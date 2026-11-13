@@ -1,0 +1,9 @@
+{
+  "calm": {"asset": "scout.png", "usage": ["welcome", "home", "idle"]},
+  "listening": {"asset": "scout-listening.png", "usage": ["typing", "triage", "case", "care", "intro-help"]},
+  "thinking": {"asset": "scout-listening.png", "usage": ["pending-reply"], "motion": "soft orbit, 1800 ms; pulse, 900 ms"},
+  "support": {"asset": "scout-support.png", "usage": ["emergency", "urgent-home", "worried-message"]},
+  "happy": {"asset": "scout-happy.png", "usage": ["thanks", "completed-step", "awards", "history-case", "greeting"]},
+  "reducedMotion": "No decorative motion. Text status and expression stay visible.",
+  "nativeIntegration": "Local demo reactions. No diagnosis or live AI inference."
+}

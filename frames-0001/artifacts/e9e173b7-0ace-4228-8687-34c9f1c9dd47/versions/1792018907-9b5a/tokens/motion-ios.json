@@ -1,0 +1,64 @@
+{
+  "press": {
+    "durationMs": 120,
+    "scale": 0.97
+  },
+  "release": {
+    "durationMs": 180,
+    "scale": 1
+  },
+  "appear": {
+    "durationMs": 220,
+    "translateY": 8,
+    "opacity": [
+      0,
+      1
+    ]
+  },
+  "screen": {
+    "durationMs": 280,
+    "kind": "push is native; web prototype fade/8px"
+  },
+  "sheet": {
+    "durationMs": 320,
+    "kind": "native detents and interactive dismissal"
+  },
+  "stagger": {
+    "stepMs": 35,
+    "maxItems": 5
+  },
+  "feedback": {
+    "durationMs": 200
+  },
+  "skeleton": {
+    "durationMs": 1200
+  },
+  "reduced": {
+    "transform": "none",
+    "durationMs": 0,
+    "loading": "static skeleton + text"
+  },
+  "scroll": {
+    "kind": "system native",
+    "restoreOffset": true,
+    "autoFollowChat": "only when near bottom",
+    "nearBottomPx": 64,
+    "refresh": "user initiated",
+    "nestedSameAxis": false
+  },
+  "glass": {
+    "regular": {
+      "webBlurPx": 24,
+      "webFill": "rgba(243,244,242,.82)"
+    },
+    "clear": {
+      "webBlurPx": 18,
+      "webFill": "rgba(23,25,27,.72)"
+    },
+    "fallback": {
+      "light": "#F3F4F2",
+      "dark": "#24292C"
+    },
+    "note": "CSS blur is an approximation, not native Liquid Glass; use native platform materials."
+  }
+}

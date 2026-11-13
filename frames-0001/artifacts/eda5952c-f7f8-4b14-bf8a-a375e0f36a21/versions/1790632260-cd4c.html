@@ -1,0 +1,465 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Багровые чары</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Kurale&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --void:#070505;
+  --panel:#0d0807;
+  --edge:#2a1612;
+  --edge-hot:#6a1f16;
+  --text:#E8DCCB;
+  --muted:#9C8A79;
+  --blood:#C21F14;
+  --glow:#FF4A2E;
+}
+html,body{height:100%}
+body{margin:0;background:var(--void);color:var(--text);font-family:'Kurale',Georgia,'Times New Roman',serif;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:44px 64px;display:flex;flex-direction:column;gap:36px}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px}
+.eyebrow{margin:0 0 6px;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+h1{margin:0;font-family:'Ruslan Display',Georgia,serif;font-weight:400;font-size:clamp(38px,6vw,64px);line-height:1;letter-spacing:.03em;text-wrap:balance;color:var(--text);text-shadow:0 0 28px rgba(255,60,35,.35)}
+.lede{margin:12px 0 0;max-width:60ch;color:var(--muted);font-size:17px}
+.list{display:flex;flex-direction:column;gap:28px}
+.fx{background:var(--panel);border:1px solid var(--edge);display:flex;flex-direction:column}
+.fx-head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 20px;padding:20px 22px 14px}
+.fx-head h2{margin:0;font-family:'Ruslan Display',Georgia,serif;font-weight:400;font-size:26px;letter-spacing:.02em}
+.fx-head p{margin:4px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+.stage{position:relative;height:var(--h,220px);border-top:1px solid var(--edge);border-bottom:1px solid var(--edge);background:radial-gradient(120% 90% at 50% 50%,#120a09 0%,#070505 70%)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer}
+.fx-foot{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 22px 16px;font-size:15px}
+.state{color:var(--muted);font-style:italic}
+.pct{font-family:'Ruslan Display',Georgia,serif;font-size:20px;color:var(--glow);font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(255,60,35,.6)}
+button{height:44px;padding:0 20px;background:transparent;border:1px solid var(--edge-hot);color:var(--text);font:inherit;font-size:15px;letter-spacing:.06em;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .15s,color .2s}
+button:hover{border-color:var(--glow);box-shadow:0 0 18px rgba(255,60,35,.35);color:#fff}
+button:active{transform:scale(.96)}
+button:focus-visible{outline:1px solid var(--glow);outline-offset:3px}
+.note{color:var(--muted);font-size:14px;margin:0}
+@media (max-width:560px){ .fx-head h2{font-size:22px} }
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <div>
+      <p class="eyebrow">Тёмная магия · эффекты загрузки</p>
+      <h1>Багровые чары</h1>
+      <p class="lede">Три анимации в красном цвете со свечением. Каждая идёт по кругу. Нажмите на поле или на кнопку, чтобы запустить эффект заново.</p>
+    </div>
+    <button type="button" id="all">Перезапустить все</button>
+  </header>
+
+  <main class="list">
+    <article class="fx" id="fx-thread">
+      <div class="fx-head">
+        <div><h2>Кривая нить</h2><p>Магическая линия прокладывает себе путь рывками и изгибами, выпускает шипы-отростки и сыплет искрами. Путь заранее виден слабым пунктиром.</p></div>
+        <button type="button">Заново</button>
+      </div>
+      <div class="stage" style="--h:240px"><canvas aria-label="Анимация: кривая магическая нить"></canvas></div>
+      <div class="fx-foot"><span class="state">Нить сплетается…</span><span class="pct">0%</span></div>
+    </article>
+
+    <article class="fx" id="fx-dot">
+      <div class="fx-head">
+        <div><h2>Загорающаяся точка</h2><p>Искры стягиваются по спирали в одну точку, она вспыхивает ударной волной и горит с рунным кольцом и живыми отростками, потом угасает.</p></div>
+        <button type="button">Зажечь снова</button>
+      </div>
+      <div class="stage" style="--h:320px"><canvas aria-label="Анимация: загорающаяся красная точка"></canvas></div>
+      <div class="fx-foot"><span class="state">Искры стягиваются…</span><span class="pct">0%</span></div>
+    </article>
+
+    <article class="fx" id="fx-burn">
+      <div class="fx-head">
+        <div><h2>Горящий фитиль</h2><p>Линия загружается возгоранием: фронт огня ползёт вперёд, оставляя за собой тлеющий след, руны на пути вспыхивают, вверх идут пламя, дым и искры.</p></div>
+        <button type="button">Заново</button>
+      </div>
+      <div class="stage" style="--h:220px"><canvas aria-label="Анимация: линия загружается возгоранием"></canvas></div>
+      <div class="fx-foot"><span class="state">Фитиль горит…</span><span class="pct">0%</span></div>
+    </article>
+
+    <p class="note">Всё нарисовано на Canvas без сторонних библиотек, поэтому код эффектов можно перенести в игру или на сайт как есть.</p>
+  </main>
+</div>
+
+<script>
+(() => {
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const TAU = Math.PI * 2;
+
+  function sprite(stops, size = 128) {
+    const c = document.createElement('canvas'); c.width = c.height = size;
+    const g = c.getContext('2d');
+    const gr = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    stops.forEach(([o, col]) => gr.addColorStop(o, col));
+    g.fillStyle = gr; g.fillRect(0, 0, size, size);
+    return c;
+  }
+  const S_RED = sprite([[0, 'rgba(255,80,50,1)'], [0.18, 'rgba(255,40,20,.62)'], [0.45, 'rgba(190,12,6,.2)'], [1, 'rgba(120,0,0,0)']]);
+  const S_HOT = sprite([[0, 'rgba(255,245,230,1)'], [0.14, 'rgba(255,170,110,.9)'], [0.4, 'rgba(255,50,25,.35)'], [1, 'rgba(160,0,0,0)']]);
+  const S_SMOKE = sprite([[0, 'rgba(80,38,32,.55)'], [1, 'rgba(40,20,18,0)']]);
+  function blit(ctx, s, x, y, r, a) {
+    if (a <= 0 || r <= 0) return;
+    ctx.globalAlpha = Math.min(1, a);
+    ctx.drawImage(s, x - r, y - r, r * 2, r * 2);
+  }
+  function spawn(dt, rate, fn) {
+    const n = dt * rate; let k = Math.floor(n) + (Math.random() < n % 1 ? 1 : 0);
+    while (k--) fn();
+  }
+
+  /* ---------- 1. Кривая нить ---------- */
+  const thread = {
+    prewarm: 5.5,
+    reset(o) { this.seed = rnd(0, 1000); this.p = 0; this.phase = 'grow'; this.pt = 0; this.sp = []; this.acc = 0; this.resize(o); },
+    resize(o) {
+      if (this.seed == null) this.seed = rnd(0, 1000);
+      const w = o.w, h = o.h, pad = Math.max(24, w * 0.06), cy = h * 0.5, A = h * 0.26, s = this.seed;
+      const N = Math.max(120, Math.round((w - 2 * pad) / 3));
+      this.pts = [];
+      for (let i = 0; i <= N; i++) {
+        const u = i / N;
+        this.pts.push([pad + u * (w - 2 * pad), cy + A * (0.52 * Math.sin(u * 6.4 + s) + 0.3 * Math.sin(u * 15.3 + s * 1.7) + 0.18 * Math.sin(u * 37 + s * 2.3))]);
+      }
+      this.N = N; this.hRef = h; this.br = [];
+    },
+    jy(i, t) { return Math.sin(t * 3.2 + i * 0.33) * 1.3 + Math.sin(t * 7.1 + i * 0.9) * 0.6; },
+    head(o) {
+      const fi = this.p * this.N, i = Math.min(this.N - 1, Math.floor(fi)), f = fi - i;
+      const a = this.pts[i], b = this.pts[i + 1];
+      return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f + this.jy(fi, o.t)];
+    },
+    spawnBranch() {
+      const i = Math.floor(this.p * this.N); if (i < 2) return;
+      const [x, y] = this.pts[i], [px, py] = this.pts[i - 1];
+      let a = Math.atan2(y - py, x - px) + (Math.random() < 0.5 ? -1 : 1) * rnd(0.9, 1.8);
+      const len = rnd(18, Math.max(24, Math.min(64, this.hRef * 0.26)));
+      const pts = [[x, y]]; let cx = x, cy = y; const K = 9;
+      for (let k = 0; k < K; k++) { a += rnd(-0.55, 0.55); cx += Math.cos(a) * len / K; cy += Math.sin(a) * len / K; pts.push([cx, cy]); }
+      this.br.push({ pts, age: 0, i });
+      if (Math.random() < 0.45) {
+        const j = Math.floor(rnd(3, 7)); const [sx, sy] = pts[j];
+        let a2 = a + (Math.random() < 0.5 ? -1 : 1) * rnd(0.5, 1.1);
+        const sub = [[sx, sy]]; let qx = sx, qy = sy;
+        for (let k = 0; k < 6; k++) { a2 += rnd(-0.5, 0.5); qx += Math.cos(a2) * len * 0.5 / 6; qy += Math.sin(a2) * len * 0.5 / 6; sub.push([qx, qy]); }
+        this.br.push({ pts: sub, age: -0.15, i });
+      }
+      if (this.br.length > 44) this.br.shift();
+    },
+    step(o, dt) {
+      const t = o.t;
+      if (this.phase === 'grow') {
+        let v = 0.1 + 0.06 * Math.sin(t * 1.9 + this.seed);
+        if (Math.sin(t * 0.8 + this.seed * 3) > 0.82) v *= 0.12;
+        this.p = Math.min(1, this.p + dt * v);
+        this.acc += dt;
+        if (this.acc > rnd(0.35, 0.9)) { this.acc = 0; this.spawnBranch(); }
+        const h = this.head(o);
+        spawn(dt, 55, () => this.sp.push({ x: h[0], y: h[1], vx: rnd(-90, 20), vy: rnd(-70, 40), life: rnd(0.35, 0.9), age: 0, r: rnd(2, 5) }));
+        if (this.p >= 1) { this.phase = 'flash'; this.pt = 0; }
+      } else {
+        this.pt += dt;
+        if (this.phase === 'flash' && this.pt > 1.6) { this.phase = 'fade'; this.pt = 0; }
+        else if (this.phase === 'fade' && this.pt > 1.1) { this.reset(o); return; }
+      }
+      this.sp.forEach(s => { s.age += dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vy -= 20 * dt; s.vx *= 0.98; });
+      this.sp = this.sp.filter(s => s.age < s.life);
+      this.br.forEach(b => b.age += dt);
+    },
+    draw(o, ctx) {
+      const t = o.t, N = this.N, pts = this.pts;
+      let G = 1, boost = 0;
+      if (this.phase === 'flash') boost = Math.exp(-this.pt * 2.2) * 1.2;
+      if (this.phase === 'fade') G = Math.max(0, 1 - this.pt / 1.1);
+
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+      ctx.setLineDash([2, 7]); ctx.strokeStyle = `rgba(150,30,22,${0.3 * G})`; ctx.lineWidth = 1;
+      ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke(); ctx.setLineDash([]);
+
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      const fi = this.p * N, n = Math.floor(fi);
+      if (fi > 0.5) {
+        const path = new Path2D();
+        for (let i = 0; i <= n; i++) { const [x, y] = pts[i]; const yy = y + this.jy(i, t); i ? path.lineTo(x, yy) : path.moveTo(x, yy); }
+        const hd = this.head(o); path.lineTo(hd[0], hd[1]);
+        [[18, 'rgba(190,14,8,', 0.07], [9, 'rgba(255,36,18,', 0.13], [4, 'rgba(255,52,30,', 0.5], [1.4, 'rgba(255,190,160,', 0.8]].forEach(([lw, c, a]) => {
+          ctx.globalAlpha = 1; ctx.strokeStyle = c + Math.min(1, a * G * (1 + boost)) + ')'; ctx.lineWidth = lw * (1 + boost * 0.4); ctx.stroke(path);
+        });
+        for (let k = 0; k < 3; k++) {
+          const u = ((t * 0.22 + k / 3) % 1) * fi, i = Math.min(n, Math.floor(u));
+          blit(ctx, S_RED, pts[i][0], pts[i][1] + this.jy(i, t), 14, 0.45 * G);
+        }
+        if (this.phase === 'grow') {
+          const hp = new Path2D(); const s0 = Math.max(0, n - 18);
+          for (let i = s0; i <= n; i++) { const [x, y] = pts[i]; const yy = y + this.jy(i, t); i === s0 ? hp.moveTo(x, yy) : hp.lineTo(x, yy); }
+          hp.lineTo(hd[0], hd[1]);
+          ctx.globalAlpha = 1; ctx.strokeStyle = 'rgba(255,120,80,.35)'; ctx.lineWidth = 6; ctx.stroke(hp);
+          ctx.strokeStyle = 'rgba(255,235,220,.9)'; ctx.lineWidth = 1.8; ctx.stroke(hp);
+        }
+        if (boost > 0.02) for (let i = 0; i <= n; i += 10) blit(ctx, S_RED, pts[i][0], pts[i][1], 26, boost * 0.45);
+      }
+      this.br.forEach(b => {
+        if (b.age <= 0) return;
+        const grow = Math.min(1, b.age / 0.35);
+        let a = b.age < 0.35 ? 1 : Math.max(0.22, 1 - (b.age - 0.35) / 1.6);
+        a *= (0.85 + 0.15 * Math.sin(t * 13 + b.i)) * G;
+        const m = Math.max(1, Math.round(grow * (b.pts.length - 1)));
+        const p = new Path2D(); p.moveTo(b.pts[0][0], b.pts[0][1]);
+        for (let k = 1; k <= m; k++) p.lineTo(b.pts[k][0], b.pts[k][1]);
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = `rgba(255,30,15,${0.14 * a})`; ctx.lineWidth = 6; ctx.stroke(p);
+        ctx.strokeStyle = `rgba(255,60,35,${0.6 * a})`; ctx.lineWidth = 1.6; ctx.stroke(p);
+        ctx.strokeStyle = `rgba(255,200,170,${0.5 * a})`; ctx.lineWidth = 0.7; ctx.stroke(p);
+        if (grow < 1) { const q = b.pts[m]; blit(ctx, S_HOT, q[0], q[1], 7, 0.8); }
+      });
+      if (this.phase === 'grow' && fi > 0.5) {
+        const hd = this.head(o);
+        blit(ctx, S_RED, hd[0], hd[1], 64, 0.55);
+        blit(ctx, S_HOT, hd[0], hd[1], 20 * (1 + 0.18 * Math.sin(t * 23)), 0.95);
+      }
+      if (this.phase !== 'grow') {
+        const a = pts[0], b = pts[N];
+        blit(ctx, S_RED, a[0], a[1], 40, 0.5 * G); blit(ctx, S_RED, b[0], b[1], 40 + boost * 30, (0.5 + boost) * G);
+      }
+      this.sp.forEach(s => { const k = 1 - s.age / s.life; blit(ctx, S_RED, s.x, s.y, s.r * 2, k * 0.8 * G); blit(ctx, S_HOT, s.x, s.y, s.r * 0.8, k * G); });
+    },
+    label() {
+      if (this.phase === 'grow') return { pct: Math.floor(this.p * 100) + '%', state: 'Нить сплетается…' };
+      return { pct: '100%', state: this.phase === 'flash' ? 'Чары сплетены' : 'Нить гаснет…' };
+    }
+  };
+
+  /* ---------- 2. Загорающаяся точка ---------- */
+  const dot = {
+    prewarm: 3.0, L: 5.8,
+    reset(o) { this.c = 0; this.ps = []; this.burst = false; this.resize(o); },
+    resize(o) { this.cx = o.w / 2; this.cy = o.h / 2; this.R = Math.min(o.w, o.h) * 0.42; },
+    step(o, dt) {
+      this.c += dt;
+      if (this.c > this.L) { this.c = 0; this.burst = false; }
+      const c = this.c, cx = this.cx, cy = this.cy;
+      if (c < 1.6) spawn(dt, 26 + 30 * c, () => {
+        this.ps.push({ m: 'in', a: rnd(0, TAU), r: this.R * rnd(0.55, 1), spin: rnd(1.2, 2.6) * (Math.random() < 0.5 ? -1 : 1), s: rnd(1.5, 3.5), age: 0 });
+      });
+      if (c >= 1.6 && !this.burst) {
+        this.burst = true;
+        for (let i = 0; i < 60; i++) { const a = rnd(0, TAU), v = rnd(60, 260); this.ps.push({ m: 'out', x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rnd(0.5, 1.2), age: 0, s: rnd(1.5, 3.5) }); }
+      }
+      if (c > 1.6 && c < 4.6) spawn(dt, 10, () => {
+        const a = rnd(0, TAU), v = rnd(30, 90);
+        this.ps.push({ m: 'out', x: cx + Math.cos(a) * 10, y: cy + Math.sin(a) * 10, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 20, life: rnd(0.5, 1), age: 0, s: rnd(1, 2.5) });
+      });
+      this.ps.forEach(p => {
+        p.age += dt;
+        if (p.m === 'in') { p.r -= (p.r * 1.5 + 25) * dt; p.a += p.spin * dt; }
+        else { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.96; p.vy *= 0.96; }
+      });
+      this.ps = this.ps.filter(p => p.m === 'in' ? p.r > 3 : p.age < p.life);
+    },
+    draw(o, ctx) {
+      const c = this.c, cx = this.cx, cy = this.cy, t = o.t, R = this.R;
+      ctx.globalCompositeOperation = 'lighter';
+      let e;
+      if (c < 1.6) e = 0.08 + 0.5 * Math.pow(c / 1.6, 2.2);
+      else if (c < 4.6) e = 1;
+      else e = Math.max(0.08, 1 - (c - 4.6) / 1.2 * 0.92);
+      const fl = 0.88 + 0.12 * Math.sin(t * 17) * Math.sin(t * 5.3) + 0.05 * Math.sin(t * 41);
+
+      blit(ctx, S_RED, cx, cy, R * 0.95 * e, 0.35 * e * fl);
+      blit(ctx, S_RED, cx, cy, R * 0.45 * e + 6, 0.7 * e * fl);
+
+      const ringA = c < 1.6 ? 0 : c < 2.0 ? (c - 1.6) / 0.4 : e;
+      if (ringA > 0) {
+        const r1 = R * 0.46;
+        ctx.save(); ctx.translate(cx, cy); ctx.globalAlpha = 1; ctx.lineWidth = 1.2;
+        ctx.rotate(t * 0.35);
+        ctx.setLineDash([3, 10]); ctx.strokeStyle = `rgba(255,60,35,${0.55 * ringA})`;
+        ctx.beginPath(); ctx.arc(0, 0, r1, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+        for (let k = 0; k < 8; k++) {
+          const a = k * Math.PI / 4, x = Math.cos(a) * r1, y = Math.sin(a) * r1;
+          ctx.fillStyle = `rgba(255,90,60,${0.75 * ringA * (0.6 + 0.4 * Math.sin(t * 3 + k))})`;
+          ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.lineTo(x + 3.5, y); ctx.lineTo(x, y + 5); ctx.lineTo(x - 3.5, y); ctx.closePath(); ctx.fill();
+        }
+        ctx.rotate(-t * 1.15);
+        for (let k = 0; k < 3; k++) {
+          ctx.strokeStyle = `rgba(255,40,25,${0.5 * ringA})`; ctx.lineWidth = 1.4;
+          ctx.beginPath(); ctx.arc(0, 0, r1 * 0.78, k * TAU / 3, k * TAU / 3 + 0.9); ctx.stroke();
+        }
+        ctx.restore();
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        for (let k = 0; k < 7; k++) {
+          let a = k * 0.9 + t * 0.2 + Math.sin(t * 2 + k) * 0.3, x = cx, y = cy;
+          const len = R * (0.18 + 0.12 * (0.5 + 0.5 * Math.sin(t * 3.1 + k * 1.7))) * ringA;
+          const p = new Path2D(); p.moveTo(x, y);
+          for (let s = 0; s < 6; s++) { a += Math.sin(t * 9 + k * 3 + s * 2.1) * 0.5; x += Math.cos(a) * len / 6; y += Math.sin(a) * len / 6; p.lineTo(x, y); }
+          ctx.globalAlpha = 1;
+          ctx.strokeStyle = `rgba(255,50,30,${0.35 * ringA})`; ctx.lineWidth = 2.4; ctx.stroke(p);
+          ctx.strokeStyle = `rgba(255,180,150,${0.45 * ringA})`; ctx.lineWidth = 0.7; ctx.stroke(p);
+        }
+      }
+
+      this.ps.forEach(p => {
+        let x, y, a;
+        if (p.m === 'in') { x = cx + Math.cos(p.a) * p.r; y = cy + Math.sin(p.a) * p.r; a = Math.min(1, p.age * 3) * 0.9; }
+        else { x = p.x; y = p.y; a = 1 - p.age / p.life; }
+        blit(ctx, S_RED, x, y, p.s * 3.2, a * 0.7); blit(ctx, S_HOT, x, y, p.s * 1.1, a);
+      });
+
+      if (c > 1.6 && c < 2.4) {
+        const k = (c - 1.6) / 0.8;
+        blit(ctx, S_HOT, cx, cy, R * 0.8 * (0.4 + k), (1 - k) * 0.9);
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = `rgba(255,70,40,${(1 - k) * 0.85})`; ctx.lineWidth = 3 * (1 - k) + 0.5;
+        ctx.beginPath(); ctx.arc(cx, cy, R * 1.1 * Math.pow(k, 0.6), 0, TAU); ctx.stroke();
+        ctx.strokeStyle = `rgba(255,200,170,${(1 - k) * 0.6})`; ctx.lineWidth = 1; ctx.stroke();
+      }
+      blit(ctx, S_HOT, cx, cy, (14 + 18 * e) * fl, Math.min(1, 0.4 + 0.8 * e));
+      blit(ctx, S_HOT, cx, cy, 6 * fl * (0.5 + e * 0.5), e);
+    },
+    label() {
+      const c = this.c;
+      if (c < 1.6) return { pct: Math.round(c / 1.6 * 100) + '%', state: 'Искры стягиваются…' };
+      if (c < 4.6) return { pct: '100%', state: 'Точка горит' };
+      return { pct: '100%', state: 'Угасает…' };
+    }
+  };
+
+  /* ---------- 3. Горящий фитиль ---------- */
+  const burn = {
+    prewarm: 4.5,
+    reset(o) { this.f = 0; this.phase = 'burn'; this.pt = 0; this.fl = []; this.sm = []; this.sk = []; this.seed = rnd(0, 100); this.bt = null; this.resize(o); },
+    resize(o) {
+      const pad = Math.max(24, o.w * 0.06);
+      this.x0 = pad; this.x1 = o.w - pad; this.cy = o.h * 0.64;
+      const M = Math.max(60, Math.floor((this.x1 - this.x0) / 2));
+      const old = this.bt; this.bt = new Float32Array(M).fill(-1);
+      if (old) for (let i = 0; i < M; i++) this.bt[i] = old[Math.floor(i / M * old.length)];
+      this.M = M;
+      const step = Math.max(48, (this.x1 - this.x0) / 14); this.notches = [];
+      for (let x = this.x0; x <= this.x1 + 0.1; x += step) this.notches.push(x);
+    },
+    step(o, dt) {
+      const t = o.t;
+      if (this.phase === 'burn') {
+        const v = 0.085 + 0.045 * Math.sin(t * 2.3 + this.seed) + 0.02 * Math.sin(t * 7.7);
+        this.f = Math.min(1, this.f + dt * Math.max(0.02, v));
+        const idx = Math.floor(this.f * this.M);
+        for (let i = 0; i < idx; i++) if (this.bt[i] < 0) this.bt[i] = t;
+        if (this.f >= 1) { this.phase = 'done'; this.pt = 0; }
+      } else {
+        this.pt += dt;
+        if (this.pt > 3.4) { this.reset(o); return; }
+      }
+      const fx = this.x0 + this.f * (this.x1 - this.x0), cy = this.cy;
+      if (this.phase === 'burn') {
+        spawn(dt, 80, () => this.fl.push({ x: fx + rnd(-8, 3), y: cy + rnd(-2, 2), vx: rnd(-14, 10), vy: -rnd(35, 95), age: 0, life: rnd(0.45, 0.9), s: rnd(5, 11), ph: rnd(0, 6) }));
+        spawn(dt, 12, () => this.sm.push({ x: fx + rnd(-14, 0), y: cy - 10, vx: rnd(-8, 6), vy: -rnd(14, 30), age: 0, life: rnd(1.6, 2.6), s: rnd(10, 18) }));
+        spawn(dt, 16, () => this.sk.push({ x: fx, y: cy, vx: rnd(-50, 40), vy: -rnd(60, 170), age: 0, life: rnd(0.6, 1.3) }));
+      }
+      if (this.f > 0.05 && (this.phase === 'burn' || this.pt < 1.6)) spawn(dt, this.phase === 'burn' ? 6 : 10, () => {
+        const u = rnd(0, this.f); this.sk.push({ x: this.x0 + u * (this.x1 - this.x0), y: cy, vx: rnd(-10, 10), vy: -rnd(20, 60), age: 0, life: rnd(0.5, 1) });
+      });
+      this.fl.forEach(p => { p.age += dt; p.x += (p.vx + Math.sin(t * 6 + p.ph) * 14) * dt; p.y += p.vy * dt; p.vy *= 0.99; });
+      this.fl = this.fl.filter(p => p.age < p.life);
+      this.sm.forEach(p => { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.s += dt * 10; });
+      this.sm = this.sm.filter(p => p.age < p.life);
+      this.sk.forEach(p => { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 160 * dt; });
+      this.sk = this.sk.filter(p => p.age < p.life && p.y < o.h + 10);
+    },
+    draw(o, ctx) {
+      const t = o.t, x0 = this.x0, x1 = this.x1, cy = this.cy, M = this.M, seg = (x1 - x0) / M;
+      const fx = x0 + this.f * (x1 - x0);
+      let G = 1, boost = 0;
+      if (this.phase === 'done') { boost = Math.exp(-this.pt * 2); G = this.pt < 1.6 ? 1 : Math.max(0, 1 - (this.pt - 1.6) / 1.6); }
+
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+      ctx.fillStyle = '#2a1411'; ctx.fillRect(fx, cy - 1.5, x1 - fx, 3);
+      this.notches.forEach(x => {
+        if (x <= fx) return;
+        ctx.fillStyle = '#3a1c17';
+        ctx.beginPath(); ctx.moveTo(x, cy - 7); ctx.lineTo(x + 4, cy); ctx.lineTo(x, cy + 7); ctx.lineTo(x - 4, cy); ctx.closePath(); ctx.fill();
+      });
+      this.sm.forEach(p => { const a = (1 - p.age / p.life) * Math.min(1, p.age * 3); blit(ctx, S_SMOKE, p.x, p.y, p.s, a * 0.7); });
+
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < M; i++) {
+        const b = this.bt[i]; if (b < 0) break;
+        const age = t - b, heat = Math.exp(-age * 1.3);
+        const emb = 0.5 + 0.5 * Math.sin(i * 1.93 + t * 5.1) * Math.sin(i * 0.71 - t * 2.3);
+        const h = Math.min(1, heat + boost * 0.6);
+        const g = Math.round(40 + 190 * h * h), bb = Math.round(20 + 170 * h * h * h);
+        ctx.globalAlpha = Math.min(1, (0.35 + 0.4 * emb * (1 - h) + 0.6 * h) * G);
+        ctx.fillStyle = `rgb(255,${g},${bb})`;
+        ctx.fillRect(x0 + i * seg, cy - 1.3, seg + 0.6, 2.6);
+        if (i % 5 === 0) blit(ctx, S_RED, x0 + i * seg, cy, 10 + 14 * h, (0.18 + 0.25 * emb * (1 - h) + 0.4 * h) * G);
+      }
+      this.notches.forEach(x => {
+        if (x > fx) return;
+        ctx.globalAlpha = 0.85 * G; ctx.fillStyle = 'rgb(255,80,50)';
+        ctx.beginPath(); ctx.moveTo(x, cy - 7); ctx.lineTo(x + 4, cy); ctx.lineTo(x, cy + 7); ctx.lineTo(x - 4, cy); ctx.closePath(); ctx.fill();
+        blit(ctx, S_RED, x, cy, 18 + boost * 20, (0.35 + 0.15 * Math.sin(t * 4 + x) + boost * 0.5) * G);
+      });
+      if (this.phase === 'burn') {
+        const flk = 1 + 0.2 * Math.sin(t * 29) * Math.sin(t * 11);
+        blit(ctx, S_RED, fx, cy, 70 * flk, 0.6);
+        blit(ctx, S_HOT, fx, cy, 22 * flk, 1);
+      }
+      this.fl.forEach(p => {
+        const k = p.age / p.life, size = p.s * (1 - k * 0.6), a = (1 - k) * 0.85;
+        blit(ctx, S_RED, p.x, p.y, size * 2.2, a * 0.5);
+        blit(ctx, k < 0.35 ? S_HOT : S_RED, p.x, p.y, size, a);
+      });
+      this.sk.forEach(p => { const k = 1 - p.age / p.life; blit(ctx, S_RED, p.x, p.y, 6, k * 0.6 * G); blit(ctx, S_HOT, p.x, p.y, 2.2, k * G); });
+    },
+    label() {
+      if (this.phase === 'burn') return { pct: Math.floor(this.f * 100) + '%', state: 'Фитиль горит…' };
+      return { pct: '100%', state: this.pt < 1.6 ? 'Выжжено' : 'Остывает…' };
+    }
+  };
+
+  /* ---------- запуск ---------- */
+  const runners = [];
+  function mount(article, fx) {
+    const cv = article.querySelector('canvas'), ctx = cv.getContext('2d');
+    const pctEl = article.querySelector('.pct'), stEl = article.querySelector('.state');
+    const o = { w: 0, h: 0, t: 0, visible: true };
+    function size() {
+      const r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+      o.w = Math.max(1, r.width); o.h = Math.max(1, r.height);
+      cv.width = Math.round(o.w * dpr); cv.height = Math.round(o.h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function render() {
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+      ctx.clearRect(0, 0, o.w, o.h);
+      fx.draw(o, ctx);
+      const L = fx.label(o); pctEl.textContent = L.pct; stEl.textContent = L.state;
+    }
+    function prewarm() { for (let i = 0; i < fx.prewarm * 30; i++) { o.t += 1 / 30; fx.step(o, 1 / 30); } }
+    function restart() { fx.reset(o); if (reduce) { prewarm(); render(); } }
+    size(); fx.reset(o);
+    new ResizeObserver(() => { size(); fx.resize(o); if (reduce) render(); }).observe(cv);
+    new IntersectionObserver(es => { o.visible = es[0].isIntersecting; }).observe(article);
+    article.querySelector('button').addEventListener('click', restart);
+    cv.addEventListener('click', restart);
+    if (reduce) { prewarm(); render(); }
+    else {
+      let last = performance.now();
+      const frame = now => {
+        const dt = Math.min(0.05, (now - last) / 1000); last = now;
+        if (o.visible) { o.t += dt; fx.step(o, dt); render(); }
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    }
+    return restart;
+  }
+  runners.push(mount(document.getElementById('fx-thread'), thread));
+  runners.push(mount(document.getElementById('fx-dot'), dot));
+  runners.push(mount(document.getElementById('fx-burn'), burn));
+  document.getElementById('all').addEventListener('click', () => runners.forEach(r => r()));
+})();
+</script>
+
+</body></html>

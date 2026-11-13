@@ -1,0 +1,1481 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Мокап смартфона</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Раскладка: большой 3D-просмотр слева, панель управления 340px справа; на узком экране панель уходит под просмотр. */
+  :root {
+    --bg: #eef0f3;
+    --panel: #ffffff;
+    --ink: #15181e;
+    --ink-2: #505967;
+    --line: #d8dce3;
+    --accent: #2a47d4;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3e8fb;
+    --ok: #1f7a4d;
+    --warn: #a4570a;
+    --chk-a: #e6e8ec;
+    --chk-b: #f3f4f6;
+    --stage-light: #f5f6f8;
+    --stage-dark: #0e1013;
+    --font-ui: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1115; --panel: #171a20; --ink: #eceef2; --ink-2: #a1a9b6; --line: #2a2f38;
+      --accent: #8da6ff; --accent-ink: #0b1020; --accent-soft: #232b4a; --ok: #6fd3a0; --warn: #f0b36a;
+      --chk-a: #1b1e24; --chk-b: #23272e; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1115; --panel: #171a20; --ink: #eceef2; --ink-2: #a1a9b6; --line: #2a2f38;
+    --accent: #8da6ff; --accent-ink: #0b1020; --accent-soft: #232b4a; --ok: #6fd3a0; --warn: #f0b36a;
+    --chk-a: #1b1e24; --chk-b: #23272e; color-scheme: dark;
+  }
+
+  body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.45; }
+  *, *::before, *::after { box-sizing: border-box; }
+
+  .app {
+    display: grid; gap: 16px; max-width: 1400px; margin-inline: auto;
+    padding-block: 20px 28px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 24px; }
+  .head > * { min-width: 0; }
+  h1 { margin: 0; font-size: 26px; line-height: 1.15; font-weight: 600; letter-spacing: -0.015em; text-wrap: balance; }
+  .lead { margin: 6px 0 0; color: var(--ink-2); max-width: 58ch; }
+  .spec { margin: 0; font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+  .work { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+
+  .stage {
+    position: relative; height: min(80vh, 840px); min-height: 480px; overflow: hidden;
+    border: 1px solid var(--line); border-radius: 16px; touch-action: none;
+  }
+  .stage[data-bg="check"] {
+    background-color: var(--chk-a);
+    background-image: conic-gradient(var(--chk-b) 25%, transparent 0 50%, var(--chk-b) 0 75%, transparent 0);
+    background-size: 28px 28px;
+  }
+  .stage[data-bg="light"] { background: var(--stage-light); }
+  .stage[data-bg="dark"] { background: var(--stage-dark); }
+  #gl { display: block; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; cursor: grab; outline: none; }
+  #gl.framed { box-shadow: 0 0 0 1px var(--accent); }
+  #gl:active { cursor: grabbing; }
+
+  .views {
+    position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none;
+  }
+  .views button {
+    pointer-events: auto; font: inherit; font-size: 13px; font-weight: 500; color: var(--ink);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer;
+  }
+  .views button:hover { border-color: var(--accent); }
+
+  .hint {
+    position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px);
+    padding: 8px 14px; border-radius: 999px; font-size: 13px; color: var(--ink-2); text-align: center;
+    background: var(--panel); border: 1px solid var(--line); pointer-events: none;
+  }
+  .fail {
+    position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--ink);
+    background: var(--panel);
+  }
+  .stage.drag::after {
+    content: 'Отпустите, чтобы загрузить макет'; position: absolute; inset: 10px; display: grid; place-items: center;
+    border: 2px dashed var(--accent); border-radius: 12px; background: var(--accent-soft); color: var(--ink);
+    font-weight: 500; opacity: .94; pointer-events: none;
+  }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 4px 16px; min-width: 0; }
+  .sec { padding: 16px 0; border-bottom: 1px solid var(--line); display: grid; gap: 12px; }
+  .sec:last-child { border-bottom: 0; }
+  .sec h2 { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-2); }
+  .note { margin: 0; font-size: 12.5px; color: var(--ink-2); }
+
+  .btn {
+    font: inherit; font-weight: 500; font-size: 14px; min-height: 40px; padding: 0 14px; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-align: center;
+  }
+  .btn:hover:not(:disabled) { border-color: var(--accent); }
+  .btn:disabled { opacity: .55; cursor: progress; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.primary:hover:not(:disabled) { filter: brightness(1.06); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .row > .btn { flex: 1 1 120px; }
+  .btn:focus-visible, .views button:focus-visible, .sw:focus-visible, select:focus-visible, .seg input:focus-visible + span, .chk input:focus-visible + span {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .seg label { display: block; min-width: 0; }
+  .seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .seg span { display: block; text-align: center; padding: 8px 6px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--ink-2); border-right: 1px solid var(--line); }
+  .seg label:last-child span { border-right: 0; }
+  .seg input:checked + span { background: var(--accent-soft); color: var(--ink); }
+
+  .swatches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .sw {
+    font: inherit; font-size: 13px; font-weight: 500; color: var(--ink); display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; text-align: left;
+  }
+  .sw[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .chip { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(0,0,0,.18); background: linear-gradient(135deg, var(--c1) 0 50%, var(--c2) 50% 100%); }
+
+  .chk { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; }
+  .chk input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+  select {
+    font: inherit; font-size: 14px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; width: 100%;
+  }
+  .field { display: grid; gap: 6px; font-size: 13px; color: var(--ink-2); }
+  #status { margin: 0; min-height: 1.4em; font-size: 13px; color: var(--ink-2); }
+  #status[data-kind="ok"] { color: var(--ok); }
+  #status[data-kind="warn"] { color: var(--warn); }
+
+  .vctl { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+  .vctl .btn { min-height: 36px; padding: 0 12px; min-width: 76px; }
+  .vctl input[type="range"], .row2 select { min-width: 0; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .mono { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .grp { margin: 4px 0 0; font-size: 12.5px; font-weight: 600; color: var(--ink); }
+  .alist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+  .abtn {
+    font: inherit; font-size: 13px; font-weight: 500; color: var(--ink); text-align: left; cursor: pointer; min-width: 0;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 4px; padding: 8px 10px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--panel); overflow-wrap: anywhere;
+  }
+  .abtn i { font-style: normal; font-family: var(--font-mono); font-size: 11px; color: var(--ink-2); }
+  .abtn:hover { border-color: var(--accent); }
+  .abtn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .abtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .actl { display: grid; gap: 10px; }
+  .actl[hidden], .vctl[hidden], #vlen-row[hidden] { display: none; }
+  .aname { margin: 0; font-size: 13px; font-weight: 600; }
+  .busy { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; background: var(--panel); }
+  .busy[hidden] { display: none; }
+  .busy-card { display: grid; gap: 14px; width: min(340px, 82%); text-align: center; }
+  .busy-card p { margin: 0; font-weight: 500; }
+  .busy-card progress { width: 100%; height: 10px; accent-color: var(--accent); }
+
+  @media (max-width: 880px) {
+    .work { grid-template-columns: minmax(0, 1fr); }
+    .stage { height: 66vh; min-height: 420px; }
+    h1 { font-size: 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="app">
+  <header class="head">
+    <div>
+      <h1>Мокап смартфона</h1>
+      <p class="lead">Загрузите макет или видео на экран, выберите ракурс или анимацию и сохраните PNG либо ролик на прозрачном фоне.</p>
+    </div>
+    <p class="spec" aria-label="Размеры модели">76,0 × 160,0 × 8,1 мм · экран 72,0 × 156,0 мм · 9:19,5</p>
+  </header>
+
+  <main class="work">
+    <section class="stage" id="stage" data-bg="check" aria-label="3D-просмотр смартфона">
+      <canvas id="gl" tabindex="0" aria-label="Смартфон в 3D. Тяните, чтобы вращать. Колесо мыши меняет масштаб. Двойной клик возвращает вид."></canvas>
+      <div class="views" role="group" aria-label="Ракурсы">
+        <button type="button" data-view="front">Спереди</button>
+        <button type="button" data-view="q3">Три четверти</button>
+        <button type="button" data-view="side">Сбоку</button>
+        <button type="button" data-view="q3back">Сзади, три четверти</button>
+        <button type="button" data-view="back">Сзади</button>
+      </div>
+      <div class="hint" id="hint">Перетащите изображение на экран, вставьте из буфера или выберите файл справа</div>
+      <div class="fail" id="fail" hidden></div>
+      <div class="busy" id="busy" hidden role="status">
+        <div class="busy-card">
+          <p id="busy-text">Подготовка…</p>
+          <progress id="busy-bar" max="100" value="0"></progress>
+          <button type="button" class="btn" id="btn-cancel">Отмена</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel" aria-label="Настройки">
+      <div class="sec">
+        <h2>Макет или видео на экране</h2>
+        <div class="row">
+          <label class="btn primary" for="file" style="cursor:pointer">Выбрать файл</label>
+          <input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif,video/mp4,video/webm,video/quicktime" hidden>
+          <button type="button" class="btn" id="btn-sample">Пример</button>
+          <button type="button" class="btn" id="btn-clear">Очистить</button>
+        </div>
+        <div class="seg" role="radiogroup" aria-label="Как вписать макет в экран">
+          <label><input type="radio" name="fit" value="cover" checked><span>Заполнить</span></label>
+          <label><input type="radio" name="fit" value="contain"><span>Вписать</span></label>
+          <label><input type="radio" name="fit" value="stretch"><span>Растянуть</span></label>
+        </div>
+        <div class="vctl" id="vctl" hidden>
+          <button type="button" class="btn" id="btn-play">Пауза</button>
+          <input type="range" id="vseek" min="0" max="1000" value="0" aria-label="Положение в видео">
+          <span class="mono" id="vtime">0:00 / 0:00</span>
+        </div>
+        <p class="note">Подойдут картинки и видео MP4, WebM, MOV. Лучше всего 9:19,5, например 1080×2340 px. Файл можно перетащить на экран, картинку вставить из буфера.</p>
+      </div>
+
+      <div class="sec">
+        <h2>Анимации телефона</h2>
+        <div id="alib" class="alib"></div>
+        <div class="actl" id="actl" hidden>
+          <p class="aname" id="aname"></p>
+          <div class="vctl">
+            <button type="button" class="btn" id="btn-aplay">Пауза</button>
+            <input type="range" id="aseek" min="0" max="1000" value="0" aria-label="Положение в анимации">
+            <span class="mono" id="atime">0,0 / 0,0 с</span>
+          </div>
+          <label class="chk"><input type="checkbox" id="chk-aloop"><span>Зациклить</span></label>
+        </div>
+        <div class="row2">
+          <label class="field">Скорость
+            <select id="sel-aspeed">
+              <option value="0.5">0,5×</option>
+              <option value="0.75">0,75×</option>
+              <option value="1" selected>1×</option>
+              <option value="1.5">1,5×</option>
+              <option value="2">2×</option>
+            </select>
+          </label>
+          <label class="field">Формат кадра
+            <select id="sel-frame">
+              <option value="free" selected>Как в окне</option>
+              <option value="16:9">16:9, горизонтальный</option>
+              <option value="9:16">9:16, вертикальный</option>
+              <option value="4:5">4:5</option>
+              <option value="1:1">1:1</option>
+            </select>
+          </label>
+        </div>
+        <button type="button" class="btn" id="btn-areset" hidden>Остановить и вернуть телефон</button>
+        <p class="note">Анимация двигает сам телефон, ракурс камеры остаётся вашим: выберите его кнопками над моделью или мышью. Пробел ставит на паузу. Формат кадра задаёт рамку и для PNG, и для видео, а видимая область совпадает с экспортом.</p>
+      </div>
+
+      <div class="sec">
+        <h2>Цвет корпуса</h2>
+        <div class="swatches">
+          <button type="button" class="sw" data-finish="graphite" aria-pressed="true"><span class="chip" style="--c1:#4d5158;--c2:#2c2f35"></span>Графит</button>
+          <button type="button" class="sw" data-finish="sand" aria-pressed="false"><span class="chip" style="--c1:#c7b594;--c2:#ddd1bb"></span>Песок</button>
+          <button type="button" class="sw" data-finish="lagoon" aria-pressed="false"><span class="chip" style="--c1:#4f8091;--c2:#7fb0c0"></span>Лагуна</button>
+          <button type="button" class="sw" data-finish="pearl" aria-pressed="false"><span class="chip" style="--c1:#d2d4d8;--c2:#eeeff0"></span>Жемчуг</button>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h2>Экран и фон просмотра</h2>
+        <label class="chk"><input type="checkbox" id="chk-punch" checked><span>Вырез фронтальной камеры</span></label>
+        <label class="chk"><input type="checkbox" id="chk-glare" checked><span>Блики на стекле</span></label>
+        <div class="seg" role="radiogroup" aria-label="Фон в окне просмотра">
+          <label><input type="radio" name="bg" value="check" checked><span>Шахматка</span></label>
+          <label><input type="radio" name="bg" value="light"><span>Светлый</span></label>
+          <label><input type="radio" name="bg" value="dark"><span>Тёмный</span></label>
+        </div>
+        <p class="note">Фон меняет только окно просмотра. В PNG он всегда прозрачный.</p>
+      </div>
+
+      <div class="sec">
+        <h2>Экспорт</h2>
+        <label class="field">Длинная сторона
+          <select id="sel-size">
+            <option value="2048">2048 px</option>
+            <option value="3072" selected>3072 px</option>
+            <option value="4096">4096 px</option>
+            <option value="6144">6144 px</option>
+          </select>
+        </label>
+        <label class="chk"><input type="checkbox" id="chk-trim" checked><span>Обрезать по контуру телефона</span></label>
+        <div class="row">
+          <button type="button" class="btn primary" id="btn-download">Скачать PNG</button>
+          <button type="button" class="btn" id="btn-copy">Копировать</button>
+        </div>
+        <p id="status" role="status" aria-live="polite"></p>
+        <p class="note">Ракурс берётся из окна просмотра: покрутите модель и сохраните то, что видите.</p>
+      </div>
+
+      <div class="sec">
+        <h2>Экспорт видео</h2>
+        <label class="field">Формат
+          <select id="sel-vfmt">
+            <option value="webm">WebM с прозрачностью</option>
+            <option value="png">PNG-последовательность (ZIP)</option>
+          </select>
+        </label>
+        <label class="field" id="vlen-row" hidden>Длительность ролика
+          <select id="sel-vlen">
+            <option value="anim" selected>По анимации (видео на экране зациклится)</option>
+            <option value="video">По видео на экране</option>
+          </select>
+        </label>
+        <div class="row2">
+          <label class="field">Длинная сторона
+            <select id="sel-vsize">
+              <option value="720">720 px</option>
+              <option value="1080" selected>1080 px</option>
+              <option value="1440">1440 px</option>
+              <option value="2160">2160 px</option>
+            </select>
+          </label>
+          <label class="field">Кадров в секунду
+            <select id="sel-fps">
+              <option value="24">24</option>
+              <option value="30" selected>30</option>
+              <option value="60">60</option>
+            </select>
+          </label>
+        </div>
+        <button type="button" class="btn primary" id="btn-video" disabled>Записать видео</button>
+        <p class="note" id="vinfo"></p>
+        <p class="note">Ракурс камеры, цвет и формат кадра берутся из окна просмотра. Без анимации кадр можно обрезать по контуру, с анимацией — нет. WebM с прозрачностью сохраняют Chrome и Edge. Для After Effects, Premiere и DaVinci берите PNG-последовательность: распакуйте ZIP и импортируйте как Image Sequence.</p>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* Универсальный смартфон для мокапов: чертёж (BP) и построители геометрии.
+ * Единицы: миллиметры. Оси: X вправо (вид спереди), Y вверх, Z к зрителю (экран смотрит в +Z).
+ * Модуль не зависит от three.js: возвращает массивы позиций, нормалей, UV и индексов,
+ * поэтому его можно проверять в Node и использовать в браузере. */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.PhoneGeo = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------ ЧЕРТЁЖ */
+  const BP = {
+    // Корпус: габариты без выступающего модуля камеры
+    body: { w: 76.0, h: 160.0, t: 8.1, r: 10.0 },
+    // Металлическая рамка. Скругления: тыл 1.0, фронт 0.8
+    frame: { zBack: -3.75, zFront: 3.70, backRound: 1.0, frontRound: 0.8 },
+    // Матовая задняя панель: отступ от контура 1.0, выступает на 0.3 над рамкой
+    backGlass: { inset: 1.0, zBack: -4.05, zFront: -3.55, round: 0.25 },
+    // Фронтальное стекло: отступ 0.35, выступает на 0.35 над рамкой
+    frontGlass: { inset: 0.35, zBack: 3.5, zFront: 4.05, round: 0.3 },
+    // Экран 9:19.5, рамки со всех сторон равны (1.65 мм)
+    display: { w: 72.0, h: 156.0, r: 8.0, aspect: 9 / 19.5, zScreen: 4.062, zGlare: 4.07, zPunch: 4.078 },
+    punch: { d: 3.0, fromTop: 4.0 },
+    // Модуль камеры: вертикальная капсула с двумя объективами и вспышкой между ними
+    module: { cx: 19.5, cy: 50.0, w: 24.0, h: 46.0, r: 9.0, height: 1.2, round: 0.8, baseZ: -3.95, plateInset: 1.4, plateZ: 0.05 },
+    lensR: 8.2,
+    lens: [{ x: 19.5, y: 61.25 }, { x: 19.5, y: 38.75 }],
+    flash: { x: 19.5, y: 50.0, r: 2.2 },
+    dot: { x: 26.0, y: 50.0, r: 1.0 },
+    // Боковые кнопки на правой грани (вид спереди), вылет 0.4 мм, утоплены на 0.35
+    buttons: {
+      volume: { y: 36, len: 24, w: 3.0, out: 0.4, base: 0.35 },
+      power: { y: 8, len: 14, w: 3.0, out: 0.4, base: 0.35 }
+    },
+    // Нижняя грань: порт, динамик, микрофон. Верхняя: микрофон.
+    bottom: { port: { x: 0, w: 9.0, h: 2.8 }, grille: { x0: -26, step: 2, count: 7, r: 0.55 }, mic: { x: 14, r: 0.5 } },
+    top: { mic: { x: 10, r: 0.5 } }
+  };
+  // Прямой участок боковой стенки (по Z), где допустимо размещать детали
+  BP.wallZ = [BP.frame.zBack + BP.frame.backRound, BP.frame.zFront - BP.frame.frontRound];
+
+  /* ------------------------------------------------------------ 2D-контуры */
+  function roundedRect(w, h, r, segs, cx, cy) {
+    segs = segs || 24; cx = cx || 0; cy = cy || 0;
+    r = Math.max(Math.min(r, w / 2 - 1e-3, h / 2 - 1e-3), 0.02);
+    const ax = w / 2 - r, ay = h / 2 - r, pts = [];
+    const corners = [[ax, ay, 0], [-ax, ay, 1], [-ax, -ay, 2], [ax, -ay, 3]];
+    for (const [px, py, q] of corners) {
+      for (let i = 0; i <= segs; i++) {
+        const t = (i / segs) * Math.PI / 2 + q * Math.PI / 2;
+        pts.push([cx + px + r * Math.cos(t), cy + py + r * Math.sin(t)]);
+      }
+    }
+    return pts;
+  }
+
+  /* ---------------------------------------------------------- Буферы и грани */
+  function newBuf() { return { pos: [], nor: [], uv: [], idx: [] }; }
+
+  // Добавляет треугольник, ориентируя его по нормалям вершин (наружу)
+  function addTri(b, i, j, k) {
+    const p = b.pos, n = b.nor;
+    const ax = p[i * 3], ay = p[i * 3 + 1], az = p[i * 3 + 2];
+    const ux = p[j * 3] - ax, uy = p[j * 3 + 1] - ay, uz = p[j * 3 + 2] - az;
+    const vx = p[k * 3] - ax, vy = p[k * 3 + 1] - ay, vz = p[k * 3 + 2] - az;
+    const gx = uy * vz - uz * vy, gy = uz * vx - ux * vz, gz = ux * vy - uy * vx;
+    if (gx * gx + gy * gy + gz * gz < 1e-14) return;
+    const sx = n[i * 3] + n[j * 3] + n[k * 3];
+    const sy = n[i * 3 + 1] + n[j * 3 + 1] + n[k * 3 + 1];
+    const sz = n[i * 3 + 2] + n[j * 3 + 2] + n[k * 3 + 2];
+    if (gx * sx + gy * sy + gz * sz >= 0) b.idx.push(i, j, k); else b.idx.push(i, k, j);
+  }
+  function addVert(b, x, y, z, nx, ny, nz, u, v) {
+    const l = Math.hypot(nx, ny, nz) || 1;
+    b.pos.push(x, y, z); b.nor.push(nx / l, ny / l, nz / l); b.uv.push(u || 0, v || 0);
+    return b.pos.length / 3 - 1;
+  }
+  function finish(b) {
+    return { positions: new Float32Array(b.pos), normals: new Float32Array(b.nor), uvs: new Float32Array(b.uv), indices: new Uint32Array(b.idx) };
+  }
+
+  /* ----------------------------------------------------- Профиль скруглений */
+  // Строки профиля от тыльной плоскости (zb) к фронтальной (zf). d: отступ внутрь, nq/nz: нормаль в плоскости (наружу, Z)
+  function profile(zb, zf, Rb, Rf, steps) {
+    steps = steps || 6;
+    const rows = [];
+    if (Rb > 0) {
+      for (let i = 0; i <= steps; i++) {
+        const f = (i / steps) * Math.PI / 2;
+        rows.push({ d: Rb * (1 - Math.sin(f)), z: zb + Rb * (1 - Math.cos(f)), nq: Math.sin(f), nz: -Math.cos(f) });
+      }
+    } else {
+      rows.push({ d: 0, z: zb, nq: 0, nz: -1 }, { d: 0, z: zb, nq: 1, nz: 0 });
+    }
+    const wallEnd = zf - Rf;
+    if (wallEnd > rows[rows.length - 1].z + 1e-9) rows.push({ d: 0, z: wallEnd, nq: 1, nz: 0 });
+    if (Rf > 0) {
+      for (let i = 0; i <= steps; i++) {
+        const f = (i / steps) * Math.PI / 2;
+        rows.push({ d: Rf * (1 - Math.cos(f)), z: zf - Rf + Rf * Math.sin(f), nq: Math.cos(f), nz: Math.sin(f) });
+      }
+    } else {
+      rows.push({ d: 0, z: zf, nq: 1, nz: 0 }, { d: 0, z: zf, nq: 0, nz: 1 });
+    }
+    return rows;
+  }
+
+  /* ----------------------------------------------------------------- Sweep */
+  // Выдавливает контур outlineAt(d) вдоль Z по строкам профиля. Нормали считаются аналитически.
+  function sweep(outlineAt, rows, opt) {
+    opt = opt || {};
+    const loops = rows.map(function (r) { return outlineAt(r.d); });
+    const N = loops[0].length, R = rows.length;
+    const b = newBuf();
+    // Рамка UV по самому большому контуру
+    let mnx = Infinity, mxx = -Infinity, mny = Infinity, mxy = -Infinity;
+    for (const p of loops[0]) { mnx = Math.min(mnx, p[0]); mxx = Math.max(mxx, p[0]); mny = Math.min(mny, p[1]); mxy = Math.max(mxy, p[1]); }
+    const cx = opt.cx != null ? opt.cx : (mnx + mxx) / 2, cy = opt.cy != null ? opt.cy : (mny + mxy) / 2;
+    for (let k = 0; k < R; k++) {
+      const L = loops[k], row = rows[k];
+      for (let i = 0; i < N; i++) {
+        const p = L[i], a = L[(i - 1 + N) % N], c = L[(i + 1) % N];
+        let tx = c[0] - a[0], ty = c[1] - a[1];
+        const len = Math.hypot(tx, ty) || 1; tx /= len; ty /= len;
+        addVert(b, p[0], p[1], row.z, ty * row.nq, -tx * row.nq, row.nz, (p[0] - mnx) / (mxx - mnx), (p[1] - mny) / (mxy - mny));
+      }
+    }
+    for (let k = 0; k < R - 1; k++) {
+      const same = Math.abs(rows[k].d - rows[k + 1].d) < 1e-9 && Math.abs(rows[k].z - rows[k + 1].z) < 1e-9;
+      if (same) continue;
+      for (let i = 0; i < N; i++) {
+        const j = (i + 1) % N;
+        const a0 = k * N + i, a1 = k * N + j, b0 = (k + 1) * N + i, b1 = (k + 1) * N + j;
+        addTri(b, a0, a1, b1); addTri(b, a0, b1, b0);
+      }
+    }
+    // Крышки веером от центра
+    function cap(k, nz) {
+      const c = addVert(b, cx, cy, rows[k].z, 0, 0, nz, (cx - mnx) / (mxx - mnx), (cy - mny) / (mxy - mny));
+      for (let i = 0; i < N; i++) addTri(b, c, k * N + i, k * N + (i + 1) % N);
+    }
+    if (Math.abs(rows[0].nq) < 1e-9 && rows[0].nz < 0) cap(0, -1);
+    if (Math.abs(rows[R - 1].nq) < 1e-9 && rows[R - 1].nz > 0) cap(R - 1, 1);
+    return finish(b);
+  }
+
+  /* --------------------------------------------------------------- Revolve */
+  // Тело вращения вокруг оси Z. profile: [[r,h],...]; h откладывается в сторону dir (+1 к +Z, -1 к -Z).
+  function revolve(profilePts, segs, cx, cy, z0, dir) {
+    segs = segs || 48;
+    const n = profilePts.length, b = newBuf();
+    let A = 0;
+    for (let i = 0; i < n; i++) { const p = profilePts[i], q = profilePts[(i + 1) % n]; A += p[0] * q[1] - q[0] * p[1]; }
+    const sgn = A >= 0 ? 1 : -1;
+    const segN = [], segOk = [];
+    for (let i = 0; i < n; i++) {
+      const p = profilePts[i], q = profilePts[(i + 1) % n];
+      let tx = q[0] - p[0], ty = q[1] - p[1]; const l = Math.hypot(tx, ty) || 1; tx /= l; ty /= l;
+      segN.push([sgn * ty, -sgn * tx]);
+      segOk.push(!(Math.abs(p[0]) < 1e-9 && Math.abs(q[0]) < 1e-9));
+    }
+    function nrm(i, side) {
+      const s = segN[i], o = segN[side === 0 ? (i - 1 + n) % n : (i + 1) % n];
+      const dot = s[0] * o[0] + s[1] * o[1];
+      if (dot > 0.766) { const x = s[0] + o[0], y = s[1] + o[1], l = Math.hypot(x, y) || 1; return [x / l, y / l]; }
+      return s;
+    }
+    for (let i = 0; i < n; i++) {
+      if (!segOk[i]) continue;
+      const p = profilePts[i], q = profilePts[(i + 1) % n];
+      const n0 = nrm(i, 0), n1 = nrm(i, 1);
+      const base = b.pos.length / 3;
+      for (let k = 0; k <= segs; k++) {
+        const th = (k / segs) * Math.PI * 2, c = Math.cos(th), s = Math.sin(th);
+        addVert(b, cx + p[0] * c, cy + p[0] * s, z0 + dir * p[1], n0[0] * c, n0[0] * s, dir * n0[1]);
+        addVert(b, cx + q[0] * c, cy + q[0] * s, z0 + dir * q[1], n1[0] * c, n1[0] * s, dir * n1[1]);
+      }
+      for (let k = 0; k < segs; k++) {
+        const A0 = base + k * 2, C0 = A0 + 1, B0 = base + (k + 1) * 2, D0 = B0 + 1;
+        addTri(b, A0, B0, D0); addTri(b, A0, D0, C0);
+      }
+    }
+    return finish(b);
+  }
+
+  /* ----------------------------------------------------- Плоский веер (decal) */
+  // pts3: выпуклый многоугольник в 3D, нормаль задана явно. uvFn(x,y,z) -> [u,v] (необязательно)
+  function polyFan(pts3, normal, uvFn) {
+    const b = newBuf();
+    let cx = 0, cy = 0, cz = 0;
+    for (const p of pts3) { cx += p[0]; cy += p[1]; cz += p[2]; }
+    cx /= pts3.length; cy /= pts3.length; cz /= pts3.length;
+    const uvc = uvFn ? uvFn(cx, cy, cz) : [0, 0];
+    const c = addVert(b, cx, cy, cz, normal[0], normal[1], normal[2], uvc[0], uvc[1]);
+    for (const p of pts3) { const uv = uvFn ? uvFn(p[0], p[1], p[2]) : [0, 0]; addVert(b, p[0], p[1], p[2], normal[0], normal[1], normal[2], uv[0], uv[1]); }
+    for (let i = 0; i < pts3.length; i++) addTri(b, c, 1 + i, 1 + (i + 1) % pts3.length);
+    return finish(b);
+  }
+
+  function transform(geo, m, t) {
+    // m: 3x3 строками (только повороты), t: перенос
+    const p = geo.positions, n = geo.normals, P = new Float32Array(p.length), Nn = new Float32Array(n.length);
+    for (let i = 0; i < p.length; i += 3) {
+      const x = p[i], y = p[i + 1], z = p[i + 2];
+      P[i] = m[0][0] * x + m[0][1] * y + m[0][2] * z + t[0];
+      P[i + 1] = m[1][0] * x + m[1][1] * y + m[1][2] * z + t[1];
+      P[i + 2] = m[2][0] * x + m[2][1] * y + m[2][2] * z + t[2];
+      const nx = n[i], ny = n[i + 1], nz = n[i + 2];
+      Nn[i] = m[0][0] * nx + m[0][1] * ny + m[0][2] * nz;
+      Nn[i + 1] = m[1][0] * nx + m[1][1] * ny + m[1][2] * nz;
+      Nn[i + 2] = m[2][0] * nx + m[2][1] * ny + m[2][2] * nz;
+    }
+    return { positions: P, normals: Nn, uvs: geo.uvs, indices: geo.indices };
+  }
+
+  function merge(list) {
+    let pc = 0, ic = 0;
+    for (const g of list) { pc += g.positions.length; ic += g.indices.length; }
+    const out = { positions: new Float32Array(pc), normals: new Float32Array(pc), uvs: new Float32Array(pc / 3 * 2), indices: new Uint32Array(ic) };
+    let po = 0, io = 0, vo = 0;
+    for (const g of list) {
+      out.positions.set(g.positions, po); out.normals.set(g.normals, po); out.uvs.set(g.uvs, vo * 2);
+      for (let i = 0; i < g.indices.length; i++) out.indices[io + i] = g.indices[i] + vo;
+      po += g.positions.length; io += g.indices.length; vo += g.positions.length / 3;
+    }
+    return out;
+  }
+
+  function bounds(geo) {
+    const p = geo.positions, mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
+    for (let i = 0; i < p.length; i += 3) for (let a = 0; a < 3; a++) { mn[a] = Math.min(mn[a], p[i + a]); mx[a] = Math.max(mx[a], p[i + a]); }
+    return { min: mn, max: mx };
+  }
+
+  /* -------------------------------------------------------------- Сборка частей */
+  // Каждая часть: { name, parent, mat, solid, geo }. Материал задаётся именем, сцена сопоставляет его с PBR.
+  function buildParts(opts) {
+    opts = opts || {};
+    const S = opts.lowPoly ? 12 : 24;
+    const B = BP, parts = [];
+    const add = function (name, parent, mat, solid, geo) { parts.push({ name: name, parent: parent, mat: mat, solid: solid, geo: geo }); };
+
+    // Рамка
+    const fr = B.frame;
+    add('frame', null, 'frame', true, sweep(function (d) { return roundedRect(B.body.w - 2 * d, B.body.h - 2 * d, B.body.r - d, S); },
+      profile(fr.zBack, fr.zFront, fr.backRound, fr.frontRound, 8)));
+
+    // Задняя панель
+    const bg = B.backGlass;
+    add('backGlass', 'frame', 'backGlass', true, sweep(function (d) {
+      return roundedRect(B.body.w - 2 * (bg.inset + d), B.body.h - 2 * (bg.inset + d), B.body.r - bg.inset - d, S);
+    }, profile(bg.zBack, bg.zFront, bg.round, 0, 3)));
+
+    // Фронтальное стекло
+    const fg = B.frontGlass;
+    add('frontGlass', 'frame', 'frontGlass', true, sweep(function (d) {
+      return roundedRect(B.body.w - 2 * (fg.inset + d), B.body.h - 2 * (fg.inset + d), B.body.r - fg.inset - d, S);
+    }, profile(fg.zBack, fg.zFront, 0, fg.round, 3)));
+
+    // Экран, блик, вырез камеры. UV экрана покрывают всю прямоугольную область дисплея.
+    const dp = B.display;
+    const dispOutline = roundedRect(dp.w, dp.h, dp.r, S);
+    const uvDisp = function (x, y) { return [x / dp.w + 0.5, y / dp.h + 0.5]; };
+    add('screen', 'frontGlass', 'screen', false, polyFan(dispOutline.map(function (p) { return [p[0], p[1], dp.zScreen]; }), [0, 0, 1], uvDisp));
+    add('glare', 'frontGlass', 'glare', false, polyFan(dispOutline.map(function (p) { return [p[0], p[1], dp.zGlare]; }), [0, 0, 1], uvDisp));
+    // центр выреза: от верхнего края экрана вниз на fromTop
+    const punchY = dp.h / 2 - B.punch.fromTop;
+    add('frontCamera', 'frontGlass', 'punch', false, polyFan(roundedRect(B.punch.d, B.punch.d, B.punch.d / 2, 20, 0, punchY).map(function (p) { return [p[0], p[1], dp.zPunch]; }), [0, 0, 1]));
+
+    // Модуль камеры
+    const md = B.module, mzBack = bg.zBack - md.height;
+    add('cameraModule', 'backGlass', 'moduleRim', true, sweep(function (d) {
+      return roundedRect(md.w - 2 * d, md.h - 2 * d, md.r - d, S, md.cx, md.cy);
+    }, profile(mzBack, md.baseZ, md.round, 0, 5), { cx: md.cx, cy: md.cy }));
+    const plateBack = mzBack - md.plateZ;
+    add('modulePlate', 'cameraModule', 'plate', true, sweep(function (d) {
+      return roundedRect(md.w - 2 * md.plateInset - 2 * d, md.h - 2 * md.plateInset - 2 * d, md.r - md.plateInset - d, S, md.cx, md.cy);
+    }, profile(plateBack, mzBack + 0.1, 0.12, 0, 3), { cx: md.cx, cy: md.cy }));
+
+    // Объективы, вспышка, датчик (оси вращения вдоль Z, h откладывается к -Z от плиты)
+    const R = B.lensR, plateZ = plateBack;
+    const ringProf = [[R - 1.6, -0.3], [R, -0.3], [R, 0.35], [R - 0.25, 0.58], [R - 1.35, 0.58], [R - 1.6, 0.35]];
+    const glassProf = [[0, 0.22], [2, 0.21], [4, 0.17], [5.8, 0.10], [6.6, 0.02], [6.6, -0.3], [0, -0.3]];
+    const barrelProf = [[3.9, 0.1], [4.7, 0.1], [4.7, 0.3], [4.55, 0.38], [4.05, 0.38], [3.9, 0.3]];
+    const coatProf = [[0, 0.34], [1.2, 0.33], [2.4, 0.30], [3.7, 0.22], [3.7, 0.1], [0, 0.1]];
+    B.lens.forEach(function (l, i) {
+      add('lensRing' + i, 'modulePlate', 'lensRing', true, revolve(ringProf, 64, l.x, l.y, plateZ, -1));
+      add('lensGlass' + i, 'modulePlate', 'lensGlass', true, revolve(glassProf, 64, l.x, l.y, plateZ, -1));
+      add('lensBarrel' + i, 'lensGlass' + i, 'lensRing', true, revolve(barrelProf, 48, l.x, l.y, plateZ, -1));
+      add('lensCoat' + i, 'lensGlass' + i, 'lensCoat', true, revolve(coatProf, 48, l.x, l.y, plateZ, -1));
+    });
+    const f = B.flash;
+    add('flashRing', 'modulePlate', 'lensRing', true, revolve([[f.r - 0.7, -0.3], [f.r, -0.3], [f.r, 0.28], [f.r - 0.2, 0.34], [f.r - 0.45, 0.34], [f.r - 0.7, 0.28]], 40, f.x, f.y, plateZ, -1));
+    add('flashDiffuser', 'flashRing', 'flash', true, revolve([[0, 0.12], [f.r - 0.6, 0.12], [f.r - 0.6, -0.3], [0, -0.3]], 40, f.x, f.y, plateZ, -1));
+    add('sensorDot', 'modulePlate', 'lensGlass', true, revolve([[0, 0.06], [B.dot.r, 0.06], [B.dot.r, -0.3], [0, -0.3]], 28, B.dot.x, B.dot.y, plateZ, -1));
+
+    // Боковые кнопки (правая грань, +X). Локальная ось Z сборки → мировой +X, ширина → мировая -Z.
+    const rotY = [[0, 0, 1], [0, 1, 0], [-1, 0, 0]];
+    ['volume', 'power'].forEach(function (key) {
+      const bt = B.buttons[key];
+      const g = sweep(function (d) { return roundedRect(bt.w - 2 * d, bt.len - 2 * d, (bt.w - 2 * d) / 2, 16); },
+        profile(0, bt.base + bt.out, 0, 0.25, 3));
+      add('btn_' + key, 'frame', 'frame', true, transform(g, rotY, [B.body.w / 2 - bt.base, bt.y, 0]));
+    });
+
+    // Нижняя грань (нормаль -Y). Плоские детали на 0.012 мм от стенки; узор роспись «x,z».
+    const yB = -B.body.h / 2 - 0.012, yT = B.body.h / 2 + 0.012;
+    const pt = B.bottom.port;
+    add('portRim', 'frame', 'portRim', false, polyFan(roundedRect(pt.w + 0.9, pt.h + 0.9, (pt.h + 0.9) / 2, 20, pt.x, 0).map(function (p) { return [p[0], yB + 0.004, p[1]]; }), [0, -1, 0]));
+    add('port', 'frame', 'decal', false, polyFan(roundedRect(pt.w, pt.h, pt.h / 2, 20, pt.x, 0).map(function (p) { return [p[0], yB, p[1]]; }), [0, -1, 0]));
+    const gr = B.bottom.grille, holes = [];
+    for (let i = 0; i < gr.count; i++) {
+      const hx = gr.x0 + i * gr.step;
+      holes.push(polyFan(roundedRect(gr.r * 2, gr.r * 2, gr.r, 12, hx, 0).map(function (p) { return [p[0], yB, p[1]]; }), [0, -1, 0]));
+    }
+    add('speakerGrille', 'frame', 'decal', false, merge(holes));
+    const mb = B.bottom.mic;
+    add('micBottom', 'frame', 'decal', false, polyFan(roundedRect(mb.r * 2, mb.r * 2, mb.r, 12, mb.x, 0).map(function (p) { return [p[0], yB, p[1]]; }), [0, -1, 0]));
+    const mt = B.top.mic;
+    add('micTop', 'frame', 'decal', false, polyFan(roundedRect(mt.r * 2, mt.r * 2, mt.r, 12, mt.x, 0).map(function (p) { return [p[0], yT, p[1]]; }), [0, 1, 0]));
+    return parts;
+  }
+
+  return { BP: BP, roundedRect: roundedRect, profile: profile, sweep: sweep, revolve: revolve, polyFan: polyFan, transform: transform, merge: merge, bounds: bounds, buildParts: buildParts };
+});
+
+</script>
+<script>
+/* Минимальный ZIP-писатель без сжатия (PNG уже сжаты). Файлы: [{name, blob, crc, size}] */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.ZipUtil = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+  var crcTable = (function () {
+    var t = new Uint32Array(256);
+    for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+    return t;
+  })();
+  function crc32(buf) {
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < buf.length; i++) c = crcTable[(c ^ buf[i]) & 255] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function makeZip(files) {
+    var enc = new TextEncoder(), parts = [], central = [], offset = 0;
+    var now = new Date();
+    var dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+    var dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+    files.forEach(function (f) {
+      var name = enc.encode(f.name), h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+      h.setUint16(10, dosTime, true); h.setUint16(12, dosDate, true);
+      h.setUint32(14, f.crc, true); h.setUint32(18, f.size, true); h.setUint32(22, f.size, true);
+      h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+      parts.push(h.buffer, name, f.blob);
+      var c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
+      c.setUint16(12, dosTime, true); c.setUint16(14, dosDate, true);
+      c.setUint32(16, f.crc, true); c.setUint32(20, f.size, true); c.setUint32(24, f.size, true);
+      c.setUint16(28, name.length, true); c.setUint16(30, 0, true); c.setUint16(32, 0, true); c.setUint16(34, 0, true); c.setUint16(36, 0, true);
+      c.setUint32(38, 0, true); c.setUint32(42, offset, true);
+      central.push(c.buffer, name);
+      offset += 30 + name.length + f.size;
+    });
+    var cdSize = 0; central.forEach(function (p) { cdSize += p.byteLength; });
+    var end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+    end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+    return new Blob(parts.concat(central, [end.buffer]), { type: 'application/zip' });
+  }
+  return { crc32: crc32, makeZip: makeZip };
+});
+
+</script>
+<script>
+/* Библиотека анимаций телефона. Поза: смещение x,y,z (мм), повороты rx,ry,rz (градусы), масштаб s.
+ * pose(t, off, side): off — расстояние (мм), на которое надо сместить телефон, чтобы он целиком ушёл за край кадра по вертикали;
+ * side — свободное место по горизонтали (мм) с каждой стороны от телефона (в узких кадрах движения вбок уменьшаются).
+ * Значения 'B' и 'A' в ключах означают «за нижней» и «за верхней» границей кадра.
+ * Вращение применяется в порядке XYZ: наклон снаружи, поворот вокруг собственной вертикальной оси внутри. */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.PhoneAnims = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+  var FIELDS = ['x', 'y', 'z', 'rx', 'ry', 'rz', 's'];
+  var REST = { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 1 };
+  var PI2 = Math.PI * 2;
+
+  var EASE = {
+    linear: function (x) { return x; },
+    inOut: function (x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; },
+    out: function (x) { return 1 - Math.pow(1 - x, 3); },
+    in: function (x) { return x * x * x; },
+    back: function (x) { var c = 1.5; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); },
+    spring: function (x) { var r1 = 1 - Math.exp(-5.5) * Math.cos(9); return 1 - Math.exp(-5.5 * x) * Math.cos(9 * x) + (1 - r1) * x * x * x; }
+  };
+
+  function num(v, off) { return v === 'B' ? -off : v === 'A' ? off : v; }
+
+  function normalize(frames) {
+    var arr = [], prev = REST;
+    frames.forEach(function (k) {
+      var o = {};
+      FIELDS.forEach(function (f) { o[f] = k[f] !== undefined ? k[f] : prev[f]; });
+      o.t = k.t; o.ease = k.ease || 'inOut';
+      arr.push(o); prev = o;
+    });
+    return arr;
+  }
+  function resolve(o, off) { var p = {}; FIELDS.forEach(function (f) { p[f] = num(o[f], off); }); return p; }
+  function evalKF(arr, t, off) {
+    if (t <= arr[0].t) return resolve(arr[0], off);
+    for (var i = 0; i < arr.length - 1; i++) {
+      var a = arr[i], b = arr[i + 1];
+      if (t <= b.t) {
+        var u = (t - a.t) / ((b.t - a.t) || 1), e = EASE[b.ease](u), p = {};
+        FIELDS.forEach(function (f) { var av = num(a[f], off), bv = num(b[f], off); p[f] = av + (bv - av) * e; });
+        return p;
+      }
+    }
+    return resolve(arr[arr.length - 1], off);
+  }
+
+  var list = [];
+  // kind: 'in' (появление), 'loop' (цикл), 'seq' (последовательность ракурсов); endsRest: заканчивается в исходной позе
+  function kf(id, name, group, kind, dur, endsRest, frames) {
+    var arr = normalize(frames);
+    list.push({ id: id, name: name, group: group, kind: kind, dur: dur, endsRest: endsRest, pose: function (t, off) { return evalKF(arr, t, off); } });
+  }
+  function proc(id, name, group, dur, fn) {
+    var a = {
+      id: id, name: name, group: group, kind: 'loop', dur: dur, endsRest: false,
+      pose: function (t, off, side) {
+        var u = (((t % dur) + dur) % dur) / dur, p = fn(u, off, side === undefined ? 1e9 : side), o = {};
+        FIELDS.forEach(function (f) { o[f] = p[f] !== undefined ? p[f] : REST[f]; });
+        return o;
+      }
+    };
+    var p0 = a.pose(0, 0, 1e9), d = 0;
+    FIELDS.forEach(function (f) { d = Math.max(d, Math.abs(((p0[f] - REST[f]) + (f[0] === 'r' ? 540 : 0)) % 360 - (f[0] === 'r' ? 180 : 0))); });
+    a.endsRest = d < 1e-6;
+    list.push(a);
+  }
+  var G1 = 'Появление', G2 = 'Движение в кадре', G3 = 'Ракурсы и повороты', G4 = 'Сценарии';
+
+  /* Появление */
+  kf('rise', 'Выезд снизу', G1, 'in', 2.4, true, [{ t: 0, y: 'B', rx: 8 }, { t: 1.7, y: 0, rx: 0, ease: 'back' }, { t: 2.4 }]);
+  kf('riseSpin', 'Выезд с оборотом', G1, 'in', 3.0, true, [{ t: 0, y: 'B', ry: -200, rx: 10 }, { t: 2.4, y: 0, ry: 0, rx: 0, ease: 'out' }, { t: 3.0 }]);
+  kf('riseTilt', 'Подъём из наклона', G1, 'in', 3.2, true, [{ t: 0, y: 'B', rx: -55, ry: 30 }, { t: 1.6, y: -8, rx: -14, ry: 24, ease: 'out' }, { t: 3.2, y: 0, rx: 0, ry: 0 }]);
+  kf('rise3q', 'Выезд в три четверти', G1, 'in', 2.8, false, [{ t: 0, y: 'B', ry: 55, rx: 6 }, { t: 2.0, y: 0, ry: 28, rx: -3, ease: 'out' }, { t: 2.8 }]);
+  kf('depth', 'Вылет из глубины', G1, 'in', 2.4, true, [{ t: 0, z: -900, ry: 70, rx: 10 }, { t: 2.0, z: 0, ry: 0, rx: 0, ease: 'out' }, { t: 2.4 }]);
+  kf('drop', 'Падение сверху', G1, 'in', 2.6, true, [{ t: 0, y: 'A', rx: -18 }, { t: 0.9, y: 0, rx: 0, ease: 'in' }, { t: 1.25, y: 20, ease: 'out' }, { t: 1.6, y: 0, ease: 'in' }, { t: 1.85, y: 6, ease: 'out' }, { t: 2.1, y: 0, ease: 'in' }, { t: 2.6 }]);
+  kf('pop', 'Всплытие', G1, 'in', 1.8, true, [{ t: 0, s: 0.15, ry: 90 }, { t: 1.4, s: 1, ry: 0, ease: 'back' }, { t: 1.8 }]);
+
+  /* Движение в кадре */
+  proc('float', 'Парение', G2, 6, function (u) { return { y: 5 * Math.sin(PI2 * u), ry: 8 * Math.sin(PI2 * u + 1), rx: 3 * Math.sin(PI2 * u * 2), rz: 1.5 * Math.sin(PI2 * u + 2) }; });
+  proc('spin', 'Оборот 360°', G2, 8, function (u) { return { ry: 360 * u }; });
+  proc('spinTilt', 'Оборот с наклоном', G2, 14, function (u) { return { ry: 360 * u, rx: -10 + 3 * Math.sin(PI2 * u * 2) }; });
+  proc('sway', 'Покачивание', G2, 5, function (u) { return { ry: 24 * Math.sin(PI2 * u), rz: 3 * Math.sin(PI2 * u * 2) }; });
+  proc('nod', 'Наклоны вперёд и назад', G2, 5, function (u) { return { rx: 14 * Math.sin(PI2 * u), ry: 12 * Math.sin(PI2 * u + Math.PI / 2) }; });
+  proc('drift', 'Дрейф по кадру', G2, 9, function (u, off, side) { return { x: Math.min(30, side) * Math.sin(PI2 * u), y: 16 * Math.sin(PI2 * u * 2), ry: 22 * Math.sin(PI2 * u + Math.PI / 2), rz: 4 * Math.sin(PI2 * u) }; });
+  proc('pendulum', 'Маятник', G2, 4, function (u, off, side) { var th = 0.26 * Math.min(1, side / 34) * Math.sin(PI2 * u); return { x: 80 * Math.sin(th), y: 80 * (1 - Math.cos(th)), rz: th * 180 / Math.PI }; });
+  proc('orbit', 'Лёгкая орбита', G2, 10, function (u) { return { ry: 40 * Math.sin(PI2 * u), rx: -10 + 10 * Math.sin(PI2 * u * 2) }; });
+
+  /* Ракурсы и повороты */
+  kf('flip', 'Разворот на 180°', G3, 'seq', 3.6, false, [{ t: 0 }, { t: 0.6 }, { t: 2.4, ry: 180 }, { t: 3.6 }]);
+  kf('back3q', 'Тыл в три четверти', G3, 'seq', 4.2, false, [{ t: 0 }, { t: 0.6 }, { t: 2.6, ry: 152, rx: -8 }, { t: 4.2 }]);
+  kf('tour', 'Обзор со всех сторон', G3, 'seq', 12, true, [{ t: 0 }, { t: 1 }, { t: 3, ry: 90 }, { t: 3.8 }, { t: 5.8, ry: 180 }, { t: 6.6 }, { t: 8.6, ry: 270 }, { t: 9.4 }, { t: 11.4, ry: 360 }, { t: 12 }]);
+  kf('hero', 'Героический наклон', G3, 'seq', 6, false, [{ t: 0, ry: -32, rx: 6, y: -4 }, { t: 3.6, ry: 24, rx: -7, y: 4 }, { t: 6, ry: 18, rx: -5, y: 3, ease: 'out' }]);
+  kf('push', 'Плавный наезд', G3, 'seq', 5, false, [{ t: 0, z: -60, ry: 14 }, { t: 4.2, z: 110, ry: 0 }, { t: 5 }]);
+  kf('lean', 'Наклон на камеру', G3, 'seq', 4.5, false, [{ t: 0 }, { t: 0.5 }, { t: 2.4, rx: 38, ry: 20 }, { t: 4.5 }]);
+
+  /* Сценарии */
+  kf('intro', 'Презентация целиком', G4, 'seq', 12.5, false, [
+    { t: 0, y: 'B', ry: -110, rx: 10 }, { t: 2.0, y: 0, ry: 0, rx: 0, ease: 'out' }, { t: 3.2 },
+    { t: 5.4, ry: 152, rx: -8 }, { t: 6.8 }, { t: 8.8, ry: 90, rx: 0 }, { t: 9.4 },
+    { t: 11.2, ry: 20, rx: -3, z: 50 }, { t: 12.5 }
+  ]);
+
+  var byId = {}, groups = [];
+  list.forEach(function (a) { byId[a.id] = a; if (groups.indexOf(a.group) < 0) groups.push(a.group); });
+  return { list: list, byId: byId, groups: groups, REST: REST, FIELDS: FIELDS };
+});
+
+</script>
+<script>
+(function () {
+  'use strict';
+  var G = window.PhoneGeo;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var stage = $('#stage'), canvas = $('#gl'), statusEl = $('#status'), hint = $('#hint'), failEl = $('#fail');
+  function setStatus(t, kind) { statusEl.textContent = t; statusEl.dataset.kind = kind || ''; }
+  function fail(msg) { failEl.textContent = msg; failEl.hidden = false; hint.hidden = true; }
+  if (typeof THREE === 'undefined' || !THREE.OrbitControls) { fail('Не удалось загрузить 3D-библиотеку. Проверьте соединение и обновите страницу.'); return; }
+  if (THREE.ColorManagement) THREE.ColorManagement.legacyMode = false;
+
+  var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, preserveDrawingBuffer: true, premultipliedAlpha: true, powerPreference: 'high-performance' });
+  } catch (e) { fail('Браузер не смог запустить WebGL. Включите аппаратное ускорение или откройте страницу в другом браузере.'); return; }
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.setClearColor(0x000000, 0);
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(22, 1, 20, 4000);
+
+  /* ---------------------------------------------------- Студийное окружение */
+  function buildEnvScene() {
+    var s = new THREE.Scene();
+    s.add(new THREE.Mesh(new THREE.BoxGeometry(80, 60, 80), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x14171c), side: THREE.BackSide })));
+    function panel(w, h, pos, tint, k) {
+      var m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(tint).multiplyScalar(k), side: THREE.DoubleSide }));
+      m.position.set(pos[0], pos[1], pos[2]); m.lookAt(0, 0, 0); s.add(m);
+    }
+    panel(36, 22, [0, 28, 6], 0xffffff, 9);      // верхний софтбокс
+    panel(8, 44, [-26, 2, 10], 0xfff3e6, 6);     // левая полоса, тёплая
+    panel(8, 44, [26, 2, 10], 0xe6f0ff, 6);      // правая полоса, холодная
+    panel(40, 10, [0, -22, 10], 0xffffff, 1.6);  // отражение от пола
+    panel(30, 16, [0, 4, -30], 0xffffff, 3);     // контровой свет сзади
+    return s;
+  }
+  var pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(buildEnvScene(), 0.02).texture;
+  pmrem.dispose();
+
+  /* ------------------------------------------------------------- Материалы */
+  function makeNoise() {
+    var c = document.createElement('canvas'); c.width = c.height = 256;
+    var x = c.getContext('2d'), img = x.createImageData(256, 256);
+    for (var i = 0; i < 256 * 256; i++) { var v = 200 + Math.random() * 55 | 0; img.data[i * 4] = v; img.data[i * 4 + 1] = v; img.data[i * 4 + 2] = v; img.data[i * 4 + 3] = 255; }
+    x.putImageData(img, 0, 0);
+    var t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(30, 60); t.anisotropy = 4; return t;
+  }
+  var noise = makeNoise();
+  function off(m, f) { m.polygonOffset = true; m.polygonOffsetFactor = f; m.polygonOffsetUnits = f; return m; }
+  var M = {
+    frame: new THREE.MeshPhysicalMaterial({ color: 0x4d5158, metalness: 1, roughness: 0.55, roughnessMap: noise, envMapIntensity: 1.0 }),
+    backGlass: new THREE.MeshPhysicalMaterial({ color: 0x2c2f35, metalness: 0, roughness: 0.55, roughnessMap: noise, clearcoat: 0.25, clearcoatRoughness: 0.35, envMapIntensity: 0.9 }),
+    frontGlass: new THREE.MeshPhysicalMaterial({ color: 0x07090c, metalness: 0, roughness: 0.05, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.0 }),
+    screen: off(new THREE.MeshBasicMaterial({ color: 0x000000, toneMapped: false }), -1),
+    glare: off(new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.04, metalness: 0, envMapIntensity: 1.3, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }), -2),
+    punch: off(new THREE.MeshStandardMaterial({ color: 0x020203, roughness: 0.15, metalness: 0 }), -3),
+    plate: new THREE.MeshPhysicalMaterial({ color: 0x0a0c10, metalness: 0, roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.04 }),
+    lensRing: new THREE.MeshStandardMaterial({ color: 0x23262b, metalness: 1, roughness: 0.28 }),
+    lensGlass: new THREE.MeshPhysicalMaterial({ color: 0x040608, metalness: 0, roughness: 0.02, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 1.5 }),
+    lensCoat: new THREE.MeshPhysicalMaterial({ color: 0x0c1640, metalness: 0.6, roughness: 0.06, envMapIntensity: 1.6 }),
+    flash: new THREE.MeshStandardMaterial({ color: 0xefe6cf, metalness: 0, roughness: 0.6 }),
+    decal: off(new THREE.MeshStandardMaterial({ color: 0x050505, metalness: 0, roughness: 0.9 }), -2),
+    portRim: off(new THREE.MeshStandardMaterial({ color: 0x2d3036, metalness: 1, roughness: 0.4 }), -1)
+  };
+  M.moduleRim = M.frame;
+
+  var FINISHES = {
+    graphite: { frame: 0x4d5158, glass: 0x2c2f35 },
+    sand: { frame: 0xc7b594, glass: 0xddd1bb },
+    lagoon: { frame: 0x4f8091, glass: 0x7fb0c0 },
+    pearl: { frame: 0xd2d4d8, glass: 0xeeeff0 }
+  };
+  function setFinish(key) {
+    var f = FINISHES[key]; if (!f) return;
+    M.frame.color.setHex(f.frame); M.backGlass.color.setHex(f.glass); requestRender();
+  }
+
+  /* ------------------------------------------------------------ Сборка модели */
+  var parts = G.buildParts();
+  var phone = new THREE.Group(), meshes = {};
+  parts.forEach(function (p) {
+    var g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(p.geo.positions, 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(p.geo.normals, 3));
+    g.setAttribute('uv', new THREE.BufferAttribute(p.geo.uvs, 2));
+    g.setIndex(new THREE.BufferAttribute(p.geo.indices, 1));
+    var mesh = new THREE.Mesh(g, M[p.mat]); mesh.name = p.name; phone.add(mesh); meshes[p.name] = mesh;
+  });
+  scene.add(phone);
+
+  /* ----------------------------------------------------------- Камера и вид */
+  var controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true; controls.dampingFactor = 0.09; controls.rotateSpeed = 0.8; controls.zoomSpeed = 0.8;
+  controls.minDistance = 220; controls.maxDistance = 1400; controls.screenSpacePanning = true;
+  var dirty = true;
+  function requestRender() { dirty = true; }
+  controls.addEventListener('change', requestRender);
+
+  var D2R = Math.PI / 180;
+  var VIEWS = {
+    front: { theta: 0, phi: 90 },
+    q3: { theta: 30, phi: 82 },
+    back: { theta: 180, phi: 90 },
+    q3back: { theta: 148, phi: 80 },
+    side: { theta: 90, phi: 90 }
+  };
+  function frameDistance() {
+    var t = Math.tan(camera.fov * D2R / 2);
+    var dH = (160 * 1.3 / 2) / t, dW = (88 * 1.3 / 2) / (t * camera.aspect);
+    return Math.max(dH, dW);
+  }
+  var tween = null;
+  function setCam(theta, phi, radius) {
+    var s = new THREE.Spherical(radius, phi, theta);
+    camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(s));
+    camera.lookAt(controls.target);
+  }
+  function goView(key, instant) {
+    var v = VIEWS[key]; if (!v) return;
+    controls.target.set(0, 0, 0);
+    var cur = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
+    var dth = v.theta * D2R - cur.theta; dth = Math.atan2(Math.sin(dth), Math.cos(dth));
+    tween = { t0: performance.now(), dur: (reduced || instant) ? 0 : 520, th: cur.theta, ph: cur.phi, r: cur.radius, dth: dth, dph: v.phi * D2R - cur.phi, dr: frameDistance() - cur.radius };
+    requestRender();
+  }
+  function stepTween(now) {
+    if (!tween) return;
+    var k = tween.dur === 0 ? 1 : Math.min(1, (now - tween.t0) / tween.dur);
+    var e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+    setCam(tween.th + tween.dth * e, tween.ph + tween.dph * e, tween.r + tween.dr * e);
+    if (k >= 1) tween = null;
+    requestRender();
+  }
+
+  /* ------------------------------------------------------------- Размер */
+  var frameAspect = 0;
+  function fitBox() {
+    var sw = stage.clientWidth, sh = stage.clientHeight;
+    if (!frameAspect || !sw || !sh) return { w: sw, h: sh };
+    var w = sw, h = Math.round(sw / frameAspect);
+    if (h > sh) { h = sh; w = Math.round(sh * frameAspect); }
+    return { w: w, h: h };
+  }
+  function curAspect() { var b = fitBox(); return b.w / b.h; }
+  function onResize() {
+    if (exporting) return;
+    var b = fitBox(), w = b.w, h = b.h; if (!w || !h) return;
+    canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+    canvas.classList.toggle('framed', !!frameAspect);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix(); requestRender();
+  }
+  if (window.ResizeObserver) new ResizeObserver(onResize).observe(stage); else window.addEventListener('resize', onResize);
+  onResize();
+  setCam(VIEWS.q3.theta * D2R, VIEWS.q3.phi * D2R, frameDistance());
+
+  var lastNow = 0;
+  function tick(now) {
+    requestAnimationFrame(tick);
+    if (exporting) return;
+    var dt = lastNow ? Math.min(0.1, (now - lastNow) / 1000) : 0; lastNow = now;
+    stepTween(now);
+    stepAnim(dt);
+    if (videoEl && !videoEl.paused && videoEl.currentTime !== lastVT) drawVideo();
+    if (now - uiT > 150) { uiT = now; if (videoEl) updateVideoUI(); updateAnimUI(); }
+    if (controls.update()) dirty = true;
+    if (dirty && !document.hidden) { dirty = false; renderer.render(scene, camera); }
+  }
+  requestAnimationFrame(tick);
+
+  /* ------------------------------------------------------------------ Экран */
+  var srcImg = null, fit = 'cover', screenTex = null;
+  var screenCanvas = document.createElement('canvas'), sctx = screenCanvas.getContext('2d');
+  var maxTex = renderer.capabilities.maxTextureSize || 4096;
+  var texScale = Math.min(1, maxTex / 3510);
+  screenCanvas.width = Math.round(1620 * texScale); screenCanvas.height = Math.round(3510 * texScale);
+
+  /* ------------------------------------------------------------------ Видео */
+  var Z = window.ZipUtil;
+  var videoEl = null, videoUrl = null, videoTex = null, lastVT = -1, exporting = false, abortFlag = false, uiT = 0, vTok = 0;
+  var videoCanvas = document.createElement('canvas'), vctx = videoCanvas.getContext('2d');
+  var vScale = Math.min(1, maxTex / 2340);
+  videoCanvas.width = Math.round(1080 * vScale); videoCanvas.height = Math.round(2340 * vScale);
+  var vctl = $('#vctl'), btnPlay = $('#btn-play'), vseek = $('#vseek'), vtime = $('#vtime');
+  var selVFmt = $('#sel-vfmt'), selVSize = $('#sel-vsize'), selFps = $('#sel-fps'), btnVideo = $('#btn-video'), vinfo = $('#vinfo');
+  var busy = $('#busy'), busyText = $('#busy-text'), busyBar = $('#busy-bar'), btnCancel = $('#btn-cancel');
+  var selVLen = $('#sel-vlen'), vlenRow = $('#vlen-row');
+  function fmtTime(t) { t = Math.max(0, t || 0); var m = Math.floor(t / 60), r = Math.floor(t % 60); return m + ':' + (r < 10 ? '0' : '') + r; }
+
+  /* ---------------------------------------------------------------- Анимации */
+  var PA = window.PhoneAnims, HOLD = 0.8;
+  var anim = { def: null, t: 0, playing: false, loop: false, speed: 1 };
+  var alib = $('#alib'), actl = $('#actl'), btnAPlay = $('#btn-aplay'), aseek = $('#aseek'), atime = $('#atime');
+  var chkLoop = $('#chk-aloop'), selSpeed = $('#sel-aspeed'), selFrame = $('#sel-frame'), btnAReset = $('#btn-areset'), aname = $('#aname');
+  function animCycle(a) { return a.kind === 'loop' ? a.dur : a.dur + HOLD; }
+  function animEnv() {
+    var dist = camera.position.distanceTo(controls.target), hh = dist * Math.tan(camera.fov * D2R / 2), hw = hh * camera.aspect;
+    return { off: hh * 1.06 + 95 + Math.abs(controls.target.y), side: Math.max(0, hw - 46 - Math.abs(controls.target.x)) };
+  }
+  function setPose(p) {
+    // смещения x (вправо), y (вверх), z (на камеру) заданы в системе координат камеры, поэтому «снизу кадра» и «вглубь» верны при любом ракурсе
+    camera.updateMatrixWorld(true);
+    var e = camera.matrixWorld.elements;
+    phone.position.set(e[0] * p.x + e[4] * p.y + e[8] * p.z, e[1] * p.x + e[5] * p.y + e[9] * p.z, e[2] * p.x + e[6] * p.y + e[10] * p.z);
+    phone.rotation.set(p.rx * D2R, p.ry * D2R, p.rz * D2R);
+    phone.scale.set(p.s, p.s, p.s);
+    phone.updateMatrixWorld(true);
+  }
+  function poseAtAnimTime(t, env) {
+    var a = anim.def; if (!a) return;
+    var tt = anim.loop ? t - Math.floor(t / animCycle(a)) * animCycle(a) : t;
+    setPose(a.pose(Math.max(0, Math.min(tt, a.dur)), env.off, env.side));
+  }
+  function applyAnim() { if (!anim.def) return; poseAtAnimTime(anim.t, animEnv()); requestRender(); }
+  function stepAnim(dt) {
+    var a = anim.def; if (!a || !anim.playing) return;
+    anim.t += dt * anim.speed;
+    if (anim.loop) { var c = animCycle(a); anim.t -= Math.floor(anim.t / c) * c; }
+    else if (anim.t >= a.dur) { anim.t = a.dur; anim.playing = false; updateAnimUI(); }
+    applyAnim();
+  }
+  function fmtT(t) { t = Math.max(0, t || 0); return t.toFixed(1).replace('.', ','); }
+  function updateAnimUI() {
+    var a = anim.def; actl.hidden = !a; btnAReset.hidden = !a;
+    if (!a) return;
+    btnAPlay.textContent = anim.playing ? 'Пауза' : 'Пуск';
+    if (document.activeElement !== aseek) aseek.value = Math.round(Math.min(1, anim.t / a.dur) * 1000);
+    atime.textContent = fmtT(Math.min(anim.t, a.dur) / anim.speed) + ' / ' + fmtT(a.dur / anim.speed) + ' с';
+    aname.textContent = a.name;
+  }
+  function selectAnim(id) {
+    var a = id ? PA.byId[id] : null;
+    anim.def = a; anim.t = 0;
+    if (!a) { anim.playing = false; setPose(PA.REST); }
+    else {
+      anim.loop = a.kind === 'loop'; chkLoop.checked = anim.loop;
+      if (reduced) { anim.t = a.dur; anim.playing = false; } else anim.playing = true;
+      applyAnim();
+    }
+    alib.querySelectorAll('.abtn').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.anim === id ? 'true' : 'false'); });
+    updateAnimUI(); updateExportInfo(); requestRender();
+  }
+  function toggleAnim() {
+    var a = anim.def; if (!a) return;
+    if (anim.playing) anim.playing = false;
+    else { if (!anim.loop && anim.t >= a.dur - 1e-6) anim.t = 0; anim.playing = true; }
+    updateAnimUI();
+  }
+  function buildLibrary() {
+    PA.groups.forEach(function (g) {
+      var h = document.createElement('h3'); h.className = 'grp'; h.textContent = g; alib.appendChild(h);
+      var box = document.createElement('div'); box.className = 'alist'; alib.appendChild(box);
+      PA.list.filter(function (a) { return a.group === g; }).forEach(function (a) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'abtn'; b.dataset.anim = a.id; b.setAttribute('aria-pressed', 'false');
+        var n = document.createElement('span'); n.textContent = a.name;
+        var d = document.createElement('i'); d.textContent = fmtT(a.dur) + ' с' + (a.kind === 'loop' ? ' · цикл' : '');
+        b.appendChild(n); b.appendChild(d);
+        b.addEventListener('click', function () { selectAnim(a.id); });
+        box.appendChild(b);
+      });
+    });
+  }
+  function drawFit(ctx, W, H, src, iw, ih) {
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+    var dw, dh, dx, dy;
+    if (fit === 'stretch') { dw = W; dh = H; dx = 0; dy = 0; }
+    else { var s = fit === 'cover' ? Math.max(W / iw, H / ih) : Math.min(W / iw, H / ih); dw = iw * s; dh = ih * s; dx = (W - dw) / 2; dy = (H - dh) / 2; }
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(src, dx, dy, dw, dh);
+  }
+  function drawVideo() {
+    if (!videoEl || videoEl.readyState < 2) return;
+    drawFit(vctx, videoCanvas.width, videoCanvas.height, videoEl, videoEl.videoWidth || 1080, videoEl.videoHeight || 2340);
+    if (!videoTex) {
+      videoTex = new THREE.CanvasTexture(videoCanvas);
+      videoTex.encoding = THREE.sRGBEncoding;
+      videoTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    }
+    videoTex.needsUpdate = true;
+    if (M.screen.map !== videoTex) { M.screen.map = videoTex; M.screen.color.setHex(0xffffff); M.screen.needsUpdate = true; }
+    hint.hidden = true; lastVT = videoEl.currentTime; requestRender();
+  }
+  function updateVideoUI() {
+    if (!videoEl) return;
+    btnPlay.textContent = videoEl.paused ? 'Пуск' : 'Пауза';
+    if (document.activeElement !== vseek && videoEl.duration) vseek.value = Math.round(videoEl.currentTime / videoEl.duration * 1000);
+    vtime.textContent = fmtTime(videoEl.currentTime) + ' / ' + fmtTime(videoEl.duration);
+  }
+  function updateExportInfo() {
+    var a = anim.def, haveV = !!videoEl;
+    vlenRow.hidden = !(a && haveV);
+    if (!a && !haveV) { vinfo.textContent = 'Выберите анимацию или загрузите видео на экран, чтобы записать ролик.'; btnVideo.disabled = true; return; }
+    var byVideo = haveV && (!a || selVLen.value === 'video'), dur = byVideo ? videoEl.duration : a.dur / anim.speed;
+    if (!isFinite(dur)) dur = 0;
+    var n = Math.ceil(dur * (+selFps.value)), sz = exportSize(+selVSize.value);
+    vinfo.textContent = 'Кадр ' + sz.W + '×' + sz.H + ' px, ' + fmtT(dur) + ' с, около ' + n + ' кадров' + (selVFmt.value === 'png' && n > 900 ? '. В последовательность попадут первые 900.' : '.') +
+      (a ? ' С анимацией кадр не обрезается по контуру: телефон движется внутри кадра.' : '');
+    btnVideo.disabled = false;
+  }
+  function clearVideo() {
+    vTok++;
+    if (videoEl) { try { videoEl.pause(); } catch (e) {} videoEl.removeAttribute('src'); try { videoEl.load(); } catch (e) {} }
+    videoEl = null;
+    if (videoUrl) { URL.revokeObjectURL(videoUrl); videoUrl = null; }
+    vctl.hidden = true; updateExportInfo();
+  }
+  function loadVideo(file) {
+    clearVideo(); srcImg = null;
+    var tok = vTok, v = document.createElement('video');
+    v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.setAttribute('playsinline', '');
+    videoUrl = URL.createObjectURL(file);
+    v.onloadeddata = function () {
+      if (tok !== vTok) return;
+      videoEl = v; drawVideo(); vctl.hidden = false; updateVideoUI(); updateExportInfo();
+      var p = v.play(); if (p && p.catch) p.catch(function () {});
+      setStatus('Видео загружено: ' + v.videoWidth + '×' + v.videoHeight + ' px, ' + fmtTime(v.duration) + '.', 'ok');
+    };
+    v.onerror = function () { if (tok !== vTok) return; clearVideo(); setStatus('Не удалось открыть видео. Попробуйте MP4 (H.264) или WebM.', 'warn'); };
+    v.addEventListener('seeked', function () { if (videoEl === v && !exporting) drawVideo(); });
+    v.src = videoUrl;
+    setStatus('Загружаю видео…', '');
+  }
+
+  function applyScreen() {
+    if (videoEl) { drawVideo(); return; }
+    if (!srcImg) {
+      M.screen.map = null; M.screen.color.setHex(0x000000); M.screen.needsUpdate = true;
+      hint.hidden = false; requestRender(); return;
+    }
+    var W = screenCanvas.width, H = screenCanvas.height;
+    var iw = srcImg.naturalWidth || srcImg.width || 1080, ih = srcImg.naturalHeight || srcImg.height || 2340;
+    drawFit(sctx, W, H, srcImg, iw, ih);
+    if (!screenTex) {
+      screenTex = new THREE.CanvasTexture(screenCanvas);
+      screenTex.encoding = THREE.sRGBEncoding;
+      screenTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    }
+    screenTex.needsUpdate = true;
+    M.screen.map = screenTex; M.screen.color.setHex(0xffffff); M.screen.needsUpdate = true;
+    hint.hidden = true; requestRender();
+  }
+
+  function loadFile(file) {
+    if (!file) return;
+    if (/^video\//.test(file.type) || /\.(mp4|m4v|mov|webm)$/i.test(file.name || '')) { loadVideo(file); return; }
+    if (!/^image\//.test(file.type)) { setStatus('Нужен файл изображения или видео: PNG, JPG, WebP, SVG, MP4, WebM.', 'warn'); return; }
+    clearVideo();
+    var url = URL.createObjectURL(file), img = new Image();
+    img.decoding = 'async';
+    img.onload = function () {
+      srcImg = img; applyScreen();
+      setStatus('Макет загружен: ' + (img.naturalWidth || '?') + '×' + (img.naturalHeight || '?') + ' px.', 'ok');
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); setStatus('Не удалось открыть файл. Попробуйте PNG или JPG.', 'warn'); };
+    img.src = url;
+  }
+
+  function drawSample() {
+    var c = document.createElement('canvas'); c.width = 1170; c.height = 2535;
+    var x = c.getContext('2d'), w = c.width, h = c.height;
+    var g = x.createLinearGradient(0, 0, w * 0.7, h);
+    g.addColorStop(0, '#0f2e3a'); g.addColorStop(0.55, '#2f7a78'); g.addColorStop(1, '#e7d9b8');
+    x.fillStyle = g; x.fillRect(0, 0, w, h);
+    function rr(px, py, pw, ph, r, fill) { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + pw, py, px + pw, py + ph, r); x.arcTo(px + pw, py + ph, px, py + ph, r); x.arcTo(px, py + ph, px, py, r); x.arcTo(px, py, px + pw, py, r); x.closePath(); x.fillStyle = fill; x.fill(); }
+    rr(70, 190, 520, 56, 28, 'rgba(255,255,255,.85)');
+    rr(70, 270, 330, 36, 18, 'rgba(255,255,255,.45)');
+    for (var i = 0; i < 3; i++) {
+      var y = 420 + i * 520;
+      rr(70, y, w - 140, 440, 56, 'rgba(255,255,255,.16)');
+      rr(120, y + 60, 300, 300, 40, 'rgba(255,255,255,.35)');
+      rr(470, y + 80, 420, 44, 22, 'rgba(255,255,255,.8)');
+      rr(470, y + 160, 520, 30, 15, 'rgba(255,255,255,.45)');
+      rr(470, y + 220, 380, 30, 15, 'rgba(255,255,255,.45)');
+    }
+    rr(160, h - 230, w - 320, 130, 65, 'rgba(10,20,26,.55)');
+    for (var j = 0; j < 4; j++) { x.beginPath(); x.arc(300 + j * 190, h - 165, 26, 0, Math.PI * 2); x.fillStyle = j === 0 ? '#ffffff' : 'rgba(255,255,255,.5)'; x.fill(); }
+    clearVideo(); srcImg = c; applyScreen(); setStatus('Показан пример экрана. Загрузите свой макет.', 'ok');
+  }
+
+  /* ------------------------------------------------------------------ Экспорт */
+  function trimCanvas(src) {
+    var w = src.width, h = src.height, c = document.createElement('canvas'); c.width = w; c.height = h;
+    var x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(src, 0, 0);
+    var d = x.getImageData(0, 0, w, h).data, minX = w, minY = h, maxX = -1, maxY = -1;
+    for (var yy = 0; yy < h; yy++) {
+      var row = yy * w * 4;
+      for (var xx = 0; xx < w; xx++) {
+        if (d[row + xx * 4 + 3] > 2) { if (xx < minX) minX = xx; if (xx > maxX) maxX = xx; if (yy < minY) minY = yy; if (yy > maxY) maxY = yy; }
+      }
+    }
+    if (maxX < 0) return src;
+    var pad = Math.round(Math.max(w, h) * 0.01);
+    minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad); maxX = Math.min(w - 1, maxX + pad); maxY = Math.min(h - 1, maxY + pad);
+    var cw = maxX - minX + 1, ch = maxY - minY + 1, out = document.createElement('canvas'); out.width = cw; out.height = ch;
+    out.getContext('2d').drawImage(c, minX, minY, cw, ch, 0, 0, cw, ch);
+    return out;
+  }
+  function toBlob(cv) { return new Promise(function (res, rej) { cv.toBlob(function (b) { b ? res(b) : rej(new Error('toBlob')); }, 'image/png'); }); }
+
+  function renderPNG(longSide, trim) {
+    var aspect = curAspect();
+    var cap = Math.min(8192, maxTex);
+    longSide = Math.min(longSide, cap);
+    var W, H;
+    if (aspect >= 1) { W = longSide; H = Math.round(longSide / aspect); } else { H = longSide; W = Math.round(longSide * aspect); }
+    var prevPR = renderer.getPixelRatio();
+    var result;
+    try {
+      renderer.setPixelRatio(1); renderer.setSize(W, H, false);
+      camera.aspect = W / H; camera.updateProjectionMatrix();
+      renderer.render(scene, camera);
+      var out = canvas;
+      if (trim) out = trimCanvas(canvas);
+      else { var cp = document.createElement('canvas'); cp.width = W; cp.height = H; cp.getContext('2d').drawImage(canvas, 0, 0); out = cp; }
+      result = toBlob(out).then(function (b) { return { blob: b, w: out.width, h: out.height }; });
+    } finally {
+      renderer.setPixelRatio(prevPR); onResize();
+    }
+    return result;
+  }
+
+  async function savePNG(blob, name) {
+    var dl = null;
+    try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) { dl = null; }
+    if (dl) {
+      try { await dl.save({ filename: name, data: blob }); return 'saved'; }
+      catch (e) { if (e && e.code === 'declined') return 'declined'; if (e && e.code === 'too_large') return 'large'; }
+    }
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+    return 'fallback';
+  }
+
+  var btnDl = $('#btn-download'), btnCopy = $('#btn-copy'), selSize = $('#sel-size'), chkTrim = $('#chk-trim');
+  async function runExport(mode) {
+    btnDl.disabled = btnCopy.disabled = true; setStatus('Рендерю…', '');
+    await new Promise(function (r) { requestAnimationFrame(function () { setTimeout(r, 0); }); });
+    try {
+      var r = await renderPNG(parseInt(selSize.value, 10), chkTrim.checked);
+      var info = r.w + '×' + r.h + ' px, ' + (r.blob.size / 1048576).toFixed(1) + ' МБ';
+      if (mode === 'copy') {
+        if (!navigator.clipboard || !window.ClipboardItem) { setStatus('Копирование здесь недоступно. Используйте «Скачать PNG».', 'warn'); }
+        else {
+          try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': r.blob })]); setStatus('PNG скопирован в буфер обмена (' + info + ').', 'ok'); }
+          catch (e) { setStatus('Браузер не разрешил копирование. Используйте «Скачать PNG».', 'warn'); }
+        }
+      } else {
+        var st = await savePNG(r.blob, 'smartphone-mockup.png');
+        if (st === 'saved') setStatus('PNG сохранён (' + info + ').', 'ok');
+        else if (st === 'declined') setStatus('Сохранение отменено.', '');
+        else if (st === 'large') setStatus('Файл слишком большой для сохранения. Выберите размер поменьше.', 'warn');
+        else setStatus('Файл отправлен в загрузки браузера (' + info + ').', 'ok');
+      }
+    } catch (e) {
+      setStatus('Не удалось отрендерить PNG. Попробуйте размер поменьше.', 'warn');
+    } finally { btnDl.disabled = btnCopy.disabled = false; }
+  }
+  btnDl.addEventListener('click', function () { runExport('save'); });
+  btnCopy.addEventListener('click', function () { runExport('copy'); });
+
+  /* -------------------------------------------------------------- Экспорт видео */
+  function alphaRect(src) {
+    var w = src.width, h = src.height, c = document.createElement('canvas'); c.width = w; c.height = h;
+    var x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(src, 0, 0);
+    var d = x.getImageData(0, 0, w, h).data, minX = w, minY = h, maxX = -1, maxY = -1;
+    for (var yy = 0; yy < h; yy++) {
+      var row = yy * w * 4;
+      for (var xx = 0; xx < w; xx++) {
+        if (d[row + xx * 4 + 3] > 2) { if (xx < minX) minX = xx; if (xx > maxX) maxX = xx; if (yy < minY) minY = yy; if (yy > maxY) maxY = yy; }
+      }
+    }
+    if (maxX < 0) return { x: 0, y: 0, w: w, h: h };
+    var pad = Math.round(Math.max(w, h) * 0.01);
+    minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad); maxX = Math.min(w - 1, maxX + pad); maxY = Math.min(h - 1, maxY + pad);
+    return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+  }
+  function exportSize(longSide) {
+    var aspect = curAspect(), cap = Math.min(8192, maxTex), W, H;
+    longSide = Math.min(longSide, cap);
+    if (aspect >= 1) { W = longSide; H = Math.round(longSide / aspect); } else { H = longSide; W = Math.round(longSide * aspect); }
+    return { W: W, H: H };
+  }
+  var prevPR = 1;
+  function beginExport(W, H) {
+    exporting = true; prevPR = renderer.getPixelRatio();
+    renderer.setPixelRatio(1); renderer.setSize(W, H, false);
+    camera.aspect = W / H; camera.updateProjectionMatrix();
+  }
+  function endExport() { renderer.setPixelRatio(prevPR); exporting = false; onResize(); requestRender(); }
+  function setProgress(frac, text) { busyBar.value = Math.round(Math.max(0, Math.min(1, frac)) * 100); busyText.textContent = text; }
+  function seekTo(v, t) {
+    return new Promise(function (res) {
+      if (Math.abs(v.currentTime - t) < 1e-4 && v.readyState >= 2) { requestAnimationFrame(function () { res(); }); return; }
+      var done = false;
+      function fin() { if (done) return; done = true; v.removeEventListener('seeked', fin); requestAnimationFrame(function () { res(); }); }
+      v.addEventListener('seeked', fin); setTimeout(fin, 2500);
+      v.currentTime = t;
+    });
+  }
+
+  async function exportVideo() {
+    var a = anim.def, haveV = !!videoEl;
+    if ((!a && !haveV) || exporting) return;
+    var v = videoEl, fmt = selVFmt.value, fps = +selFps.value, sz = exportSize(+selVSize.value);
+    var byVideo = haveV && (!a || selVLen.value === 'video'), spd = anim.speed;
+    var dur = byVideo ? v.duration : a.dur / spd;
+    if (!isFinite(dur) || dur <= 0) { setStatus('У видео не определилась длительность.', 'warn'); return; }
+    var total = Math.max(1, Math.min(Math.ceil(dur * fps), fmt === 'png' ? 900 : 1e9));
+    abortFlag = false; busy.hidden = false; setProgress(0, 'Подготовка…');
+    btnVideo.disabled = true;
+    var wasPlaying = haveV && !v.paused, prevLoop = haveV ? v.loop : false, prevT = haveV ? v.currentTime : 0, result = null;
+    var keepAnimPlaying = anim.playing; anim.playing = false;
+    if (haveV) { v.pause(); v.loop = false; }
+    beginExport(sz.W, sz.H);
+    var env = animEnv();
+    try {
+      var rect;
+      if (haveV) { await seekTo(v, 0); drawVideo(); }
+      if (a) poseAtAnimTime(0, env);
+      renderer.render(scene, camera);
+      rect = (chkTrim.checked && !a) ? alphaRect(canvas) : { x: 0, y: 0, w: sz.W, h: sz.H };
+      rect.w -= rect.w % 2; rect.h -= rect.h % 2;
+      var out = document.createElement('canvas'); out.width = rect.w; out.height = rect.h;
+      var octx = out.getContext('2d');
+      var paint = function (t) {
+        if (a) poseAtAnimTime(t * spd, env);
+        if (haveV) drawVideo();
+        renderer.render(scene, camera);
+        octx.clearRect(0, 0, rect.w, rect.h); octx.drawImage(canvas, rect.x, rect.y, rect.w, rect.h, 0, 0, rect.w, rect.h);
+      };
+      var base = a ? 'smartphone-mockup-animation' : 'smartphone-mockup';
+      if (fmt === 'png') {
+        var files = [];
+        for (var i = 0; i < total; i++) {
+          if (abortFlag) throw 'abort';
+          var t = i / fps;
+          if (haveV) await seekTo(v, byVideo ? Math.min(t, v.duration - 0.001) : (t % v.duration));
+          paint(t);
+          var blob = await toBlob(out), buf = new Uint8Array(await blob.arrayBuffer());
+          files.push({ name: 'frame_' + String(i + 1).padStart(4, '0') + '.png', blob: blob, crc: Z.crc32(buf), size: buf.length });
+          setProgress((i + 1) / total, 'Кадр ' + (i + 1) + ' из ' + total);
+        }
+        setProgress(1, 'Собираю ZIP…');
+        result = { blob: Z.makeZip(files), name: base + '-frames.zip', note: total + ' кадров PNG, ' + rect.w + '×' + rect.h + ' px, ' + fps + ' к/с' };
+      } else {
+        if (typeof MediaRecorder === 'undefined' || !out.captureStream) throw new Error('nomr');
+        var mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].filter(function (m) { return MediaRecorder.isTypeSupported(m); })[0];
+        if (!mime) throw new Error('nomr');
+        var chunks = [], rec = new MediaRecorder(out.captureStream(fps), { mimeType: mime, videoBitsPerSecond: Math.min(40e6, Math.max(4e6, Math.round(rect.w * rect.h * fps * 0.2))) });
+        rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+        var stopped = new Promise(function (res) { rec.onstop = res; });
+        paint(0); rec.start(500);
+        if (haveV) { v.loop = !byVideo; await v.play(); }
+        var t0 = performance.now();
+        await new Promise(function (resolve) {
+          function step() {
+            if (abortFlag) { resolve(); return; }
+            var el = (performance.now() - t0) / 1000, tt = byVideo ? v.currentTime : el;
+            paint(tt); setProgress(Math.min(1, tt / dur), 'Запись: ' + fmtTime(tt) + ' из ' + fmtTime(dur));
+            if (byVideo ? v.ended : el >= dur) { resolve(); return; }
+            requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+        });
+        if (haveV) v.pause();
+        paint(dur);
+        await new Promise(function (r) { setTimeout(r, 250); });
+        rec.stop(); await stopped;
+        if (abortFlag) throw 'abort';
+        result = { blob: new Blob(chunks, { type: 'video/webm' }), name: base + '.webm', note: 'WebM, ' + rect.w + '×' + rect.h + ' px, ' + fps + ' к/с' };
+      }
+    } catch (e) {
+      result = null;
+      if (e === 'abort') setStatus('Запись отменена.', '');
+      else if (e && e.message === 'nomr') setStatus('Этот браузер не умеет записывать WebM. Выберите PNG-последовательность.', 'warn');
+      else { if (window.console) console.error(e); setStatus('Не удалось записать видео. Попробуйте размер поменьше или меньше кадров в секунду.', 'warn'); }
+    } finally {
+      endExport(); busy.hidden = true; btnVideo.disabled = false;
+      anim.playing = keepAnimPlaying; if (a) { applyAnim(); updateAnimUI(); }
+      if (haveV) {
+        v.loop = prevLoop;
+        try { v.currentTime = prevT; if (wasPlaying) { var pp = v.play(); if (pp && pp.catch) pp.catch(function () {}); } } catch (e2) {}
+      }
+    }
+    if (result) {
+      var info = result.note + ', ' + (result.blob.size / 1048576).toFixed(1) + ' МБ';
+      var st = await savePNG(result.blob, result.name);
+      if (st === 'saved') setStatus('Видео сохранено: ' + info + '.', 'ok');
+      else if (st === 'declined') setStatus('Сохранение отменено.', '');
+      else if (st === 'large') setStatus('Файл слишком большой для сохранения. Выберите размер поменьше.', 'warn');
+      else setStatus('Файл отправлен в загрузки браузера: ' + info + '.', 'ok');
+    }
+  }
+
+  /* ---------------------------------------------------------------- Интерфейс */
+  var fileInput = $('#file');
+  fileInput.addEventListener('change', function () { loadFile(fileInput.files[0]); fileInput.value = ''; });
+  $('#btn-sample').addEventListener('click', drawSample);
+  $('#btn-clear').addEventListener('click', function () { clearVideo(); srcImg = null; applyScreen(); setStatus('Экран очищен.', ''); });
+  document.querySelectorAll('input[name="fit"]').forEach(function (r) { r.addEventListener('change', function () { fit = r.value; if (videoEl) drawVideo(); else if (srcImg) applyScreen(); }); });
+  document.querySelectorAll('input[name="bg"]').forEach(function (r) { r.addEventListener('change', function () { stage.dataset.bg = r.value; }); });
+  document.querySelectorAll('.sw').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.sw').forEach(function (o) { o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
+      setFinish(b.dataset.finish);
+    });
+  });
+  $('#chk-punch').addEventListener('change', function (e) { meshes.frontCamera.visible = e.target.checked; requestRender(); });
+  $('#chk-glare').addEventListener('change', function (e) { meshes.glare.visible = e.target.checked; requestRender(); });
+  btnPlay.addEventListener('click', function () { if (!videoEl) return; if (videoEl.paused) { var p = videoEl.play(); if (p && p.catch) p.catch(function () {}); } else videoEl.pause(); updateVideoUI(); });
+  vseek.addEventListener('input', function () { if (videoEl && videoEl.duration) videoEl.currentTime = vseek.value / 1000 * videoEl.duration; });
+  btnVideo.addEventListener('click', exportVideo);
+  btnCancel.addEventListener('click', function () { abortFlag = true; setProgress(1, 'Отменяю…'); });
+  [selVFmt, selFps, selVSize, selVLen].forEach(function (e) { e.addEventListener('change', updateExportInfo); });
+  buildLibrary();
+  btnAReset.addEventListener('click', function () { selectAnim(null); });
+  btnAPlay.addEventListener('click', toggleAnim);
+  aseek.addEventListener('input', function () { if (!anim.def) return; anim.playing = false; anim.t = aseek.value / 1000 * anim.def.dur; applyAnim(); updateAnimUI(); });
+  chkLoop.addEventListener('change', function () { anim.loop = chkLoop.checked; if (anim.def && anim.loop && !anim.playing && anim.t >= anim.def.dur - 1e-6) anim.t = 0; });
+  selSpeed.addEventListener('change', function () { anim.speed = +selSpeed.value; updateAnimUI(); updateExportInfo(); });
+  selFrame.addEventListener('change', function () { var p = selFrame.value.split(':'); frameAspect = p.length === 2 ? (+p[0]) / (+p[1]) : 0; onResize(); updateExportInfo(); });
+  canvas.addEventListener('keydown', function (e) { if (e.code === 'Space' && anim.def) { e.preventDefault(); toggleAnim(); } });
+  document.querySelectorAll('[data-view]').forEach(function (b) { b.addEventListener('click', function () { goView(b.dataset.view); }); });
+
+  ['dragenter', 'dragover'].forEach(function (t) { stage.addEventListener(t, function (e) { e.preventDefault(); stage.classList.add('drag'); }); });
+  ['dragleave', 'drop'].forEach(function (t) { stage.addEventListener(t, function (e) { e.preventDefault(); stage.classList.remove('drag'); }); });
+  stage.addEventListener('drop', function (e) { var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; loadFile(f); });
+  document.addEventListener('paste', function (e) {
+    var items = e.clipboardData && e.clipboardData.items; if (!items) return;
+    for (var i = 0; i < items.length; i++) { if (items[i].type.indexOf('image/') === 0) { loadFile(items[i].getAsFile()); e.preventDefault(); break; } }
+  });
+  stage.addEventListener('dblclick', function () { goView('q3'); });
+
+  applyScreen(); updateAnimUI(); updateExportInfo();
+  window.__mock = { scene: scene, camera: camera, renderer: renderer, controls: controls, meshes: meshes, goView: goView, setFinish: setFinish, selectAnim: selectAnim, anim: anim, phone: phone, setFrame: function (v) { selFrame.value = v; selFrame.dispatchEvent(new Event('change')); } };
+})();
+
+</script>
+
+</body></html>

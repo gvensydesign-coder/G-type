@@ -1,0 +1,118 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Лаборатория движений</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=PT+Sans+Narrow:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#17130f; --panel:rgba(23,19,15,.88); --panel-2:rgba(38,31,24,.92); --line:rgba(201,162,94,.28);
+  --fg:#efe5d0; --dim:#b3a385; --mute:#857760; --gold:#c9a25e; --gold-2:#e2c27f; --red:#b8483a; --green:#7fae6a; --blue:#6fa3c4;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:14px/1.4 "PT Sans","Segoe UI",system-ui,sans-serif;overflow:hidden}
+canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.ui{position:fixed;z-index:5}
+button{font:inherit;color:inherit;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}
+button:hover{border-color:var(--gold)}
+button.on{background:var(--gold);color:#1c150d;border-color:var(--gold);font-weight:700}
+#top{top:max(10px,env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));display:flex;gap:10px;align-items:center;flex-wrap:wrap;pointer-events:none}
+#top>*{pointer-events:auto}
+#brand{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 12px;display:flex;flex-direction:column}
+#brand b{font:700 17px/1.1 "PT Sans Narrow","PT Sans",sans-serif;letter-spacing:.04em;color:var(--gold-2)}
+#brand span{font-size:12px;color:var(--dim)}
+.seg{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px}
+.seg button{border-color:transparent;background:transparent}
+.seg button.on{background:var(--gold);color:#1c150d}
+#tools{top:max(10px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;width:236px}
+#tools h4{margin:0;font:700 11px/1 "PT Sans",sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+#tools .row{display:flex;gap:4px;flex-wrap:wrap}
+#tools .row button{flex:1;padding:4px 6px;font-size:13px}
+#side{left:max(12px,env(safe-area-inset-left,0px));top:82px;bottom:96px;width:272px;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;overflow:hidden}
+#side .head{padding:8px 10px;border-bottom:1px solid var(--line);display:flex;gap:4px}
+#side .head button{flex:1}
+#list{overflow:auto;padding:4px 6px 10px;min-height:0}
+#list h5{margin:10px 4px 4px;font:700 11px/1 "PT Sans",sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+#list .it{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;color:var(--fg)}
+#list .it:hover{background:rgba(201,162,94,.12)}
+#list .it.on{background:rgba(201,162,94,.26)}
+#list .it small{color:var(--mute);font-variant-numeric:tabular-nums;white-space:nowrap}
+#list .it .new{color:var(--green);font-size:11px;font-weight:700;letter-spacing:.06em}
+#transport{left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom,0px));background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:flex;gap:10px;align-items:center;width:min(640px,calc(100% - 32px))}
+#transport input{flex:1;min-width:0;accent-color:var(--gold)}
+#tname{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+#ttime{font-variant-numeric:tabular-nums;color:var(--dim);white-space:nowrap}
+#hint{left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom,0px));background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;text-align:center;max-width:calc(100% - 32px)}
+#state{font:700 16px/1.2 "PT Sans Narrow","PT Sans",sans-serif;color:var(--gold-2);letter-spacing:.03em}
+#keys{color:var(--dim);font-size:13px;margin-top:2px}
+kbd{font:700 11px/1 "PT Sans",sans-serif;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:2px 5px;color:var(--fg);background:rgba(255,255,255,.04)}
+#info{left:max(12px,env(safe-area-inset-left,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;max-width:300px;font-size:13px;color:var(--dim)}
+#info b{color:var(--fg)}
+#load{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:var(--bg)}
+#load div{text-align:center}
+#load b{display:block;font:700 22px/1.2 "PT Sans Narrow",sans-serif;color:var(--gold-2);letter-spacing:.05em}
+#bar{margin:12px auto 0;width:220px;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+#bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .2s}
+#legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--dim)}
+#legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+@media (max-width:820px){
+  #tools{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + 70px);width:auto;left:max(12px,env(safe-area-inset-left,0px))}
+  #side{top:70px;bottom:auto;max-height:38vh;width:auto;right:max(12px,env(safe-area-inset-right,0px))}
+  #info{display:none}
+  #tname{max-width:110px}
+  #brand{display:none}
+  #side{top:108px}
+  #tools{right:auto;max-width:calc(100% - 32px)}
+  #tools.fold>*:not(#tFold){display:none}
+}
+@media (min-width:821px){ #tFold{display:none} }
+</style>
+
+<canvas id="c"></canvas>
+<div id="load"><div><b>Лаборатория движений</b><span id="lmsg">Загружаю модели и 40 клипов…</span><div id="bar"><i></i></div></div></div>
+
+<div id="top" class="ui">
+  <div id="brand"><b>ЛАБОРАТОРИЯ ДВИЖЕНИЙ</b><span>Сказанье о Тени · превью на согласование</span></div>
+  <div class="seg" id="modes"><button data-m="course" class="on">Полигон</button><button data-m="gallery">Галерея клипов</button><button data-m="duel">Бой</button></div>
+  <div class="seg" id="who"><button data-c="hero" class="on">Богатырь</button><button data-c="leshy">Леший</button></div>
+</div>
+
+<div id="tools" class="ui">
+  <button id="tFold">Настройки</button>
+  <h4>Ноги</h4>
+  <div class="row"><button id="tIK" class="on">IK стоп</button><button id="tLock" class="on">Без скольжения</button></div>
+  <h4>Подъём на уступ</h4>
+  <div class="row"><button id="tNew" class="on">Новый, 1 с</button><button id="tOld">Старый, 2,9 с</button></div>
+  <h4>Скорость</h4>
+  <div class="row" id="speeds"><button data-s="1" class="on">1×</button><button data-s="0.5">½×</button><button data-s="0.25">¼×</button></div>
+  <h4>Камера</h4>
+  <div class="row" id="views"><button data-v="back" class="on">За спиной</button><button data-v="side">Сбоку</button><button data-v="front">Спереди</button></div>
+  <div class="row"><button id="tDbg">Показать опоры</button></div>
+  <div id="legend" hidden><span><i style="background:#7fae6a"></i>стопа стоит</span><span><i style="background:#e2c27f"></i>цель IK</span><span><i style="background:#6fa3c4"></i>руки</span></div>
+</div>
+
+<div id="side" class="ui" hidden>
+  <div id="list"></div>
+</div>
+
+<div id="transport" class="ui" hidden>
+  <button id="play">❚❚</button>
+  <span id="tname"></span>
+  <input id="scrub" type="range" min="0" max="1000" value="0">
+  <span id="ttime">0,00 с</span>
+</div>
+
+<div id="hint" class="ui">
+  <div id="state">Готов</div>
+  <div id="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> идти · <kbd>Shift</kbd> бег · <kbd>Пробел</kbd> прыжок / перелезть · <kbd>←</kbd><kbd>→</kbd> камера</div>
+</div>
+
+<div id="info" class="ui"></div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
+</script>
+<script type="module" src="src/app.js"></script>
+
+</body></html>

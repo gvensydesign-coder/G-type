@@ -1,0 +1,204 @@
+{
+  "version": "3.3.1",
+  "source": "https://registry.npmjs.org/@flaticon/flaticon-uicons/-/flaticon-uicons-3.3.1.tgz",
+  "icons": {
+    "arrow": {
+      "slug": "arrow-right",
+      "prefix": "fi-rr-",
+      "code": 61851,
+      "family": "regular-rounded"
+    },
+    "back": {
+      "slug": "angle-left",
+      "prefix": "fi-rr-",
+      "code": 61777,
+      "family": "regular-rounded"
+    },
+    "battery": {
+      "slug": "battery-half",
+      "prefix": "fi-rr-",
+      "code": 61990,
+      "family": "regular-rounded"
+    },
+    "bell": {
+      "slug": "bell",
+      "prefix": "fi-rr-",
+      "code": 62009,
+      "family": "regular-rounded"
+    },
+    "bluetooth": {
+      "slug": "bluetooth",
+      "prefix": "fi-brands-",
+      "code": 61726,
+      "family": "brands"
+    },
+    "check": {
+      "slug": "check",
+      "prefix": "fi-rr-",
+      "code": 62408,
+      "family": "regular-rounded"
+    },
+    "clock": {
+      "slug": "clock",
+      "prefix": "fi-rr-",
+      "code": 62554,
+      "family": "regular-rounded"
+    },
+    "close": {
+      "slug": "cross",
+      "prefix": "fi-rr-",
+      "code": 62711,
+      "family": "regular-rounded"
+    },
+    "download": {
+      "slug": "download",
+      "prefix": "fi-rr-",
+      "code": 62865,
+      "family": "regular-rounded"
+    },
+    "edit": {
+      "slug": "edit",
+      "prefix": "fi-rr-",
+      "code": 62913,
+      "family": "regular-rounded"
+    },
+    "filter": {
+      "slug": "settings-sliders",
+      "prefix": "fi-rr-",
+      "code": 64465,
+      "family": "regular-rounded"
+    },
+    "grid": {
+      "slug": "apps",
+      "prefix": "fi-rr-",
+      "code": 61804,
+      "family": "regular-rounded"
+    },
+    "heart": {
+      "slug": "heart",
+      "prefix": "fi-rr-",
+      "code": 63392,
+      "family": "regular-rounded"
+    },
+    "home": {
+      "slug": "home",
+      "prefix": "fi-rr-",
+      "code": 63416,
+      "family": "regular-rounded"
+    },
+    "info": {
+      "slug": "info",
+      "prefix": "fi-rr-",
+      "code": 63499,
+      "family": "regular-rounded"
+    },
+    "map": {
+      "slug": "map",
+      "prefix": "fi-rr-",
+      "code": 63739,
+      "family": "regular-rounded"
+    },
+    "office": {
+      "slug": "briefcase",
+      "prefix": "fi-rr-",
+      "code": 62185,
+      "family": "regular-rounded"
+    },
+    "pause": {
+      "slug": "pause",
+      "prefix": "fi-rr-",
+      "code": 64012,
+      "family": "regular-rounded"
+    },
+    "pin": {
+      "slug": "marker",
+      "prefix": "fi-rr-",
+      "code": 63741,
+      "family": "regular-rounded"
+    },
+    "play": {
+      "slug": "play",
+      "prefix": "fi-rr-",
+      "code": 64158,
+      "family": "regular-rounded"
+    },
+    "scooter": {
+      "slug": "scooter",
+      "prefix": "fi-rr-",
+      "code": 64419,
+      "family": "regular-rounded"
+    },
+    "search": {
+      "slug": "search",
+      "prefix": "fi-rr-",
+      "code": 64442,
+      "family": "regular-rounded"
+    },
+    "settings": {
+      "slug": "settings",
+      "prefix": "fi-rr-",
+      "code": 64466,
+      "family": "regular-rounded"
+    },
+    "sun": {
+      "slug": "sun",
+      "prefix": "fi-rr-",
+      "code": 64791,
+      "family": "regular-rounded"
+    },
+    "target": {
+      "slug": "target",
+      "prefix": "fi-rr-",
+      "code": 64863,
+      "family": "regular-rounded"
+    },
+    "trash": {
+      "slug": "trash",
+      "prefix": "fi-rr-",
+      "code": 65047,
+      "family": "regular-rounded"
+    },
+    "user": {
+      "slug": "user",
+      "prefix": "fi-rr-",
+      "code": 65184,
+      "family": "regular-rounded"
+    },
+    "warning": {
+      "slug": "triangle-warning",
+      "prefix": "fi-rr-",
+      "code": 65075,
+      "family": "regular-rounded"
+    },
+    "wifi": {
+      "slug": "wifi",
+      "prefix": "fi-rr-",
+      "code": 65288,
+      "family": "regular-rounded"
+    },
+    "chat": {
+      "slug": "comment",
+      "prefix": "fi-rr-",
+      "code": 62648,
+      "family": "regular-rounded"
+    },
+    "shield": {
+      "slug": "shield-check",
+      "prefix": "fi-rr-",
+      "code": 64475,
+      "family": "regular-rounded"
+    },
+    "photo": {
+      "slug": "picture",
+      "prefix": "fi-rr-",
+      "code": 64120,
+      "family": "regular-rounded"
+    },
+    "mic": {
+      "slug": "microphone",
+      "prefix": "fi-rr-",
+      "code": 63812,
+      "family": "regular-rounded"
+    }
+  }
+}
