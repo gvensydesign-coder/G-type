@@ -1,0 +1,115 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Агенты G-type</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<style>
+/* layout: one column of agent cards, each = header, stage route, progress + time left */
+:root{
+  --bg:#efeff1;--card:#fafafa;--surface:#ffffff;--line:#e1e1e5;--ink:#0b0b0c;--text-2:#6a6a72;--text-3:#a3a3ab;
+  --ok:#14663a;--ok-soft:rgba(31,157,85,.14);--warn:#8a5200;--warn-soft:rgba(217,130,0,.14);--run:#0b0b0c;--run-soft:rgba(11,11,12,.08);
+  --f:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f0f11;--card:#18181b;--surface:#232328;--line:#32323a;--ink:#f2f2f4;--text-2:#a3a3ae;--text-3:#6f6f79;--ok:#7be0a8;--ok-soft:rgba(63,200,120,.16);--warn:#e9a23b;--warn-soft:rgba(233,162,59,.16);--run:#f2f2f4;--run-soft:rgba(242,242,244,.1);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f0f11;--card:#18181b;--surface:#232328;--line:#32323a;--ink:#f2f2f4;--text-2:#a3a3ae;--text-3:#6f6f79;--ok:#7be0a8;--ok-soft:rgba(63,200,120,.16);--warn:#e9a23b;--warn-soft:rgba(233,162,59,.16);--run:#f2f2f4;--run-soft:rgba(242,242,244,.1);color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:500 14px/1.45 var(--f);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 40px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px}
+h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+.upd{color:var(--text-2);font-size:13px}
+.sum{display:flex;flex-wrap:wrap;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;background:var(--surface);font-size:12px;font-weight:600;white-space:nowrap}
+.pill.run{background:var(--run-soft)}.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.wait{background:var(--warn-soft);color:var(--warn)}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,500px),1fr));gap:16px}
+.card{background:var(--card);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0;box-shadow:0 0 0 1px var(--line)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.top h2{margin:0;font-size:17px;font-weight:700;text-wrap:balance}
+.top p{margin:2px 0 0;color:var(--text-2);font-size:13px}
+.route{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0}
+.route li{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;align-items:start;padding:6px 0;position:relative}
+.route li::before{content:"";position:absolute;left:9px;top:24px;bottom:-6px;width:2px;background:var(--line)}
+.route li:last-child::before{display:none}
+.dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);background:var(--card);display:grid;place-items:center;position:relative;z-index:1}
+.done .dot{background:var(--ok);border-color:var(--ok)}
+.done .dot::after{content:"";width:8px;height:4px;border:2px solid var(--card);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.now .dot{border-color:var(--run)}
+.now .dot::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--run);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.now .dot::after{animation:none}}
+.route .t{min-width:0;overflow-wrap:anywhere}
+.todo .t{color:var(--text-3)}
+.now .t{font-weight:700}
+.route .m{color:var(--text-2);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:999px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink);border-radius:999px;transition:width .4s cubic-bezier(.2,0,0,1)}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;font-size:13px;color:var(--text-2);font-variant-numeric:tabular-nums}
+.foot b{color:var(--ink)}
+.note{margin:0;font-size:13px;color:var(--text-2);background:var(--surface);border-radius:14px;padding:10px 14px}
+.empty{background:var(--card);border-radius:22px;padding:28px;color:var(--text-2);text-align:center;box-shadow:0 0 0 1px var(--line)}
+.hint{color:var(--text-3);font-size:12px;margin:0}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Агенты G-type</h1>
+    <span class="upd" id="upd">Загружаю…</span>
+  </header>
+  <div class="sum" id="sum"></div>
+  <div class="list" id="list"><div class="empty" id="empty">Здесь появятся агенты, которые сейчас работают: маршрут этапов, текущий этап и сколько примерно осталось.</div></div>
+  <p class="hint">Данные обновляются сами, когда агент заканчивает этап или присылает отчёт. Оставшееся время — оценка, она пересчитывается после каждого этапа.</p>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const fmtMin=m=>{if(m<=0)return 'вот-вот';const h=Math.floor(m/60),mm=Math.round(m%60);return h?h+' ч '+(mm?mm+' мин':''):mm+' мин';};
+const ago=t=>{const s=Math.max(0,(Date.now()-t)/1000);if(s<60)return 'только что';const m=Math.round(s/60);if(m<60)return m+' мин назад';return Math.round(m/60)+' ч назад';};
+const ST={run:['run','Работает'],wait:['wait','Ждёт решения'],done:['ok','Готово'],queue:['wait','В очереди']};
+let rows=[];
+function render(){
+  const list=$('#list');
+  if(!rows.length){list.innerHTML='';const e=document.createElement('div');e.className='empty';e.textContent='Сейчас агенты не работают.';list.appendChild(e);$('#sum').innerHTML='';return;}
+  const order={run:0,wait:1,queue:2,done:3};
+  rows.sort((a,b)=>(order[a.status]??9)-(order[b.status]??9)||(b.updated||0)-(a.updated||0));
+  const cnt={};rows.forEach(r=>cnt[r.status]=(cnt[r.status]||0)+1);
+  $('#sum').innerHTML='';
+  for(const k of ['run','wait','queue','done'])if(cnt[k]){const p=document.createElement('span');p.className='pill '+ST[k][0];p.textContent=ST[k][1]+': '+cnt[k];$('#sum').appendChild(p);}
+  list.innerHTML='';
+  let last=0;
+  for(const r of rows){
+    last=Math.max(last,r.updated||0);
+    const c=document.createElement('article');c.className='card';
+    const stages=Array.isArray(r.stages)?r.stages:[];const cur=Math.min(r.stage??0,stages.length);
+    const top=document.createElement('div');top.className='top';
+    const tl=document.createElement('div');const h=document.createElement('h2');h.textContent=r.title||r.id;const d=document.createElement('p');d.textContent=r.task||'';tl.append(h,d);
+    const st=ST[r.status]||ST.run;const pill=document.createElement('span');pill.className='pill '+st[0];pill.textContent=st[1];
+    top.append(tl,pill);c.appendChild(top);
+    const ol=document.createElement('ol');ol.className='route';
+    stages.forEach((s,i)=>{const li=document.createElement('li');const state=r.status==='done'||i<cur?'done':i===cur?'now':'todo';li.className=state;
+      const dot=document.createElement('span');dot.className='dot';const t=document.createElement('span');t.className='t';t.textContent=s.name||s;
+      const m=document.createElement('span');m.className='m';m.textContent=state==='done'?'готово':(s.min?'≈ '+fmtMin(s.min):'');li.append(dot,t,m);ol.appendChild(li);});
+    c.appendChild(ol);
+    const pct=r.status==='done'?100:Math.round(Math.min(99,Math.max(0,r.pct??(stages.length?cur/stages.length*100:0))));
+    const bar=document.createElement('div');bar.className='bar';bar.setAttribute('role','progressbar');bar.setAttribute('aria-valuenow',pct);bar.setAttribute('aria-valuemin',0);bar.setAttribute('aria-valuemax',100);
+    const bi=document.createElement('i');bi.style.width=pct+'%';bar.appendChild(bi);c.appendChild(bar);
+    const f=document.createElement('div');f.className='foot';
+    let left='';if(r.status==='done')left='Завершено';else if(r.eta){const m=(r.eta-Date.now())/60000;left=m>0?'Осталось примерно <b>'+fmtMin(m)+'</b>':'Оценка вышла, жду отчёт';}else left='Время уточняется';
+    f.innerHTML='<span>'+pct+' %</span><span>'+left+'</span><span>Обновлено '+ago(r.updated||Date.now())+'</span>';
+    c.appendChild(f);
+    if(r.note){const n=document.createElement('p');n.className='note';n.textContent=r.note;c.appendChild(n);}
+    list.appendChild(c);
+  }
+  $('#upd').textContent=last?'Последнее обновление '+ago(last):'';
+}
+setInterval(render,30000);
+(async()=>{
+  const db=await (window.claude&&window.claude.use?window.claude.use('db'):null);
+  if(!db){$('#upd').textContent='Нет связи с данными: откройте страницу в Claude, войдя в аккаунт.';render();return;}
+  const timer=setTimeout(()=>{$('#upd').textContent='Данные загружаются дольше обычного…';},10000);
+  db.collection('agents').onSnapshot(snap=>{clearTimeout(timer);rows=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},
+    e=>{clearTimeout(timer);$('#upd').textContent='Не удалось получить данные ('+(e&&e.code||'ошибка')+'). Обновите страницу позже.';});
+})();
+})();
+</script>
+
+</body></html>

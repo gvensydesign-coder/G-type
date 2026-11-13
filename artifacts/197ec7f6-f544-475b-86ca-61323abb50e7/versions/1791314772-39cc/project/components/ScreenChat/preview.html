@@ -1,0 +1,38 @@
+<!-- @dsCard group="Screens" height=900 width=900 subtitle="Чат: узор из квадратиков живёт за маскотом и меняется вместе с состоянием ассистента (раздумье, поиск, ответ)." -->
+<style>
+  .chat-art { position: relative; width: 240px; height: 190px; margin: 0 auto; }
+  .chat-card { position: absolute; width: 76px; height: 76px; display: grid; place-items: center; border-radius: var(--radius-xl); background: var(--bg-surface-raised); box-shadow: var(--shadow-md); border: 1px solid var(--bd-edge); }
+  .chat-card--a { left: 6px; top: 22px; transform: rotate(-12deg); }
+  .chat-card--b { left: 82px; top: 0; transform: rotate(2deg); width: 84px; height: 84px; }
+  .chat-card--c { right: 6px; top: 30px; transform: rotate(10deg); }
+  .chat-mascot { position: absolute; left: 50%; bottom: 0; margin-left: -58px; }
+  .chat-status { height: 32px; margin-top: 14px; display: grid; place-items: center; }
+</style>
+<div id="root"></div>
+<script>
+  var B = window.Buddy;
+  function screen() {
+    var art = '<div class="chat-art bd-anim-rise"><div class="chat-card chat-card--a">' + B.object('bike', { size: 52 }) + '</div><div class="chat-card chat-card--b">' + B.object('book', { size: 58 }) + '</div><div class="chat-card chat-card--c">' + B.object('apple', { size: 50 }) + '</div>' +
+      '<div class="chat-mascot">' + B.mascot('sunny-happy', { size: 116, cls: 'bd-anim-float' }) + '</div></div>';
+    var inner = '<div class="chat-pat" style="position:absolute;inset:0"></div>' +
+      B.cloud('lg', { style: 'right:-96px;top:84px', delay: '-3s' }) + B.cloud('md', { style: 'left:-52px;top:452px', delay: '-6s' }) + B.cloud('lg', { style: 'left:-110px;bottom:-54px', delay: '-1s' }) +
+      '<div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:0 20px 28px">' +
+      '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding-top:40px">' + art +
+      '<h1 class="display-xl" style="margin:32px 0 8px;font-size:34px;line-height:40px;text-wrap:balance">Hello, How<br>can I help you?</h1>' +
+      '<p class="body-lg" style="margin:0;color:var(--text-muted);max-width:240px">Your little buddy for better and a happier you</p><div class="chat-status"></div></div>' +
+      '<div class="bd-chips" style="margin:0 -20px 16px;padding:0 20px">' + B.Chip({ icon: 'bulb', tone: 'yellow', label: 'Habit Tips' }) + B.Chip({ icon: 'target', tone: 'pink', label: 'Set-up goals' }) + B.Chip({ icon: 'calendar', tone: 'green', label: 'Schedule' }) + '</div>' +
+      B.ChatInput({ placeholder: 'Ask anything ...' }) + '</div>';
+    return B.Phone(inner, { wash: true });
+  }
+  document.getElementById('root').innerHTML = B.Stage(screen);
+  var ctrls = [], hosts = document.querySelectorAll('.chat-pat'), stats = document.querySelectorAll('.chat-status');
+  Array.prototype.forEach.call(hosts, function (h) { ctrls.push(B.Pattern.mount(h, { focus: { x: 0.5, y: 0.3 } })); });
+  var seq = [['idle', 2600], ['thinking', 3400], ['searching', 3400], ['answering', 3400], ['success', 2400]], n = 0;
+  function step() {
+    var s = seq[n % seq.length][0], lab = B.Pattern.label(s);
+    ctrls.forEach(function (c) { c.set(s); });
+    Array.prototype.forEach.call(stats, function (el) { el.innerHTML = lab ? B.ThinkingIndicator({ label: lab + (s === 'success' ? '' : '…'), ok: s === 'success' }) : ''; });
+    window.setTimeout(step, seq[n % seq.length][1]); n++;
+  }
+  step();
+</script>

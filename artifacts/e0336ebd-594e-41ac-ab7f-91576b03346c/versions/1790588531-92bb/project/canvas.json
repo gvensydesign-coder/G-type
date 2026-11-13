@@ -1,0 +1,71 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Game.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "4 · Игровой экран",
+      "w": 1280,
+      "x": 1360,
+      "y": 840
+    },
+    "Main.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "1 · Загрузка",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Novel.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "3 · Новелльные сцены",
+      "w": 1280,
+      "x": 0,
+      "y": 840
+    },
+    "Start.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "2 · Главное меню",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-28T09:45:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "flow": {
+      "fill": "gray",
+      "text": "Поток: Загрузка → Меню → «Новая игра» → сцены (Далее / Пропустить) → Игровой экран. «Продолжить» в меню ведёт сразу в игру. Нажмите Play на любом экране.",
+      "w": 320,
+      "x": 2720,
+      "y": 0
+    },
+    "head": {
+      "kind": "title1",
+      "maxW": 2640,
+      "text": "Русская хтонь — черновой прототип интерфейса",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Start.dc.html",
+    "Novel.dc.html",
+    "Game.dc.html"
+  ],
+  "pages": [],
+  "title": "Русская хтонь — прототип UI"
+}

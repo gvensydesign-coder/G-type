@@ -1,0 +1,13 @@
+<!-- @dsCard group="Screens" height=940 width=900 subtitle="Интерактивный прототип «Подхват» целиком: знакомство, создание случая, маршрут помощи, роли, карта, чат, листовка. Скаут и собачка: 3D." -->
+<style>html,body{margin:0}.pa{display:flex;justify-content:center;padding:6px 0 0;background:var(--bg-surface-sunken)}</style>
+<div class="pa" id="app"></div>
+<script>
+  function loadToon(kinds) {
+    return Promise.all(kinds.map(function (k) {
+      var cls = Buddy.Toon.names[k].cls;
+      if (window[cls]) return 1;
+      return fetch('../../assets/Toon/' + k + '-toon.js').then(function (r) { return r.text(); }).then(function (t) { var s = document.createElement('script'); s.text = t; document.head.appendChild(s); }).catch(function () {});
+    }));
+  }
+  loadToon(['cat', 'dog']).then(function () { Buddy.Podhvat.mount(document.getElementById('app'), { persist: false, fit: false, tools: true, skipBoot: false, photos: {} }); });
+</script>

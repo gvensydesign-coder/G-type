@@ -1,0 +1,76 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Рисованные нормали</title>
+<style>
+@font-face { font-family: 'Rub'; src: url('fonts/SkazanieRub.woff2') format('woff2'); font-display: swap; }
+:root { --soot: #070505; --bone: #eadfc6; --boneDim: #a99b80; --ember: #ff8a3c; --line: rgba(234,223,198,.18); --glass: rgba(18,12,10,.84); color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--soot); color: var(--bone); font: 13px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif; overflow: hidden; }
+canvas#c { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+.title { position: fixed; left: 18px; top: 14px; pointer-events: none; text-shadow: 0 2px 0 #120c0a; max-width: calc(100vw - 380px); }
+.title h1 { font: 30px/1 'Rub', Georgia, serif; margin: 0; }
+.title p { margin: 4px 0 0; color: var(--boneDim); font-size: 12px; }
+#views { position: fixed; left: 18px; top: 76px; display: flex; gap: 6px; flex-wrap: wrap; max-width: calc(100vw - 380px); }
+button { font: inherit; color: var(--bone); background: var(--glass); border: 1px solid var(--line); padding: 6px 11px; cursor: pointer; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+button:hover { border-color: var(--boneDim); }
+button.on { border-color: var(--ember); box-shadow: inset 0 0 0 1px var(--ember); color: #fff; }
+#panel { position: fixed; right: 0; top: 0; bottom: 0; width: 340px; background: var(--glass); border-left: 1px solid var(--line); overflow-y: auto; padding: 14px 14px 40px; backdrop-filter: blur(6px); transition: transform .25s; }
+#panel.hide { transform: translateX(100%); }
+#toggle { position: fixed; right: 348px; top: 14px; transition: right .25s; }
+#panel.hide + #toggle { right: 14px; }
+h2 { font: 17px/1.1 'Rub', Georgia, serif; margin: 16px 0 8px; }
+h2:first-child { margin-top: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.mode { display: grid; gap: 5px; }
+.mode button { text-align: left; }
+.mode button small { display: block; color: var(--boneDim); font-size: 11.5px; margin-top: 2px; }
+label.chk { display: flex; align-items: flex-start; gap: 7px; padding: 4px 6px; border: 1px solid var(--line); cursor: pointer; margin-bottom: 4px; }
+label.chk input { accent-color: var(--ember); margin: 2px 0 0; }
+label.chk small { display: block; color: var(--boneDim); font-size: 11.5px; }
+input[type=range] { width: 100%; accent-color: var(--ember); }
+.muted { color: var(--boneDim); font-size: 11.5px; }
+#fps { position: fixed; left: 18px; bottom: 14px; font-variant-numeric: tabular-nums; color: var(--boneDim); background: var(--glass); padding: 3px 8px; border: 1px solid var(--line); }
+#hint { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); background: var(--glass); border: 1px solid var(--line); padding: 6px 12px; max-width: min(620px, calc(100vw - 420px)); text-align: center; font-size: 12.5px; }
+#loading { position: fixed; inset: 0; display: grid; place-items: center; background: var(--soot); z-index: 5; font: 22px 'Rub', Georgia, serif; text-align: center; }
+#loading small { display: block; font: 13px system-ui, sans-serif; color: var(--boneDim); margin-top: 8px; }
+@media (max-width: 760px) {
+  #panel { width: 100%; top: 50%; border-left: 0; border-top: 1px solid var(--line); }
+  #toggle { right: 14px !important; top: auto; bottom: calc(50% + 8px); }
+  #panel.hide + #toggle { bottom: 14px; }
+  .title, #views { max-width: calc(100vw - 32px); }
+  #views { top: 64px; }
+  .title h1 { font-size: 22px; }
+  #hint { display: none; }
+}
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<canvas id="c"></canvas>
+<div class="title"><h1>Рисованные нормали</h1><p>Мазки в карте нормалей: свет ложится плоскими пятнами кисти и держится на теле в движении</p></div>
+<div id="views"></div>
+<aside id="panel">
+  <h2>Как считать нормаль</h2>
+  <div class="mode" id="modes"></div>
+  <h2>Слои</h2>
+  <div id="layers"></div>
+  <h2>Смотреть</h2>
+  <div class="row" id="look"></div>
+  <h2>Свет</h2>
+  <label class="chk"><input id="lightAuto" type="checkbox" checked><span>Свет ходит по кругу<small>Пятна пересчитываются, форма мазка остаётся</small></span></label>
+  <input id="lightAng" type="range" min="0" max="6.283" step="0.01" value="5.93">
+  <h2>Сила мазка</h2>
+  <input id="amt" type="range" min="0" max="1" step="0.01" value="0.85">
+  <h2>Движение</h2>
+  <div class="row" id="anims"></div>
+  <p class="muted">Мышь камерой не управляет. Стрелки: ←→ облёт, ↑↓ ближе и дальше.</p>
+</aside>
+<button id="toggle">Панель</button>
+<div id="fps"></div>
+<div id="hint"></div>
+<div id="loading">Запекаем нормали…<small>Богатырь и Леший грузятся из проекта, около 10 МБ</small></div>
+<script type="module" src="main.js"></script>
+
+</body></html>

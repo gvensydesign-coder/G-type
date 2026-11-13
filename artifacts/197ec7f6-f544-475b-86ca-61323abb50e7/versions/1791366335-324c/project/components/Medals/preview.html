@@ -1,0 +1,19 @@
+<!-- @dsCard group="Foundations" height=860 width=900 subtitle="Ачивки: три формы, шесть тонов, мягкое 3D, закрытые и в процессе, тост награды. Нажмите «Получить»." -->
+<style>
+  .md { display: flex; flex-direction: column; gap: 22px; padding: 20px; background: var(--bg-app); color: var(--text-primary); }
+  .md h4 { margin: 0 0 10px; font: 800 11px/14px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+  .md__row { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: flex-start; }
+  .md__panel { padding: 18px; border-radius: var(--radius-2xl); background: var(--bg-surface); border: 1px solid var(--bd-edge); box-shadow: var(--shadow-sm); }
+  .md__earn { display: flex; align-items: center; gap: 22px; }
+</style>
+<div class="md bd-root" id="root"></div>
+<script>
+  var B = window.Buddy, tones = ['violet', 'orange', 'green', 'pink', 'sky', 'gold'], icons = ['flame', 'droplet', 'moon', 'bike', 'heart', 'star'];
+  function matrix(shape) { return '<div class="md__row">' + tones.map(function (t, i) { return B.Medal({ shape: shape, tone: t, emblem: icons[i], size: 'md', label: t }); }).join('') + '</div>'; }
+  function earn() { document.getElementById('earn').innerHTML = B.MedalToast({ medals: [{ shape: 'shield', tone: 'orange', text: '7' }, { shape: 'round', tone: 'sky', emblem: 'droplet' }, { shape: 'hex', tone: 'violet', emblem: 'moon' }] }) + B.Medal({ shape: 'shield', tone: 'gold', emblem: 'rocket', size: 'lg', label: 'Week 1 All-Star', shine: true, pop: true }); }
+  document.getElementById('root').innerHTML =
+    '<div><h4>Shield · Hex · Round</h4><div class="md__panel">' + matrix('shield') + matrix('hex') + matrix('round') + '</div></div>' +
+    '<div><h4>Состояния: открыта, счётчик, в процессе, закрыта</h4><div class="md__panel md__row">' + B.Medal({ shape: 'shield', tone: 'orange', text: '7', label: 'Week streak', count: 7, shine: true }) + B.Medal({ shape: 'round', tone: 'pink', emblem: 'heart', label: 'Cheers sent', count: 2 }) + B.Medal({ shape: 'round', tone: 'green', emblem: 'bike', label: 'Move 100', locked: true, progress: 34 }) + B.Medal({ shape: 'hex', tone: 'gold', emblem: 'star', label: 'Perfect week', locked: true }) + B.Medal({ shape: 'shield', tone: 'violet', emblem: 'crown', size: 'sm', label: 'sm 56' }) + B.Medal({ shape: 'shield', tone: 'violet', emblem: 'crown', size: 'lg', label: 'lg 128' }) + '</div></div>' +
+    '<div><h4>Получение награды</h4><div class="md__panel md__earn"><div id="earn"></div><button type="button" class="bd-btn bd-btn--soft" id="again">Получить</button></div></div>';
+  document.getElementById('again').addEventListener('click', earn); earn();
+</script>

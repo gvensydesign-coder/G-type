@@ -1,0 +1,17 @@
+<!-- @dsCard group="Foundations" height=640 width=900 subtitle="47 иконок на сетке 24px: штрих 2px, круглые окончания, currentColor." -->
+<style>
+  .ig { padding: 20px; background: var(--bg-app); color: var(--text-primary); }
+  .ig h4 { margin: 0 0 10px; font: 800 11px/14px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+  .sizes { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 20px; color: var(--text-brand); }
+  .sizes span { display: flex; flex-direction: column; align-items: center; gap: 6px; font: 500 12px/16px var(--font-sans); color: var(--text-muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px 8px; border-radius: var(--radius-md); background: var(--bg-surface); border: 1px solid var(--bd-edge); }
+  .cell span { font: 500 11px/14px var(--font-sans); color: var(--text-muted); }
+</style>
+<div class="ig" id="root"></div>
+<script>
+  var B = window.Buddy, names = Object.keys(B.icons);
+  document.getElementById('root').innerHTML =
+    '<h4>Размеры (size-icon-sm … size-icon-xl)</h4><div class="sizes">' + [16, 20, 24, 32].map(function (s) { return '<span>' + B.icon('flame', { size: s }) + s + '</span>'; }).join('') + '<span>' + B.icon('flame', { size: 24, stroke: 2.5 }) + 'stroke 2.5</span></div>' +
+    '<h4>Библиотека</h4><div class="grid">' + names.map(function (n) { return '<div class="cell">' + B.icon(n, { size: 24 }) + '<span>' + n + '</span></div>'; }).join('') + '</div>';
+</script>

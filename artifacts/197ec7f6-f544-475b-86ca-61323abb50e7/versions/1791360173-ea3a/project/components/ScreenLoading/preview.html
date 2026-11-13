@@ -1,0 +1,8 @@
+<!-- @dsCard group="Launch" height=900 width=900 subtitle="Загрузка экрана: скелет по форме главного экрана с бегущим бликом и сонный Sunny, три вида лоадера." -->
+<div id="root"></div>
+<script>
+  var B = window.Buddy;
+  function screen() { return B.Phone(B.LoadingScreen({ label: 'Loading your day…' }), {}); }
+  document.getElementById('root').innerHTML = B.Stage(screen) +
+    '<div class="bd-root" style="display:flex;gap:40px;justify-content:center;padding:0 16px 24px;background:var(--bg-app);color:var(--text-primary)">' + B.Loader({ kind: 'squares', label: 'Squares' }) + B.Loader({ kind: 'bar', label: 'Bar' }) + B.Loader({ kind: 'orbit', label: 'Orbit' }) + '</div>';
+</script>

@@ -1,0 +1,23 @@
+<!-- @dsCard group="Screens" height=640 width=1400 subtitle="Новые потоки v1.13: выбор вида с вкладками и советом, сканер ID-слепка, доверие и безопасность." -->
+<style>html,body{margin:0}.ps{background:var(--bg-surface-sunken);padding:16px 0;display:flex;justify-content:center;gap:8px}.ps>div{--pd-scale:.6;min-height:0!important;padding:0!important;flex:none;background:none!important;display:block!important}</style>
+<div class="ps" id="s"></div>
+<script>
+  function loadToon(kinds) {
+    return Promise.all(kinds.map(function (k) {
+      var cls = Buddy.Toon.names[k].cls;
+      if (window[cls]) return 1;
+      return fetch('../../assets/Toon/' + k + '-toon.js').then(function (r) { return r.text(); }).then(function (t) { var s = document.createElement('script'); s.text = t; document.head.appendChild(s); }).catch(function () {});
+    }));
+  }
+  var common = { onboardingDone: true, place: 'У входа в парк' };
+  var shots = [
+    { page: 'capture', group: 'home', spCat: 'small', species: 'hamster' },
+    { page: 'capture', group: 'home', spCat: 'birds', species: 'parrot' },
+    { page: 'scan' },
+    { page: 'trust', trustChecks: ['mark', 'print'] }
+  ];
+  loadToon(['cat', 'dog']).then(function () {
+  var host = document.getElementById('s');
+  shots.forEach(function (st) { var d = document.createElement('div'); host.appendChild(d); Buddy.Podhvat.mount(d, { persist: false, fit: false, tools: false, skipBoot: true, theme: 'light', photos: {}, state: Object.assign({}, common, st) }); });
+  });
+</script>

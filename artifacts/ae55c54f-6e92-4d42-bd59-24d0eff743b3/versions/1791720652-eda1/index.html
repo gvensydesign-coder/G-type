@@ -1,0 +1,566 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Аура: прототип</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-height 3D viewport with a dense instrument panel on the right (stacks under the viewport on phones). Single dark look by choice. */
+:root {
+  --bg: #090c11;
+  --panel: #10151d;
+  --panel-2: #161d28;
+  --line: #243142;
+  --fg: #d9e3ec;
+  --muted: #8193a6;
+  --accent: #5fc8ff;
+  --danger: #ff7a6b;
+  --f-display: "Ruslan Display", "Georgia", serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 13px/1.45 var(--f-body); overflow: hidden; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: 100%; }
+.view { position: relative; min-width: 0; overflow: hidden; }
+#c { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#c:active { cursor: grabbing; }
+
+.topbar { position: absolute; left: 16px; right: 16px; top: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; pointer-events: none; }
+.topbar > * { pointer-events: auto; }
+.brand { font-family: var(--f-display); font-size: 22px; letter-spacing: .04em; line-height: 1; color: var(--fg); text-shadow: 0 2px 12px #000; margin-right: auto; padding-top: 4px; }
+.brand small { display: block; font: 500 10px/1.4 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 85%, transparent); padding: 6px 11px 6px 9px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.chip i { width: 12px; height: 12px; transform: rotate(45deg); border-radius: 2px; flex: none; }
+.chip:hover { border-color: var(--muted); }
+.chip[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+.bottombar { position: absolute; left: 16px; right: 16px; bottom: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: none; }
+.bottombar > * { pointer-events: auto; }
+.btn { border: 1px solid var(--line); background: var(--panel-2); padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: #05080c; border-color: transparent; font-weight: 600; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--panel-2); }
+.seg button { border: 0; background: transparent; padding: 8px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--fg); }
+.hint { margin-left: auto; color: var(--muted); font-size: 11px; text-shadow: 0 1px 6px #000; }
+
+.panel { background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.panel-head { padding: 14px 16px 12px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row label { color: var(--muted); font-size: 12px; }
+.row select { flex: 1; min-width: 0; background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 6px 8px; }
+.scroll { overflow-y: auto; padding: 4px 16px 24px; flex: 1; min-height: 0; }
+details { border-bottom: 1px solid var(--line); }
+summary { cursor: pointer; padding: 12px 0; font-weight: 600; letter-spacing: .02em; list-style: none; display: flex; justify-content: space-between; }
+summary::after { content: "+"; color: var(--muted); font-family: var(--f-mono); }
+details[open] summary::after { content: "−"; }
+.ctl { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding-bottom: 10px; }
+.ctl span { color: var(--muted); font-size: 12px; }
+.ctl output { font: 11px var(--f-mono); color: var(--fg); font-variant-numeric: tabular-nums; }
+.ctl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); margin: 2px 0 0; }
+.ctl select { grid-column: 1 / -1; background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 5px 8px; }
+.colors { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; padding-bottom: 12px; }
+.colors label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+.colors input { width: 30px; height: 24px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: none; cursor: pointer; flex: none; }
+.foot { padding: 12px 16px; border-top: 1px solid var(--line); display: flex; gap: 8px; flex-wrap: wrap; }
+.foot .btn { flex: 1; }
+.toast { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--line); padding: 6px 12px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font: 12px var(--f-mono); letter-spacing: .1em; pointer-events: none; }
+
+.doc { position: fixed; inset: 0; background: var(--bg); overflow-y: auto; z-index: 10; padding-block: 32px 64px; padding-inline: 16px; }
+.doc article { max-width: 760px; margin: 0 auto; font-size: 15px; line-height: 1.6; }
+.doc h1 { font-family: var(--f-display); font-weight: 400; font-size: 34px; line-height: 1.1; margin: 0 0 6px; text-wrap: balance; }
+.doc h2 { font-size: 18px; margin: 34px 0 8px; text-wrap: balance; }
+.doc h3 { font-size: 15px; margin: 20px 0 4px; }
+.doc p, .doc li { max-width: 68ch; color: #c6d2dd; }
+.doc .lede { color: var(--muted); }
+.doc code, .doc pre { font-family: var(--f-mono); font-size: 12.5px; }
+.doc pre { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; overflow-x: auto; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; margin: 12px 0; }
+.tbl table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13px; }
+.tbl th, .tbl td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.tbl th { color: var(--muted); font-weight: 500; font-size: 12px; background: var(--panel); }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl tr.pick td { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.m { font-family: var(--f-mono); font-size: 12px; white-space: nowrap; }
+.m.good { color: #7fe0a1; } .m.mid { color: #e8c76a; } .m.bad { color: var(--danger); }
+.close { position: sticky; top: 0; float: right; }
+
+@media (max-width: 820px) {
+  body { overflow: auto; }
+  .app { grid-template-columns: 1fr; grid-template-rows: 62vh auto; height: auto; }
+  .panel { border-left: 0; border-top: 1px solid var(--line); }
+  .scroll { overflow: visible; }
+  .hint { display: none; }
+  .brand { font-size: 18px; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+
+<div class="app">
+  <div class="view">
+    <canvas id="c" aria-label="3D-сцена с аурой вокруг персонажа. Тяните мышью или пальцем, чтобы вращать камеру, колесо или щипок для приближения."></canvas>
+    <div class="loading" id="loading">ЗАГРУЗКА МОДЕЛИ…</div>
+    <div class="topbar">
+      <div class="brand">Аура<small>2D-эффект в 3D · прототип</small></div>
+      <div class="chips" id="presets" role="group" aria-label="Пресеты"></div>
+    </div>
+    <div class="bottombar">
+      <button class="btn primary" id="toggle">Развеять</button>
+      <div class="seg" role="group" aria-label="Состояние">
+        <button id="calm" aria-pressed="false">Покой</button>
+        <button id="battle" aria-pressed="true">Бой</button>
+      </div>
+      <button class="btn" id="docBtn">Разбор и выбор подхода</button>
+      <span class="hint">Тяните, чтобы вращать камеру · колесо — зум</span>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <aside class="panel" aria-label="Настройки ауры">
+    <div class="panel-head">
+      <div class="row">
+        <label for="who">Персонаж</label>
+        <select id="who"></select>
+      </div>
+      <div class="row">
+        <div class="seg" role="group" aria-label="Сколько персонажей">
+          <button id="one" aria-pressed="true">Один</button>
+          <button id="three" aria-pressed="false">Трое</button>
+        </div>
+        <select id="anim" aria-label="Анимация персонажа">
+          <option value="idle">Стоит</option>
+          <option value="walk">Идёт</option>
+          <option value="run">Бежит</option>
+          <option value="agree">Кивает</option>
+          <option value="sneak_pose">Крадётся</option>
+          <option value="sad_pose">Поникший</option>
+        </select>
+      </div>
+      <div class="ctl" style="padding:0">
+        <span>Время перехода между пресетами</span><output id="tdurOut">1.5 с</output>
+        <input type="range" id="tdur" min="0" max="4" step="0.1" value="1.5">
+      </div>
+    </div>
+    <div class="scroll" id="groups"></div>
+    <div class="foot">
+      <button class="btn" id="spin" aria-pressed="false">Автовращение</button>
+      <select class="btn" id="quality" aria-label="Качество">
+        <option value="1">Качество: обычное</option>
+        <option value="1.5" selected>Качество: высокое</option>
+        <option value="0.6">Качество: быстрое</option>
+      </select>
+      <button class="btn" id="copy">Копировать настройки (JSON)</button>
+    </div>
+  </aside>
+</div>
+
+<div class="doc" id="doc" hidden>
+  <article>
+    <button class="btn close" id="docClose">Закрыть</button>
+    <h1>Аура: разбор и выбор подхода</h1>
+    <p class="lede">Что видно на референсах, какими способами это можно сделать в 3D-окне, что выбрано для прототипа и почему.</p>
+
+    <h2>Что на референсах</h2>
+    <h3>Синий дух (фигура над землёй)</h3>
+    <ul>
+      <li>Три-четыре плоских тона без мягкого свечения: тёмно-синий край, насыщенный синий, голубое ядро у самого тела. Ядро работает как контровой свет по силуэту.</li>
+      <li>Форма дыма повторяет силуэт ног и тела, а выше уходит S-образными языками.</li>
+      <li>Внутри плывут тёмные круглые пятна-дыры.</li>
+      <li>Растровая точка (halftone): ореолом вокруг дыма и как фактура в тёмных тонах.</li>
+      <li>Острые ромбовидные осколки разного размера, ярче самого дыма.</li>
+    </ul>
+    <h3>Жёлто-зелёный дым из чаши</h3>
+    <ul>
+      <li>Столб дыма от источника, толстые языки с тонким тёмным контуром.</li>
+      <li>Градиент от яркого жёлтого ядра к оливковым краям: три тона, но с лёгким перетеканием.</li>
+      <li>Черепа-призраки сделаны из того же дыма, глазницы сквозные, снизу черепа тянется хвост, который переходит в общий поток.</li>
+      <li>Формы перетекают друг в друга, верх рваный.</li>
+    </ul>
+    <p>Общее у обоих: это иллюстрация. Объём передаётся наложением плоских слоёв, а не светотенью. Края жёсткие, линия контура одной толщины, растр как в комиксе. Значит в 3D эффект должен всегда показываться «лицом» к зрителю, держать постоянную толщину линии и растра в пикселях и при этом облегать персонажа в его текущей позе.</p>
+
+    <h2>Сравнение подходов</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Подход</th><th>2D-вид</th><th>Любой ракурс</th><th>Настройки и масштаб</th><th>Переходы, появление</th><th>Цена кадра</th><th>Работа художника</th></tr></thead>
+      <tbody>
+        <tr><td>Покадровая анимация (flipbook-спрайт, нарисованный вручную)</td><td class="m good">отлично</td><td class="m mid">billboard, не облегает позу</td><td class="m bad">цвет и размер</td><td class="m bad">отдельный клип на каждое</td><td class="m good">низкая</td><td class="m bad">много, на каждый пресет</td></tr>
+        <tr><td>Многослойный дым: прокрутка шумовых текстур под рисованными масками, erosion</td><td class="m good">хорошо</td><td class="m mid">billboard, форма фиксирована</td><td class="m mid">средне</td><td class="m good">порог erosion</td><td class="m good">низкая</td><td class="m mid">маски и атласы</td></tr>
+        <tr><td>Объёмный 3D-шейдер (раймарчинг или «раздутая» оболочка меша, fresnel)</td><td class="m bad">читается как 3D-стекло</td><td class="m good">да</td><td class="m good">да</td><td class="m good">да</td><td class="m bad">высокая</td><td class="m good">нет</td></tr>
+        <tr><td>Цилиндрические вращающиеся оболочки с текстурой</td><td class="m mid">средне</td><td class="m bad">швы и «ленты» сбоку и сверху</td><td class="m mid">средне</td><td class="m mid">средне</td><td class="m good">низкая</td><td class="m mid">текстуры</td></tr>
+        <tr><td>Экранный пост-эффект (маска силуэта → расширение → шум)</td><td class="m good">отлично</td><td class="m good">облегает позу</td><td class="m good">да</td><td class="m good">да</td><td class="m mid">средняя</td><td class="m good">нет</td></tr>
+        <tr class="pick"><td><b>Гибрид (выбран):</b> billboard-слои с процедурным шейдером + экранная маска силуэта + частицы в 3D</td><td class="m good">отлично</td><td class="m good">да, с глубиной</td><td class="m good">все параметры</td><td class="m good">плавно</td><td class="m mid">средняя</td><td class="m good">нет, текстур нет</td></tr>
+      </tbody>
+    </table></div>
+    <p>У чистого экранного эффекта нет глубины: дым не может быть одновременно за спиной и перед коленями, и его перекрывает всё подряд. У спрайтов и масок нет облегания позы и мало настроек. Гибрид берёт сильные стороны обоих.</p>
+
+    <h2>Как устроен прототип</h2>
+    <ul>
+      <li><b>Слои.</b> До шести прямоугольников у ног персонажа. Они всегда повёрнуты к камере, но «верх» у них остаётся мировым, поэтому дым всегда поднимается вверх и никогда не виден с ребра. Часть слоёв стоит за телом (тело их перекрывает), один-два спереди и становятся прозрачнее над телом.</li>
+      <li><b>Форма.</b> Процедурное поле: шум с перетеканием (domain warp), S-образное смещение, огибающая «пламени» и силуэт персонажа. Силуэт рендерится в маленькую текстуру с той же камеры, шейдер расширяет его на заданную толщину, поэтому дым облегает любую позу с любого ракурса.</li>
+      <li><b>2D-стиль.</b> Поле постеризуется в 1–4 тона, контур и линии между тонами держат постоянную толщину в пикселях, растр привязан к слою, а не к экрану, чтобы точки не «плыли». Можно включить анимацию «на двойках» (8–12 кадров/с), как у рисованных эффектов.</li>
+      <li><b>Пятна и черепа.</b> Пятна — клеточный шум, плывущий вверх: тёмные или сквозные. Черепа описаны формулой (SDF), состоят из того же дыма, глазницы сквозные, хвост вливается в поток.</li>
+      <li><b>Частицы.</b> Ромбовидные осколки летают по спирали в настоящем 3D вокруг тела (дают параллакс при вращении камеры), а рисуются плоскими. При появлении и исчезновении вылетает отдельный всплеск.</li>
+      <li><b>Масштаб.</b> Всё задано в метрах и умножается на общий масштаб, поэтому одна аура подходит и для маленького, и для великана. Радиус, высота и толщина вокруг тела настраиваются отдельно.</li>
+      <li><b>Состояния и переходы.</b> Любой пресет или ручная правка плавно интерполируется (числа и цвета). «Накал» — игровая ручка: покой ↔ бой меняет высоту, скорость, турбулентность, число частиц и подсветку.</li>
+      <li><b>Появление и исчезновение.</b> Три режима: подъём от земли, растворение по шуму, вспышка из центра.</li>
+    </ul>
+
+    <h2>Ограничения и что дальше</h2>
+    <ul>
+      <li>Камера в прототипе не поднимается выше 70°: при взгляде строго сверху вертикальный дым превращается в пятно. Для вида сверху нужна отдельная огибающая.</li>
+      <li>Одна маска хранит до трёх персонажей (каналы R, G, B). Для толпы: вторая маска или облегание только у ближних, у дальних хватит столба дыма.</li>
+      <li>Цена — несколько полупрозрачных слоёв с шумом на персонажа. Для дальних персонажей можно уменьшать число слоёв.</li>
+      <li>Если художник захочет нарисованные формы, их можно подмешать в тот же шейдер вместо шума (атлас-маска), остальная система не меняется.</li>
+      <li>Подключение к арене «Сказанья»: модуль <code>aura.js</code> не зависит от прототипа.</li>
+    </ul>
+<pre>const mask = new SilhouetteMask(renderer);
+mask.register(hero.group, 0);
+const aura = new Aura({ channel: 0, params: { ...PRESETS.spirit.params, scale: 1 } });
+scene.add(aura.group);
+// в кадре, перед основным рендером:
+mask.render(renderer, scene, camera);
+aura.update(dt, camera, hero.group.position, mask, renderer);
+// события:
+aura.appear(); aura.disappear();
+aura.transitionTo(PRESETS.rage.params, 1.2);</pre>
+  </article>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+import { Aura, SilhouetteMask, PRESETS, PARAM_DEFS, PARAM_GROUPS, COLOR_DEFS, REVEAL_MODES } from './aura.js';
+
+const $ = (id) => document.getElementById(id);
+const canvas = $('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+let quality = 1.5;
+renderer.setPixelRatio(Math.min(devicePixelRatio, quality));
+renderer.setClearColor(0x090c11);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x090c11);
+scene.fog = new THREE.Fog(0x090c11, 9, 24);
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 80);
+
+// toon-ish world so the 2D aura sits naturally
+const toonRamp = new THREE.DataTexture(new Uint8Array([70, 70, 70, 255, 150, 150, 150, 255, 255, 255, 255, 255]), 3, 1);
+toonRamp.minFilter = toonRamp.magFilter = THREE.NearestFilter; toonRamp.needsUpdate = true;
+const toon = (color, extra = {}) => new THREE.MeshToonMaterial({ color, gradientMap: toonRamp, ...extra });
+
+scene.add(new THREE.HemisphereLight(0x3a5680, 0x0b0b12, 1.1));
+const moon = new THREE.DirectionalLight(0xa9c2ff, 1.6); moon.position.set(-4, 8, 3); scene.add(moon);
+
+const floor = new THREE.Mesh(new THREE.CircleGeometry(16, 64), toon(0x182030));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+const ringMat = toon(0x24304a);
+const ring = new THREE.Mesh(new THREE.RingGeometry(5.6, 5.75, 96), ringMat); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.005; scene.add(ring);
+const wood = toon(0x3a3129);
+for (let i = 0; i < 9; i++) {
+  const a = (i / 9) * Math.PI * 2 + 0.2, h = 1.2 + (i % 3) * 0.45;
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, h, 7), wood);
+  post.position.set(Math.cos(a) * 6.4, h / 2, Math.sin(a) * 6.4); post.rotation.z = (i % 2 ? 1 : -1) * 0.05; scene.add(post);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.3, 7), wood); cap.position.set(post.position.x, h + 0.15, post.position.z); scene.add(cap);
+}
+const stoneMat = toon(0x2a3241);
+for (let i = 0; i < 14; i++) {
+  const a = i * 2.39, r = 3.6 + (i % 5) * 0.9;
+  const s = new THREE.Mesh(new THREE.DodecahedronGeometry(0.14 + (i % 4) * 0.07), stoneMat);
+  s.position.set(Math.cos(a) * r, 0.05, Math.sin(a) * r); s.rotation.set(i, i * 2, 0); scene.add(s);
+}
+
+const CHARS = [
+  { name: 'Герой', pos: [0, 0, 0], scale: 1, preset: 'spirit', surface: 0x9aa3b1, joints: 0x2a3442 },
+  { name: 'Великан', pos: [-2.8, 0, -1.2], scale: 1.45, preset: 'plague', surface: 0x7d7564, joints: 0x2c2a1c },
+  { name: 'Разбойник', pos: [2.6, 0, -0.8], scale: 0.85, preset: 'rage', surface: 0x8a6e66, joints: 0x2a1515 },
+];
+const mask = new SilhouetteMask(renderer);
+const chars = [], auras = [];
+let selected = 0, crowd = false, tdur = 1.5;
+
+function makeFallbackFigure(def) {
+  // simple mannequin if the model can't be loaded
+  const g = new THREE.Group(), m = toon(def.surface), j = toon(def.joints);
+  const add = (geo, mat, x, y, z) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); g.add(o); };
+  add(new THREE.CapsuleGeometry(0.22, 0.5, 4, 10), m, 0, 1.2, 0);
+  add(new THREE.SphereGeometry(0.15, 16, 12), m, 0, 1.68, 0);
+  for (const s of [-1, 1]) { add(new THREE.CapsuleGeometry(0.08, 0.7, 4, 8), j, s * 0.12, 0.45, 0); add(new THREE.CapsuleGeometry(0.06, 0.55, 4, 8), j, s * 0.34, 1.2, 0); }
+  return { root: g, mixer: null, actions: {} };
+}
+
+function setupCharacters(gltf) {
+  CHARS.forEach((def, i) => {
+    let c;
+    if (gltf) {
+      const root = SkeletonUtils.clone(gltf.scene);
+      root.traverse((o) => {
+        if (o.isMesh) {
+          o.frustumCulled = false;
+          const isJ = /Joints/i.test(o.material.name);
+          o.material = toon(isJ ? def.joints : def.surface, { emissive: 0x000000 });
+        }
+      });
+      const mixer = new THREE.AnimationMixer(root);
+      const actions = {};
+      for (const clip of gltf.animations) actions[clip.name] = mixer.clipAction(clip);
+      c = { root, mixer, actions };
+    } else c = makeFallbackFigure(def);
+    c.group = new THREE.Group();
+    c.group.add(c.root);
+    c.group.position.set(...def.pos);
+    c.group.scale.setScalar(def.scale);
+    c.group.rotation.y = i === 0 ? 0.35 : i === 1 ? 0.5 : -0.5;
+    c.def = def;
+    c.mats = [];
+    c.root.traverse((o) => { if (o.isMesh) c.mats.push(o.material); });
+    c.anim = null;
+    scene.add(c.group);
+    mask.register(c.group, i);
+    chars.push(c);
+    playAnim(c, i === 2 ? 'sneak_pose' : 'idle', 0);
+
+    const aura = new Aura({ channel: i, seed: i + 1, params: { ...PRESETS[def.preset].params, scale: def.scale } });
+    scene.add(aura.group);
+    auras.push(aura);
+  });
+  setCrowd(false);
+  buildWho();
+  syncUI();
+}
+
+function playAnim(c, name, fade = 0.35) {
+  if (!c.mixer || !c.actions[name] || c.anim === name) return;
+  const next = c.actions[name];
+  next.reset().play();
+  if (c.anim && c.actions[c.anim]) c.actions[c.anim].crossFadeTo(next, fade, false);
+  c.anim = name;
+}
+
+function setCrowd(on) {
+  crowd = on;
+  chars.forEach((c, i) => {
+    const vis = i === 0 || on;
+    c.group.visible = vis;
+    auras[i].group.visible = vis;
+  });
+  if (!on) selected = 0;
+  $('one').setAttribute('aria-pressed', String(!on));
+  $('three').setAttribute('aria-pressed', String(on));
+  buildWho();
+  syncUI();
+}
+
+/* ---------------- camera orbit */
+const orbit = { theta: 0.5, phi: 0.22, dist: 6.2, target: new THREE.Vector3(0, 1.1, 0), goal: new THREE.Vector3(0, 1.1, 0), spin: false };
+const pointers = new Map();
+let pinch0 = 0;
+canvas.addEventListener('pointerdown', (e) => { canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pointers.size === 2) pinch0 = pinchDist(); });
+canvas.addEventListener('pointermove', (e) => {
+  const p = pointers.get(e.pointerId); if (!p) return;
+  if (pointers.size === 1) {
+    orbit.theta -= (e.clientX - p.x) * 0.006;
+    orbit.phi = THREE.MathUtils.clamp(orbit.phi + (e.clientY - p.y) * 0.005, -0.15, 1.22);
+  }
+  p.x = e.clientX; p.y = e.clientY;
+  if (pointers.size === 2) { const d = pinchDist(); if (pinch0) zoom(pinch0 / d); pinch0 = d; }
+});
+const endPtr = (e) => { pointers.delete(e.pointerId); pinch0 = 0; };
+canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
+canvas.addEventListener('wheel', (e) => { e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0012)); }, { passive: false });
+function pinchDist() { const [a, b] = [...pointers.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; }
+function zoom(k) { orbit.dist = THREE.MathUtils.clamp(orbit.dist * k, 2.2, 18); }
+function updateCamera(dt) {
+  if (orbit.spin) orbit.theta += dt * 0.35;
+  orbit.target.lerp(orbit.goal, 1 - Math.exp(-dt * 5));
+  const cp = Math.cos(orbit.phi);
+  camera.position.set(
+    orbit.target.x + Math.sin(orbit.theta) * cp * orbit.dist,
+    orbit.target.y + Math.sin(orbit.phi) * orbit.dist,
+    orbit.target.z + Math.cos(orbit.theta) * cp * orbit.dist);
+  camera.lookAt(orbit.target);
+}
+
+/* ---------------- UI */
+const groupsEl = $('groups');
+const inputs = {};
+const fmt = (v, step) => (step >= 1 ? String(Math.round(v)) : v.toFixed(step < 0.01 ? 3 : 2));
+
+for (const [gid, gname] of PARAM_GROUPS) {
+  const det = document.createElement('details');
+  det.open = gid === 'size' || gid === 'reveal';
+  det.innerHTML = `<summary>${gname}</summary>`;
+  const body = document.createElement('div');
+  if (gid === 'color') {
+    body.className = 'colors';
+    for (const [key, label] of COLOR_DEFS) {
+      const l = document.createElement('label');
+      l.innerHTML = `<input type="color" id="p-${key}"> ${label}`;
+      body.appendChild(l);
+      const inp = l.querySelector('input');
+      inp.addEventListener('input', () => edit(key, inp.value));
+      inputs[key] = { inp };
+    }
+  } else {
+    for (const [key, label, g, min, max, step, unit] of PARAM_DEFS) {
+      if (g !== gid) continue;
+      const row = document.createElement('div');
+      row.className = 'ctl';
+      row.innerHTML = `<span>${label}</span><output></output><input type="range" id="p-${key}" min="${min}" max="${max}" step="${step}" aria-label="${label}">`;
+      const inp = row.querySelector('input'), out = row.querySelector('output');
+      inp.addEventListener('input', () => { const v = +inp.value; out.textContent = fmt(v, step) + (unit ? ' ' + unit : ''); edit(key, v); });
+      inputs[key] = { inp, out, step, unit };
+      body.appendChild(row);
+    }
+    if (gid === 'reveal') {
+      for (const [key, label] of [['revealIn', 'Появление'], ['revealOut', 'Исчезновение']]) {
+        const row = document.createElement('div');
+        row.className = 'ctl';
+        row.innerHTML = `<span>${label}</span><output></output><select id="p-${key}" aria-label="${label}">${REVEAL_MODES.map(([v, n]) => `<option value="${v}">${n}</option>`).join('')}</select>`;
+        const sel = row.querySelector('select');
+        sel.addEventListener('change', () => edit(key, sel.value));
+        inputs[key] = { inp: sel };
+        body.appendChild(row);
+      }
+    }
+  }
+  det.appendChild(body);
+  groupsEl.appendChild(det);
+}
+
+function edit(key, value) {
+  const a = auras[selected]; if (!a) return;
+  if (a.tween) { a.tween.to[key] = value; a.tween.from[key] = value; }
+  a.params[key] = value;
+  if (key === 'power') markState();
+  if (key === 'cMid') setAccent();
+}
+
+function syncUI() {
+  const a = auras[selected]; if (!a) return;
+  const P = a.params;
+  for (const key in inputs) {
+    const { inp, out, step, unit } = inputs[key];
+    if (document.activeElement === inp) continue;
+    if (inp.type === 'color') inp.value = P[key];
+    else if (inp.tagName === 'SELECT') inp.value = P[key];
+    else { inp.value = P[key]; if (out) out.textContent = fmt(+P[key], step) + (unit ? ' ' + unit : ''); }
+  }
+  markState(); setAccent(); markPreset();
+  $('toggle').textContent = a.revealTarget > 0.5 ? 'Развеять' : 'Призвать';
+  const c = chars[selected];
+  if (c) $('anim').value = c.anim || 'idle';
+}
+function setAccent() { const a = auras[selected]; if (a) document.documentElement.style.setProperty('--accent', brighten(a.params.cMid)); }
+function brighten(hex) { const c = new THREE.Color(hex); const hsl = {}; c.getHSL(hsl); c.setHSL(hsl.h, Math.min(1, hsl.s), Math.max(0.6, hsl.l)); return '#' + c.getHexString(); }
+function markState() { const p = auras[selected]?.params.power ?? 1; $('calm').setAttribute('aria-pressed', String(p < 0.55)); $('battle').setAttribute('aria-pressed', String(p >= 0.55)); }
+let lastPreset = {};
+function markPreset() { for (const b of $('presets').children) b.setAttribute('aria-pressed', String(b.dataset.key === lastPreset[selected])); }
+
+for (const [key, pr] of Object.entries(PRESETS)) {
+  const b = document.createElement('button');
+  b.className = 'chip'; b.dataset.key = key;
+  b.innerHTML = `<i style="background:linear-gradient(135deg, ${pr.params.cCore}, ${pr.params.cMid} 55%, ${pr.params.cEdge})"></i>${pr.name}`;
+  b.addEventListener('click', () => {
+    const a = auras[selected]; if (!a) return;
+    const keep = { scale: a.params.scale, power: a.params.power };
+    a.transitionTo({ ...pr.params, ...keep }, tdur);
+    if (a.revealTarget < 0.5) a.appear();
+    lastPreset[selected] = key; markPreset();
+    toast(`Переход: ${pr.name}`);
+  });
+  $('presets').appendChild(b);
+}
+CHARS.forEach((d, i) => (lastPreset[i] = d.preset));
+
+function buildWho() {
+  const sel = $('who'); sel.innerHTML = '';
+  CHARS.forEach((d, i) => { if (i === 0 || crowd) sel.insertAdjacentHTML('beforeend', `<option value="${i}">${d.name}${d.scale !== 1 ? ` (×${d.scale})` : ''}</option>`); });
+  sel.value = String(selected);
+}
+$('who').addEventListener('change', (e) => { selected = +e.target.value; syncUI(); });
+$('one').addEventListener('click', () => setCrowd(false));
+$('three').addEventListener('click', () => setCrowd(true));
+$('anim').addEventListener('change', (e) => { const c = chars[selected]; if (c) playAnim(c, e.target.value); });
+$('tdur').addEventListener('input', (e) => { tdur = +e.target.value; $('tdurOut').textContent = tdur.toFixed(1) + ' с'; });
+$('toggle').addEventListener('click', () => { const a = auras[selected]; if (!a) return; a.toggle(); syncUI(); });
+$('calm').addEventListener('click', () => { const a = auras[selected]; if (a) { a.transitionTo({ power: 0.2 }, tdur); markStateSoon(0.2); } });
+$('battle').addEventListener('click', () => { const a = auras[selected]; if (a) { a.transitionTo({ power: 1 }, tdur); markStateSoon(1); } });
+function markStateSoon(p) { $('calm').setAttribute('aria-pressed', String(p < 0.55)); $('battle').setAttribute('aria-pressed', String(p >= 0.55)); }
+$('spin').addEventListener('click', (e) => { orbit.spin = !orbit.spin; e.currentTarget.setAttribute('aria-pressed', String(orbit.spin)); e.currentTarget.textContent = orbit.spin ? 'Стоп вращения' : 'Автовращение'; });
+$('quality').addEventListener('change', (e) => { quality = +e.target.value; renderer.setPixelRatio(Math.min(devicePixelRatio, quality)); resize(); });
+$('copy').addEventListener('click', () => {
+  const txt = JSON.stringify(auras[selected]?.params ?? {}, (k, v) => (typeof v === 'number' ? Math.round(v * 1000) / 1000 : v), 2);
+  const done = () => toast('Настройки скопированы');
+  try { navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt)); } catch { fallbackCopy(txt); }
+});
+function fallbackCopy(txt) { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('Настройки скопированы'); } catch { toast('Не удалось скопировать'); } ta.remove(); }
+$('docBtn').addEventListener('click', () => { $('doc').hidden = false; $('docClose').focus(); });
+$('docClose').addEventListener('click', () => { $('doc').hidden = true; });
+addEventListener('keydown', (e) => { if (e.key === 'Escape') $('doc').hidden = true; });
+let toastT;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1400); }
+
+/* ---------------- loop */
+function resize() {
+  const el = canvas.parentElement;
+  const w = el.clientWidth, h = el.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(h, 1); camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(canvas.parentElement);
+resize();
+
+window.auraDemo = { auras, chars, mask, renderer, scene, camera, PRESETS };
+const clock = new THREE.Clock();
+const feet = new THREE.Vector3();
+const glow = new THREE.Color();
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const c0 = chars[selected];
+  if (c0) orbit.goal.set(c0.group.position.x, 1.05 * c0.def.scale * 0.95 + 0.1, c0.group.position.z);
+  updateCamera(dt);
+  for (const c of chars) c.mixer?.update(dt);
+  scene.updateMatrixWorld();
+  mask.render(renderer, scene, camera);
+  chars.forEach((c, i) => {
+    const a = auras[i];
+    if (!c.group.visible) return;
+    c.group.getWorldPosition(feet);
+    a.update(dt, camera, feet, mask, renderer);
+    glow.copy(a.glowColor).multiplyScalar(a.glowStrength * 0.1);
+    for (const m of c.mats) m.emissive.copy(glow);
+  });
+  if (auras[selected]?.tween) syncUI();
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+
+const loader = new GLTFLoader();
+const parse = (buf) => new Promise((res, rej) => loader.parse(buf, '', res, rej));
+fetch('models/Xbot.glb')
+  .then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+  .catch(() => fetch('models/xbot.b64.txt').then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then((b64) => Uint8Array.from(atob(b64.trim()), (ch) => ch.charCodeAt(0)).buffer))
+  .then(parse)
+  .then((g) => setupCharacters(g))
+  .catch((err) => { console.warn('model failed, using mannequin', err); setupCharacters(null); })
+  .finally(() => { $('loading').hidden = true; requestAnimationFrame(frame); });
+</script>
+
+</body></html>

@@ -1,0 +1,531 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Подхват</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Golos+Text:wght@400;500;600&display=swap">
+<script>document.documentElement.classList.add('js')</script>
+<style>
+/* Раскладка: презентация, разложенная в скролл — один разворот на слайд,
+   крупный плотный заголовок с 3D-меткой слева, настоящий айфон с живым
+   переключением экранов справа, тёмный разворот под карту пути. */
+:root{
+  --paper:#F3F4F2; --surface:#FFFFFF; --ink:#17191B; --muted:#556166; --line:#E2E6E1;
+  --lime:#DBF95B; --lime-deep:#CBEA39; --lime-ink:#4A5A20;
+  --air:#658592; --air-surface:#DBE5E9; --ink-deep:#101619; --band:#ECEFEA;
+  --r-card:32px;
+  --display:'Onest',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --body:'Golos Text','Onest',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --shadow:0 2px 4px rgba(23,25,27,.04),0 18px 44px rgba(23,25,27,.09);
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#101619; --surface:#182026; --ink:#F1F4F1; --muted:#A3B0B6; --line:#2A343A;
+  --lime:#D7F554; --lime-deep:#C2E436; --lime-ink:#17191B;
+  --air:#8FAAB6; --air-surface:#25323A; --ink-deep:#070C0F; --band:#161E23;
+  --shadow:0 2px 4px rgba(0,0,0,.4),0 20px 48px rgba(0,0,0,.45);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#101619; --surface:#182026; --ink:#F1F4F1; --muted:#A3B0B6; --line:#2A343A;
+  --lime:#D7F554; --lime-deep:#C2E436; --lime-ink:#17191B;
+  --air:#8FAAB6; --air-surface:#25323A; --ink-deep:#070C0F; --band:#161E23;
+  --shadow:0 2px 4px rgba(0,0,0,.4),0 20px 48px rgba(0,0,0,.45);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
+ font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,video{max-width:100%;display:block}
+.wrap{max-width:1200px;margin-inline:auto;
+ padding-left:max(16px,env(safe-area-inset-left,0px));
+ padding-right:max(16px,env(safe-area-inset-right,0px))}
+section{padding-block:clamp(60px,8.5vw,120px)}
+h1,h2{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.035em;line-height:1.03;font-weight:600}
+h1{font-size:clamp(38px,6.6vw,78px)}
+h2{font-size:clamp(31px,4.8vw,58px)}
+h3{font-family:var(--display);margin:0;font-size:19px;font-weight:600;letter-spacing:-.02em;line-height:1.28}
+p{margin:0}
+.lead{color:var(--muted);font-size:clamp(16px,1.45vw,18.5px);max-width:60ch}
+.accent{color:var(--lime-ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .accent{color:var(--lime)}}
+:root[data-theme="dark"] .accent{color:var(--lime)}
+.stack{display:flex;flex-direction:column;gap:20px}
+.split{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);
+ gap:clamp(30px,4.5vw,70px);align-items:center}
+.split.flip{grid-template-columns:minmax(0,.96fr) minmax(0,1.04fr)}
+@media (max-width:900px){.split,.split.flip{grid-template-columns:minmax(0,1fr)}
+ .split .media{order:2}}
+.media{display:flex;justify-content:center}
+.mark{width:56px;height:56px;object-fit:contain}
+.center{align-items:center;text-align:center}
+.center .lead{text-align:center}
+
+/* появление по скроллу */
+.js .r{opacity:0;transform:translateY(20px)}
+.js .r.in{opacity:1;transform:none;transition:opacity .72s var(--ease),transform .72s var(--ease)}
+.js .r[data-d="1"].in{transition-delay:.09s}
+.js .r[data-d="2"].in{transition-delay:.18s}
+.js .r[data-d="3"].in{transition-delay:.27s}
+.js .r[data-d="4"].in{transition-delay:.36s}
+@media (prefers-reduced-motion:reduce){.js .r{opacity:1!important;transform:none!important}}
+
+/* шоурилл */
+.player{position:relative;border-radius:var(--r-card);overflow:hidden;background:#0E1214;
+ box-shadow:var(--shadow);border:1px solid var(--line)}
+.player video{width:100%;aspect-ratio:16/9;object-fit:cover;background:#0E1214}
+.player .ctl{position:absolute;right:14px;bottom:14px;display:flex;gap:9px}
+.player button{height:42px;padding:0 17px;border-radius:999px;border:1px solid rgba(255,255,255,.26);
+ background:rgba(18,22,25,.52);color:#fff;font-family:var(--body);font-size:14px;font-weight:500;cursor:pointer;
+ backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:background .18s}
+.player button:hover{background:rgba(18,22,25,.72)}
+.player button:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
+
+/* ===== мокап айфона ===== */
+.iphone{--k:.60;position:relative;flex:0 0 auto;
+ width:calc(428px * var(--k));height:calc(900px * var(--k))}
+@media (max-width:1180px){.iphone{--k:.54}}
+@media (max-width:900px){.iphone{--k:.6}}
+@media (max-width:460px){.iphone{--k:.48}}
+@media (max-width:380px){.iphone{--k:.42}}
+.ph{position:absolute;left:calc(13px * var(--k));top:calc(13px * var(--k));
+ width:402px;height:874px;transform:scale(var(--k));transform-origin:0 0}
+.ph .body{position:absolute;left:-13px;top:-13px;width:428px;height:900px;border-radius:70px;
+ background:conic-gradient(from 212deg at 50% 50%,
+  #9AA6AE 0deg,#454F55 26deg,#20262A 62deg,#6B767D 104deg,#D3DBDF 134deg,#556066 168deg,
+  #1C2125 212deg,#7E8A91 258deg,#3A4349 300deg,#A9B4BA 338deg,#9AA6AE 360deg);
+ box-shadow:0 46px 78px rgba(16,24,28,.26),0 14px 28px rgba(16,24,28,.16),0 2px 4px rgba(16,24,28,.14)}
+.ph .rail{position:absolute;left:-13px;top:-13px;width:428px;height:900px;border-radius:70px;
+ box-shadow:inset 0 1px 1px rgba(255,255,255,.55),inset 0 -1px 1px rgba(255,255,255,.3)}
+.ph .bezel{position:absolute;left:-4px;top:-4px;width:410px;height:882px;border-radius:61px;
+ background:#07090A;box-shadow:0 0 0 1px rgba(255,255,255,.05)}
+.ph .screen{position:absolute;left:0;top:0;width:402px;height:874px;border-radius:55px;
+ overflow:hidden;background:#F8F9F7}
+.ph .screen img{position:absolute;left:0;top:0;width:402px;height:874px;object-fit:cover;
+ opacity:0;transform:translateX(22%);backface-visibility:hidden;
+ transition:opacity .42s var(--ease),transform .58s var(--ease)}
+.ph .screen img.on{opacity:1;transform:none}
+.ph .screen img.out{opacity:0;transform:translateX(-11%)}
+.ph .island{position:absolute;left:50%;margin-left:-47px;top:11px;width:94px;height:29px;border-radius:15px;
+ background:#050607;z-index:6;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.07)}
+.ph .island:after{content:'';position:absolute;right:9px;top:50%;margin-top:-5px;width:10px;height:10px;
+ border-radius:50%;background:radial-gradient(circle at 36% 32%,#2C3A46 0%,#121A22 45%,#05080B 100%);
+ box-shadow:inset 0 0 0 .5px rgba(120,160,200,.25)}
+.ph .kb{position:absolute;background:linear-gradient(90deg,#7C878E,#2E363B 40%,#191E21 70%,#6E7980)}
+.ph .kb.l1{left:-16px;top:168px;width:4px;height:32px;border-radius:2px 0 0 2px}
+.ph .kb.l2{left:-16px;top:222px;width:4px;height:58px;border-radius:2px 0 0 2px}
+.ph .kb.l3{left:-16px;top:298px;width:4px;height:58px;border-radius:2px 0 0 2px}
+.ph .kb.r1{right:-16px;top:252px;width:4px;height:92px;border-radius:0 2px 2px 0}
+.ph .glare{position:absolute;left:-13px;top:-13px;width:428px;height:900px;border-radius:70px;
+ pointer-events:none;mix-blend-mode:screen;
+ background:linear-gradient(118deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,0) 17%,
+  rgba(255,255,255,0) 72%,rgba(255,255,255,.18) 88%,rgba(255,255,255,0) 100%)}
+.ph .scrglare{position:absolute;left:0;top:0;width:402px;height:874px;border-radius:55px;
+ pointer-events:none;z-index:7;
+ background:linear-gradient(122deg,rgba(255,255,255,.055) 0%,rgba(255,255,255,0) 26%,rgba(255,255,255,0) 100%)}
+@media (prefers-reduced-motion:reduce){.ph .screen img{transition:none}}
+.duo{display:flex;gap:clamp(14px,2.4vw,30px);flex-wrap:wrap;justify-content:center}
+.duo .iphone{--k:.5}
+@media (max-width:1180px){.duo .iphone{--k:.44}}
+@media (max-width:460px){.duo .iphone{--k:.42}}
+
+/* тёмный разворот — карта пути */
+.dark-band{background:var(--ink-deep);color:#F1F4F1}
+.dark-band .lead{color:#A3B0B6}
+.stages{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:15px;margin-top:clamp(28px,4vw,46px)}
+@media (max-width:1000px){.stages{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:540px){.stages{grid-template-columns:minmax(0,1fr)}}
+.stage{background:#1A2228;border:1px solid #28333A;border-radius:var(--r-card);padding:22px 20px;
+ display:flex;flex-direction:column;gap:13px;min-width:0}
+.stage .num{width:30px;height:30px;border-radius:50%;background:var(--lime);color:#17191B;
+ display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;font-weight:600}
+.stage h3{color:#F1F4F1}
+.stage ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.stage li{font-size:14.5px;line-height:1.4;color:#B6C2C8;padding-left:16px;position:relative}
+.stage li::before{content:"";position:absolute;left:0;top:.52em;width:6px;height:6px;border-radius:50%;background:#46535B}
+.start-pill{display:inline-flex;align-items:center;height:46px;padding:0 24px;border-radius:999px;
+ background:var(--lime);color:#17191B;font-family:var(--display);font-weight:600;font-size:16px}
+
+.band{background:var(--band)}
+.guides{display:flex;flex-wrap:wrap;gap:10px}
+.guide{display:inline-flex;align-items:center;height:44px;padding:0 18px;border-radius:999px;
+ background:var(--air-surface);color:var(--ink);font-size:15px;font-weight:500}
+.brand{display:flex;align-items:center;gap:14px}
+.brand img{width:52px;height:52px;border-radius:14px;box-shadow:0 6px 18px rgba(23,25,27,.14)}
+.brand b{font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:-.02em}
+.qr-row{display:flex;align-items:center;gap:18px;margin-top:clamp(22px,3vw,34px);flex-wrap:wrap}
+.qr-row img{width:116px;height:116px;border-radius:18px;background:#fff;padding:9px;
+ box-shadow:var(--shadow);border:1px solid var(--line)}
+.qr-row a{display:block;border-radius:18px}
+.qr-row a:focus-visible{outline:3px solid var(--air);outline-offset:3px}
+.qr-row p{font-size:15.5px;color:var(--muted);max-width:26ch}
+.finale{display:flex;flex-direction:column;align-items:center;text-align:center;gap:26px}
+.finale img{width:112px;height:112px;border-radius:27px;box-shadow:0 18px 44px rgba(23,25,27,.2)}
+.finale h2{max-width:17ch}
+</style>
+
+<!-- Обложка: шоурилл -->
+<header class="wrap" style="padding-top:clamp(26px,4vw,52px);padding-bottom:clamp(36px,5vw,70px)">
+  <div class="brand r in">
+    <img src="a/appicon.webp" alt="Иконка приложения «Подхват»" width="52" height="52">
+    <b>Подхват</b>
+  </div>
+  <div class="player r in" style="margin-top:clamp(24px,3.5vw,40px)">
+    <video id="reel" src="a/showreel.mp4" poster="a/poster.webp" muted loop playsinline autoplay
+           preload="metadata" aria-label="Шоурилл приложения «Подхват»"></video>
+    <div class="ctl">
+      <button id="snd" type="button">Включить звук</button>
+      <button id="pp" type="button">Пауза</button>
+    </div>
+  </div>
+  <div class="qr-row r in">
+    <a href="https://gvensydesign-coder.github.io/Podhvat/" target="_blank" rel="noopener">
+      <img src="a/qr.png" alt="QR-код: открыть прототип «Подхвата»" width="640" height="640"></a>
+    <p>Наведите камеру — откроется прототип приложения.</p>
+  </div>
+</header>
+
+<!-- Это Скаут -->
+<section class="wrap">
+  <div class="split">
+    <div class="stack r">
+      <h1>Это Скаут — ваш личный <span class="accent">помощник!</span></h1>
+      <p class="lead">ИИ-агент подскажет, что делать, найдёт помощь рядом и доведёт случай
+        до передачи хозяину.</p>
+    </div>
+    <div class="media r" data-d="1">
+      <img src="a/scout.webp" alt="Скаут — собака в лаймовом ошейнике"
+           width="760" height="648" style="width:min(100%,400px)">
+    </div>
+  </div>
+</section>
+
+<!-- Помощник, который всегда на связи -->
+<section class="wrap">
+  <div class="split">
+    <div class="stack r">
+      <img class="mark" src="a/ic/chats.webp" alt="">
+      <h2>Помощник, который всегда на связи.</h2>
+      <p class="lead">Скаут живёт внутри приложения. Пишите ему текстом, записывайте голосовые,
+        присылайте фото или видео: он задаёт короткие вопросы, подсказывает безопасные первые шаги
+        и собирает ответы в карточку случая.</p>
+      <p class="lead">Если ситуация выходит за рамки самопомощи, Скаут называет подходящую службу
+        или специалиста и помогает связаться. Он работает круглосуточно.</p>
+    </div>
+    <div class="media r" data-d="1">
+      <div class="iphone" data-cycle="3400">
+        <div class="ph"><i class="body"></i><i class="rail"></i><i class="bezel"></i>
+          <div class="screen">
+            <img class="on" src="a/s/home.webp" alt="Главный экран приложения">
+            <img src="a/s/scout.webp" alt="Диалог со Скаутом">
+          </div>
+          <i class="kb l1"></i><i class="kb l2"></i><i class="kb l3"></i>
+          <i class="kb r1"></i><i class="scrglare"></i><i class="glare"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Основная карта пути пользователя -->
+<div class="dark-band">
+  <section class="wrap">
+    <div class="stack r center" style="gap:16px">
+      <img class="mark" src="a/ic/map.webp" alt="">
+      <h2>Основная карта пути пользователя</h2>
+      <p class="lead">Первая помощь в несколько основных шагов.</p>
+      <span class="start-pill">Нашёл животное</span>
+    </div>
+    <div class="stages">
+      <div class="stage r" data-d="0"><div class="num">1</div><h3>Оценка</h3>
+        <ul><li>Шесть вопросов</li><li>Результат оценки</li><li>Срочная помощь</li></ul></div>
+      <div class="stage r" data-d="1"><div class="num">2</div><h3>Карточка находки</h3>
+        <ul><li>Новая находка</li><li>Описание и фото</li><li>Текущий случай</li></ul></div>
+      <div class="stage r" data-d="2"><div class="num">3</div><h3>Поиск помощи</h3>
+        <ul><li>Скаут в чате</li><li>Помощники рядом</li><li>Маршрут помощи</li><li>Самопомощь и памятки</li></ul></div>
+      <div class="stage r" data-d="3"><div class="num">4</div><h3>Связь</h3>
+        <ul><li>Согласие на контакты</li><li>Чат по случаю</li><li>Звонок и видео</li></ul></div>
+      <div class="stage r" data-d="4"><div class="num">5</div><h3>Завершение</h3>
+        <ul><li>Хозяин найден</li><li>Передано в учреждение</li><li>История случая</li></ul></div>
+    </div>
+    <div class="media r" data-d="2" style="margin-top:clamp(32px,4.5vw,54px)">
+      <div class="iphone" data-cycle="2900">
+        <div class="ph"><i class="body"></i><i class="rail"></i><i class="bezel"></i>
+          <div class="screen">
+            <img class="on" src="a/s/case.webp" alt="Экран текущего случая">
+            <img src="a/s/route.webp" alt="Экран маршрута помощи">
+            <img src="a/s/tasks.webp" alt="Экран задач по случаю">
+            <img src="a/s/close.webp" alt="Экран закрытия случая">
+          </div>
+          <i class="kb l1"></i><i class="kb l2"></i><i class="kb l3"></i>
+          <i class="kb r1"></i><i class="scrglare"></i><i class="glare"></i>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Шесть вопросов вместо паники -->
+<section class="wrap">
+  <div class="split flip">
+    <div class="media r">
+      <div class="iphone" data-cycle="3100">
+        <div class="ph"><i class="body"></i><i class="rail"></i><i class="bezel"></i>
+          <div class="screen">
+            <img class="on" src="a/s/triage.webp" alt="Экран шести вопросов">
+            <img src="a/s/triage-result.webp" alt="Экран результата оценки">
+            <img src="a/s/emergency.webp" alt="Экран срочной помощи">
+          </div>
+          <i class="kb l1"></i><i class="kb l2"></i><i class="kb l3"></i>
+          <i class="kb r1"></i><i class="scrglare"></i><i class="glare"></i>
+        </div>
+      </div>
+    </div>
+    <div class="stack r" data-d="1">
+      <img class="mark" src="a/ic/search.webp" alt="">
+      <h2>Шесть вопросов вместо паники</h2>
+      <p class="lead">Первым идёт вопрос о непосредственной опасности для людей или животного.
+        Приближаться ради ответа не нужно: так и написано на экране.</p>
+      <p class="lead">По ответам Скаут показывает ориентир для следующего шага: наблюдение,
+        внимание или срочно. Это подсказка, а не диагноз, и приложение прямо об этом говорит.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Люди и организации -->
+<div class="band">
+  <section class="wrap">
+    <div class="split">
+      <div class="stack r">
+        <img class="mark" src="a/ic/volunteer.webp" alt="">
+        <h2>Люди и организации</h2>
+        <p class="lead">В разделе «Связь» собраны волонтёры, клиники, приюты и фонды. Их можно
+          отфильтровать по расстоянию, скорости ответа и рейтингу; у каждого видно, чем он готов помочь.
+          Есть быстрый запрос на передержку на ночь.</p>
+        <p class="lead">Предложение помощи ещё не означает, что место найдено: приём подтверждается
+          отдельно, и приложение так и пишет.</p>
+      </div>
+      <div class="media r" data-d="1">
+        <div class="iphone" data-cycle="3100">
+          <div class="ph"><i class="body"></i><i class="rail"></i><i class="bezel"></i>
+            <div class="screen">
+              <img class="on" src="a/s/helpers.webp" alt="Экран помощников рядом">
+              <img src="a/s/helper.webp" alt="Карточка помощника">
+              <img src="a/s/night-foster.webp" alt="Экран передержки на ночь">
+            </div>
+            <i class="kb l1"></i><i class="kb l2"></i><i class="kb l3"></i>
+            <i class="kb r1"></i><i class="scrglare"></i><i class="glare"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- База знаний -->
+<section class="wrap">
+  <div class="split flip">
+    <div class="media r">
+      <div class="iphone">
+        <div class="ph"><i class="body"></i><i class="rail"></i><i class="bezel"></i>
+          <div class="screen"><img class="on" src="a/s/knowledge.webp" alt="Экран базы знаний"></div>
+          <i class="kb l1"></i><i class="kb l2"></i><i class="kb l3"></i>
+          <i class="kb r1"></i><i class="scrglare"></i><i class="glare"></i>
+        </div>
+      </div>
+    </div>
+    <div class="stack r" data-d="1">
+      <img class="mark" src="a/ic/book.webp" alt="">
+      <h2>База знаний.</h2>
+      <p class="lead">Больше двадцати памяток на 1–2 минуты чтения.</p>
+      <div class="guides">
+        <span class="guide">Нашли животное. С чего начать?</span>
+        <span class="guide">Вижу травму. Что дальше?</span>
+        <span class="guide">Кошка во дворе — потерялась?</span>
+        <span class="guide">Дикое животное рядом</span>
+      </div>
+      <p class="lead">Памятки работают как самопомощь, когда важно быстро понять следующий шаг.
+        Главная фишка — возможность изучения проблемы как онлайн, так и офлайн: памятки открываются
+        даже тогда, когда нет сети, а это самое главное.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Дополнительные функции -->
+<section class="wrap" style="padding-bottom:clamp(18px,2.6vw,34px)">
+  <div class="stack r center" style="gap:14px">
+    <img class="mark" src="a/ic/medal.webp" alt="">
+    <h2>Дополнительные функции</h2>
+    <p class="lead">Функции, которые усиливают основной сценарий.</p>
+  </div>
+</section>
+
+<!-- ID-слепок -->
+<section class="wrap" style="padding-top:clamp(28px,4vw,54px)">
+  <div class="split">
+    <div class="stack r">
+      <img class="mark" src="a/ic/camera.webp" alt="">
+      <h2>Нос собаки — уникальный. А у кошки — уникальные черты мордочки.</h2>
+      <p class="lead">По снимкам собирается ID-слепок признаков, который можно сверить с объявлениями.</p>
+      <p class="lead">Это не биометрическая идентификация, поэтому совпадение нужно проверять отдельно.</p>
+      <p class="lead">Если животное напугано или ранено, скан пропускают.</p>
+    </div>
+    <div class="media r" data-d="1">
+      <div class="iphone" data-cycle="3000">
+        <div class="ph"><i class="body"></i><i class="rail"></i><i class="bezel"></i>
+          <div class="screen">
+            <img class="on" src="a/s/nose-scan.webp" alt="Экран скана носа и морды">
+            <img src="a/s/scanner.webp" alt="Экран ID-слепка">
+          </div>
+          <i class="kb l1"></i><i class="kb l2"></i><i class="kb l3"></i>
+          <i class="kb r1"></i><i class="scrglare"></i><i class="glare"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Страховка на случай пропажи -->
+<div class="band">
+  <section class="wrap">
+    <div class="split flip">
+      <div class="media r">
+        <div class="iphone" data-cycle="3200">
+          <div class="ph"><i class="body"></i><i class="rail"></i><i class="bezel"></i>
+            <div class="screen">
+              <img class="on" src="a/s/flyer.webp" alt="Экран листовки">
+              <img src="a/s/pet-collar.webp" alt="Экран печати бумажного ошейника">
+            </div>
+            <i class="kb l1"></i><i class="kb l2"></i><i class="kb l3"></i>
+            <i class="kb r1"></i><i class="scrglare"></i><i class="glare"></i>
+          </div>
+        </div>
+      </div>
+      <div class="stack r" data-d="1">
+        <img class="mark" src="a/ic/saved.webp" alt="">
+        <h2>Страховка на случай пропажи.</h2>
+        <p class="lead">Из карточки питомца Скаут готовит бумажный ошейник: четыре полоски на листе.
+          На каждой имя, телефон владельца, QR-код и надпись «Нашли меня?».</p>
+        <p class="lead">Скаут подготавливает данные для заявления о находке; подаёте его вы сами.
+          Цифровая листовка делается из фото и района, с QR-кодом на карточку: телефон, чип
+          и точный адрес в неё не попадают.</p>
+        <p class="lead">Листовку можно скачать готовым файлом и распечатать.
+          Документы питомца хранятся приватно на вашем кабинете.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Карта случаев -->
+<section class="wrap">
+  <div class="split">
+    <div class="stack r">
+      <img class="mark" src="a/ic/map.webp" alt="">
+      <h2>Карта случаев.</h2>
+      <p class="lead">Интерактивная карта случаев даёт возможность увидеть случаи пропажи или помощи
+        рядом с вами — именно в вашем районе. Таким образом вы сможете проверить, есть ли рядом
+        хозяин с нужным объявлением, а может, были похожие случаи находки и сравнить карточки.
+        Или вы можете стать тем самым волонтёром, который спешит на помощь.</p>
+      <p class="lead">На карте показаны те случаи, которые отмечены местом и зафиксированы на фото,
+        видео или в формате 360. Также есть функция «Списка», где вы можете подробнее узнать
+        о ситуации вокруг и найти подходящий случай без фото.</p>
+    </div>
+    <div class="media r" data-d="1">
+      <div class="iphone" data-cycle="3200">
+        <div class="ph"><i class="body"></i><i class="rail"></i><i class="bezel"></i>
+          <div class="screen">
+            <img class="on" src="a/s/nearby.webp" alt="Экран карты случаев рядом">
+            <img src="a/s/panorama.webp" alt="Экран панорамы 360 градусов">
+          </div>
+          <i class="kb l1"></i><i class="kb l2"></i><i class="kb l3"></i>
+          <i class="kb r1"></i><i class="scrglare"></i><i class="glare"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Награда за вашу помощь -->
+<div class="band">
+  <section class="wrap">
+    <div class="stack r center" style="gap:14px">
+      <img class="mark" src="a/ic/medal.webp" alt="">
+      <h2>Награда за вашу помощь</h2>
+      <p class="lead">Уровень растёт вместе с вашими добрыми делами. Чтобы человек чувствовал себя
+        комфортнее в стрессовой ситуации, Скаут старается поддерживать пользователя на разных этапах,
+        давая разные ачивки и слова благодарности.</p>
+    </div>
+    <div class="media duo r" data-d="1" style="margin-top:clamp(30px,4vw,48px)">
+      <div class="iphone">
+        <div class="ph"><i class="body"></i><i class="rail"></i><i class="bezel"></i>
+          <div class="screen"><img class="on" src="a/s/awards.webp" alt="Экран наград"></div>
+          <i class="kb l1"></i><i class="kb l2"></i><i class="kb l3"></i>
+          <i class="kb r1"></i><i class="scrglare"></i><i class="glare"></i>
+        </div>
+      </div>
+      <div class="iphone">
+        <div class="ph"><i class="body"></i><i class="rail"></i><i class="bezel"></i>
+          <div class="screen"><img class="on" src="a/s/stats.webp" alt="Экран вклада пользователя"></div>
+          <i class="kb l1"></i><i class="kb l2"></i><i class="kb l3"></i>
+          <i class="kb r1"></i><i class="scrglare"></i><i class="glare"></i>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Финал -->
+<section class="wrap finale">
+  <img class="r" src="a/appicon.webp" alt="Иконка приложения «Подхват»" width="112" height="112">
+  <h2 class="r" data-d="1">Первая помощь тому, кто решил оказать помощь другому.</h2>
+</section>
+
+<script>
+(function(){
+  var v=document.getElementById('reel'), snd=document.getElementById('snd'), pp=document.getElementById('pp');
+  if(v){
+    var pr=v.play&&v.play(); if(pr&&pr.catch)pr.catch(function(){});
+    snd.addEventListener('click',function(){
+      v.muted=!v.muted; snd.textContent=v.muted?'Включить звук':'Выключить звук';
+      if(!v.muted){var q=v.play();if(q&&q.catch)q.catch(function(){});}
+    });
+    pp.addEventListener('click',function(){
+      if(v.paused){var q=v.play();if(q&&q.catch)q.catch(function(){});pp.textContent='Пауза';}
+      else{v.pause();pp.textContent='Смотреть';}
+    });
+  }
+  /* появление по скроллу */
+  var items=[].slice.call(document.querySelectorAll('.r'));
+  function showAll(){items.forEach(function(e){e.classList.add('in')})}
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})
+    },{rootMargin:'0px 0px -6% 0px',threshold:.06});
+    items.forEach(function(e){if(!e.classList.contains('in'))io.observe(e)});
+    setTimeout(showAll,2600);
+    window.addEventListener('load',function(){setTimeout(showAll,1800)});
+  } else showAll();
+  /* переключение экранов внутри айфонов, пока они в кадре */
+  var phones=[].slice.call(document.querySelectorAll('.iphone[data-cycle]'));
+  phones.forEach(function(ph){
+    var imgs=[].slice.call(ph.querySelectorAll('.screen img'));
+    if(imgs.length<2)return;
+    var i=0,t=null,ms=parseInt(ph.getAttribute('data-cycle'),10)||3200;
+    function step(){
+      var prev=imgs[i]; i=(i+1)%imgs.length; var nx=imgs[i];
+      prev.classList.remove('on'); prev.classList.add('out');
+      nx.classList.remove('out'); void nx.offsetWidth; nx.classList.add('on');
+      setTimeout(function(){prev.classList.remove('out')},640);
+    }
+    function start(){if(!t)t=setInterval(step,ms)}
+    function stop(){if(t){clearInterval(t);t=null}}
+    if('IntersectionObserver' in window){
+      new IntersectionObserver(function(es){
+        es.forEach(function(e){e.isIntersecting?start():stop()})
+      },{threshold:.35}).observe(ph);
+    } else start();
+  });
+})();
+</script>
+
+</body></html>

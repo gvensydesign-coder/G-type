@@ -1,0 +1,25 @@
+<!-- @dsCard group="Foundations" height=640 width=900 subtitle="Тени, градиенты, скругления, стекло и кольцо фокуса." -->
+<style>
+  .fx { display: flex; flex-direction: column; gap: 22px; padding: 20px; background: var(--bg-app); color: var(--text-primary); }
+  .fx h4 { margin: 0 0 10px; font: 800 11px/14px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; }
+  .sw { width: 120px; height: 72px; border-radius: var(--radius-lg); background: var(--bg-surface); border: 1px solid var(--bd-edge); display: grid; place-items: center; font: 700 12px/16px var(--font-sans); color: var(--text-secondary); text-align: center; }
+  .gr { width: 190px; height: 84px; border-radius: var(--radius-xl); display: flex; align-items: flex-end; padding: 10px 12px; font: 700 12px/16px var(--font-sans); }
+  .rd { width: 72px; height: 72px; background: var(--brand-soft); border: 2px solid var(--brand); display: grid; place-items: center; font: 800 12px/16px var(--font-sans); color: var(--text-brand); }
+  .gl { padding: 16px 20px; border-radius: var(--radius-xl); background: var(--bd-grad-hero); display: flex; gap: 12px; align-items: center; }
+</style>
+<div class="fx" id="root"></div>
+<script>
+  var B = window.Buddy;
+  function sh(n) { return '<div class="sw" style="box-shadow:var(--' + n + ')">' + n + '</div>'; }
+  document.getElementById('root').innerHTML =
+    '<div><h4>Тени</h4><div class="row">' + ['shadow-xs', 'shadow-sm', 'shadow-md', 'shadow-lg', 'shadow-brand', 'shadow-orange', 'shadow-glow-streak', 'ring-focus'].map(sh).join('') + '</div></div>' +
+    '<div><h4>Градиенты</h4><div class="row">' +
+      '<div class="gr" style="background:var(--bd-grad-hero);color:var(--text-on-hero)">grad-hero</div>' +
+      '<div class="gr" style="background:var(--bd-grad-wash);color:var(--text-primary)">grad-wash</div>' +
+      '<div class="gr bd-cover--aurora" style="color:var(--ink-900)">cover-aurora</div><div class="gr bd-cover--sunset" style="color:var(--ink-900)">cover-sunset</div>' +
+      '<div class="gr bd-cover--candy" style="color:var(--ink-900)">cover-candy</div><div class="gr bd-cover--lagoon" style="color:var(--ink-900)">cover-lagoon</div></div></div>' +
+    '<div><h4>Скругления</h4><div class="row">' + [['xs', 6], ['sm', 10], ['md', 14], ['lg', 18], ['xl', 24], ['2xl', 28], ['3xl', 36], ['pill', 9999]].map(function (r) { return '<div class="rd" style="border-radius:var(--radius-' + r[0] + ')">' + r[0] + '</div>'; }).join('') + '</div></div>' +
+    '<div><h4>Стекло: blur-sm 8 · blur-md 16 · blur-lg 28 (полоски под панелями)</h4><div class="row">' + ['sm', 'md', 'lg'].map(function (s) { return '<div style="position:relative;width:190px;height:96px;border-radius:var(--radius-xl);overflow:hidden;background:repeating-linear-gradient(135deg,var(--violet-400) 0 14px,var(--orange-300) 14px 28px,var(--sky-300) 28px 42px)"><div style="position:absolute;left:12px;right:12px;bottom:12px;height:44px;border-radius:var(--radius-lg);display:grid;place-items:center;font:800 12px/16px var(--font-sans);color:var(--text-primary);background:var(--glass-bg);-webkit-backdrop-filter:blur(var(--blur-' + s + ')) saturate(var(--glass-saturate));backdrop-filter:blur(var(--blur-' + s + ')) saturate(var(--glass-saturate));border:1px solid var(--glass-border);box-shadow:var(--shadow-glass)">blur-' + s + '</div></div>'; }).join('') + '</div></div>' +
+    '<div><h4>Стекло (только на градиенте шапки)</h4><div class="gl">' + B.IconButton({ icon: 'menu', label: 'Menu', variant: 'glass' }) + '<span class="bd-pill-group">' + B.IconButton({ icon: 'bell', label: 'Notifications', variant: 'glass', dot: true, size: 'sm' }) + B.IconButton({ icon: 'search', label: 'Search', variant: 'glass', size: 'sm' }) + '</span></div></div>';
+</script>

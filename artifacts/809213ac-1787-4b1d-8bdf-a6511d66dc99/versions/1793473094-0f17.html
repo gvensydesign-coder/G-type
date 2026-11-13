@@ -1,0 +1,420 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Живая медь: карта</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
+<style>
+/* Layout: isometric illustrated map on a paper-coloured stage (stays light in both themes), sidebar with filters, list and card. */
+:root{
+  --bg:#FBF6EE; --panel:#FFFFFF; --ink:#2A2320; --soft:#6B5E55; --line:#E6DCCD; --chip:#F3ECE1;
+  --patina:#2F9E86; --patina-ink:#1F7A67; --copper:#BF6A45; --pill-bg:rgba(255,255,255,.94);
+  --font-d:'Unbounded',system-ui,sans-serif; --font-b:'Onest',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1D1917; --panel:#2A2420; --ink:#F4ECE2; --soft:#BDAEA2; --line:#3E352F; --chip:#352D28;
+  --patina:#4DBFA3; --patina-ink:#7FD9C0; --copper:#D58A6C; --pill-bg:rgba(42,36,32,.94); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1D1917; --panel:#2A2420; --ink:#F4ECE2; --soft:#BDAEA2; --line:#3E352F; --chip:#352D28;
+  --patina:#4DBFA3; --patina-ink:#7FD9C0; --copper:#D58A6C; --pill-bg:rgba(42,36,32,.94); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:15px;line-height:1.45;overflow:hidden;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px}
+.app{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px}
+.stage{position:relative;min-width:0;min-height:0;border-radius:24px;overflow:hidden;background:#F3EDE2;border:1px solid var(--line)}
+#map{display:block;width:100%;height:100%;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+#map.drag{cursor:grabbing}
+.bg,.obj{transition:opacity .5s ease,transform .5s ease}
+.bg.off,.obj.off{opacity:0;transform:translateY(-16px);pointer-events:none}
+.obj{cursor:pointer}
+.obj:hover{transform:translateY(-3px)}
+.obj.off:hover{transform:translateY(-16px)}
+.obj.sel{filter:drop-shadow(0 0 5px rgba(191,106,69,.95))}
+.obj.sel .plot{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.lab{cursor:pointer}
+.lab text{font-family:var(--font-b);font-weight:500;fill:#2A2320;paint-order:stroke;stroke:#F3EDE2;stroke-linejoin:round}
+.lab.sel text{fill:#BF6A45;font-weight:600}
+.lab[display="none"]{display:none}
+.stname{font-family:var(--font-b);font-weight:600;fill:#8A7C70;letter-spacing:.14em;pointer-events:none}
+.title{position:absolute;left:14px;top:14px;pointer-events:none;background:#BF6A45;color:#FBF6EE;padding:10px 16px 11px;border:2px solid #BF6A45;
+  outline:2px solid #BF6A45;outline-offset:3px;box-shadow:inset 0 0 0 2px #F3EDE2}
+.title b{display:block;font-family:var(--font-d);font-weight:600;font-size:clamp(15px,2.3vw,24px);letter-spacing:.02em;line-height:1.1}
+.title span{display:block;font-size:12px;margin-top:3px;opacity:.92}
+.compass{position:absolute;right:14px;top:14px;width:44px;height:44px;pointer-events:none}
+.time{position:absolute;left:14px;right:70px;bottom:14px;background:var(--pill-bg);border:1px solid var(--line);border-radius:18px;padding:10px 14px;display:flex;flex-direction:column;gap:6px;color:var(--ink)}
+.trow{display:flex;align-items:center;gap:12px;min-width:0}
+.trow button{flex:none;width:34px;height:34px;border-radius:50%;border:0;background:var(--patina);color:#fff;font-size:14px;cursor:pointer}
+.yr{flex:none;font-family:var(--font-d);font-weight:600;font-size:22px;min-width:3.2ch;font-variant-numeric:tabular-nums}
+#yr-in{flex:1;min-width:0;accent-color:var(--copper)}
+.ticks{display:flex;flex-wrap:wrap;gap:4px}
+.ticks button{font:inherit;font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+.cap{font-size:13px;min-height:2.6em}
+.cap b{color:var(--copper)}
+.tools{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:6px}
+.tools button{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:18px;cursor:pointer;display:grid;place-items:center}
+button:focus-visible{outline:2px solid #5B8DEF;outline-offset:2px}
+aside{min-width:0;min-height:0;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+.chip i{width:10px;height:10px;border-radius:50%;display:block}
+.chip[aria-pressed="false"]{opacity:.45}
+.list{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px}
+.item{font:inherit;text-align:left;border:0;background:transparent;color:var(--ink);padding:8px 10px;border-radius:12px;display:flex;gap:10px;align-items:center;cursor:pointer;min-width:0}
+.item:hover{background:var(--chip)}
+.item[aria-current="true"]{background:var(--chip);box-shadow:inset 3px 0 0 var(--copper)}
+.item.dim{opacity:.4;cursor:default}
+.item i{flex:none;width:10px;height:10px;border-radius:50%}
+.item span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px 16px 14px;display:flex;flex-direction:column;gap:8px;max-height:46%;overflow:auto}
+.card .k{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);font-weight:600}
+.card h2{margin:0;font-family:var(--font-d);font-weight:500;font-size:18px;line-height:1.2;text-wrap:balance}
+.card p{margin:0}
+.card .why{color:var(--soft);font-size:14px}
+.card a{color:var(--patina-ink);font-weight:500}
+.note{font-size:12px;color:var(--soft)}
+@media (max-width:820px){
+  body{overflow:auto}
+  .app{height:auto;grid-template-columns:minmax(0,1fr);grid-template-rows:64vh auto}
+  .list{max-height:220px;flex:none}
+  .card{max-height:none}
+}
+@media (prefers-reduced-motion:reduce){.bg,.obj{transition:none}.obj.sel .plot{animation:none}}
+</style>
+
+<div class="app">
+  <div class="stage" id="stage">
+    <svg id="map" role="img" aria-label="Изометрическая карта Верхней Пышмы" xmlns="http://www.w3.org/2000/svg">
+      <defs><clipPath id="clip"><polygon id="clip-poly" points=""/></clipPath></defs>
+      <g id="slab"></g>
+      <g id="grid" clip-path="url(#clip)"></g>
+      <g id="roads" clip-path="url(#clip)"></g>
+      <g id="stage-objs"></g>
+      <g id="names"></g>
+      <g id="labels"></g>
+    </svg>
+    <div class="title"><b>ВЕРХНЯЯ ПЫШМА</b><span>Медная столица Урала · схема</span></div>
+    <svg class="compass" viewBox="-22 -22 44 44" aria-label="Север"><g transform="rotate(60)"><path d="M0-17 6 4 0 0-6 4z" fill="#BF6A45" stroke="#2A2320" stroke-width="1.6" stroke-linejoin="round"/></g><text x="12" y="-12" font-size="11" font-weight="600" fill="#2A2320" font-family="Onest,sans-serif">С</text></svg>
+    <div class="time" id="time">
+      <div class="trow"><button id="t-play" aria-label="Запустить время">▶</button><span class="yr" id="yr">2026</span><input type="range" id="yr-in" min="1850" max="2026" step="1" value="2026" aria-label="Год"></div>
+      <div class="ticks" id="ticks"></div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="tools">
+      <button id="b-in" aria-label="Приблизить">+</button>
+      <button id="b-out" aria-label="Отдалить">−</button>
+      <button id="b-reset" aria-label="Сбросить вид" title="Сбросить вид">⌂</button>
+    </div>
+  </div>
+  <aside>
+    <div class="filters" id="filters"></div>
+    <div class="list" id="list"></div>
+    <div class="card" id="card"></div>
+  </aside>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const NS='http://www.w3.org/2000/svg';
+const K=100,C30=.8660254,INK='#2A2320';
+const P=(x,y,z)=>[(x-y)*C30*K,(x+y)*.5*K-(z||0)];
+const f=n=>(Math.round(n*10)/10);
+const pts=a=>a.map(p=>f(p[0])+','+f(p[1])).join(' ');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- палитра карты ---------- */
+const COL={cu:['#F4C9B3','#E8A98A','#C98160'],faith:['#F8E3AE','#EBC875','#CDA24A'],nat:['#CDEFE3','#8FDCC4','#4DBFA3'],cult:['#D6E3FB','#AFC6F5','#7D9FE6'],
+  stone:['#FFFFFF','#EFE8DD','#D6CCBD'],ore:['#8A7B70','#4A403A','#3A302B'],deep:['#7FD9C0','#2F9E86','#1F7A67'],gold:['#F8E3AE','#E0B24E','#BC8E34'],bgc:['#FFFFFF','#ECE6DC','#DCD4C6']};
+const CATS={cu:{n:'Медь и труд',css:'#BF6A45'},faith:{n:'Вера',css:'#D9A441'},nat:{n:'Природа',css:'#4DBFA3'},cult:{n:'Культура и память',css:'#5B8DEF'}};
+const ICON={
+  cu:'<path d="M3 21V11l6 3.5V11l6 3.5V5h5v16z"/>',
+  faith:'<path d="M12 1.5c2.2 3.2 5.2 4.4 5.2 8.5H6.8c0-4.100 3-5.300 5.200-8.500zM6 11.500h12V21H6z"/>',
+  nat:'<circle cx="12" cy="9" r="7"/><rect x="10.800" y="14" width="2.400" height="8"/>',
+  cult:'<path d="M2 9l10-6.500L22 9zM4.500 11h3.200v8H4.500zM10.400 11h3.200v8h-3.200zM16.300 11h3.200v8h-3.200zM2.500 20h19v2.500h-19z"/>'};
+
+/* ---------- данные ---------- */
+const S={
+ hist:['Историко-краеведческий музей','https://history-vp.ru/ekspozitsii'],
+ cnk:['Центр народной культуры Среднего Урала','https://uraltradicia.ru/ethnomap/gorodskoy-okrug-verhnyaya-pyshma/'],
+ city:['Сайт музея: о городе','https://www.history-vp.ru/turizm/o-verkhnej-pyshme-page'],
+ stela:['EANews: стела','https://www.eanews.ru/ekaterinburg/20250717153041/stelu-v-chest-170-letiya-otkryli-v-verhney-pyshme'],
+ manin:['EANews: Манин парк','https://eanews.ru/ekaterinburg/20220902171247/otsenka-otlichno-sverdlovskiy-deputat-otsenil-rekonstruktsiyu-manina-parka-v-verhney-pyshme'],
+ flower:['EANews: «Медный цветок»','https://www.eanews.ru/ekaterinburg/20241023155214/mezhdunarodnyy-kinofestival-mednyy-tsvetok-startuet-v-verhney-pyshme'],
+ parad:['Профиль: «Парадный расчёт»','https://profile.ru/news/dk/ugmk/v-muzejnom-komplekse-ugmk-otkryto-novoe-zdanie-349051/']
+};
+const CITY=[
+ {id:'museum',name:'Исторический музей',cat:'cult',shape:'museum',pos:[.15,.55],year:1989,
+  text:'ул. Кривоусова, 47. 13 экспозиций: «Деревенька моя», «Битва за медь», «Город у медной реки», «Музей меди», «Чуланчик, или Назад в СССР» (2015), «Русская мебель». Год основания в источниках разный: 1978 или 1989.',
+  why:'Тёплые бытовые детали: резная мебель, КВН, патефон, хрущёвка.',src:S.hist},
+ {id:'stela',name:'Стела к 170-летию',cat:'cu',shape:'stela',pos:[1.3,-1.4],year:2025,
+  text:'Улица Орджоникидзе. Открыта 17 июля 2025: атом меди с 29 электронами, кольцо расплавленной меди, синие фонари как кристаллы медного купороса, барельеф с конной откаткой руды.',
+  why:'Орбиты и кольца уже в нашем знаке. Синий — акцент азурита.',src:S.stela},
+ {id:'manin',name:'Манин парк',cat:'nat',shape:'hills',pos:[2.2,-2.3],year:0,
+  text:'Реконструкция завершена в 2022: смотровая, мост, амфитеатр, скульптуры животных. Название связывают с гражданской войной и девушкой Маной. Подтверждения я не нашёл.',
+  why:'Рельеф и холм из трёхвершинного герба.',src:S.manin},
+ {id:'ugmkpark',name:'Парк УГМК',cat:'nat',shape:'park',pos:[-1.9,-1.7],year:0,
+  text:'Солнечные часы и музыкальные фонтаны.',why:'Геометрия, свет и вода для светлых иллюстраций.',src:S.cnk},
+ {id:'mosque',name:'Медная мечеть',cat:'faith',shape:'mosque',pos:[-2.4,1.5],year:2002,
+  text:'Мечеть имени имама Исмаила аль-Бухари, 2002. Медный купол, первая соборная мечеть Свердловской области.',
+  why:'Медь как архитектурный материал и зелёная патина купола.',src:S.cnk},
+ {id:'hram',name:'Храм Успения',cat:'faith',shape:'church',pos:[-1.1,.85],s:1,year:2000,
+  text:'Построен в 2000 году. Другой храмовый слой города: церковь Иоакима и Анны (2019).',
+  why:'Кокошник и изразец как модуль орнамента.',src:S.cnk},
+ {id:'joakim',name:'Церковь Иоакима и Анны',cat:'faith',shape:'church',pos:[1.9,1.4],s:.8,year:2019,
+  text:'2019 год. Русский стиль, кокошники, изразцы.',why:'Узорчатая кровля как источник ритма.',src:S.cnk},
+ {id:'dk',name:'ДК «Металлург»',cat:'cult',shape:'dk',pos:[1.0,.5],year:0,
+  text:'Главная сцена города. Здесь вручают приз «Медного цветка» — молодёжного кинофестиваля.',
+  why:'Место встречи аудитории до 25 лет.',src:S.flower},
+ {id:'complex',name:'Музейный комплекс УГМК',cat:'cult',shape:'complex',pos:[2.5,-.1],year:2005,
+  text:'«Боевая слава Урала» (2005), «Крылья Победы», «Парадный расчёт» (24 июня 2020, больше 3000 м², больше 50 образцов техники), «XX век авто» (2016), «Музей меди».',
+  why:'Масштаб и металл. Фасад «Парадного расчёта» собран из фотопанелей.',src:S.parad},
+ {id:'plant',name:'Медеэлектролитный завод',cat:'cu',shape:'plant',pos:[.7,2.3],year:1929,
+  text:'Стройка началась в 1929, первая катодная медь — в 1934. По данным музея, в войну из меди завода делали около 80% гильз и патронов.',
+  why:'Электролиз как сюжет: кристаллы растут на катоде.',src:S.city},
+ {id:'rowan',name:'ГорСАД и «Рябиновые зори»',cat:'nat',shape:'rowan',pos:[-3.1,-.55],year:0,
+  text:'Рябиновые аллеи на Успенском проспекте.',why:'Тёплый красный акцент вместо оранжевого.',src:S.cnk},
+ {id:'square',name:'Сквер Воинской Славы',cat:'cult',shape:'square',pos:[-.5,-1.45],year:0,
+  text:'Памятное место города. Рядом памятник уральским рудокопам.',why:'Сдержанно, без пафоса: каска, кирка, шахтный фонарь.',src:S.city},
+ {id:'mine',name:'Первая шахта, 1854',cat:'cu',shape:'mine',pos:[3.0,1.5],year:1854,
+  text:'7 июля 1854 заложена первая шахта Иоанно-Богословская (Ивановская), в работе с 1856. Рудник дал посёлку имя Медный Рудник.',
+  why:'Точка отсчёта: отсюда медь «растёт» в слои города.',src:S.city}
+];
+CITY.forEach(i=>{i.note='Положение на схеме условное.';});
+const EVENTS=[
+ [1850,'До рудника: деревни Пышма и Мостовское на Верхотурском тракте, золотой прииск в верховьях реки.'],
+ [1854,'Заложена первая медная шахта. Посёлок Медный Рудник.'],
+ [1934,'Первая катодная медь на электролитном заводе (стройка с 1929).'],
+ [1946,'Рабочий посёлок становится городом (дата в источниках расходится).'],
+ [1989,'Исторический музей (в части источников год основания — 1978).'],
+ [2000,'Храм Успения. Мечеть откроется в 2002.'],
+ [2002,'Медная мечеть имени имама Исмаила аль-Бухари.'],
+ [2005,'Музейный комплекс УГМК: «Боевая слава Урала». Статус городского округа.'],
+ [2019,'Церковь Иоакима и Анны.'],
+ [2022,'Реконструкция Манин парка. Трамвай «Львёнок» до Екатеринбурга.'],
+ [2025,'Стела к 170-летию города.']];
+const STREETS=[
+ {name:'УСПЕНСКИЙ ПРОСПЕКТ',a:[-4.1,0],b:[4.2,0],main:true,lab:[-1.6,0]},
+ {name:'УЛ. КРИВОУСОВА',a:[0,-3.9],b:[0,4],lab:[0,-2.55],up:true},
+ {name:'УЛ. ОРДЖОНИКИДЗЕ',a:[-.8,-1],b:[3.2,-1],lab:[2.2,-1]}];
+const CX=.3,CZ=.1,perR=a=>3.7*(1+.1*Math.sin(2*a+1)+.06*Math.sin(3*a+4));
+
+/* ---------- построители ---------- */
+function el(tag,attrs,html){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(html!=null)e.innerHTML=html;return e;}
+const poly=(a,fill,st,sw)=>'<polygon points="'+pts(a)+'" fill="'+fill+'" stroke="'+st+'" stroke-width="'+sw+'" stroke-linejoin="round"/>';
+function box(x,y,w,d,h,z0,c,o){o=o||{};const st=o.st||INK,sw=o.sw||2.2;
+  const T=[P(x,y,z0+h),P(x+w,y,z0+h),P(x+w,y+d,z0+h),P(x,y+d,z0+h)];
+  const L=[P(x,y+d,z0+h),P(x+w,y+d,z0+h),P(x+w,y+d,z0),P(x,y+d,z0)];
+  const R=[P(x+w,y,z0+h),P(x+w,y+d,z0+h),P(x+w,y+d,z0),P(x+w,y,z0)];
+  let s=poly(L,c[1],st,sw)+poly(R,c[2],st,sw)+poly(T,c[0],st,sw);
+  if(o.win){const cols=Math.max(2,Math.round(w*8)),rows=Math.max(1,Math.round(h/13));
+    for(let i=0;i<cols;i++)for(let j=0;j<rows;j++){const u0=(i+.25)/cols,u1=(i+.7)/cols,v0=z0+h*(j+.3)/rows,v1=z0+h*(j+.7)/rows;
+      s+=poly([P(x+w*u0,y+d,v1),P(x+w*u1,y+d,v1),P(x+w*u1,y+d,v0),P(x+w*u0,y+d,v0)],'rgba(42,35,32,.28)','none',0);}
+    const cr=Math.max(2,Math.round(d*8));
+    for(let i=0;i<cr;i++)for(let j=0;j<rows;j++){const u0=(i+.25)/cr,u1=(i+.7)/cr,v0=z0+h*(j+.3)/rows,v1=z0+h*(j+.7)/rows;
+      s+=poly([P(x+w,y+d*u0,v1),P(x+w,y+d*u1,v1),P(x+w,y+d*u1,v0),P(x+w,y+d*u0,v0)],'rgba(42,35,32,.34)','none',0);}}
+  return s;}
+function plot(x,y,w,d,c,extra){return '<g class="plot">'+poly([P(x,y,0),P(x+w,y,0),P(x+w,y+d,0),P(x,y+d,0)],c,'#CFC4B3',1.2)+'</g>'+(extra||'');}
+function tree(x,y,r,fill){const p=P(x,y,0);const rr=r||8;
+  return '<path d="M'+f(p[0])+','+f(p[1])+'l0,-'+f(rr*1.2)+'" stroke="'+INK+'" stroke-width="2"/><circle cx="'+f(p[0])+'" cy="'+f(p[1]-rr*1.9)+'" r="'+rr+'" fill="'+(fill||'#7FD9C0')+'" stroke="'+INK+'" stroke-width="1.8"/>';}
+function dome(x,y,z,r,h,fill){const c=P(x,y,z),rx=r*K*1.2247,ry=r*K*.7071;
+  return '<path d="M'+f(c[0]-rx)+','+f(c[1])+' C'+f(c[0]-rx)+','+f(c[1]-h*1.33)+' '+f(c[0]+rx)+','+f(c[1]-h*1.33)+' '+f(c[0]+rx)+','+f(c[1])+' A'+f(rx)+','+f(ry)+' 0 0 1 '+f(c[0]-rx)+','+f(c[1])+'z" fill="'+fill+'" stroke="'+INK+'" stroke-width="2.2" stroke-linejoin="round"/>';}
+function onion(x,y,z,r,h,fill){const c=P(x,y,z),rx=r*K*1.2247,ry=r*K*.7071;
+  return '<path d="M'+f(c[0]-rx)+','+f(c[1])+' C'+f(c[0]-rx*1.7)+','+f(c[1]-h*.45)+' '+f(c[0]-rx*.4)+','+f(c[1]-h*.75)+' '+f(c[0])+','+f(c[1]-h*1.35)+' C'+f(c[0]+rx*.4)+','+f(c[1]-h*.75)+' '+f(c[0]+rx*1.7)+','+f(c[1]-h*.45)+' '+f(c[0]+rx)+','+f(c[1])+' A'+f(rx)+','+f(ry)+' 0 0 1 '+f(c[0]-rx)+','+f(c[1])+'z" fill="'+fill+'" stroke="'+INK+'" stroke-width="2.2" stroke-linejoin="round"/>'
+   +'<path d="M'+f(c[0])+','+f(c[1]-h*1.35)+'l0,-9M'+f(c[0]-3)+','+f(c[1]-h*1.35-6)+'l6,0" stroke="'+INK+'" stroke-width="2"/>';}
+function ring(cx,cy,rx,ry,rot,col,w){return '<ellipse cx="'+f(cx)+'" cy="'+f(cy)+'" rx="'+rx+'" ry="'+ry+'" transform="rotate('+rot+' '+f(cx)+' '+f(cy)+')" fill="none" stroke="'+col+'" stroke-width="'+w+'"/>';}
+
+/* каждая форма: svg, якорь подписи (x,y,z), глубина */
+const SHAPES={
+ museum(x,y){return {svg:plot(x-.08,y-.08,.7,.5,'#EFE8DD')+box(x,y,.5,.32,34,0,COL.stone,{win:1})+box(x-.03,y-.03,.56,.38,5,34,COL.cu)+box(x+.05,y+.05,.14,.14,22,39,COL.stone,{win:1}),a:[x+.25,y+.16,64],c:[x+.25,y+.16]};},
+ stela(x,y){const c=P(x+.1,y+.1,102);
+  return {svg:plot(x-.12,y-.12,.44,.44,'#EFE8DD')+box(x,y,.2,.2,12,0,COL.ore)+box(x+.06,y+.06,.08,.08,76,12,COL.ore)
+   +ring(c[0],c[1],28,11,-32,'#BF6A45',4)+ring(c[0],c[1],28,11,32,'#D58A6C',4)+ring(c[0],c[1],28,11,90,'#BF6A45',4)
+   +'<circle cx="'+f(c[0])+'" cy="'+f(c[1])+'" r="6" fill="#5B8DEF" stroke="'+INK+'" stroke-width="2"/>',a:[x+.1,y+.1,140],c:[x+.1,y+.1]};},
+ hills(x,y){let s=plot(x-.1,y-.1,1.1,.95,'#CDEFE3')+box(x,y,.9,.75,12,0,COL.nat)+box(x+.12,y+.1,.66,.5,12,12,COL.nat)+box(x+.24,y+.2,.42,.28,12,24,COL.nat);
+  [[x-.05,y+.8],[x+.95,y+.2],[x+.85,y+.85],[x-.05,y-.05]].forEach(p=>{s+=tree(p[0],p[1],8,'#8FDCC4');});
+  return {svg:s,a:[x+.45,y+.35,52],c:[x+.45,y+.4]};},
+ park(x,y){let s=plot(x,y,1,.8,'#CDEFE3');const c=P(x+.5,y+.4,0);
+  s+=ring(c[0],c[1],34,17,0,'#E0B24E',4)+'<path d="M'+f(c[0])+','+f(c[1])+'l0,-26" stroke="'+INK+'" stroke-width="3"/>';
+  [[x+.1,y+.1],[x+.85,y+.1],[x+.12,y+.7],[x+.88,y+.7],[x+.5,y+.05],[x+.5,y+.75]].forEach(p=>{s+=tree(p[0],p[1],8,'#8FDCC4');});
+  return {svg:s,a:[x+.5,y+.4,34],c:[x+.5,y+.4]};},
+ mosque(x,y){let s=plot(x-.08,y-.08,.74,.6,'#EFE8DD')+box(x,y,.36,.36,26,0,COL.stone,{win:1})+dome(x+.18,y+.18,26,.17,26,'#2F9E86')
+  +box(x+.45,y+.04,.07,.07,70,0,COL.stone);const t=P(x+.485,y+.075,70);
+  s+='<polygon points="'+pts([[t[0]-6,t[1]],[t[0]+6,t[1]],[t[0],t[1]-16]])+'" fill="#E0B24E" stroke="'+INK+'" stroke-width="2"/>';
+  return {svg:s,a:[x+.18,y+.18,60],c:[x+.25,y+.2]};},
+ church(x,y,s0){const k=s0||1;let s=plot(x-.07,y-.07,.3*k+.14,.3*k+.14,'#EFE8DD')+box(x,y,.3*k,.3*k,30*k,0,COL.stone,{win:1})+box(x+.1*k,y+.3*k,.1*k,.1*k,14*k,0,COL.stone);
+  s+=onion(x+.15*k,y+.15*k,30*k,.12*k,32*k,'#E0B24E');return {svg:s,a:[x+.15*k,y+.15*k,86*k],c:[x+.15*k,y+.2*k]};},
+ dk(x,y){return {svg:plot(x-.08,y-.08,.86,.62,'#EEF3FC')+box(x,y,.7,.36,30,0,COL.cult,{win:1})+box(x-.02,y-.02,.74,.4,4,30,COL.cult)+box(x+.1,y+.36,.5,.1,5,0,COL.stone),a:[x+.35,y+.18,50],c:[x+.35,y+.22]};},
+ complex(x,y){return {svg:plot(x-.08,y-.08,1.16,.8,'#EFE8DD')+box(x,y,1,.34,22,0,COL.stone,{win:1})+box(x-.02,y-.02,1.04,.38,4,22,COL.cu)+box(x+.7,y+.34,.3,.2,36,0,COL.cu,{win:1})+box(x+.1,y+.34,.16,.16,12,0,COL.ore),a:[x+.5,y+.17,50],c:[x+.5,y+.25]};},
+ plant(x,y){const c1=P(x+.53,y-.05,100),c2=P(x+.53,y-.05,112);
+  return {svg:plot(x-.1,y-.2,.9,.9,'#EFE8DD')+box(x,y,.6,.3,26,0,COL.stone,{win:1})+box(x+.05,y+.3,.25,.22,40,0,COL.cu,{win:1})+box(x+.5,y-.12,.07,.07,95,0,COL.ore)
+   +'<ellipse cx="'+f(c1[0]+6)+'" cy="'+f(c1[1]-14)+'" rx="15" ry="9" fill="#fff" fill-opacity=".85" stroke="#C9BFB1" stroke-width="1.5"/><ellipse cx="'+f(c2[0]+18)+'" cy="'+f(c2[1]-24)+'" rx="12" ry="7" fill="#fff" fill-opacity=".7" stroke="#C9BFB1" stroke-width="1.5"/>',a:[x+.3,y+.15,60],c:[x+.3,y+.2]};},
+ rowan(x,y){let s='';for(let i=0;i<7;i++){const p=P(x+i*.27,y,0);
+   s+='<path d="M'+f(p[0])+','+f(p[1])+'l0,-10" stroke="'+INK+'" stroke-width="2"/><circle cx="'+f(p[0])+'" cy="'+f(p[1]-20)+'" r="10" fill="'+(i%2?'#E0705B':'#8FDCC4')+'" stroke="'+INK+'" stroke-width="1.8"/>'
+   +(i%2?'<circle cx="'+f(p[0]-3)+'" cy="'+f(p[1]-22)+'" r="2" fill="#fff"/><circle cx="'+f(p[0]+4)+'" cy="'+f(p[1]-17)+'" r="2" fill="#fff"/>':'');}
+  return {svg:s,a:[x+.8,y,48],c:[x+.8,y]};},
+ square(x,y){let s=plot(x,y,.55,.55,'#DDF1E8')+box(x+.22,y+.22,.11,.11,8,0,COL.stone)+box(x+.25,y+.25,.05,.05,56,8,COL.gold);const t=P(x+.275,y+.275,64);
+  s+='<polygon points="'+pts([[t[0]-4,t[1]],[t[0]+4,t[1]],[t[0],t[1]-10]])+'" fill="#E0B24E" stroke="'+INK+'" stroke-width="1.8"/>';
+  [[x+.05,y+.05],[x+.5,y+.05],[x+.05,y+.5],[x+.5,y+.5]].forEach(p=>{s+=tree(p[0],p[1],7,'#8FDCC4');});
+  return {svg:s,a:[x+.275,y+.275,78],c:[x+.275,y+.275]};},
+ mine(x,y){const b1=P(x+.1,y+.05,16),b2=P(x+.1,y+.22,16),ap=P(x+.1,y+.135,86);
+  return {svg:plot(x-.08,y-.08,.6,.46,'#EFE8DD')+box(x,y,.36,.26,16,0,COL.stone,{win:1})
+   +'<path d="M'+pts([b1])+' L'+pts([ap])+' L'+pts([b2])+' M'+f((b1[0]+ap[0])/2)+','+f((b1[1]+ap[1])/2+8)+' L'+f((b2[0]+ap[0])/2)+','+f((b2[1]+ap[1])/2+8)+'" fill="none" stroke="'+INK+'" stroke-width="3.4" stroke-linejoin="round"/>'
+   +'<circle cx="'+f(ap[0])+'" cy="'+f(ap[1])+'" r="11" fill="#C98160" stroke="'+INK+'" stroke-width="2.2"/><circle cx="'+f(ap[0])+'" cy="'+f(ap[1])+'" r="3" fill="'+INK+'"/>',a:[x+.1,y+.135,108],c:[x+.18,y+.13]};}
+};
+
+/* ---------- сборка сцены ---------- */
+const objLayer=$('#stage-objs'),slab=$('#slab'),grid=$('#grid'),roads=$('#roads'),names=$('#names'),labels=$('#labels'),svg=$('#map'),stageEl=$('#stage');
+const per=[];for(let i=0;i<120;i++){const a=i/120*Math.PI*2,r=perR(a);per.push([CX+Math.cos(a)*r,CZ+Math.sin(a)*r,a]);}
+$('#clip-poly').setAttribute('points',pts(per.map(p=>P(p[0],p[1],0))));
+(function(){ // плита-периметр
+  const T=18,n=per.length;let sides='',edge='';
+  for(let i=0;i<n;i++){const j=(i+1)%n,a=per[i],b=per[j],m=(a[2]+b[2])/2,nx=Math.cos(m),ny=Math.sin(m);
+    if(nx+ny>0){const fill=ny>nx?'#D8CFC0':'#C4BAA9';
+      sides+='<polygon points="'+pts([P(a[0],a[1],0),P(b[0],b[1],0),P(b[0],b[1],-T),P(a[0],a[1],-T)])+'" fill="'+fill+'" stroke="'+fill+'" stroke-width=".8"/>';
+      edge+='M'+pts([P(a[0],a[1],-T)]).replace(',',' ')+' L'+pts([P(b[0],b[1],-T)]).replace(',',' ')+' ';}}
+  slab.innerHTML=sides+'<polygon points="'+pts(per.map(p=>P(p[0],p[1],0)))+'" fill="#F6F1E8" stroke="'+INK+'" stroke-width="2.6" stroke-linejoin="round"/>'
+   +'<path d="'+edge+'" fill="none" stroke="'+INK+'" stroke-width="2.6" stroke-linejoin="round"/>'
+   +'<polygon points="'+pts(per.map(p=>P(CX+(p[0]-CX)*.975,CZ+(p[1]-CZ)*.975,0)))+'" fill="none" stroke="#BF6A45" stroke-width="2.6" stroke-dasharray="11 8" stroke-linejoin="round"/>';
+})();
+(function(){ // мелкая сетка улиц
+  let s='';for(let g=-4.5;g<=4.5;g+=.5){s+='<path d="M'+pts([P(g,-4.6,0)]).replace(',',' ')+' L'+pts([P(g,4.6,0)]).replace(',',' ')+' M'+pts([P(-4.6,g,0)]).replace(',',' ')+' L'+pts([P(4.6,g,0)]).replace(',',' ')+'" stroke="#FFFFFF" stroke-width="5" fill="none"/>';}
+  grid.innerHTML=s;})();
+(function(){ // улицы
+  let s='';STREETS.forEach(st=>{const a=P(st.a[0],st.a[1],0),b=P(st.b[0],st.b[1],0),d='M'+f(a[0])+','+f(a[1])+' L'+f(b[0])+','+f(b[1]);
+    if(st.main)s+='<path d="'+d+'" stroke="#9E5535" stroke-width="19" stroke-linecap="round" fill="none"/><path d="'+d+'" stroke="#BF6A45" stroke-width="15" stroke-linecap="round" fill="none"/><path d="'+d+'" stroke="#F4C9B3" stroke-width="2" stroke-dasharray="9 9" fill="none"/>';
+    else s+='<path d="'+d+'" stroke="#DCD2C2" stroke-width="15" stroke-linecap="round" fill="none"/><path d="'+d+'" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" fill="none"/>';});
+  roads.innerHTML=s;
+  STREETS.forEach(st=>{const p=P(st.lab[0],st.lab[1],0),ang=st.up?-30:30;
+    const t=el('text',{x:f(p[0]),y:f(p[1]+4),'text-anchor':'middle',transform:'rotate('+ang+' '+f(p[0])+' '+f(p[1])+')','class':'stname','data-main':st.main?1:0},st.name);
+    if(st.main)t.style.fill='#FBF6EE';names.appendChild(t);});
+})();
+const distSeg=(px,py,st)=>{const [ax,ay]=st.a,[bx,by]=st.b,dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)));return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));};
+const items=[];let seed=11;const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+// объекты
+CITY.forEach(it=>{const r=SHAPES[it.shape](it.pos[0],it.pos[1],it.s);it.r=r;
+  const g=el('g',{'class':'obj','data-id':it.id},r.svg);items.push({d:r.c[0]+r.c[1]+.35,g,obj:it});});
+// фоновые кварталы
+const cells=[];
+for(let gx=-4.3;gx<=4.4;gx+=.34)for(let gy=-4.3;gy<=4.4;gy+=.34){
+  const x=gx+(rnd()-.5)*.05,y=gy+(rnd()-.5)*.05,a=Math.atan2(y-CZ,x-CX),r=Math.hypot(x-CX,y-CZ);
+  if(r>perR(a)*.93)continue;
+  if(STREETS.some(st=>distSeg(x+.08,y+.08,st)<.2))continue;
+  if(CITY.some(c=>Math.hypot(c.r.c[0]-x,c.r.c[1]-y)<(c.shape==='complex'?.95:c.shape==='hills'||c.shape==='park'?.85:.62)))continue;
+  cells.push({x,y,k:Math.hypot(x-3,y-1.4)+rnd()*1.1});}
+cells.sort((p,q)=>p.k-q.k);
+const NBF=[[1850,0],[1854,.025],[1934,.16],[1946,.34],[2000,.64],[2025,1]];
+const bld=cells.map((c,i)=>{const fr=i/cells.length,tall=fr>.64?(rnd()<.1?58:24+rnd()*20):fr>.34?14+rnd()*14:9+rnd()*8;
+  const col=fr<.16?['#FBEAE0','#EBCDBB','#D9B39B']:fr>.64&&rnd()<.14?['#E7F6F0','#BDE8D8','#98D3BF']:COL.bgc;
+  const w=.15+rnd()*.07,d=.15+rnd()*.07;
+  const g=el('g',{'class':'bg off'},box(c.x,c.y,w,d,tall,0,col,{st:'#A89D90',sw:1.1}));items.push({d:c.x+c.y+(w+d)/2,g});return {g,fr};});
+items.sort((a,b)=>a.d-b.d).forEach(i=>objLayer.appendChild(i.g));
+
+/* ---------- подписи ---------- */
+const labEls={};
+function wrap(t){const w=t.split(' '),out=[];let c='';w.forEach(x=>{if((c+' '+x).trim().length>17&&c){out.push(c);c=x;}else c=(c+' '+x).trim();});if(c)out.push(c);return out;}
+CITY.forEach(it=>{
+  const g=el('g',{'class':'lab','data-id':it.id,display:'none'});
+  g.appendChild(el('path',{fill:'none',stroke:'#2A2320','stroke-width':1.3,'stroke-dasharray':'4 4','class':'lead'}));
+  g.appendChild(el('circle',{fill:'#2A2320'}));
+  g.appendChild(el('g',{fill:CATS[it.cat].css,'class':'ico'},ICON[it.cat]));
+  const tl=el('text',{});wrap(it.name).forEach((ln,i)=>{const ts=el('tspan',{},ln);tl.appendChild(ts);});g.appendChild(tl);
+  labels.appendChild(g);labEls[it.id]=g;});
+
+/* ---------- вид: масштаб и сдвиг ---------- */
+let view={cx:0,cy:30,w:1780},goal=null,scale=1,layoutQ=false;
+function rect(){return stageEl.getBoundingClientRect();}
+function defaultView(){const r=rect();if(r.width/r.height<1)return {cx:0,cy:40,w:1120};const sc=Math.min(.62,Math.max(.3,(r.width/2-190)/505));return {cx:0,cy:30,w:r.width/sc};}
+function applyView(){const r=rect(),h=view.w*r.height/r.width;
+  svg.setAttribute('viewBox',f(view.cx-view.w/2)+' '+f(view.cy-h/2)+' '+f(view.w)+' '+f(h));scale=r.width/view.w;scheduleLayout();}
+function scheduleLayout(){if(layoutQ)return;layoutQ=true;requestAnimationFrame(()=>{layoutQ=false;layout();});}
+function zoomAt(f2,px,py){const r=rect(),h=view.w*r.height/r.width,wx=view.cx-view.w/2+px/scale,wy=view.cy-h/2+py/scale;
+  const nw=Math.min(2400,Math.max(420,view.w*f2)),ns=r.width/nw,nh=nw*r.height/r.width;
+  view.w=nw;view.cx=wx-px/ns+nw/2;view.cy=wy-py/ns+nh/2;goal=null;applyView();}
+const ptrs=new Map();let moved=0,pinch=0;
+svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=0;pinch=0;svg.classList.add('drag');});
+svg.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
+  if(ptrs.size===2){const a=[...ptrs.values()],d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),r=rect();if(pinch)zoomAt(pinch/d,(a[0].x+a[1].x)/2-r.left,(a[0].y+a[1].y)/2-r.top);pinch=d;return;}
+  if(moved>4){view.cx-=dx/scale;view.cy-=dy/scale;goal=null;applyView();}});
+function endp(e){ptrs.delete(e.pointerId);svg.classList.remove('drag');pinch=0;
+  if(e.type==='pointerup'&&moved<6){const t=document.elementFromPoint(e.clientX,e.clientY),n=t&&t.closest&&t.closest('[data-id]');if(n)select(n.getAttribute('data-id'));}}
+svg.addEventListener('pointerup',endp);svg.addEventListener('pointercancel',endp);
+svg.addEventListener('wheel',e=>{e.preventDefault();const r=rect();zoomAt(Math.exp(e.deltaY*.0012),e.clientX-r.left,e.clientY-r.top);},{passive:false});
+let firstRO=true;new ResizeObserver(()=>{if(firstRO){firstRO=false;view=defaultView();}applyView();}).observe(stageEl);
+function animTick(){if(goal){const k=reduce?1:.16;view.cx+=(goal.cx-view.cx)*k;view.cy+=(goal.cy-view.cy)*k;view.w+=(goal.w-view.w)*k;applyView();
+  if(Math.abs(goal.cx-view.cx)+Math.abs(goal.cy-view.cy)+Math.abs(goal.w-view.w)<1)goal=null;}requestAnimationFrame(animTick);}
+requestAnimationFrame(animTick);
+
+/* ---------- раскладка подписей ---------- */
+function layout(){
+  const u=1/scale,showAll=scale>=.38;
+  const vis=CITY.filter(it=>it.alive!==false&&filt[it.cat]&&(showAll||it.id===selected));
+  CITY.forEach(it=>{if(!vis.includes(it))labEls[it.id].setAttribute('display','none');});
+  const X0=510,gap=44*u,rows={L:[],R:[]};
+  vis.forEach(it=>{const a=P(it.r.a[0],it.r.a[1],it.r.a[2]);rows[a[0]<0?'L':'R'].push({it,ax:a[0],ay:a[1]});});
+  ['L','R'].forEach(side=>{const rs=rows[side].sort((p,q)=>p.ay-q.ay);let prev=-1e9;
+    rs.forEach(r=>{r.ly=Math.max(r.ay-20*u,prev+gap);prev=r.ly;});
+    const lim=380;if(rs.length&&rs[rs.length-1].ly>lim){const sh=rs[rs.length-1].ly-lim;rs.forEach(r=>r.ly-=sh);}
+    let top=-400;rs.forEach(r=>{if(r.ly<top)r.ly=top;top=r.ly+gap;});
+    rs.forEach(r=>{const g=labEls[r.it.id],sg=side==='L'?-1:1,lx=sg*X0,ico=22*u;
+      g.removeAttribute('display');g.classList.toggle('sel',r.it.id===selected);
+      const path=g.querySelector('path'),dot=g.querySelector('circle'),icn=g.querySelector('.ico'),tx=g.querySelector('text');
+      path.setAttribute('d','M'+f(r.ax)+','+f(r.ay)+' C'+f(r.ax)+','+f((r.ay+r.ly)/2)+' '+f(lx-sg*40*u)+','+f(r.ly)+' '+f(lx)+','+f(r.ly));
+      path.setAttribute('stroke-width',1.3*u);path.setAttribute('stroke-dasharray',(4*u)+' '+(4*u));
+      dot.setAttribute('cx',f(r.ax));dot.setAttribute('cy',f(r.ay));dot.setAttribute('r',3.4*u);
+      icn.setAttribute('transform','translate('+f(sg>0?lx+6*u:lx-6*u-ico)+','+f(r.ly-ico/2)+') scale('+(ico/24)+')');
+      const tsx=f(sg>0?lx+6*u+ico+7*u:lx-6*u-ico-7*u),spans=tx.querySelectorAll('tspan');tx.setAttribute('x',tsx);tx.setAttribute('y',f(r.ly+5*u-(spans.length-1)*7.5*u));spans.forEach((sp,i)=>{sp.setAttribute('x',tsx);sp.setAttribute('dy',i?15*u:0);});
+      tx.setAttribute('text-anchor',sg>0?'start':'end');tx.setAttribute('font-size',13.5*u);tx.setAttribute('stroke-width',3.4*u);});});
+  names.querySelectorAll('text').forEach(t=>{t.setAttribute('font-size',(t.getAttribute('data-main')==='1'?11:10)*u*(u>1.4?1.15:1));t.style.display=scale<.3?'none':'';});
+}
+
+/* ---------- интерфейс ---------- */
+const filt={cu:true,faith:true,nat:true,cult:true};let selected=null,year=2026,playing=false,playAcc=0;
+const fEl=$('#filters'),lEl=$('#list'),cEl=$('#card');
+Object.keys(CATS).forEach(k=>{const b=document.createElement('button');b.className='chip';b.setAttribute('aria-pressed','true');
+  b.innerHTML='<i style="background:'+CATS[k].css+'"></i>'+CATS[k].n;
+  b.onclick=()=>{filt[k]=!filt[k];b.setAttribute('aria-pressed',String(filt[k]));refresh();};fEl.appendChild(b);});
+function mk(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x)e.textContent=x;return e;}
+function refresh(){
+  CITY.forEach(it=>{const g=objLayer.querySelector('[data-id="'+it.id+'"]');const on=filt[it.cat]&&it.alive!==false;g.classList.toggle('off',!on);g.classList.toggle('sel',on&&it.id===selected);});
+  lEl.innerHTML='';
+  CITY.forEach(it=>{if(!filt[it.cat])return;const ok=it.alive!==false,b=mk('button','item'+(ok?'':' dim'));if(!ok)b.disabled=true;
+    b.innerHTML='<i style="background:'+CATS[it.cat].css+'"></i><span></span>';b.querySelector('span').textContent=it.name;
+    b.onclick=()=>select(it.id);if(it.id===selected)b.setAttribute('aria-current','true');lEl.appendChild(b);});
+  layout();}
+function renderCard(it){cEl.innerHTML='';
+  if(!it){cEl.append(mk('div','k','Как читать карту'),mk('p','','Изометрическая схема города. Здания растут вместе со временем: тяните ползунок или нажмите ▶. Цветные постройки — важные места, серые — городская ткань.'),mk('p','note','Периметр, жилые кварталы и положение объектов условные. Места, улицы и даты настоящие.'));return;}
+  const a=mk('a','',it.src[0]+' ↗');a.href=it.src[1];a.target='_blank';a.rel='noopener noreferrer';
+  cEl.append(mk('div','k',CATS[it.cat].n),mk('h2','',it.name),mk('p','',it.text),mk('p','why','Для визуала: '+it.why),a,mk('p','note',it.note));}
+function select(id){const it=CITY.find(x=>x.id===id);if(!it||it.alive===false)return;selected=id;renderCard(it);refresh();
+  const a=P(it.r.c[0],it.r.c[1],20);goal={cx:a[0]*.55,cy:a[1]*.55+30,w:Math.min(view.w,1150)};
+  const c=lEl.querySelector('[aria-current="true"]');if(c)c.scrollIntoView({block:'nearest'});}
+function resetView(){selected=null;renderCard(null);goal=defaultView();refresh();}
+$('#b-in').onclick=()=>{const r=rect();zoomAt(.78,r.width/2,r.height/2);};
+$('#b-out').onclick=()=>{const r=rect();zoomAt(1.28,r.width/2,r.height/2);};
+$('#b-reset').onclick=resetView;
+
+/* время */
+const yIn=$('#yr-in'),yEl=$('#yr'),capEl=$('#cap'),tPlay=$('#t-play'),tk=$('#ticks');
+[1854,1934,1946,2000,2025].forEach(y=>{const b=mk('button','',String(y));b.onclick=()=>{stop();setYear(y);};tk.appendChild(b);});
+function stop(){playing=false;tPlay.textContent='▶';}
+function frac(y){for(let i=1;i<NBF.length;i++){if(y<=NBF[i][0]){const a=NBF[i-1],b=NBF[i];return a[1]+(b[1]-a[1])*(y-a[0])/(b[0]-a[0]);}}return 1;}
+function setYear(y){year=Math.round(y);yIn.value=year;yEl.textContent=year;
+  const fr=frac(year);bld.forEach(b=>b.g.classList.toggle('off',!(b.fr<fr)));
+  let ev=EVENTS[0];EVENTS.forEach(e=>{if(e[0]<=year)ev=e;});capEl.innerHTML='<b>'+ev[0]+'</b> · '+ev[1];
+  let ch=false;CITY.forEach(it=>{const a=year>=it.year;if((it.alive!==false)!==a){it.alive=a;ch=true;}});
+  if(ch){const so=CITY.find(x=>x.id===selected);if(so&&so.alive===false){selected=null;renderCard(null);}refresh();}}
+yIn.addEventListener('input',()=>{stop();setYear(+yIn.value);});
+tPlay.onclick=()=>{playing=!playing;tPlay.textContent=playing?'❚❚':'▶';if(playing&&year>=2026)setYear(1850);};
+let t0=performance.now();
+(function loop(now){const dt=Math.min(.05,(now-t0)/1000);t0=now;
+  if(playing){playAcc+=dt*14;if(playAcc>=1){const st=Math.floor(playAcc);playAcc-=st;if(year>=2026)stop();else setYear(Math.min(2026,year+st));}}
+  requestAnimationFrame(loop);})(t0);
+
+CITY.forEach(it=>{it.alive=true;});
+view=defaultView();applyView();setYear(2026);renderCard(null);refresh();
+})();
+</script>
+
+</body></html>

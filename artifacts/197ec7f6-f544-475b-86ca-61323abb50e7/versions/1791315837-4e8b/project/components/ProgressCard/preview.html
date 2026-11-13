@@ -1,0 +1,6 @@
+<!-- @dsCard group="Data" height=260 width=420 subtitle="Hero-карточка дня: маскот выходит за верхний и левый край, сегменты прогресса, счётчик." -->
+<style>.pv{padding:24px 20px;background:var(--bd-grad-hero)}</style>
+<div class="pv" id="root"></div>
+<script>
+  document.getElementById('root').innerHTML = window.Buddy.ProgressCard({ done: 3, total: 5, next: 'Next: Move 20 mins' });
+</script>

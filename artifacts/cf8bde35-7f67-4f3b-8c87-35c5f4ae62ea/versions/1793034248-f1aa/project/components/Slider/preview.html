@@ -1,0 +1,26 @@
+<!-- @dsCard group="Выбор" height=220 -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Slider — превью</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;padding:16px;background:var(--bg);color:var(--ink);font:400 var(--fs-base)/var(--lh) var(--f-ui);-webkit-font-smoothing:antialiased}
+.row{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center}
+.row+.row,.cap+.row,.row+.cap{margin-top:var(--s3)}
+.cap{margin:0 0 var(--s2);font:var(--fw-sb) var(--fs-xs)/1.2 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.row+.cap,.stack+.cap{margin-top:var(--s5)}
+.stack{display:grid;gap:var(--s3);max-width:420px}
+.ctl{max-width:300px;margin-bottom:var(--s3)}.ctl label{font-size:var(--fs-md)}</style>
+</head>
+<body>
+<p class="cap">Параметры шрифта</p>
+<div class="ctl"><label><span>Насыщенность</span><output>420</output></label><input type="range" min="0" max="100" value="42" style="--lo:0%;--hi:42%" aria-label="Насыщенность"></div>
+<div class="ctl"><label><span>Ширина</span><output>100</output></label><input type="range" min="0" max="100" value="68" style="--lo:0%;--hi:68%" aria-label="Ширина"></div>
+<div class="ctl"><label><span>Наклон</span><output class="clamp">предел</output></label><input type="range" min="0" max="100" value="100" style="--lo:0%;--hi:100%" aria-label="Наклон"></div>
+<script>
+document.querySelectorAll('input[type=range]').forEach(function(r){r.addEventListener('input',function(){r.style.setProperty('--hi',r.value+'%');var o=r.parentNode.querySelector('output');if(!o.classList.contains('clamp'))o.textContent=Math.round(r.value*10)})})
+</script>
+</body>
+</html>

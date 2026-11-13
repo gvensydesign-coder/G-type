@@ -1,0 +1,405 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Дизайн-система Подхват</title>
+<link rel="stylesheet" href="tokens/tokens.css"><link rel="stylesheet" href="podhvat.css"><link rel="stylesheet" href="ds.css">
+
+<header class="ds-top">
+  <b>Подхват</b><small>Дизайн-система · v20 · iOS primary</small><span class="sp"></span>
+  <button id="motion" aria-pressed="false">Меньше движения</button>
+  <button id="theme" aria-pressed="false">Тёмная тема</button>
+  <a href="https://claude.ai/artifact/Vt5HCqXePRktkT3hFzwsRG" style="margin-left:4px"><button>Открыть прототип</button></a>
+</header>
+<div class="ds-wrap">
+<nav class="ds-nav" aria-label="Разделы">
+  <a href="#principles">Принципы</a><a href="#color">Цвет</a><a href="#type">Типографика</a><a href="#geometry">Геометрия</a>
+  <a href="#components">Компоненты</a><a href="#icons">Иконки</a><a href="#motion-s">Движение</a><a href="#rules">Правила продукта</a><a href="#screens">Экраны</a><a href="#tokens">Токены</a>
+</nav>
+<main>
+
+<section id="principles">
+  <h1>Спокойная помощь<br>в стрессовый момент</h1>
+  <p class="lead">Система собрана из кода прототипа «Подхват». Каждое значение ниже — то, что реально отрисовывается в приложении; компоненты на этой странице подключают тот же <code>podhvat.css</code>, что и прототип.</p>
+  <div class="grid g2">
+    <div class="spec"><h3 style="margin-top:0">Один шаг за раз</h3><p class="note">Экран показывает следующее действие, а не весь маршрут. Главная кнопка одна и всегда лаймовая.</p></div>
+    <div class="spec"><h3 style="margin-top:0">Стекло только в управлении</h3><p class="note">Навигация, шапка и поле ввода — полупрозрачные. Содержимое — непрозрачные карточки.</p></div>
+    <div class="spec"><h3 style="margin-top:0">Не обещаем лишнего</h3><p class="note">Запрос, задача, приём и согласие на контакты — разные состояния. Ответ организации не равен приёму животного.</p></div>
+    <div class="spec"><h3 style="margin-top:0">Две темы, два языка</h3><p class="note">Светлая и тёмная темы, RU и EN. «Меньше движения», «Меньше прозрачности», «Больше контраста» — в настройках.</p></div>
+  </div>
+</section>
+
+<section id="color">
+  <h2>Цвет</h2>
+  <p class="lead">Ink, paper, white и лайм — основа. Воздушный сине-серый используется на главной и в фоне случая. Статусные цвета всегда сопровождаются иконкой и текстом.</p>
+  <h3>Поверхности и текст — переключаются темой</h3>
+  <div class="grid g3" id="sw-semantic"></div>
+  <h3>Основа бренда</h3>
+  <div class="grid g3" id="sw-brand"></div>
+  <h3>Статусы</h3>
+  <div class="grid g3" id="sw-status"></div>
+  <h3>Контраст основных пар</h3>
+  <div class="spec"><table id="contrast"><thead><tr><th>Пара</th><th>Текущая тема</th><th>Контраст</th><th>WCAG AA</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section id="type">
+  <h2>Типографика</h2>
+  <p class="lead">Системный шрифт iOS (SF Pro), на других платформах — Segoe UI и Arial. Веса: 400 для крупных заголовков, 500–600 для действий и подзаголовков.</p>
+  <div class="spec" id="type-scale"></div>
+  <p class="note">В прототипе встречалось около десяти размеров. Шкала выше — рабочая: новые экраны берут значения только из неё; близкие значения (13, 15 px) постепенно приводятся к 14 и 16.</p>
+</section>
+
+<section id="geometry">
+  <h2>Геометрия</h2>
+  <p class="lead">Все поля и интервалы проверяются по фактическим границам элементов, а не по декларациям CSS.</p>
+  <h3>Поля и интервалы</h3>
+  <div class="spec"><table>
+    <thead><tr><th>Токен</th><th>px</th><th>Где применяется</th></tr></thead><tbody>
+    <tr><td><code>--page-inset</code></td><td>10</td><td>Внешние поля страницы, плавающие панели</td></tr>
+    <tr><td><code>--control-inset</code></td><td>10</td><td>Кнопки и круглые элементы от внутреннего края плашки</td></tr>
+    <tr><td><code>--surface-inset</code></td><td>18</td><td>Текст внутри карточек</td></tr>
+    <tr><td><code>--section-gap</code></td><td>12</td><td>Интервал между карточками и кнопками</td></tr>
+    <tr><td>Страница на ширине</td><td>320–430</td><td>Мобильная рамка 390 на десктопе</td></tr>
+    </tbody></table></div>
+  <h3>Высоты</h3>
+  <div class="spec"><div class="ruler">
+    <div><span style="width:56px;height:56px"></span>56<br>главное</div>
+    <div><span style="width:54px;height:54px"></span>54<br>кнопка · круг</div>
+    <div><span style="width:44px;height:44px"></span>44<br>компактное</div>
+    <div><span style="width:40px;height:40px"></span>40<br>тег</div>
+    <div><span style="width:24px;height:24px"></span>24<br>иконка</div>
+  </div></div>
+  <h3>Радиусы</h3>
+  <div class="spec"><div class="radii">
+    <div style="border-radius:999px">pill</div><div style="border-radius:50%">круг</div>
+    <div style="border-radius:28px">28<br>карточка</div><div style="border-radius:24px">24<br>поле</div>
+    <div style="border-radius:22px">22<br>фото в карточке</div><div style="border-radius:20px">20<br>плитка</div>
+    <div style="border-radius:16px">16<br>значок</div>
+  </div><p class="note">Фото внутри карточки (22) = радиус карточки (28) минус поле 6 — вложенные углы остаются концентричными.</p></div>
+</section>
+
+<section id="components">
+  <h2>Компоненты</h2>
+  <p class="lead">Живые образцы. Переключатели темы и движения вверху страницы действуют на все из них.</p>
+
+  <h3>Кнопки</h3>
+  <div class="spec"><div class="stage">
+    <button class="button">Продолжить</button>
+    <button class="button secondary">Вторичная</button>
+    <button class="button dark">Тёмная</button>
+    <button class="button ghost">Прозрачная</button>
+    <button class="button danger">Удалить данные</button>
+    <button class="button" disabled>Недоступна</button>
+  </div>
+  <div class="stage">
+    <button class="icon-button" aria-label="Назад"><span class="ds-ico" style="--m:url(assets/flaticon/back.svg)"></span></button>
+    <button class="icon-button" aria-label="Профиль"><span class="ds-ico" style="--m:url(assets/flaticon/user.svg)"></span></button>
+    <button class="icon-button" aria-label="Избранное"><span class="ds-ico" style="--m:url(assets/flaticon/heart.svg)"></span></button>
+  </div>
+  <p class="note">Высота: 54 по умолчанию, 56 для главного действия на экране. Нажатие — масштаб .92 за 120 мс, иконка не деформируется.</p></div>
+
+  <h3>Теги и статусы</h3>
+  <div class="spec"><div class="stage">
+    <span class="badge ongoing">Идёт</span><span class="badge attention">Нужно внимание</span><span class="badge urgent">Срочно</span><span class="badge lime">Лайм</span><span class="badge closed">Закрыт</span><span class="badge">Нейтральный</span>
+  </div>
+  <div class="stage" style="padding:8px 20px"><div class="tab-filter" style="width:100%"><button class="active">Все</button><button>Люди</button><button>Организации</button><button>Услуги</button></div></div></div>
+
+  <h3>Поля формы</h3>
+  <div class="spec"><div class="phone screen" style="width:100%;max-width:420px;border-radius:28px">
+    <label class="field">Название карточки<input value="Рыжий пёс"></label>
+    <label class="field">Группа животного<select><option>Домашнее</option><option>Дикое</option></select></label>
+    <label class="field">Особые приметы<textarea>Белая грудь</textarea></label>
+    <label class="check"><input type="checkbox" checked>Я подтверждаю выбранный итог</label>
+    <label class="outcome-option"><input type="radio" name="d" checked>Вернулся владельцу</label>
+    <label class="outcome-option"><input type="radio" name="d">На временной передержке</label>
+    <label class="preference-row"><span>Меньше движения</span><input type="checkbox" role="switch"></label>
+  </div></div>
+
+  <h3>Карточки и уведомления</h3>
+  <div class="spec"><div class="phone screen">
+    <div class="case-stage"><div class="card">
+      <button class="photo-button" aria-label="Открыть фото"><img class="animal-photo photo-loaded" src="assets/dog.png" alt="Рыжий пёс"><span class="photo-label">Синтетическое фото</span></button>
+      <div class="case-head"><h3 class="case-name">Рыжий пёс</h3><span class="badge ongoing">Идёт</span></div>
+      <p class="caption">Городской парк · #0241</p>
+      <div class="case-next"><small>Следующий шаг · 3 / 5</small><h3>Найти помощника</h3>
+        <div class="progress"><i class="done"></i><i class="done"></i><i class="done"></i><i></i><i></i></div>
+        <button class="button">Продолжить</button></div>
+    </div></div>
+    <button class="card card-link"><div class="split"><h3>#0242 · Кошка во дворе</h3><span class="badge attention">Нужно внимание</span></div><p>Жилой квартал</p><small class="caption">Открыть этот случай</small></button>
+    <div class="notice">Согласие относится только к этому случаю и этому собеседнику. Его можно отозвать.</div>
+  </div></div>
+
+  <h3>Маршрут</h3>
+  <div class="spec"><div class="phone screen"><div class="card">
+    <div class="step-row"><span class="step-number">✓</span><div><h3>Оценить</h3><small>Данные сохранены</small></div><button class="text-button">Открыть</button></div>
+    <div class="step-row"><span class="step-number current">3</span><div><h3>Найти помощь</h3><small>Текущий этап</small></div><button class="text-button">Открыть</button></div>
+    <div class="step-row"><span class="step-number">4</span><div><h3>Согласовать</h3><small>Впереди</small></div><button class="text-button">Открыть</button></div>
+  </div></div></div>
+
+  <h3>Сообщения Скаута</h3>
+  <div class="spec"><div class="phone screen" style="background:var(--air,#658592)">
+    <article class="guided-message"><small class="guided-author">Скаут</small><p>Начнём с безопасности. Вы сейчас можете наблюдать за животным с безопасного расстояния?</p></article>
+    <nav class="guided-hot-topics" aria-label="Быстрые темы" style="margin:0;width:100%;padding:0"><button>Подсказки</button><button class="urgent">Срочно</button><button>Фото</button></nav>
+  </div></div>
+
+  <h3>Нижняя навигация</h3>
+  <div class="spec"><div class="phone screen" style="height:120px"><div class="screen ds-dock" style="position:absolute;inset:0;display:block;animation:none">
+    <nav class="dock" aria-label="Главные разделы" style="bottom:16px">
+      <button class="active"><span class="ds-ico" style="--m:url(assets/flaticon/home.svg)"></span><span>Главная</span></button>
+      <button><span class="ds-ico" style="--m:url(assets/flaticon/map.svg)"></span><span>Рядом</span></button>
+      <button><span class="ds-ico" style="--m:url(assets/flaticon/grid.svg)"></span><span>Случай</span></button>
+      <button><span class="ds-ico" style="--m:url(assets/flaticon/chat.svg)"></span><span>Связь</span></button>
+    </nav></div></div>
+  <p class="note">Четыре раздела: Главная, Рядом, Случай, Связь. Профиль — через шапку. Подсветка вкладки определяется по экрану: оценка, план заботы и история относятся к «Случаю».</p></div>
+
+  <h3>v14 · Карточка случая, миниатюры и мини-кнопки</h3>
+  <div class="spec"><div class="phone screen">
+    <div class="card case-glass"><div class="cg-head"><span class="cg-mark"><span class="ds-ico" style="--m:url(assets/flaticon/pin.svg)"></span></span><div class="cg-title"><h3 class="case-name">Рыжий пёс</h3><small>Сегодня · #0241</small></div><button class="cg-arrow" aria-label="Открыть"><span class="ds-ico" style="--m:url(assets/flaticon/arrow.svg)"></span></button></div>
+      <div class="cg-well"><img class="animal-photo" src="assets/dog.png" alt=""><div class="cg-thumbs"><button class="cg-thumb"><img src="assets/dog.png" alt=""></button><button class="cg-thumb"><img src="assets/panoramas/park.jpg" alt=""></button><button class="cg-more">+3</button></div></div></div>
+    <nav class="home-shortcuts" style="margin-top:12px"><button><span class="mini"><span class="ds-ico" style="--m:url(assets/flaticon/map.svg)"></span></span>Рядом</button><button><span class="mini"><span class="ds-ico" style="--m:url(assets/flaticon/user.svg)"></span></span>Волонтёры</button><button><span class="mini"><span class="ds-ico" style="--m:url(assets/flaticon/office.svg)"></span></span>Организации</button><button><span class="mini"><span class="ds-ico" style="--m:url(assets/flaticon/heart.svg)"></span></span>Избранное</button></nav>
+  </div>
+  <p class="note">Карточка: радиус 32, внутренний отступ 10. «Колодец» с фото 28, фото растворяется вниз градиентом. Миниатюры 58 px. Мини-кнопка: круг 56 (радиус 28), подпись 12 px снизу, на ≤350 px — 11 px.</p></div>
+
+  <h3>v14 · Сегмент, чипы, поля без обводки</h3>
+  <div class="spec"><div class="phone screen">
+    <div class="seg" role="radiogroup"><button class="active" role="radio" aria-checked="true">Только район</button><button role="radio" aria-checked="false">Скрыть место</button><button role="radio" aria-checked="false">После согласия</button></div>
+    <div class="chip-row"><span class="chip yes">Вид</span><span class="chip yes">Окрас</span><span class="chip unk">Габариты</span><span class="chip no">Район</span><span class="chip lime">Фото учтено</span></div>
+    <div class="chip-row"><button class="chip-btn on">Быстро ответил</button><button class="chip-btn">Приехал вовремя</button></div>
+    <label class="field">Окрас<input value="рыжий / бежевый"></label>
+  </div>
+  <p class="note">Поле — заливка <code>--field-fill</code>, без рамки. Фокус: кольцо 3 px и линия 1,5 px (синяя в светлой теме, лайм в тёмной). Ошибка — красная внутренняя линия.</p></div>
+
+  <h3>v14 · Шкала срочности и статус ответа</h3>
+  <div class="spec"><div class="phone screen">
+    <section class="card urg"><div class="urg-bar"><i class="s0 on"></i><i class="s1 on"></i><i class="s2"></i><b class="urg-marker" style="left:50%"></b></div><div class="urg-labels"><span>Наблюдение</span><span class="cur">Внимание</span><span>Срочно</span></div></section>
+    <section class="card ladder"><div class="ladder-head"><h3>Ответ помощи</h3><span class="caption">2 / 4</span></div><ol class="ladder-steps"><li class="done"><span class="lg-dot"><span class="ds-ico" style="--m:url(assets/flaticon/check.svg)"></span></span><b>Увидели</b></li><li class="done"><span class="lg-dot"><span class="ds-ico" style="--m:url(assets/flaticon/check.svg)"></span></span><b>Ответили</b></li><li class="now"><span class="lg-dot"><span class="ds-ico" style="--m:url(assets/flaticon/check.svg)"></span></span><b>Принимают</b></li><li><span class="lg-dot"><span class="ds-ico" style="--m:url(assets/flaticon/heart.svg)"></span></span><b>Забрали</b></li></ol></section>
+  </div>
+  <p class="note">Шкала — три сегмента с маркером, цвета мягкие (зелёный, жёлтый, коралловый). Лестница — четыре шага; текущий шаг обведён лаймовым кольцом. «Ответ организации» никогда не равен «приняли».</p></div>
+
+  <h3>v14 · Пустое состояние, скелетон, кольцо</h3>
+  <div class="spec"><div class="phone screen">
+    <section class="empty"><img class="empty-scout" src="assets/scout-listening.png" alt=""><h3>Задач пока нет</h3><p>Выберите помощника — и здесь появится согласованная задача.</p></section>
+    <div class="skeleton-list" style="margin-top:12px"><div class="skeleton-card"><i class="sk sk-circle"></i><span><i class="sk sk-line"></i><i class="sk sk-line short"></i></span></div></div>
+    <div class="stage" style="margin-top:12px"><div class="v14-ring" style="--s:76px"><svg viewBox="0 0 76 76"><circle class="rt" cx="38" cy="38" r="33"/><circle class="rv" cx="38" cy="38" r="33" stroke-dasharray="139 207" transform="rotate(-90 38 38)"/></svg><b>67<small>%</small></b></div></div>
+  </div>
+  <p class="note">Скелетон вместо спиннера; при «Меньше движения» мерцание отключается. Кольцо хранит значение в <code>stroke-dasharray</code>.</p></div>
+
+  <h3>v14 · Уведомление, лента напоминаний, баннер сети</h3>
+  <div class="spec"><div class="phone screen">
+    <div class="net-banner"><span class="ds-ico" style="--m:url(assets/flaticon/wifi.svg)"></span><span><b>Нет сети</b><small>Памятки доступны без интернета</small></span><button>Открыть</button></div>
+    <div class="notif-list"><button class="notif"><span class="pb-ico"><span class="ds-ico" style="--m:url(assets/flaticon/bell.svg)"></span></span><span><b>Проверьте состояние животного</b><small>Рыжий пёс #0241 · сегодня</small></span></button></div>
+  </div></div>
+
+  <h3>v14 · Листовка с QR</h3>
+  <div class="spec"><div class="phone screen"><div class="preview-flyer fl-a5"><img class="animal-photo" src="assets/dog.png" alt=""><div class="fl-body"><h2>Найдено животное</h2><p>Рыжий пёс · #0241</p></div><div class="fl-qr" id="ds-qr"></div></div></div>
+  <p class="note">QR кодирует пример ссылки <code>https://podhvat.example/c/0241</code> (ECC L, версия 2). Генератор — <code>src/js/16-qr.js</code>, проверен декодером.</p>
+
+  <h3>v15 · Карточка помощника в списке</h3>
+  <div class="spec"><div class="phone screen">
+    <article class="card directory-card hcard"><div class="hc-cover"><img src="assets/helpers/o4-cover.svg" alt=""><button class="icon-button directory-save" aria-label="В избранное"><span class="ds-ico" style="--m:url(assets/flaticon/heart.svg)"></span></button></div><div class="hc-main"><img class="h-avatar" src="assets/helpers/o4-avatar.svg" alt=""><div class="hc-title"><h2>Зоомагазин «Лапа»</h2><p>Товары первой необходимости · 1,5 км</p></div></div><div class="hc-foot"><div class="h-badges"><span class="h-badge"><span class="ds-ico" style="--m:url(assets/flaticon/clock.svg)"></span></span><span class="h-badge"><span class="ds-ico" style="--m:url(assets/flaticon/check.svg)"></span></span><span class="h-badge"><span class="ds-ico" style="--m:url(assets/flaticon/heart.svg)"></span></span></div><button class="button secondary hc-open">Открыть</button></div></article>
+  </div>
+  <p class="note">Обложка 116 px, радиус 24; аватар 56 с кольцом 4 px цвета карточки и выносом на 30 px вверх; значки достижений 34 px (лайм, максимум три и «+N»). Заголовок и подпись — рядом с аватаром, кнопка «Открыть» 44 px.</p>
+
+  <h3>v15 · Страница помощника: статистика, услуги, каталог</h3>
+  <div class="spec"><div class="phone screen">
+    <div class="h-stats"><div><strong>45</strong><small>ответов</small></div><div><strong>12 мин</strong><small>время ответа</small></div><div><strong>52</strong><small>помогли</small></div></div>
+    <section class="h-sec" style="margin-top:12px"><h3>Достижения</h3><div class="h-ach"><div class="h-ach-item"><span><span class="ds-ico" style="--m:url(assets/flaticon/clock.svg)"></span></span><small>Доставка за день</small></div><div class="h-ach-item"><span><span class="ds-ico" style="--m:url(assets/flaticon/check.svg)"></span></span><small>Проверен</small></div><div class="h-ach-item"><span><span class="ds-ico" style="--m:url(assets/flaticon/heart.svg)"></span></span><small>Тёплый октябрь</small></div></div></section>
+    <section class="h-sec" style="margin-top:12px"><h3>Услуги</h3><ul class="h-serv"><li><span>Подбор товаров</span><b>Бесплатно</b></li><li><span>Доставка по району</span><b>от 150 ₽</b></li></ul></section>
+    <section class="h-sec h-cat-sec" style="margin-top:12px"><h3>Первое необходимое</h3><div class="h-cat"><button class="prod"><span class="prod-img"><img src="assets/helpers/product-food.svg" alt=""></span><b>Корм, 1 кг</b><small>240 ₽</small></button><button class="prod on"><span class="prod-img"><img src="assets/helpers/product-bowl.svg" alt=""></span><b>Миска</b><small>В запросе</small></button><button class="prod"><span class="prod-img"><img src="assets/helpers/product-carrier.svg" alt=""></span><b>Переноска</b><small>1 490 ₽</small></button></div></section>
+  </div>
+  <p class="note">Статистика — три ячейки без оценок людей. Достижения: круг 54, лайм. Услуги — плашки с заливкой поля, цена справа. Товар — плитка 132 px; «В запросе» заливается лаймом. Иллюстрации сгенерированы кодом (<code>src/js/19-v15-art.js</code>, выгрузка <code>tools/export-art.cjs</code>); фотографии подставляются теми же слотами.</p></div>
+
+  <h3>v16 · Таймер ожидания</h3>
+  <div class="spec"><div class="phone screen">
+    <section class="card wait-card"><div class="wait-head"><span class="wait-ico"><span class="ds-ico" style="--m:url(assets/flaticon/clock.svg)"></span></span><div><small>Ждёт помощи</small><strong>1 ч 44 мин</strong></div></div><div class="wait-track"><i><b style="width:100%"></b></i><i><b style="width:36%"></b></i><i><b style="width:0%"></b></i></div><div class="wait-marks"><span>0</span><span>1 ч</span><span>3 ч</span><span>сутки</span></div><h3>Ищем хозяина</h3><p>Чаще всего хозяева ищут в первые часы. Опубликуйте листовку с районом.</p><button class="button">Открыть листовку</button></section>
+  </div>
+  <p class="note">Три сегмента: до часа, до трёх часов, до суток. Заголовок, текст и одна кнопка зависят от этапа. На главной остаётся одна строка «Ждёт 1 ч 44 мин». Сегмент заполняется 0,8 с; при «Меньше движения» без анимации.</p></div>
+
+  <h3>v16 · Голосовое описание</h3>
+  <div class="spec"><div class="phone screen">
+    <button class="voice-entry"><span class="ve-ico"><span class="ds-ico" style="--m:url(assets/flaticon/mic.svg)"></span></span><span><b>Рассказать голосом</b><small>Скаут разберёт описание и заполнит поля</small></span></button>
+    <div class="voice-box"><button class="voice-mic live" aria-label="Говорить"><span class="ds-ico" style="--m:url(assets/flaticon/mic.svg)"></span></button><span class="voice-state">Слушаю…</span></div>
+    <div class="voice-parse"><small>Нашёл в описании</small><label class="vp-item"><input type="checkbox" checked><span><small>Вид</small><b>Собака</b></span></label><label class="vp-item"><input type="checkbox" checked><span><small>Приметы</small><b>Белая грудь, Красный ошейник</b></span></label></div>
+  </div>
+  <p class="note">Микрофон 64 px, во время записи тёмный с лаймовым кольцом. Каждый найденный признак можно снять до заполнения. Если браузер не умеет слушать или нет доступа, остаётся текстовое поле: распознавание работает одинаково.</p></div>
+
+  <h3>v16 · Передержка на ночь</h3>
+  <div class="spec"><div class="phone screen">
+    <button class="night-entry"><span class="ne-ico"><span class="ds-ico" style="--m:url(assets/flaticon/home.svg)"></span></span><span><b>Передержка на ночь</b><small>Быстрый запрос тем, кто принимает на одну ночь</small></span><span class="ne-arrow"><span class="ds-ico" style="--m:url(assets/flaticon/arrow.svg)"></span></span></button>
+    <article class="card nf-row"><img class="h-avatar" src="assets/helpers/v1-avatar.svg" alt=""><div class="nf-main"><b>Анна · волонтёр</b><small>Передержка · 1,2 км</small><span class="nf-st ok">Готов(а) взять до 9:00</span></div><button class="button nf-take">Принять</button></article>
+    <article class="card nf-row" style="margin-top:10px"><img class="h-avatar" src="assets/helpers/o3-avatar.svg" alt=""><div class="nf-main"><b>Приют «Тёплый дом»</b><small>Приют · 4,6 км</small><span class="nf-st wait"><i></i>Ждём ответа</span></div></article>
+  </div>
+  <p class="note">Статус ответа — одна строка: ждём, готов, не может. «Принять» создаёт задачу и закрывает остальные запросы. Контакты открываются только после согласия.</p></div>
+
+  <h3>v16 · Пустой экран</h3>
+  <div class="spec"><div class="phone screen">
+    <section class="empty-hero"><div class="eh-scene"><svg viewBox="0 0 320 150" aria-hidden="true"><rect x="40" y="96" width="240" height="10" rx="5" class="eh-b"/><rect x="62" y="48" width="38" height="48" rx="8" class="eh-a"/><rect x="108" y="38" width="34" height="58" rx="8" class="eh-c"/><rect x="150" y="56" width="40" height="40" rx="8" class="eh-b"/><path d="M72 62h18M72 72h12" class="eh-l"/><circle cx="256" cy="46" r="14" class="eh-a"/><path d="M250 46l4 4 8-9" class="eh-ck"/></svg><img class="eh-scout" src="assets/scout-listening.png" alt=""></div><h3>Пока нет закрытых случаев</h3><p>Когда вы закроете случай, он сохранится здесь вместе с историей.</p><button class="button">К текущему случаю</button></section>
+  </div>
+  <p class="note">Для истории, диалогов, задач, избранного и напоминаний своя сцена 320×150 и одна кнопка. Цвета сцены берутся из токенов <code>--eh-a</code>, <code>--eh-b</code>, <code>--eh-c</code>.</p></div>
+
+  <h3>v16 · Скаут по ситуации</h3>
+  <div class="spec"><div class="phone screen" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">
+    <div><img src="assets/scout.png" alt="" style="width:100%"><small>Спокойно</small></div><div><img src="assets/scout-listening.png" alt="" style="width:100%"><small>Слушает</small></div><div><img src="assets/scout-support.png" alt="" style="width:100%"><small>Рядом</small></div><div><img src="assets/scout-happy.png" alt="" style="width:100%"><small>Рад</small></div>
+  </div>
+  <p class="note">На главной: срочный случай — «рядом», вечер без места на ночь — «слушает», закрытый случай — «рад», иначе «спокойно». Каждому свой мягкий цикл движения, при «Меньше движения» поза без анимации. При закрытии случая Скаут машет лапой 1,5 с, затем экран возвращается.</p></div>
+  <h3>v17 · Галерея в карточке: 360°, фото, видео</h3>
+  <div class="spec"><div class="phone screen"><section class="card"><div class="mg"><div class="mg-stage"><div class="mg-track"><figure class="mg-slide"><img src="assets/media/park-360.webp" alt=""><button class="mg-360" type="button"><span class="b360">360°</span><b>Осмотреть сцену</b></button></figure></div><span class="mg-count">1 / 4</span></div><div class="mg-thumbs"><button class="mg-th on" type="button"><img src="assets/media/park-360.webp" alt=""><i class="k">360°</i></button><button class="mg-th" type="button"><img src="assets/media/park-p1.webp" alt=""><i class="k"></i></button><button class="mg-th" type="button"><img src="assets/media/park-p2.webp" alt=""><i class="k"></i></button><button class="mg-th" type="button"><img src="assets/media/park-p1.webp" alt=""><i class="k"><span class="ds-ico" style="--m:url(assets/flaticon/play.svg)"></span></i></button></div></div></section></div>
+  <p class="note">Одна карточка — один набор материалов. 360° идёт первым, дальше обычные фото и видео. Сцену открывает сама картинка с кнопкой «Осмотреть сцену»; отдельной кнопки под ней нет. Миниатюры — 58 px с подписью типа, рамка лаймом у выбранной. Счётчик в углу, свайп и стрелки клавиатуры. Видео играет на месте, без автозапуска.</p></div>
+
+  <h3>v17 · Карта: метки по типу материалов</h3>
+  <div class="spec"><div class="phone screen" style="padding-bottom:18px"><div class="n17-filters"><button class="on" type="button">Все</button><button type="button">360°</button><button type="button">Фото</button><button type="button">Видео</button></div>
+    <div style="display:flex;gap:18px;align-items:center;padding:10px 6px"><span class="map-pin n17-pin" style="position:static"><span class="pin-g"><b>360</b></span></span><span class="map-pin n17-pin" style="position:static"><span class="pin-g"><span class="ds-ico" style="--m:url(assets/flaticon/photo.svg)"></span></span></span><span class="map-pin n17-pin" style="position:static"><span class="pin-g"><span class="ds-ico" style="--m:url(assets/flaticon/play.svg)"></span></span></span><span class="map-pin n17-pin selected" style="position:static"><span class="pin-g"><span class="ds-ico" style="--m:url(assets/flaticon/photo.svg)"></span></span></span><span class="map-pin n17-pin" style="position:static"><span class="pin-g"><span class="ds-ico" style="--m:url(assets/flaticon/user.svg)"></span></span></span></div>
+    <div class="map-selected" style="position:static;margin-top:6px"><div class="split"><img class="mini-photo" src="assets/media/stop-p2.webp" alt=""><div><h3>Собака у остановки</h3><small>Остановка у парка</small><span class="mk-row"><span class="mk"><span class="ds-ico" style="--m:url(assets/flaticon/photo.svg)"></span>3</span><span class="mk"><span class="ds-ico" style="--m:url(assets/flaticon/play.svg)"></span>Видео</span></span></div></div><button class="button" type="button">Открыть карточку</button></div></div>
+  <p class="note">На карте видны все случаи: метка говорит, что внутри — «360», фото или видео. Фильтр сверху оставляет нужный тип. Выбранная метка лаймовая с кольцом; карточка внизу с одним действием. Метка 34 px, зона нажатия 44 px.</p></div>
+
+  <h3>v17 · Чат: вложения и голос</h3>
+  <div class="spec"><div class="phone screen"><article class="guided-message self file-msg"><div class="fm-file"><span class="fm-ico"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5"/></svg></span><span class="fm-meta"><b>акт-осмотра.pdf</b><small>PDF · 214 КБ</small></span></div></article>
+    <div class="attach-sheet" style="animation:none;margin-top:12px"><button type="button"><span class="as-ico"><span class="ds-ico" style="--m:url(assets/flaticon/photo.svg)"></span></span><span><b>Фото</b><small>Снимок с безопасного расстояния</small></span></button><button type="button"><span class="as-ico"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5"/></svg></span><span><b>Файл</b><small>Документ, аудио, PDF — любой формат</small></span></button><button type="button"><span class="as-ico"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" cx="12" cy="12" r="3.2"/></svg></span><span><b>Скан носа или морды</b><small>Для собаки или кошки в текущем случае</small></span></button></div>
+    <div class="mic-status" style="margin-top:10px"><i></i><span>Слушаю… говорите, текст появится в строке</span><button type="button" aria-label="Остановить"><span class="ds-ico" style="--m:url(assets/flaticon/pause.svg)"></span></button></div>
+    <div class="composer" style="display:flex;align-items:center;gap:6px;position:static;margin-top:10px"><button class="icon-button attach-btn" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 11.5l-7.6 7.6a5 5 0 0 1-7.1-7.1l8-8a3.3 3.3 0 0 1 4.7 4.7l-8 8a1.7 1.7 0 0 1-2.4-2.4l7.3-7.3"/></svg></button><input placeholder="Ответьте Скауту…" style="flex:1;min-width:0"><button class="icon-button mic-btn live" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" x="9" y="3" width="6" height="11" rx="3"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></svg></button><button class="icon-button" type="button"><span class="ds-ico" style="--m:url(assets/flaticon/arrow.svg)"></span></button></div></div>
+  <p class="note">Скрепка слева открывает меню: фото, видео, любой файл, скан. Микрофон справа диктует текст в строку, ничего не отправляя сам; во время записи лаймовый с пульсом и строка «Слушаю…» с кнопкой остановки. Файл до 25 МБ. Фото, видео и звук играют в сообщении, остальное — карточка с именем и размером. Скаут содержимое не разбирает и говорит об этом.</p></div>
+
+  <h3>v17 · Скан носа и морды</h3>
+  <div class="spec"><div class="phone screen"><section class="card ns-hero"><div class="ns-stage"><svg viewBox="0 0 200 150" aria-hidden="true" class="ns-guide"><rect x="38" y="20" width="124" height="110" rx="34" class="g-frame"/><path d="M64 66Q64 54 80 52H120Q136 54 136 66Q136 84 118 96Q108 102 100 102Q92 102 82 96Q64 84 64 66Z" class="g-nose"/><path d="M100 92v20" class="g-line"/><path d="M82 72Q74 78 80 87Q90 85 92 77Q90 70 82 72Z" class="g-hole"/><path d="M118 72Q126 78 120 87Q110 85 108 77Q110 70 118 72Z" class="g-hole"/><path d="M26 44V28q0-8 8-8h12M174 44V28q0-8-8-8h-12M26 106v16q0 8 8 8h12M174 106v16q0 8-8 8h-12" class="g-corner"/></svg></div><div class="chip-row ns-q"><span class="chip yes"><span class="ds-ico" style="--m:url(assets/flaticon/check.svg)"></span>Резко</span><span class="chip yes"><span class="ds-ico" style="--m:url(assets/flaticon/check.svg)"></span>Свет хороший</span><span class="chip no"><span class="ds-ico" style="--m:url(assets/flaticon/close.svg)"></span>Мелко</span></div></section>
+    <div class="ns-dots" style="margin-top:10px"><span class="ok"></span><span class="cur"></span><span></span></div>
+    <section class="card ns-result" style="margin-top:10px"><div class="ns-thumbs"><figure class="ok"><img src="assets/media/stop-p3.webp" alt=""><figcaption>Нос анфас, крупно</figcaption></figure><figure class="ok"><img src="assets/media/stop-p1.webp" alt=""><figcaption>Нос чуть слева</figcaption></figure><figure class="bad"><img src="assets/media/stop-p2.webp" alt=""><figcaption>Нос чуть справа</figcaption></figure></div><div class="ns-sim hi"><span class="ds-ico" style="--m:url(assets/flaticon/info.svg)"></span><span><b>Высокое сходство снимков</b><small>со сканом питомца Марта. Это повод проверить, а не доказательство.</small></span></div></section></div>
+  <p class="note">Три кадра: анфас, чуть слева, чуть справа (у кошки — морда и два профиля). Рамка и контур подсказывают кадр. Резкость, свет и размер проверяются по самому снимку; плохой кадр предлагают переснять, но можно оставить. Запись сохраняется только после согласия, показывается при сверке и не публикуется. Сходство — три корзины «высокое, среднее, низкое», процента нет. Скан не заменяет чип и не доказывает владельца.</p></div>
+
+  <h3>v17 · Где живёт скан</h3>
+  <div class="spec"><table><thead><tr><th>Экран</th><th>Что там про скан</th></tr></thead><tbody>
+    <tr><td><b>Случай</b></td><td>Строка «Скан носа / Скан морды» со статусом, только для собаки и кошки.</td></tr>
+    <tr><td><b>Приметы</b></td><td>Рядом с голосовым описанием вход «Скан носа» или «Скан морды».</td></tr>
+    <tr><td><b>Совпадения</b></td><td>Карточка «Сверка по скану»: сделать скан или код и сходство со сканом питомца.</td></tr>
+    <tr><td><b>Сравнение признаков</b></td><td>Строка «Скан» вместо «ID-слепок».</td></tr>
+    <tr><td><b>Профиль питомца</b></td><td>Карточка скана «на всякий случай», до потери.</td></tr>
+    <tr><td><b>Пропал питомец</b></td><td>Отметка «Скан питомца приложен», сам скан не публикуется.</td></tr>
+    <tr><td><b>Чат со Скаутом</b></td><td>Пункт «Скан носа или морды» в меню вложений.</td></tr>
+  </tbody></table></div>
+
+  <h3>v18 · Профиль помощника</h3>
+  <div class="spec"><div class="phone screen"><div class="helper-page"><div class="h-hero"><div class="h-cover h-gal"><div class="h-gtrack"><figure class="h-gslide"><img src="assets/media/park-p1.webp" alt=""></figure><figure class="h-gslide"><img src="assets/media/park-p2.webp" alt=""></figure></div><div class="h-gdots"><i class="on"></i><i></i></div><span class="h-gcount">1 / 2</span><button class="icon-button h-like saved" type="button" aria-label="Убрать из избранного"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.6-7-10a4 4 0 0 1 7-2.4A4 4 0 0 1 19 10c0 5.4-7 10-7 10z" fill="currentColor" stroke="currentColor" stroke-width="2"/></svg></button></div></div>
+    <section class="h-sec h-ach-sec" style="margin-top:12px"><div class="h-ach-row"><h3>Достижения</h3><div class="h-ach2"><span class="h-ach2-i" style="--z:3"></span><span class="h-ach2-i" style="--z:2"></span><span class="h-ach2-i" style="--z:1"></span></div></div></section>
+    <div class="stack mt h-actions"><button class="button secondary h-contact" type="button">Связаться</button></div></div></div></div>
+  <p class="note">Лайк — в правом верхнем углу фото, а не отдельной кнопкой внизу. Под фото одна кнопка «Связаться» (если диалог есть — «Открыть диалог»). «Ещё» и «Обсудить со Скаутом» убраны: Скаут уже доступен через «Описать ситуацию». Достижения — иконки внахлёст без подписей, по нажатию открывается описание. Фотографий в профиле и в услугах может быть несколько, 4:3, листаются жестом.</p>
+
+  <h3>v18 · Заметки в избранном</h3>
+  <div class="spec"><div class="phone screen"><section class="card fav-card"><small class="fn-src">Анна · 12 окт</small><div class="fav-note"><p>Позвонить после 18:00</p><div class="fav-tags ro"><span>Позвонить</span><span>Важно</span></div><div class="fn-actions"><button type="button" class="fn-done" role="checkbox" aria-checked="true">Сделано</button><button type="button" class="fn-edit">Изменить</button></div></div></section>
+    <section class="card fav-card"><div class="fav-editor"><label class="field">Заметка<textarea rows="3" placeholder="Например: позвонить после 18:00"></textarea></label><div class="fav-tags"><button type="button" class="on">Позвонить</button><button type="button">Обсудить</button><button type="button">Подходит</button><button type="button">Не подходит</button><button type="button">Важно</button></div></div></section></div>
+  <p class="note">Заметка живёт под сохранённой карточкой или отдельно (вкладка «Заметки»). Текст до 400 знаков и пять отметок: позвонить, обсудить, подходит, не подходит, важно. «Сделано» зачёркивает текст. Данные хранятся на устройстве.</p>
+
+  <h3>v18 · Правила против дублей</h3>
+  <div class="spec"><table><thead><tr><th>Правило</th><th>Как проверяется</th></tr></thead><tbody>
+    <tr><td><b>Один путь к одному месту</b></td><td>Если крупная кнопка шага ведёт на экран, строка списка и чип с тем же адресом не показываются.</td></tr>
+    <tr><td><b>Один вход в Скаута</b></td><td>На экране не больше одной кнопки в Скаута. Маскот на главной — иллюстрация.</td></tr>
+    <tr><td><b>Одна главная кнопка</b></td><td>Лаймовая кнопка одна на экран, остальные вторичные.</td></tr>
+    <tr><td><b>Роль в метке, не в имени</b></td><td>«Волонтёр» — в метке над именем; имя без приписки.</td></tr>
+    <tr><td><b>Лайк — на фото</b></td><td>Сердечко в углу фото или карточки, не отдельной кнопкой внизу.</td></tr>
+  </tbody></table></div>
+
+  <h3>v19 · Ответ помощника в чате</h3>
+  <div class="spec"><div class="phone screen"><div class="chat-list"><div class="bubble system">Анна — прочитано<small>00:34</small></div><div class="bubble">Здравствуйте! Вижу запрос по случаю #0241. Готова помочь, задачу подтверждаю.<small>00:34</small></div><div class="bubble typing" aria-label="Печатает"><i></i><i></i><i></i></div></div>
+    <div class="agree-card"><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Договорённость зафиксирована</b><small>Передержка до 7 дней</small></div><button class="button secondary" type="button">Открыть задачи</button></div></div></div>
+  <p class="note">После сообщения помощник «читает» (1 с), «печатает» (точки) и отвечает по смыслу: цена, время, адрес, благодарность. После запроса помощи он подтверждает задачу сам, и в чате появляется одна карточка договорённости без повтора строкой. В закрытом случае ответов нет. Это имитация: реальных сообщений прототип не отправляет.</p>
+
+  <h3>v19 · Сортировка и сравнение</h3>
+  <div class="spec"><div class="phone screen"><div class="sort-row"><span class="sort-lab">Сначала</span><button class="on" type="button">Ближе</button><button type="button">Быстрее отвечают</button><button type="button">Выше рейтинг</button></div>
+    <section class="card cmp-card"><div class="cmp-row cmp-head" style="grid-template-columns:84px repeat(2,minmax(0,1fr))"><span></span><span class="cmp-v"><b>Анна</b><small>Волонтёр</small></span><span class="cmp-v"><b>Дмитрий</b><small>Волонтёр</small></span></div><div class="cmp-row" style="grid-template-columns:84px repeat(2,minmax(0,1fr))"><span class="cmp-l">Ответ</span><span class="cmp-v">18 мин</span><span class="cmp-v best">9 мин</span></div><div class="cmp-row" style="grid-template-columns:84px repeat(2,minmax(0,1fr))"><span class="cmp-l">Рейтинг</span><span class="cmp-v best">4,9</span><span class="cmp-v">4,8</span></div></section></div></div>
+  <p class="note">Четыре сортировки: ближе, быстрее отвечают, выше рейтинг, бесплатные. Значок рядом с «Открыть» добавляет карточку к сравнению (до трёх). Лучшее значение в строке отмечено точкой; при равенстве точки нет. Сравнение берёт данные карточек и ничего не оценивает от себя.</p>
+
+  <h3>v19 · Напоминания у заметок</h3>
+  <div class="spec"><div class="phone screen"><section class="card fav-card"><div class="fav-note"><p>Позвонить Анне</p><p class="fn-due"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17h12l-1.5-2V11a4.5 4.5 0 0 0-9 0v4L6 17zM10 20h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Напомнить: сегодня 19:00</span></p></div></section>
+    <section class="card rem-card"><h3>Напоминания</h3></section></div></div>
+  <p class="note">Срок: через час, сегодня вечером, завтра утром, через 3 дня или своё время. Ближайшие 24 часа показаны на главной и в «Уведомлениях»; просроченные подсвечены. Когда срок наступил, приходит один тост. «Сделано» снимает напоминание.</p>
+
+  <h3>v19 · Сверка скана со случаями рядом</h3>
+  <div class="spec"><div class="phone screen"><section class="card scan-card scan-near"><div class="near-list"><div class="near-row hi"><img src="assets/media/park-p1.webp" alt="" width="56" height="56"><span><b>Собака в парке</b><small>Городской парк · 2,4 км</small><i class="sim-pill hi">Высокое сходство снимков</i></span><span></span></div><div class="near-row mid"><img src="assets/media/stop-p2.webp" alt="" width="56" height="56"><span><b>Собака у остановки</b><small>Остановка у парка · 3,6 км</small><i class="sim-pill mid">Среднее сходство снимков</i></span><span></span></div></div></section></div></div>
+  <p class="note">Есть у экрана совпадений (скан найденного) и у профиля питомца (скан своего). Сравниваются только животные того же вида. Результат — три уровня сходства без процентов и оговорка «повод проверить, а не доказательство». Контакты открываются по согласию обеих сторон.</p>
+
+  <h3>v19 · Правила: возврат и названия</h3>
+  <div class="spec"><table><thead><tr><th>Правило</th><th>Как проверяется</th></tr></thead><tbody>
+    <tr><td><b>Назад возвращает туда, откуда пришли</b></td><td>Сквозной проход по экранам: после перехода «Назад» ведёт на исходный экран. Скаут больше не возвращает на главную всегда.</td></tr>
+    <tr><td><b>Одно название на раздел</b></td><td>«Самопомощь» — раздел, «памятка» — статья в нём. Раньше было «Подсказки», «Памятки» и «Самопомощь».</td></tr>
+    <tr><td><b>Без тупиков</b></td><td>На каждом экране есть следующий шаг, назад или нижняя панель.</td></tr>
+  </tbody></table></div>
+
+</section>
+
+<section id="icons">
+  <h2>Иконки</h2>
+  <p class="lead">Flaticon Uicons (regular-rounded), 24 px, <code>currentColor</code>, без дополнительной обводки. Лицензия — <code>Podhvat/assets/flaticon/LICENSE.txt</code>.</p>
+  <div class="icons" id="icon-grid"></div>
+</section>
+
+<section id="motion-s">
+  <h2>Движение</h2>
+  <p class="lead">Движение объясняет переход и не отвлекает. При «Меньше движения» и системном Reduce Motion всё выключается, остаётся мгновенная смена.</p>
+  <div class="spec"><table><thead><tr><th>Событие</th><th>Время</th><th>Кривая</th><th>Что происходит</th></tr></thead><tbody>
+    <tr><td>Нажатие</td><td>120 мс</td><td>ease-out</td><td>Масштаб .92 всего контрола, иконка не деформируется</td></tr>
+    <tr><td>Смена экрана</td><td>380 мс</td><td><code>.22,.7,.2,1</code></td><td>Кроссфейд: новый экран лежит снизу, прежний гаснет сверху; нижняя панель неподвижна</td></tr>
+    <tr><td>Чекбокс, радио</td><td>140–160 мс</td><td><code>.22,.7,.2,1</code></td><td>Появление галочки с масштабом .6 → 1</td></tr>
+    <tr><td>Тег-рейка</td><td>200 мс</td><td>ease</td><td>Нажатый тег уходит в конец, порядок сохраняется</td></tr>
+    <tr><td>Скаут на главной</td><td>2,8–6 с</td><td>ease-in-out</td><td>Дыхание, покачивание, наклон или подпрыгивание по ситуации</td></tr>
+    <tr><td>Закрытие случая</td><td>2,6 с</td><td><code>.22,.8,.24,1</code></td><td>Плашка с Скаутом: появление 0,4 с, взмах лапой 1,5 с, тап закрывает раньше</td></tr>
+    <tr><td>Меню вложений</td><td>220 мс</td><td>ease-out</td><td>Выезжает на 8 px снизу с лёгким масштабом; при «Меньше движения» сразу</td></tr>
+    <tr><td>Микрофон</td><td>1,3 с, цикл</td><td>ease-in-out</td><td>Лаймовое кольцо пульсирует, пока идёт запись</td></tr>
+    <tr><td>Reduce Motion</td><td>0</td><td>—</td><td>Без transform и shimmer</td></tr>
+  </tbody></table></div>
+  <h3>Образец</h3>
+  <div class="stage"><div class="demo-fade" id="demo-fade" tabindex="0" role="button">Нажмите</div><span class="note">Нажатие и возврат целиком, 120 мс</span></div>
+</section>
+
+<section id="rules">
+  <h2>Правила продукта</h2>
+  <div class="spec"><table><tbody>
+    <tr><td><b>Срочный вход</b></td><td>Обходит обычный маршрут и ведёт к специалисту.</td></tr>
+    <tr><td><b>Дикие и сельскохозяйственные</b></td><td>Наблюдение издалека и профильный специалист.</td></tr>
+    <tr><td><b>Контакты</b></td><td>Телефон, точка, звонки и видео — только по согласию обеих сторон, в рамках этого случая и этого собеседника.</td></tr>
+    <tr><td><b>Ответ организации</b></td><td>Не равен подтверждённому приёму животного.</td></tr>
+    <tr><td><b>Закрытие случая</b></td><td>Один из четырёх итогов, чаты уходят в архив, история допускает отдельные обновления.</td></tr>
+    <tr><td><b>Скаут</b></td><td>Коротко, тепло, на «вы». Без диагнозов и назначения лечения.</td></tr>
+    <tr><td><b>Состояния</b></td><td>default · loading · empty · error · attention · closed. Unknown не превращается в ноль.</td></tr>
+  </tbody></table></div>
+</section>
+
+<section id="screens">
+  <h2>Экраны</h2>
+  <p class="lead">Все 50 экранов прототипа на ширине 390 px в выбранной теме.</p>
+  <div class="gallery" id="gallery"></div>
+</section>
+
+<section id="tokens">
+  <h2>Токены</h2>
+  <p class="lead">Машиночитаемая версия — <a href="tokens.json">tokens.json</a>. Переменные CSS — в <code>Podhvat/tokens/tokens.css</code> и в начале <code>src/css/15-polish.css</code>.</p>
+  <h3>v20 · Анимированный 3D-Скаут на главной</h3>
+  <div class="spec"><div class="s3d-row">
+    <figure><span class="s3d-still"><img src="media/scout3d-calm.webp" alt="Скаут смотрит на пользователя" width="240" height="240"></span><figcaption>Спокойный: взгляд в камеру</figcaption></figure>
+    <figure><span class="s3d-still"><img src="media/scout3d-happy.webp" alt="Скаут радуется" width="240" height="240"></span><figcaption>Радость: уши вверх, прищур</figcaption></figure>
+    <figure><span class="s3d-still"><img src="media/scout3d-curious.webp" alt="Скаут наклоняет голову" width="240" height="240"></span><figcaption>Любопытство: наклон головы</figcaption></figure>
+    <figure><span class="s3d-still"><img src="media/scout3d-worried.webp" alt="Скаут тревожится" width="240" height="240"></span><figcaption>Срочный случай: уши назад, брови домиком</figcaption></figure>
+  </div></div>
+  <p class="note">Без круга и подложки: щенок стоит прямо на фоне экрана, размером с прежний круг (188 px). Холст вдвое шире блока (по 40% запаса с каждой стороны), чтобы уши и наклоны головы не упирались в границу и не срезались. За ним лёгкая тень по силуэту, а низ плавно растворяется, поэтому жёсткого среза груди нет. Модель с костями и анимацией покоя встроена без сторонних библиотек (собственный WebGL-рендер, 30 к/с). Взгляд всегда на пользователе: глаза доворачиваются к камере, пока голова покачивается, и не следят за курсором. Реакции: касание — радость; «Попросить помощи» — настороженность; срочный случай — тревога; раз в 6–12 секунд — наклон головы или кивок. Вне главной рендер останавливается; при «Уменьшить движение» поза статична; нет WebGL или слабое устройство — прежний PNG (тоже без круга, с той же тенью).</p>
+
+  <h3>v20 · Сердечки при касании</h3>
+  <div class="spec"><div class="heart-demo"><i class="s3d-heart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.2A4.7 4.7 0 0 1 12 6.8a4.7 4.7 0 0 1 8.5 2.4C20.5 15 12 20.5 12 20.5Z"/></svg></i><i class="s3d-heart deep"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.2A4.7 4.7 0 0 1 12 6.8a4.7 4.7 0 0 1 8.5 2.4C20.5 15 12 20.5 12 20.5Z"/></svg></i><i class="s3d-heart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.2A4.7 4.7 0 0 1 12 6.8a4.7 4.7 0 0 1 8.5 2.4C20.5 15 12 20.5 12 20.5Z"/></svg></i></div></div>
+  <p class="note">Касание щенка выпускает 6–8 сердечек: лайм <code>--lime</code> #DBF95B и плотный лайм <code>--limeStrong</code> #CBEA39 с контуром <code>--ink</code> (как у иконок: контур 1,7 px, скруглённые углы). Размер 14–27 px, подъём 90–150 px, разлёт ±32 px, 1,1–1,7 с, появляются с шагом 70 мс и растворяются. Не больше 28 одновременно, касаний не перехватывают, при «Уменьшить движение» не показываются.</p>
+
+  <h3>v20 · Тень маскота</h3>
+  <div class="spec"><table><thead><tr><th>Токен</th><th>Значение</th><th>Где</th></tr></thead><tbody>
+    <tr><td><code>--mascot-shadow</code> (светлая тема)</td><td><code>drop-shadow(0 14px 16px rgba(30,45,52,.30)) drop-shadow(0 3px 4px rgba(30,45,52,.16))</code></td><td>Блок Скаута на главной, образцы в дизайн-системе</td></tr>
+    <tr><td><code>--mascot-shadow</code> (тёмная тема)</td><td><code>drop-shadow(0 12px 16px rgba(0,0,0,.55)) drop-shadow(0 2px 3px rgba(0,0,0,.35))</code></td><td>Тот же блок, тема <code>dark</code></td></tr>
+    <tr><td><code>--mascot-fade</code></td><td><code>linear-gradient(to bottom,#000 70%,transparent 87.5%)</code></td><td>Маска низа: грудь растворяется, а не обрезается</td></tr>
+  </tbody></table></div>
+  <p class="note">Тень повторяет силуэт (drop-shadow), а не рисуется эллипсом: когда щенок наклоняет голову или поднимает уши, тень двигается вместе с ним. Двойная тень: широкая мягкая даёт «парение», узкая у контура — контакт с фоном.</p>
+
+  <h3>v20 · Правила: живой маскот</h3>
+  <div class="spec"><table><thead><tr><th>Правило</th><th>Как проверяется</th></tr></thead><tbody>
+    <tr><td><b>Смотрит на пользователя, а не за мышкой</b></td><td>Угол между осью глаза и камерой ≤ 4° на всей петле; без коррекции до 26°. В коде нет mousemove и pointermove.</td></tr>
+    <tr><td><b>Без подложки</b></td><td>Щенок без круга, рамки и обрезки; от фона его отделяет только лёгкая тень (<code>--mascot-shadow</code>).</td></tr>
+    <tr><td><b>Маскот не кнопка</b></td><td>Касание — реакция; перехода нет, единственная кнопка входа в Скаута — «Попросить помощи».</td></tr>
+    <tr><td><b>Экономия</b></td><td>30 к/с, остановка вне главной и вне экрана, 15 к/с на слабом устройстве, затем PNG.</td></tr>
+    <tr><td><b>Доступность</b></td><td>Декоративный (aria-hidden), статичная поза при «Уменьшить движение».</td></tr>
+  </tbody></table></div>
+
+</section>
+
+</main></div>
+<script src="qr.js"></script><script src="ds-data.js"></script><script src="ds.js"></script>
+
+</body></html>

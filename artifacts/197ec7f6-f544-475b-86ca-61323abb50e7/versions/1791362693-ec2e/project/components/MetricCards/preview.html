@@ -1,0 +1,10 @@
+<!-- @dsCard group="Data" height=380 width=420 subtitle="Карточки трекера: столбики сна, кольцо тренировки, строка метрики со статусом." -->
+<style>.pv{display:flex;flex-direction:column;gap:12px;padding:20px;background:var(--bd-grad-wash)}</style>
+<div class="pv" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    '<div class="bd-grid-2" style="gap:12px">' + B.SleepCard({}) + B.WorkoutCard({ percent: 62 }) + '</div>' +
+    B.MetricRow({ object: 'bottle', tone: 'sky', title: 'Drink Water', status: 'Poor', value: 3, total: 8, barTone: 'sky', badgeTone: 'orange' }) +
+    B.MetricRow({ object: 'dumbbell', tone: 'orange', title: 'Workout', status: 'Great', value: 6, total: 8, barTone: 'orange', badgeTone: 'green' });
+</script>

@@ -1,0 +1,20 @@
+<!-- @dsCard group="Screens" height=900 width=900 subtitle="Центр уведомлений: фильтры, группы по дням, типы (напоминание, серия, награда, друзья, совет), действия." -->
+<div id="root"></div>
+<script>
+  var B = window.Buddy;
+  function screen() {
+    var top = '<div style="display:flex;align-items:center;justify-content:space-between;padding:58px 20px 8px"><h1 class="title-xl" style="margin:0">Notifications</h1>' + B.IconButton({ icon: 'check', label: 'Mark all read', variant: 'soft' }) + '</div>' +
+      '<div class="bd-chips" style="padding:0 20px 14px">' + ['All', 'Reminders', 'Badges', 'Friends'].map(function (l, i) { return B.Chip({ filter: true, label: l, pressed: i === 0 }); }).join('') + '</div>';
+    var body = '<div class="bd-stack" style="padding:0 20px;gap:20px">' +
+      B.NotificationGroup({ title: 'Today', items: [
+        { type: 'streak', mascot: 'buddy-streak', title: '4 days streak!', text: 'One more habit keeps the fire going.', time: '9:41', unread: true },
+        { type: 'reminder', title: 'Drink Water', text: 'Time for a glass. It takes 10 seconds.', time: '9:30', unread: true, actions: ['Done', 'Snooze'] },
+        { type: 'badge', title: 'New badge: Water hero', text: 'You drank 8 glasses three days in a row.', time: '8:15' }] }) +
+      B.NotificationGroup({ title: 'Yesterday', items: [
+        { type: 'friend', title: 'Mira sent you a cheer', text: 'Keep it up, you are on a roll!', time: '20:05' },
+        { type: 'tip', title: 'Tip of the day', text: 'Pair a new habit with something you already do.', time: '08:00' }] }) + '</div>';
+    return B.Phone(top + body, { tabs: B.TabBar({ current: 'home' }) });
+  }
+  document.getElementById('root').innerHTML = B.Stage(screen);
+  B.wire(document);
+</script>

@@ -1,0 +1,20 @@
+<!-- @dsCard group="Screens" height=900 width=900 subtitle="Диалог: узор 50% за сообщениями, статус ассистента, поиск, карточка в чате, стеклянный композер." -->
+<div id="root"></div>
+<script>
+  var B = window.Buddy;
+  function screen() {
+    var head = '<div class="bd-dlg-head">' + B.IconButton({ icon: 'arrow-left', label: 'Back', variant: 'soft' }) + B.Avatar({ mascot: 'buddy-happy', size: 44, status: 'online' }) + '<div class="bd-dlg-head__who"><b>Buddy</b><span>Writing…</span></div>' + B.IconButton({ icon: 'more', label: 'More', variant: 'soft' }) + '</div>';
+    var msgs = '<div class="bd-stack" style="padding:6px 20px 0;gap:14px">' +
+      '<div style="text-align:center">' + B.Badge({ text: 'Today', size: 'sm' }) + '</div>' +
+      B.Message({ role: 'user', text: 'I keep forgetting to drink water', time: '9:39' }) +
+      '<div style="padding-left:36px">' + B.ToolCall({ state: 'done', title: 'Found 3 ideas', text: 'habit research, sleep studies' }) + '</div>' +
+      B.Message({ role: 'buddy', text: 'Try a glass after every call. Want me to add it?', extra: B.MessageCard({ object: 'bottle', tone: 'sky', title: 'Drink Water', meta: 'After every call', cta: 'Add' }), time: '9:40' }) +
+      B.Message({ role: 'user', text: 'Yes, add it' }) + B.Typing() + '</div>';
+    var inner = '<div class="dlg-pat" style="position:absolute;inset:0"></div><div style="position:absolute;inset:0">' + head + msgs + '</div>' +
+      '<div style="position:absolute;z-index:5;left:16px;right:16px;bottom:30px"><div class="bd-chips" style="margin-bottom:10px">' + B.Chip({ icon: 'bulb', tone: 'yellow', label: 'Habit Tips' }) + B.Chip({ icon: 'target', tone: 'pink', label: 'Set-up goals' }) + B.Chip({ icon: 'calendar', tone: 'green', label: 'Schedule' }) + '</div>' + B.Composer({ placeholder: 'Message Buddy' }) + '</div>';
+    return B.Phone(inner, { wash: true });
+  }
+  document.getElementById('root').innerHTML = B.Stage(screen);
+  Array.prototype.forEach.call(document.querySelectorAll('.dlg-pat'), function (h) { B.Pattern.mount(h, { state: 'answering', focus: { x: 0.5, y: 0.1 } }); });
+  B.wire(document);
+</script>

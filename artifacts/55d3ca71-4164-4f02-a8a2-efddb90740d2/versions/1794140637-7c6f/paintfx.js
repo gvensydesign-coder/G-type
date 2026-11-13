@@ -1,0 +1,1106 @@
+// Рисованный стиль «Живопись поверх 3D» для three.js (r170+). Зависимость одна: three.
+// Повторяет приёмы из разбора (ANALYSIS.md): плоская заливка в 2–3 тона, цветные тени,
+// мазки кисти по поверхности (Вороной → нормаль), карандашная штриховка, неровный контур
+// с нажимом и разрывами, рваный контровый свет, мазки-карточки на модели (как Hatchix),
+// светящийся проём с мазками, рисованное небо и пост-обработка (Кувахара, бумага, зерно,
+// аберрация, bloom, виньетка, набросок контуров по глубине). Линии «кипят» шагами.
+//
+//   const style = new PaintStyle(PRESETS.mayhem.params);
+//   const mat = style.material({ color: '#6e4d35', flow: 'wrap', flowDir: [0,0,1] });
+//   style.paintObject(gltf.scene);               // заменить материалы модели на рисованные
+//   style.addOutline(gltf.scene);                // неровный контур (оболочка)
+//   const cards = new StrokeCards(style, gltf.scene, { density: 900 }); // мазки-карточки
+//   const post = new PaintPost(renderer, style);
+//   // каждый кадр:
+//   style.update(dt, camera); cards.update(dt);
+//   post.render(scene, camera);
+import * as THREE from 'three';
+
+// ---------------------------------------------------------------- параметры
+// key, label, min, max, step, group
+export const PARAM_DEFS = [
+  ['bands', 'Тонов в заливке (2–3)', 2, 3, 1, 'fill'],
+  ['t0', 'Порог глубокой тени', -0.3, 0.6, 0.01, 'fill'],
+  ['t1', 'Порог света', 0, 1.2, 0.01, 'fill'],
+  ['t2', 'Порог блика', 0.4, 2.5, 0.01, 'fill'],
+  ['soft', 'Мягкость границ', 0, 0.3, 0.005, 'fill'],
+  ['wrap', 'Обтекание светом', 0, 1, 0.01, 'fill'],
+  ['exposure', 'Сила света', 0.2, 3, 0.01, 'fill'],
+  ['litValue', 'Яркость света', 0.5, 1.6, 0.01, 'fill'],
+  ['lightTint', 'Окраска светом', 0, 1, 0.01, 'fill'],
+  ['highlight', 'Блик', 0, 1, 0.01, 'fill'],
+  ['hiTint', 'Блик цветом света', 0, 1, 0.01, 'fill'],
+  ['shadowValue', 'Яркость тени', 0.1, 1, 0.01, 'shadow'],
+  ['shadowTint', 'Цвет тени (сдвиг тона)', 0, 1, 0.01, 'shadow'],
+  ['deepTint', 'Цвет глубокой тени', 0, 1, 0.01, 'shadow'],
+  ['ambient', 'Подсветка окружением', 0, 2, 0.01, 'shadow'],
+  ['strokeAmt', 'Мазки: сила', 0, 1, 0.01, 'stroke'],
+  ['strokeSize', 'Мазки: размер, см', 2, 60, 0.5, 'stroke'],
+  ['strokeLen', 'Мазки: длина', 0.4, 1.4, 0.01, 'stroke'],
+  ['strokeJitter', 'Мазки: разброс угла', 0, 1, 0.01, 'stroke'],
+  ['strokeTilt', 'Мазки: излом нормали', 0, 1.2, 0.01, 'stroke'],
+  ['strokeLight', 'Мазки: рвут границу тени', 0, 0.6, 0.01, 'stroke'],
+  ['strokeValue', 'Мазки: разброс цвета', 0, 0.6, 0.01, 'stroke'],
+  ['strokeHue', 'Мазки: цветные', 0, 1, 0.01, 'stroke'],
+  ['strokeDry', 'Мазки: сухая кисть', 0, 1, 0.01, 'stroke'],
+  ['hatchAmt', 'Карандаш в тени', 0, 1, 0.01, 'pencil'],
+  ['hatchScale', 'Карандаш: шаг, px', 2, 16, 0.1, 'pencil'],
+  ['hatchAngle', 'Карандаш: угол, °', -90, 90, 1, 'pencil'],
+  ['hatchCross', 'Карандаш: перекрёст в глубокой', 0, 1, 0.01, 'pencil'],
+  ['hatchObject', 'Карандаш по объекту (не по экрану)', 0, 1, 1, 'pencil'],
+  ['scratch', 'Процарапы на свету', 0, 1, 0.01, 'pencil'],
+  ['rimAmt', 'Контровый свет', 0, 3, 0.01, 'rim'],
+  ['rimWidth', 'Кромка: ширина', 0.05, 0.9, 0.01, 'rim'],
+  ['rimRag', 'Кромка: рваность', 0, 1, 0.01, 'rim'],
+  ['lineW', 'Контур: толщина, px', 0, 8, 0.1, 'line'],
+  ['linePressure', 'Контур: нажим', 0, 1, 0.01, 'line'],
+  ['lineGaps', 'Контур: разрывы', 0, 0.8, 0.01, 'line'],
+  ['lineFromBase', 'Контур цветом предмета', 0, 1, 0.01, 'line'],
+  ['lineNoise', 'Контур: частота неровности', 0.5, 20, 0.1, 'line'],
+  ['boil', 'Кипение линий и мазков', 0, 1, 0.01, 'anim'],
+  ['stepFps', 'Кадров кипения, к/с', 0, 24, 1, 'anim'],
+  // пост-обработка
+  ['kuwahara', 'Кувахара: радиус, px', 0, 7, 1, 'post'],
+  ['kuwaAniso', 'Кувахара: вытянутость мазка', 1, 4, 0.05, 'post'],
+  ['warp', 'Дрожь краёв (кисть)', 0, 4, 0.05, 'post'],
+  ['sketch', 'Набросок по глубине', 0, 1, 0.01, 'post'],
+  ['sketchOver', 'Перелёт линий, px', 0, 12, 0.1, 'post'],
+  ['colorEdge', 'Линии по цвету', 0, 1, 0.01, 'post'],
+  ['paper', 'Бумага', 0, 1, 0.01, 'post'],
+  ['paperScale', 'Бумага: масштаб', 0.3, 3, 0.01, 'post'],
+  ['grain', 'Зерно', 0, 0.3, 0.005, 'post'],
+  ['aberration', 'Аберрация, px', 0, 6, 0.05, 'post'],
+  ['bloom', 'Свечение (bloom)', 0, 2, 0.01, 'post'],
+  ['bloomThreshold', 'Свечение: порог', 0.3, 3, 0.01, 'post'],
+  ['vignette', 'Виньетка', 0, 1.5, 0.01, 'post'],
+  ['saturation', 'Насыщенность', 0, 2, 0.01, 'post'],
+  ['contrast', 'Контраст', 0.5, 1.6, 0.01, 'post'],
+  ['postExposure', 'Экспозиция', 0.3, 3, 0.01, 'post'],
+];
+export const PARAM_GROUPS = {
+  fill: 'Заливка и свет', shadow: 'Цветные тени', stroke: 'Мазки кисти', pencil: 'Карандаш',
+  rim: 'Контровый свет', line: 'Контур', anim: 'Кипение', post: 'Пост-обработка',
+};
+export const COLOR_DEFS = [
+  ['cShadow', 'Цвет тени'], ['cDeep', 'Глубокая тень'], ['cStroke', 'Цвет мазков'],
+  ['cPencil', 'Карандаш'], ['cRim', 'Кромка'], ['cLine', 'Контур'],
+  ['cPaper', 'Бумага'], ['cLift', 'Тени кадра (lift)'], ['cGain', 'Свет кадра (gain)'],
+];
+
+// Слои, которые можно включать по отдельности (для разбора «как это сложено»).
+export const LAYERS = [
+  ['fill', 'Заливка тонами'], ['shadow', 'Цветные тени'], ['stroke', 'Мазки по форме'],
+  ['cards', 'Мазки-карточки'], ['pencil', 'Карандаш'], ['rim', 'Контровый свет'],
+  ['line', 'Контур'], ['kuwahara', 'Кувахара'], ['sketch', 'Набросок'],
+  ['paper', 'Бумага и зерно'], ['bloom', 'Свечение'], ['lens', 'Аберрация и виньетка'],
+];
+
+const BASE = {
+  bands: 3, t0: 0.06, t1: 0.32, t2: 1.15, soft: 0.04, wrap: 0.25, exposure: 1, litValue: 1, lightTint: 0.55,
+  highlight: 0.5, hiTint: 0.3,
+  shadowValue: 0.45, shadowTint: 0.6, deepTint: 0.6, ambient: 0.35,
+  strokeAmt: 0.8, strokeSize: 14, strokeLen: 1.05, strokeJitter: 0.35, strokeTilt: 0.45, strokeLight: 0.22,
+  strokeValue: 0.24, strokeHue: 0.25, strokeDry: 0.3,
+  hatchAmt: 0.45, hatchScale: 7, hatchAngle: 35, hatchCross: 0.5, hatchObject: 0, scratch: 0.2,
+  rimAmt: 1.2, rimWidth: 0.42, rimRag: 0.6,
+  lineW: 2.2, linePressure: 0.7, lineGaps: 0.18, lineFromBase: 0.45, lineNoise: 4,
+  boil: 0.5, stepFps: 10,
+  kuwahara: 3, kuwaAniso: 2, warp: 1.2, sketch: 0.5, sketchOver: 4, colorEdge: 0.25,
+  paper: 0.45, paperScale: 1, grain: 0.05, aberration: 1.2, bloom: 0.7, bloomThreshold: 0.95,
+  vignette: 0.55, saturation: 1.05, contrast: 1.05, postExposure: 1,
+  cShadow: '#5a2f3a', cDeep: '#140a08', cStroke: '#d8d2a0', cPencil: '#2a1a12', cRim: '#e8f0a8',
+  cLine: '#20120c', cPaper: '#efe6cf', cLift: '#1a0f0c', cGain: '#fff6e0',
+};
+const P = (o) => ({ ...BASE, ...o });
+
+export const PRESETS = {
+  mayhem: { name: 'Тоннель (как на фото)', params: P({}) },
+  pastel: { name: '2.5D закат (видео)', params: P({
+    shadowValue: 0.46, contrast: 1.12, shadowTint: 0.75, cShadow: '#5b4fa8', cDeep: '#2a2050', deepTint: 0.5,
+    lightTint: 0.7, highlight: 0.7, hiTint: 0.45, strokeSize: 10, strokeAmt: 0.65, hatchAmt: 0.12, scratch: 0.1,
+    rimAmt: 1.6, cRim: '#ffd9a0', lineW: 1.6, cLine: '#3a2440', lineFromBase: 0.7,
+    kuwahara: 3, paper: 0.35, grain: 0.05, bloom: 1.1, bloomThreshold: 0.85, vignette: 0.35, saturation: 1.25,
+    cPaper: '#fff1d8', cLift: '#2a1c3a', cGain: '#fff0d0', cStroke: '#ffe2b0',
+  }) },
+  neon: { name: 'Неоновая ночь (видео)', params: P({
+    shadowValue: 0.32, shadowTint: 0.8, cShadow: '#3a1850', cDeep: '#0b0612', deepTint: 0.8, ambient: 0.5,
+    lightTint: 0.85, highlight: 0.8, hiTint: 0.7, strokeSize: 16, strokeLight: 0.28, hatchAmt: 0.25, cPencil: '#140a1e',
+    rimAmt: 2.2, cRim: '#7fd8ff', rimWidth: 0.38, lineW: 2, cLine: '#0e0714', lineFromBase: 0.35,
+    kuwahara: 4, warp: 1.6, paper: 0.3, grain: 0.06, aberration: 2.2, bloom: 1.0, bloomThreshold: 0.85,
+    vignette: 0.8, saturation: 1.2, cPaper: '#d8d0e8', cLift: '#180a24', cGain: '#e8f4ff', cStroke: '#c0b0ff',
+  }) },
+  pencil: { name: 'Карандашный набросок', params: P({
+    bands: 2, shadowValue: 0.7, shadowTint: 0.25, cShadow: '#6a6458', deepTint: 0.3, strokeAmt: 0.35, strokeValue: 0.08,
+    strokeHue: 0, hatchAmt: 0.95, hatchScale: 4, hatchCross: 0.9, scratch: 0.05, rimAmt: 0.4,
+    lineW: 1.6, linePressure: 0.9, lineGaps: 0.3, lineFromBase: 0.1, boil: 0.8, stepFps: 8,
+    kuwahara: 1, sketch: 0.9, sketchOver: 7, colorEdge: 0.6, paper: 0.9, grain: 0.06, aberration: 0, bloom: 0.2,
+    vignette: 0.35, saturation: 0.35, contrast: 1.15, cPaper: '#f2ead6', cLift: '#2a2620', cGain: '#fffaf0',
+  }) },
+  rus: { name: 'Русь, масло (для игры)', params: P({
+    shadowValue: 0.48, shadowTint: 0.6, cShadow: '#2e3a4a', cDeep: '#0e1014', deepTint: 0.55,
+    lightTint: 0.5, highlight: 0.45, strokeSize: 18, strokeAmt: 0.85, strokeTilt: 0.55, strokeDry: 0.6,
+    hatchAmt: 0.25, cPencil: '#1c1812', rimAmt: 1, cRim: '#ffd890', lineW: 2, cLine: '#16110c', lineFromBase: 0.55,
+    kuwahara: 4, paper: 0.5, grain: 0.07, aberration: 0.8, bloom: 0.6, vignette: 0.6, saturation: 0.95,
+    cPaper: '#eadfc4', cLift: '#141418', cGain: '#fff2d8', cStroke: '#cdbf96',
+  }) },
+  khton: { name: 'Хтонь, уголь', params: P({
+    bands: 2, shadowValue: 0.36, shadowTint: 0.7, cShadow: '#2c3328', cDeep: '#07080a', deepTint: 0.8,
+    lightTint: 0.3, highlight: 0.2, strokeSize: 22, strokeAmt: 0.9, strokeHue: 0.1, strokeDry: 0.8,
+    hatchAmt: 0.7, hatchScale: 6, hatchCross: 0.8, cPencil: '#050605', scratch: 0.35, rimAmt: 0.7, cRim: '#b8c4a0',
+    lineW: 3, linePressure: 0.9, lineGaps: 0.35, lineFromBase: 0.15, boil: 0.7, stepFps: 8,
+    kuwahara: 5, warp: 2, sketch: 0.75, sketchOver: 8, paper: 0.7, grain: 0.1, aberration: 0.5, bloom: 0.3,
+    vignette: 1, saturation: 0.55, contrast: 1.2, cPaper: '#cfcbb8', cLift: '#0a0c0a', cGain: '#e8ecd8', cStroke: '#8a9078',
+  }) },
+};
+
+// ---------------------------------------------------------------- общий GLSL
+export const GLSL_NOISE = /* glsl */`
+float pfH11(float p){ p = fract(p * .1031); p *= p + 33.33; p *= p + p; return fract(p); }
+float pfH21(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+vec2 pfH22(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973)); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.xx + p3.yz) * p3.zy); }
+vec3 pfH32(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973)); p3 += dot(p3, p3.yxz + 33.33); return fract((p3.xxy + p3.yzz) * p3.zyx); }
+float pfH31(vec3 p){ p = fract(p * .1031); p += dot(p, p.zyx + 31.32); return fract((p.x + p.y) * p.z); }
+float pfNoise(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3. - 2. * f);
+  return mix(mix(pfH21(i), pfH21(i + vec2(1, 0)), u.x), mix(pfH21(i + vec2(0, 1)), pfH21(i + vec2(1, 1)), u.x), u.y); }
+float pfNoise3(vec3 p){ vec3 i = floor(p), f = fract(p); vec3 u = f * f * (3. - 2. * f);
+  float a = mix(mix(pfH31(i), pfH31(i + vec3(1,0,0)), u.x), mix(pfH31(i + vec3(0,1,0)), pfH31(i + vec3(1,1,0)), u.x), u.y);
+  float b = mix(mix(pfH31(i + vec3(0,0,1)), pfH31(i + vec3(1,0,1)), u.x), mix(pfH31(i + vec3(0,1,1)), pfH31(i + vec3(1,1,1)), u.x), u.y);
+  return mix(a, b, u.z); }
+float pfFbm(vec2 p){ float s = 0., a = .5; for (int i = 0; i < 4; i++) { s += a * pfNoise(p); p = p * 2.03 + 17.1; a *= .5; } return s; }
+vec2 pfRot(vec2 v, float a){ float c = cos(a), s = sin(a); return vec2(c * v.x - s * v.y, s * v.x + c * v.y); }
+float pfLuma(vec3 c){ return dot(c, vec3(.299, .587, .114)); }
+`;
+
+// Поле мазков в 2D: клетки Вороного, в каждой один мазок своей длины, ширины, угла.
+// Верхним считается мазок с наибольшим «порядком» (как слои краски).
+// x: смещение тона (-1..1), y: покрытие 0..1, z: номер мазка 0..1, w: поперечная координата.
+export const GLSL_STROKES = /* glsl */`
+vec4 pfStroke(vec2 p, vec2 dir, float len, float jitter, float dry, float seed){
+  vec2 ip = floor(p), fp = fract(p);
+  vec4 best = vec4(0.); float bestZ = -1.;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+    vec2 g = vec2(float(i), float(j)); vec2 id = ip + g + seed;
+    vec2 c = g + pfH22(id) - fp;
+    float a = (pfH21(id * 1.37) - .5) * jitter * 3.1416;
+    vec2 d = pfRot(dir, a);
+    vec2 q = vec2(dot(-c, d), dot(-c, vec2(-d.y, d.x)));
+    float L = len * (.65 + .7 * pfH21(id + 7.1));
+    float W = .36 * (.7 + .6 * pfH21(id + 3.3));
+    float u = q.x / L; float w = 1. - .5 * u * u; float v = q.y / (W * max(w, .15));
+    float m = (1. - smoothstep(.82, 1., abs(u))) * (1. - smoothstep(.72, 1., abs(v)));
+    // ворс: продольные полосы, у хвоста мазка кисть «сохнет» и рвётся
+    float br = pfNoise(vec2(u * 1.6, v * 3.2) + id * 13.1);
+    float dryT = smoothstep(-.3, 1., u) * dry;
+    m *= smoothstep(dryT - .12, dryT + .12, br);
+    float z = pfH21(id + 11.7);
+    if (m > .35 && z > bestZ) { bestZ = z; best = vec4(pfH21(id + 5.3) * 2. - 1., m, z, v); }
+  }
+  return best;
+}
+vec2 pfPlaneDir(vec3 D, int axis){
+  vec2 d = axis == 0 ? D.zy : (axis == 1 ? D.xz : D.xy);
+  return dot(d, d) < 1e-3 ? vec2(1., 0.) : normalize(d);
+}
+// трипланарно в координатах объекта (метры)
+vec4 pfTriStroke(vec3 p, vec3 n, vec3 D, float sc, float len, float jitter, float dry, float seed){
+  vec3 w = pow(abs(n), vec3(8.)); w /= max(dot(w, vec3(1.)), 1e-4);
+  // смешиваем только тон и покрытие; номер мазка берём у главной проекции (иначе хеш от смеси даёт рябь)
+  vec4 s = vec4(0.); float wm = -1.;
+  if (w.x > .02) { vec4 t = pfStroke(p.zy * sc, pfPlaneDir(D, 0), len, jitter, dry, seed); s.xy += w.x * t.xy; if (w.x > wm) { wm = w.x; s.zw = t.zw; } }
+  if (w.y > .02) { vec4 t = pfStroke(p.xz * sc, pfPlaneDir(D, 1), len, jitter, dry, seed + 31.); s.xy += w.y * t.xy; if (w.y > wm) { wm = w.y; s.zw = t.zw; } }
+  if (w.z > .02) { vec4 t = pfStroke(p.xy * sc, pfPlaneDir(D, 2), len, jitter, dry, seed + 67.); s.xy += w.z * t.xy; if (w.z > wm) { wm = w.z; s.zw = t.zw; } }
+  return s;
+}
+float pfHatch(vec2 p, float seed){
+  // p: в единицах шага штриховки; ширина линии ~1 px независимо от шага
+  float row = floor(p.y);
+  float r = pfH11(row * 1.7 + seed);
+  float wob = (pfNoise(vec2(p.x * .18, row + seed)) - .5) * .35;
+  float d = abs(fract(p.y + wob) - .5);
+  float fw = max(fwidth(p.y), 1e-4);
+  float w = fw * (.55 + .7 * r);
+  float line = 1. - smoothstep(w, w + fw, d);
+  float seg = pfNoise(vec2(p.x * .07 + r * 10., row * .37 + seed));
+  return line * smoothstep(.4, .52, seg) * (.55 + .45 * r);
+}
+`;
+
+function col(v) { return new THREE.Color(v); }
+
+// ---------------------------------------------------------------- стиль (общие uniform)
+export class PaintStyle {
+  constructor(params = {}) {
+    this.params = { ...BASE, ...params };
+    this.layers = Object.fromEntries(LAYERS.map(([k]) => [k, true]));
+    this.time = 0;
+    this.materials = new Set();
+    this.outlines = [];
+    this.u = {
+      pfTime: { value: 0 }, pfStep: { value: 0 },
+      pfFill: { value: new THREE.Vector4() },     // t0, t1, t2, soft
+      pfLight: { value: new THREE.Vector4() },    // wrap, exposure, litValue, lightTint
+      pfHi: { value: new THREE.Vector4() },       // highlight, hiTint, bands, -
+      pfShadow: { value: new THREE.Vector4() },   // shadowValue, shadowTint, deepTint, ambient
+      pfStrokeA: { value: new THREE.Vector4() },  // amt, scale(1/m), len, jitter
+      pfStrokeB: { value: new THREE.Vector4() },  // tilt, light, value, hue
+      pfStrokeC: { value: new THREE.Vector4() },  // dry, boil, -, -
+      pfHatchA: { value: new THREE.Vector4() },   // amt, scale px, angle rad, cross
+      pfHatchB: { value: new THREE.Vector4() },   // object, scratch, -, -
+      pfRim: { value: new THREE.Vector4() },      // amt, width, rag, -
+      pfCShadow: { value: new THREE.Color() }, pfCDeep: { value: new THREE.Color() },
+      pfCStroke: { value: new THREE.Color() }, pfCPencil: { value: new THREE.Color() },
+      pfCRim: { value: new THREE.Color() },
+      // контур
+      pfLine: { value: new THREE.Vector4() },     // width px, pressure, gaps, fromBase
+      pfLineB: { value: new THREE.Vector4() },    // noise freq, boil, -, -
+      pfCLine: { value: new THREE.Color() },
+      pfRes: { value: new THREE.Vector2(1920, 1080) },
+    };
+    this.set(this.params);
+  }
+
+  set(p) {
+    Object.assign(this.params, p);
+    const q = this.params, L = this.layers, u = this.u;
+    const fillOn = L.fill;
+    u.pfFill.value.set(q.t0, q.t1, fillOn ? q.t2 : 99, fillOn ? q.soft : 0.6);
+    u.pfLight.value.set(q.wrap, q.exposure, q.litValue, q.lightTint);
+    u.pfHi.value.set(fillOn ? q.highlight : 0, q.hiTint, q.bands, 0);
+    u.pfShadow.value.set(q.shadowValue, L.shadow ? q.shadowTint : 0, L.shadow ? q.deepTint : 0, q.ambient);
+    u.pfStrokeA.value.set(L.stroke ? q.strokeAmt : 0, 100 / q.strokeSize, q.strokeLen, q.strokeJitter);
+    u.pfStrokeB.value.set(q.strokeTilt, q.strokeLight, q.strokeValue, q.strokeHue);
+    u.pfStrokeC.value.set(q.strokeDry, q.boil, 0, 0);
+    u.pfHatchA.value.set(L.pencil ? q.hatchAmt : 0, q.hatchScale, q.hatchAngle * Math.PI / 180, q.hatchCross);
+    u.pfHatchB.value.set(q.hatchObject, L.pencil ? q.scratch : 0, 0, 0);
+    u.pfRim.value.set(L.rim ? q.rimAmt : 0, q.rimWidth, q.rimRag, 0);
+    u.pfCShadow.value.set(q.cShadow); u.pfCDeep.value.set(q.cDeep); u.pfCStroke.value.set(q.cStroke);
+    u.pfCPencil.value.set(q.cPencil); u.pfCRim.value.set(q.cRim);
+    u.pfLine.value.set(q.lineW, q.linePressure, q.lineGaps, q.lineFromBase);
+    u.pfLineB.value.set(q.lineNoise, q.boil, 0, 0);
+    u.pfCLine.value.set(q.cLine);
+    for (const o of this.outlines) o.visible = L.line && q.lineW > 0.01;
+  }
+
+  setLayer(key, on) { this.layers[key] = on; this.set({}); }
+
+  update(dt, renderer) {
+    this.time += dt;
+    this.u.pfTime.value = this.time;
+    const fps = this.params.stepFps;
+    this.u.pfStep.value = fps > 0 ? Math.floor(this.time * fps) : 0;
+    if (renderer) {
+      const s = renderer.getDrawingBufferSize(new THREE.Vector2());
+      this.u.pfRes.value.copy(s);
+    }
+  }
+
+  // Рисованный материал. opts: color, map, emissive, emissiveIntensity, flow ('fixed'|'wrap'|'along'),
+  // flowDir [x,y,z] в координатах объекта, strokeScale (множитель размера мазка), vertexColors, side.
+  material(opts = {}) {
+    const m = new THREE.MeshToonMaterial({
+      color: opts.color ?? '#ffffff', map: opts.map ?? null,
+      emissive: opts.emissive ?? '#000000', emissiveIntensity: opts.emissiveIntensity ?? 1,
+      emissiveMap: opts.emissiveMap ?? null,
+      vertexColors: !!opts.vertexColors, side: opts.side ?? THREE.FrontSide,
+      transparent: !!opts.transparent, opacity: opts.opacity ?? 1,
+    });
+    const flowMode = { fixed: 0, wrap: 1, along: 2 }[opts.flow ?? 'wrap'] ?? 1;
+    const fd = opts.flowDir ?? [0, 1, 0];
+    m.userData.pf = {
+      pfFlow: { value: new THREE.Vector4(fd[0], fd[1], fd[2], flowMode) },
+      pfMatK: { value: new THREE.Vector4(opts.strokeScale ?? 1, opts.seed ?? Math.random() * 50, opts.rimScale ?? 1, opts.hatchScale ?? 1) },
+    };
+    m.onBeforeCompile = (sh) => this._patch(sh, m);
+    m.customProgramCacheKey = () => 'paintfx1';
+    m.userData.paintfx = true;
+    this.materials.add(m);
+    return m;
+  }
+
+  _patch(sh, m) {
+    Object.assign(sh.uniforms, this.u, m.userData.pf);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vPfObjPos;\nvarying vec3 vPfObjN;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPfObjPos = position * length(modelMatrix[0].xyz);\nvPfObjN = normal;');
+    const pars = /* glsl */`
+      varying vec3 vPfObjPos; varying vec3 vPfObjN;
+      uniform float pfTime, pfStep;
+      uniform vec4 pfFill, pfLight, pfHi, pfShadow, pfStrokeA, pfStrokeB, pfStrokeC, pfHatchA, pfHatchB, pfRim, pfFlow, pfMatK;
+      uniform vec3 pfCShadow, pfCDeep, pfCStroke, pfCPencil, pfCRim;
+      ${GLSL_NOISE}
+      ${GLSL_STROKES}
+      vec3 gPfLC; vec3 gPfRim; vec3 gPfAmb; vec4 gPfS;
+      varying vec3 vViewPosition;
+      struct ToonMaterial { vec3 diffuseColor; };
+      void RE_Direct_Toon( const in IncidentLight directLight, const in vec3 geometryPosition, const in vec3 geometryNormal, const in vec3 geometryViewDir, const in vec3 geometryClearcoatNormal, const in ToonMaterial material, inout ReflectedLight reflectedLight ) {
+        float nl = dot(geometryNormal, directLight.direction);
+        float w = pfLight.x;
+        float lam = clamp((nl + w) / (1. + w), 0., 1.);
+        gPfLC += directLight.color * lam;
+        float back = clamp(dot(directLight.direction, -geometryViewDir), 0., 1.);
+        float side = 1. - abs(nl);
+        gPfRim += directLight.color * (back * .8 + .2) * smoothstep(-.35, .2, nl) * (.4 + .6 * side);
+      }
+      void RE_IndirectDiffuse_Toon( const in vec3 irradiance, const in vec3 geometryPosition, const in vec3 geometryNormal, const in vec3 geometryViewDir, const in vec3 geometryClearcoatNormal, const in ToonMaterial material, inout ReflectedLight reflectedLight ) {
+        gPfAmb += irradiance;
+      }
+      #define RE_Direct RE_Direct_Toon
+      #define RE_IndirectDiffuse RE_IndirectDiffuse_Toon
+    `;
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <lights_toon_pars_fragment>', pars)
+      .replace('#include <normal_fragment_maps>', /* glsl */`#include <normal_fragment_maps>
+        gPfLC = vec3(0.); gPfRim = vec3(0.); gPfAmb = vec3(0.);
+        {
+          float boilK = pfStrokeC.y;
+          vec2 bj = (pfH22(vec2(pfStep, 3.7)) - .5) * boilK * .35;
+          vec3 D = pfFlow.xyz; vec3 on = normalize(vPfObjN);
+          if (pfFlow.w > .5 && pfFlow.w < 1.5) D = cross(on, normalize(pfFlow.xyz));
+          float sc = pfStrokeA.y / pfMatK.x;
+          gPfS = pfStrokeA.x > 0. ? pfTriStroke(vPfObjPos + vec3(bj, bj.x), on, D, sc, pfStrokeA.z, pfStrokeA.w, pfStrokeC.x, pfMatK.y) : vec4(0.);
+          gPfS.y *= pfStrokeA.x;
+          // Вороной → нормаль: у каждого мазка свой наклон, как у плоского мазка краски
+          vec3 tilt = (pfH32(vec2(gPfS.z * 91.7, gPfS.z * 13.3)) - .5) * 2.;
+          normal = normalize(normal + tilt * pfStrokeB.x * gPfS.y);
+        }
+      `)
+      .replace('#include <opaque_fragment>', /* glsl */`
+        {
+          vec3 base = diffuseColor.rgb;
+          float sv = gPfS.x * gPfS.y;
+          base *= 1. + sv * pfStrokeB.z;
+          base = mix(base, pfCStroke * pfLuma(base) * 1.6, pfStrokeB.w * gPfS.y * max(gPfS.x, 0.) * .5);
+          float Lraw = pfLuma(gPfLC) * pfLight.y;
+          vec3 lightHue = gPfLC / max(max(gPfLC.r, max(gPfLC.g, gPfLC.b)), 1e-3);
+          float L = Lraw + sv * pfStrokeB.y;
+          float soft = pfFill.w + .002;
+          float b0 = smoothstep(pfFill.x - soft, pfFill.x + soft, L);
+          float b1 = smoothstep(pfFill.y - soft, pfFill.y + soft, L);
+          float b2 = smoothstep(pfFill.z - soft, pfFill.z + soft, L);
+          if (pfHi.z < 2.5) b0 = 1.;
+          float lb = pfLuma(base);
+          vec3 shadowC = mix(base * pfShadow.x, pfCShadow * lb * 2.2, pfShadow.y);
+          shadowC += base * gPfAmb * pfShadow.w * .25;
+          vec3 deepC = mix(shadowC * .42, pfCDeep, pfShadow.z);
+          vec3 litC = base * mix(vec3(1.), lightHue, pfLight.w) * pfLight.z * (.85 + .15 * min(Lraw, 2.));
+          vec3 hiC = mix(litC * 1.28, lightHue * max(lb * 1.6, .6), pfHi.y);
+          vec3 c = mix(deepC, shadowC, b0);
+          c = mix(c, litC, b1);
+          c = mix(c, hiC, b2 * pfHi.x);
+          // карандаш: штриховка в тени, перекрёст в глубокой, процарапы на свету
+          if (pfHatchA.x > 0. || pfHatchB.y > 0.) {
+            vec2 hp;
+            if (pfHatchB.x > .5) {
+              vec3 an = abs(normalize(vPfObjN));
+              vec2 op = an.x > an.y && an.x > an.z ? vPfObjPos.zy : (an.y > an.z ? vPfObjPos.xz : vPfObjPos.xy);
+              hp = op * (90. / pfHatchA.y) / pfMatK.w;
+            } else hp = gl_FragCoord.xy / pfHatchA.y;
+            hp += (pfH22(vec2(pfStep, 9.1)) - .5) * pfStrokeC.y * 2.;
+            float sh = 1. - b1;
+            float h1 = pfHatch(pfRot(hp, pfHatchA.z), pfMatK.y);
+            float h2 = pfHatch(pfRot(hp * 1.07, pfHatchA.z + 1.25), pfMatK.y + 7.);
+            float hm = h1 * smoothstep(.15, .7, sh) + h2 * (1. - b0) * pfHatchA.w;
+            c = mix(c, mix(c * .45, pfCPencil, .6), clamp(hm, 0., 1.) * pfHatchA.x);
+            float h3 = pfHatch(pfRot(hp * .8, pfHatchA.z - .5), pfMatK.y + 3.);
+            c = mix(c, c * 1.25 + .04, h3 * b1 * pfHatchB.y);
+          }
+          // контровый свет: рваная кромка с освещённой стороны
+          vec3 vd = normalize(vViewPosition);
+          float fres = 1. - clamp(dot(normal, vd), 0., 1.);
+          float rm = smoothstep(1. - pfRim.y - .03, 1. - pfRim.y + .03, fres + gPfS.x * gPfS.y * .2 * pfRim.z
+                     + (pfNoise(gl_FragCoord.xy * .05 + pfStep * 3.1) - .5) * .12 * pfRim.z);
+          vec3 rimL = gPfRim * pfLight.y;
+          float rimS = pfLuma(rimL);
+          vec3 rimC = mix(pfCRim, pfCRim * (rimL / max(max(rimL.r, max(rimL.g, rimL.b)), 1e-3)), .5);
+          c += rimC * rm * smoothstep(.05, .6, rimS) * pfRim.x * pfMatK.z * mix(1., lb * 2., .3);
+          outgoingLight = c + totalEmissiveRadiance;
+        }
+        #include <opaque_fragment>`);
+  }
+
+  // Заменяет материалы в объекте на рисованные (цвет и текстура берутся из старых).
+  paintObject(root, opts = {}) {
+    root.traverse((o) => {
+      if (!o.isMesh || o.userData.pfSkip) return;
+      const conv = (old) => {
+        if (old.userData?.paintfx) return old;
+        const m = this.material({
+          color: old.color ?? '#ffffff', map: old.map ?? null, emissive: old.emissive ?? '#000000',
+          emissiveMap: old.emissiveMap ?? null, emissiveIntensity: old.emissiveIntensity ?? 1,
+          vertexColors: old.vertexColors, side: old.side, ...opts,
+        });
+        if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
+        o.userData.pfPlain = o.userData.pfPlain ?? old;
+        return m;
+      };
+      o.material = Array.isArray(o.material) ? o.material.map(conv) : conv(o.material);
+    });
+  }
+
+  // Неровный контур-оболочка с нажимом, разрывами и кипением. Работает со SkinnedMesh.
+  addOutline(root, opts = {}) {
+    const made = [];
+    const meshes = [];
+    root.traverse((o) => { if (o.isMesh && !o.userData.pfOutline && !o.userData.pfSkip) meshes.push(o); });
+    for (const o of meshes) {
+      const g = o.geometry;
+      if (!g.attributes.pfSmoothN) smoothNormalsForOutline(g);
+      const srcMat = Array.isArray(o.material) ? o.material[0] : o.material;
+      const mat = new THREE.ShaderMaterial({
+        uniforms: {
+          ...this.u,
+          pfBase: { value: (srcMat.color ?? new THREE.Color(0.3, 0.3, 0.3)).clone() },
+          pfWidthK: { value: opts.widthScale ?? 1 },
+        },
+        vertexShader: OUTLINE_VERT, fragmentShader: OUTLINE_FRAG,
+        side: THREE.BackSide,
+      });
+      const ol = o.isSkinnedMesh ? new THREE.SkinnedMesh(g, mat) : new THREE.Mesh(g, mat);
+      if (o.isSkinnedMesh) ol.bind(o.skeleton, o.bindMatrix);
+      ol.userData.pfOutline = true; ol.userData.pfSkip = true;
+      ol.frustumCulled = o.frustumCulled;
+      ol.castShadow = false; ol.receiveShadow = false;
+      ol.renderOrder = o.renderOrder;
+      o.add(ol);
+      if (o.isSkinnedMesh) {
+        // SkinnedMesh-ребёнок: положение берётся из скелета, поэтому без смещения от родителя
+        ol.matrixAutoUpdate = false;
+        ol.onBeforeRender = () => { ol.matrixWorld.copy(o.matrixWorld); };
+      }
+      made.push(ol); this.outlines.push(ol);
+    }
+    this.set({});
+    return made;
+  }
+}
+
+// Сглаженные нормали для оболочки: у вершин в одной точке одна нормаль, иначе контур рвётся на углах.
+export function smoothNormalsForOutline(g) {
+  const pos = g.attributes.position, nor = g.attributes.normal;
+  const out = new Float32Array(pos.count * 3);
+  const map = new Map();
+  const key = (i) => `${Math.round(pos.getX(i) * 1e4)},${Math.round(pos.getY(i) * 1e4)},${Math.round(pos.getZ(i) * 1e4)}`;
+  for (let i = 0; i < pos.count; i++) {
+    const k = key(i);
+    let a = map.get(k); if (!a) { a = [0, 0, 0]; map.set(k, a); }
+    if (nor) { a[0] += nor.getX(i); a[1] += nor.getY(i); a[2] += nor.getZ(i); }
+  }
+  for (let i = 0; i < pos.count; i++) {
+    const a = map.get(key(i)); const l = Math.hypot(a[0], a[1], a[2]) || 1;
+    out[i * 3] = a[0] / l; out[i * 3 + 1] = a[1] / l; out[i * 3 + 2] = a[2] / l;
+  }
+  g.setAttribute('pfSmoothN', new THREE.BufferAttribute(out, 3));
+}
+
+const OUTLINE_VERT = /* glsl */`
+#include <common>
+#include <skinning_pars_vertex>
+attribute vec3 pfSmoothN;
+uniform vec4 pfLine, pfLineB; uniform vec2 pfRes; uniform float pfStep, pfWidthK;
+varying float vPfK;
+${GLSL_NOISE}
+void main(){
+  vec3 objectNormal = pfSmoothN;
+  #include <skinbase_vertex>
+  #include <skinnormal_vertex>
+  #include <begin_vertex>
+  #include <skinning_vertex>
+  #include <project_vertex>
+  vec3 op = position * length(modelMatrix[0].xyz);
+  vec3 bj = vec3(pfH22(vec2(pfStep, 1.3)), pfH11(pfStep * 1.7)) * pfLineB.y * 3.;
+  float n = pfNoise3(op * pfLineB.x + bj);
+  float n2 = pfNoise3(op * pfLineB.x * .6 + 13.1 + bj * .7);
+  float w = pfLine.x * pfWidthK * mix(1., .25 + 1.6 * n, pfLine.y);
+  w *= smoothstep(pfLine.z, pfLine.z + .1, n2);
+  vPfK = n;
+  vec3 vn = normalize(normalMatrix * objectNormal);
+  vec4 cn = projectionMatrix * vec4(vn, 0.);
+  vec2 d = cn.xy; float dl = length(d);
+  d = dl > 1e-5 ? d / dl : vec2(0.);
+  float distK = clamp(6. / max(gl_Position.w, .1), .35, 1.4);
+  gl_Position.xy += d * w * distK * 2. / pfRes * gl_Position.w;
+  gl_Position.z += .0004 * gl_Position.w;
+}`;
+const OUTLINE_FRAG = /* glsl */`
+uniform vec4 pfLine; uniform vec3 pfCLine, pfBase; varying float vPfK;
+void main(){
+  vec3 c = mix(pfCLine, pfBase * .28, pfLine.w);
+  c *= .85 + .3 * vPfK;
+  gl_FragColor = vec4(c, 1.);
+  #include <colorspace_fragment>
+}`;
+
+// ---------------------------------------------------------------- мазки-карточки (как Hatchix)
+// Плоские мазки, разбросанные по поверхности меша и лежащие вдоль формы. Цвет берётся из
+// текстуры/цвета модели в этой точке и освещается тем же светом в 2–3 тона. grow 0→1 «дорисовывает».
+export class StrokeCards {
+  constructor(style, root, opts = {}) {
+    this.style = style;
+    this.o = {
+      density: 700, max: 30000, size: 0.06, aspect: 3.2, lift: 0.004, flow: 'wrap', flowDir: [0, 1, 0],
+      jitter: 0.5, lightDir: [0.4, 0.8, 0.5], lightColor: '#fff2d0', backDir: [0, 0.3, -1], backColor: '#e8f0a8',
+      shadowColor: null, ...opts,
+    };
+    this.group = new THREE.Group();
+    this.meshes = [];
+    this.uniforms = {
+      ...style.u,
+      pcGrow: { value: 1 }, pcSize: { value: this.o.size }, pcAspect: { value: this.o.aspect }, pcLift: { value: this.o.lift },
+      pcLightDir: { value: new THREE.Vector3(...this.o.lightDir).normalize() }, pcLightCol: { value: col(this.o.lightColor) },
+      pcBackDir: { value: new THREE.Vector3(...this.o.backDir).normalize() }, pcBackCol: { value: col(this.o.backColor) },
+      pcAlpha: { value: 1 },
+    };
+    const meshes = [];
+    root.traverse((m) => { if (m.isMesh && !m.userData.pfSkip) meshes.push(m); });
+    for (const m of meshes) this._build(m);
+  }
+
+  _build(src) {
+    const g = src.geometry; const pos = g.attributes.position; const nor = g.attributes.normal; const uv = g.attributes.uv;
+    const idx = g.index ? g.index.array : null;
+    const triCount = idx ? idx.length / 3 : pos.count / 3;
+    const sc = new THREE.Vector3(); src.getWorldScale(sc); const s = (sc.x + sc.y + sc.z) / 3;
+    const A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), t1 = new THREE.Vector3(), t2 = new THREE.Vector3();
+    const areas = new Float32Array(triCount); let total = 0;
+    const vi = (t, k) => (idx ? idx[t * 3 + k] : t * 3 + k);
+    for (let t = 0; t < triCount; t++) {
+      A.fromBufferAttribute(pos, vi(t, 0)); B.fromBufferAttribute(pos, vi(t, 1)); C.fromBufferAttribute(pos, vi(t, 2));
+      const a = t1.subVectors(B, A).cross(t2.subVectors(C, A)).length() * 0.5 * s * s;
+      total += a; areas[t] = total;
+    }
+    const n = Math.min(this.o.max, Math.max(16, Math.round(total * this.o.density)));
+    const center = new Float32Array(n * 4 * 3), normal = new Float32Array(n * 4 * 3), tang = new Float32Array(n * 4 * 3);
+    const corner = new Float32Array(n * 4 * 2), seed = new Float32Array(n * 4 * 4), uvs = new Float32Array(n * 4 * 2);
+    const skI = src.isSkinnedMesh ? new Float32Array(n * 4 * 4) : null, skW = src.isSkinnedMesh ? new Float32Array(n * 4 * 4) : null;
+    const index = new Uint32Array(n * 6);
+    const N = new THREE.Vector3(), F = new THREE.Vector3(...this.o.flowDir).normalize(), T = new THREE.Vector3(), P = new THREE.Vector3();
+    const na = new THREE.Vector3(), nb = new THREE.Vector3(), nc = new THREE.Vector3();
+    const rnd = mulberry(1234 + this.meshes.length * 77);
+    const CORN = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+    for (let i = 0; i < n; i++) {
+      const r = rnd() * total; let lo = 0, hi = triCount - 1;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (areas[mid] < r) lo = mid + 1; else hi = mid; }
+      const t = lo; const i0 = vi(t, 0), i1 = vi(t, 1), i2 = vi(t, 2);
+      let u = rnd(), v = rnd(); if (u + v > 1) { u = 1 - u; v = 1 - v; } const w = 1 - u - v;
+      A.fromBufferAttribute(pos, i0); B.fromBufferAttribute(pos, i1); C.fromBufferAttribute(pos, i2);
+      P.set(0, 0, 0).addScaledVector(A, w).addScaledVector(B, u).addScaledVector(C, v);
+      if (nor) {
+        na.fromBufferAttribute(nor, i0); nb.fromBufferAttribute(nor, i1); nc.fromBufferAttribute(nor, i2);
+        N.set(0, 0, 0).addScaledVector(na, w).addScaledVector(nb, u).addScaledVector(nc, v).normalize();
+      } else N.subVectors(B, A).cross(t2.subVectors(C, A)).normalize();
+      if (this.o.flow === 'wrap') T.crossVectors(N, F); else T.copy(F).addScaledVector(N, -N.dot(F));
+      if (T.lengthSq() < 1e-4) T.set(1, 0, 0).addScaledVector(N, -N.x);
+      T.normalize().applyAxisAngle(N, (rnd() - 0.5) * this.o.jitter * Math.PI);
+      const dom = w >= u && w >= v ? i0 : (u >= v ? i1 : i2);
+      const sd = [rnd(), rnd(), rnd(), 0.6 + rnd() * 0.8];
+      let tu = 0, tv = 0;
+      if (uv) { tu = uv.getX(i0) * w + uv.getX(i1) * u + uv.getX(i2) * v; tv = uv.getY(i0) * w + uv.getY(i1) * u + uv.getY(i2) * v; }
+      for (let k = 0; k < 4; k++) {
+        const j = i * 4 + k;
+        center.set([P.x, P.y, P.z], j * 3); normal.set([N.x, N.y, N.z], j * 3); tang.set([T.x, T.y, T.z], j * 3);
+        corner.set(CORN[k], j * 2); seed.set(sd, j * 4); uvs.set([tu, tv], j * 2);
+        if (skI) {
+          const si = g.attributes.skinIndex, sw = g.attributes.skinWeight;
+          skI.set([si.getX(dom), si.getY(dom), si.getZ(dom), si.getW(dom)], j * 4);
+          skW.set([sw.getX(dom), sw.getY(dom), sw.getZ(dom), sw.getW(dom)], j * 4);
+        }
+      }
+      index.set([i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3], i * 6);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(center, 3));
+    geo.setAttribute('normal', new THREE.BufferAttribute(normal, 3));
+    geo.setAttribute('pcTangent', new THREE.BufferAttribute(tang, 3));
+    geo.setAttribute('pcCorner', new THREE.BufferAttribute(corner, 2));
+    geo.setAttribute('pcSeed', new THREE.BufferAttribute(seed, 4));
+    geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    if (skI) { geo.setAttribute('skinIndex', new THREE.BufferAttribute(skI, 4)); geo.setAttribute('skinWeight', new THREE.BufferAttribute(skW, 4)); }
+    geo.setIndex(new THREE.BufferAttribute(index, 1));
+    const srcMat = Array.isArray(src.material) ? src.material[0] : src.material;
+    const plain = src.userData.pfPlain ?? srcMat;
+    const map = plain.map ?? srcMat.map ?? null;
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        ...this.uniforms,
+        pcMap: { value: map }, pcColor: { value: (plain.color ?? new THREE.Color(1, 1, 1)).clone() },
+        pcScale: { value: 1 / s },
+      },
+      defines: map ? { PC_MAP: '' } : {},
+      vertexShader: CARD_VERT, fragmentShader: CARD_FRAG,
+      side: THREE.DoubleSide, alphaToCoverage: true, transparent: false,
+      polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    });
+    const mesh = src.isSkinnedMesh ? new THREE.SkinnedMesh(geo, mat) : new THREE.Mesh(geo, mat);
+    if (src.isSkinnedMesh) mesh.bind(src.skeleton, src.bindMatrix);
+    mesh.frustumCulled = false; mesh.userData.pfSkip = true;
+    src.add(mesh);
+    if (src.isSkinnedMesh) { mesh.matrixAutoUpdate = false; mesh.onBeforeRender = () => mesh.matrixWorld.copy(src.matrixWorld); }
+    this.meshes.push(mesh);
+  }
+
+  set grow(v) { this.uniforms.pcGrow.value = v; }
+  get grow() { return this.uniforms.pcGrow.value; }
+  set visible(v) { for (const m of this.meshes) m.visible = v; }
+  setOptions(o) {
+    if (o.size != null) this.uniforms.pcSize.value = o.size;
+    if (o.aspect != null) this.uniforms.pcAspect.value = o.aspect;
+    if (o.alpha != null) this.uniforms.pcAlpha.value = o.alpha;
+    if (o.lightDir) this.uniforms.pcLightDir.value.set(...o.lightDir).normalize();
+    if (o.lightColor) this.uniforms.pcLightCol.value.set(o.lightColor);
+    if (o.backDir) this.uniforms.pcBackDir.value.set(...o.backDir).normalize();
+    if (o.backColor) this.uniforms.pcBackCol.value.set(o.backColor);
+  }
+  dispose() { for (const m of this.meshes) { m.parent?.remove(m); m.geometry.dispose(); m.material.dispose(); } this.meshes = []; }
+}
+
+const CARD_VERT = /* glsl */`
+#include <common>
+#include <skinning_pars_vertex>
+attribute vec3 pcTangent; attribute vec2 pcCorner; attribute vec4 pcSeed;
+uniform float pcGrow, pcSize, pcAspect, pcLift, pcScale, pfStep; uniform vec4 pfStrokeC;
+varying vec2 vC; varying vec4 vSeed; varying vec3 vN; varying vec2 vUv; varying float vShow; varying vec3 vWN;
+${GLSL_NOISE}
+void main(){
+  vec3 objectNormal = normal;
+  #include <skinbase_vertex>
+  #include <skinnormal_vertex>
+  vec3 tg = pcTangent;
+  #ifdef USE_SKINNING
+    tg = (skinMatrix * vec4(tg, 0.)).xyz;
+  #endif
+  vec3 transformed = position;
+  #include <skinning_vertex>
+  float appear = clamp((pcGrow * 1.25 - pcSeed.x) / .25, 0., 1.);
+  vShow = appear;
+  vec3 n = normalize(objectNormal); vec3 t = normalize(tg - n * dot(tg, n)); vec3 b = cross(n, t);
+  float sz = pcSize * pcScale * pcSeed.w;
+  float lenK = sz * pcAspect * (.4 + .6 * appear);
+  vec2 bj = (pfH22(vec2(pfStep, pcSeed.y * 91.)) - .5) * pfStrokeC.y;
+  vec3 p = transformed + t * (pcCorner.x * lenK + bj.x * sz) + b * (pcCorner.y * sz * .5 + bj.y * sz * .3) + n * pcLift * pcScale * (1. + pcSeed.z);
+  vec4 mvPosition = modelViewMatrix * vec4(p, 1.);
+  gl_Position = projectionMatrix * mvPosition;
+  vC = pcCorner; vSeed = pcSeed; vUv = uv;
+  vWN = normalize((modelMatrix * vec4(n, 0.)).xyz);
+}`;
+const CARD_FRAG = /* glsl */`
+uniform vec3 pcColor, pcLightDir, pcLightCol, pcBackDir, pcBackCol, pfCShadow, pfCDeep, pfCStroke;
+uniform vec4 pfFill, pfShadow, pfLight, pfStrokeB, pfStrokeC; uniform float pcAlpha, pfStep;
+#ifdef PC_MAP
+uniform sampler2D pcMap;
+#endif
+varying vec2 vC; varying vec4 vSeed; varying vec2 vUv; varying float vShow; varying vec3 vWN;
+${GLSL_NOISE}
+void main(){
+  float u = vC.x, v = vC.y;
+  float w = 1. - .45 * u * u;
+  float m = (1. - smoothstep(.8, 1., abs(u))) * (1. - smoothstep(.6, 1., abs(v) / max(w, .1)));
+  float br = pfNoise(vec2(u * 2.2, v * 6.) + vSeed.xy * 40.);
+  float dryT = smoothstep(-.2, 1., u) * pfStrokeC.x;
+  m *= smoothstep(dryT - .1, dryT + .1, br);
+  m *= step(u * .5 + .5, vShow * 1.02);        // дорисовка вдоль мазка
+  if (m * pcAlpha < .5) discard;
+  vec3 base = pcColor;
+  #ifdef PC_MAP
+    base *= texture2D(pcMap, vUv).rgb;
+  #endif
+  base *= 1. + (vSeed.y - .5) * pfStrokeB.z * 2.;
+  base = mix(base, pfCStroke * pfLuma(base) * 1.6, pfStrokeB.w * step(.7, vSeed.z) * .5);
+  vec3 n = normalize(vWN) * (gl_FrontFacing ? 1. : -1.);
+  float nl = dot(n, pcLightDir);
+  float L = clamp((nl + pfLight.x) / (1. + pfLight.x), 0., 1.) * pfLuma(pcLightCol) * pfLight.y + (vSeed.z - .5) * pfStrokeB.y;
+  float soft = pfFill.w + .002;
+  float b0 = smoothstep(pfFill.x - soft, pfFill.x + soft, L), b1 = smoothstep(pfFill.y - soft, pfFill.y + soft, L);
+  float lb = pfLuma(base);
+  vec3 sh = mix(base * pfShadow.x, pfCShadow * lb * 2.2, pfShadow.y);
+  vec3 dp = mix(sh * .42, pfCDeep, pfShadow.z);
+  vec3 lit = base * mix(vec3(1.), pcLightCol, pfLight.w) * pfLight.z;
+  vec3 c = mix(mix(dp, sh, b0), lit, b1);
+  float back = clamp(dot(n, pcBackDir) * -1., 0., 1.);
+  c += pcBackCol * smoothstep(.55, .75, back + (vSeed.x - .5) * .3) * .35;
+  gl_FragColor = vec4(c, 1.);
+  #include <colorspace_fragment>
+}`;
+
+// ---------------------------------------------------------------- светящийся проём
+export const PORTAL_PRESETS = {
+  sewer: { name: 'Проём тоннеля (фото)', cCore: '#eeeac4', cMid: '#cfc996', cStrokeA: '#9cb47c', cStrokeB: '#f2eecc', cShade: '#8a9070',
+    cRim1: '#b8e070', cRim2: '#f2e890', cFringe: '#d0502a', cHalo: '#e0e8a0', cScribble: '#3a2416', glow: 1.0, halo: 1, strokes: 1, scribbles: 1 },
+  moon: { name: 'Луна (ночь из видео)', cCore: '#ffffff', cMid: '#f0f4ff', cStrokeA: '#c8e8f0', cStrokeB: '#ffffff', cShade: '#b0c0d8',
+    cRim1: '#a0f0e8', cRim2: '#ffffff', cFringe: '#7050c0', cHalo: '#c8d8ff', cScribble: '#2a1438', glow: 1.15, halo: 0.8, strokes: 0.6, scribbles: 0.3 },
+  ember: { name: 'Колдовской огонь', cCore: '#fff0c0', cMid: '#ffb050', cStrokeA: '#ff8030', cStrokeB: '#fff0b0', cShade: '#c05020',
+    cRim1: '#ff6020', cRim2: '#ffe070', cFringe: '#801030', cHalo: '#ff9040', cScribble: '#2a0a06', glow: 2, halo: 1.2, strokes: 1, scribbles: 0.6 },
+  spirit: { name: 'Дух леса', cCore: '#e8fff0', cMid: '#a8e8c0', cStrokeA: '#70c890', cStrokeB: '#e0fff0', cShade: '#509878',
+    cRim1: '#50e0a0', cRim2: '#d0fff0', cFringe: '#1a6040', cHalo: '#80f0b0', cScribble: '#0a2416', glow: 1.8, halo: 1, strokes: 1, scribbles: 0.7 },
+};
+
+export class GlowPortal {
+  constructor(style, opts = {}) {
+    this.style = style;
+    const r = opts.radius ?? 3;
+    const p = { ...PORTAL_PRESETS.sewer, ...(opts.colors ?? {}) };
+    this.uniforms = {
+      pfStep: style.u.pfStep, pfStrokeC: style.u.pfStrokeC,
+      ppCore: { value: col(p.cCore) }, ppMid: { value: col(p.cMid) }, ppStrokeA: { value: col(p.cStrokeA) }, ppStrokeB: { value: col(p.cStrokeB) },
+      ppShade: { value: col(p.cShade) }, ppRim1: { value: col(p.cRim1) }, ppRim2: { value: col(p.cRim2) }, ppFringe: { value: col(p.cFringe) },
+      ppHalo: { value: col(p.cHalo) }, ppScribble: { value: col(p.cScribble) },
+      ppK: { value: new THREE.Vector4(p.glow, p.halo, p.strokes, p.scribbles) },
+      ppExt: { value: 1.45 },
+    };
+    const ext = this.uniforms.ppExt.value;
+    // два меша: диск (непрозрачный, пишет глубину, чтобы набросок по глубине не видел, что за ним)
+    // и ореол-кольцо (аддитивный, без глубины)
+    this.mesh = new THREE.Mesh(new THREE.CircleGeometry(r * 1.06, 96), new THREE.ShaderMaterial({
+      uniforms: { ...this.uniforms, ppR: { value: 1.06 } }, vertexShader: PORTAL_VERT, fragmentShader: PORTAL_FRAG,
+    }));
+    this.halo = new THREE.Mesh(new THREE.RingGeometry(r * 0.94, r * ext, 128, 1), new THREE.ShaderMaterial({
+      uniforms: { ...this.uniforms, ppR: { value: ext } }, vertexShader: PORTAL_VERT, fragmentShader: PORTAL_FRAG, defines: { PP_HALO: '' },
+      transparent: true, depthWrite: false,
+      blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
+    }));
+    this.mesh.userData.pfSkip = true; this.halo.userData.pfSkip = true;
+    this.halo.renderOrder = 2;
+    this.group = new THREE.Group(); this.group.add(this.mesh, this.halo);
+    if (opts.light !== false) {
+      this.light = new THREE.PointLight(p.cHalo, opts.lightIntensity ?? 60, opts.lightRange ?? r * 8, 1.6);
+      this.light.position.set(0, 0, r * 0.4);
+      this.group.add(this.light);
+    }
+  }
+  setColors(p) {
+    const U = this.uniforms;
+    const map = { cCore: 'ppCore', cMid: 'ppMid', cStrokeA: 'ppStrokeA', cStrokeB: 'ppStrokeB', cShade: 'ppShade', cRim1: 'ppRim1', cRim2: 'ppRim2', cFringe: 'ppFringe', cHalo: 'ppHalo', cScribble: 'ppScribble' };
+    for (const k in map) if (p[k]) U[map[k]].value.set(p[k]);
+    const K = U.ppK.value; if (p.glow != null) K.x = p.glow; if (p.halo != null) K.y = p.halo; if (p.strokes != null) K.z = p.strokes; if (p.scribbles != null) K.w = p.scribbles;
+    if (this.light && p.cHalo) this.light.color.set(p.cHalo);
+  }
+}
+const PORTAL_VERT = /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`;
+const PORTAL_FRAG = /* glsl */`
+uniform vec3 ppCore, ppMid, ppStrokeA, ppStrokeB, ppShade, ppRim1, ppRim2, ppFringe, ppHalo, ppScribble;
+uniform vec4 ppK; uniform float ppR, pfStep; uniform vec4 pfStrokeC;
+varying vec2 vUv;
+${GLSL_NOISE}
+${GLSL_STROKES}
+void main(){
+  vec2 p = (vUv - .5) * 2. * ppR;          // 1 = край проёма
+  float r = length(p); float a = atan(p.y, p.x);
+  vec2 bj = (pfH22(vec2(pfStep, 5.1)) - .5) * pfStrokeC.y * .12;
+  float edgeN = (pfNoise(vec2(a * 9., pfStep * .37)) - .5) * .035 + (pfNoise(vec2(a * 40., 3.)) - .5) * .015;
+  float re = r + edgeN;
+  vec3 c = vec3(0.); float alpha = 0.;
+#ifndef PP_HALO
+  if (re >= 1.) discard;
+#else
+  if (re < 1.) discard;
+#endif
+  if (re < 1.) {
+    // заливка: светлый центр, к краю плотнее
+    c = mix(ppCore, ppMid, smoothstep(.1, .95, re));
+    // мазки дугами по кругу и вертикальные (как на фото)
+    vec2 tdir = normalize(vec2(-p.y, p.x) + 1e-4);
+    vec4 s1 = pfStroke((p + bj) * 4.2, tdir, 1.15, .35, .55, 3.);
+    vec4 s2 = pfStroke((p + bj) * 6.5 + 11., vec2(.15, 1.), 1.2, .5, .7, 9.);
+    c = mix(c, mix(ppStrokeA, ppStrokeB, s1.z * s1.z), s1.y * .8 * ppK.z * smoothstep(.1, .45, re));
+    c = mix(c, mix(ppStrokeB, ppStrokeA, s2.z), s2.y * .5 * ppK.z);
+    // силуэты-тени снизу (дальние постройки), тоже мазками
+    float sk = smoothstep(-.15, -.55, p.y + (pfNoise(vec2(p.x * 3., 1.)) - .5) * .5);
+    c = mix(c, ppShade, sk * .45 * s2.y * ppK.z);
+    // кромка: зелёная, жёлтая и тонкие красные нитки
+    float ring = smoothstep(.8, .97, re);
+    c = mix(c, ppRim1, ring * .7);
+    c = mix(c, ppRim2, smoothstep(.9, .99, re) * (.4 + .6 * pfNoise(vec2(a * 30., 2.))));
+    float fr = smoothstep(.006, 0., abs(re - .955 - (pfNoise(vec2(a * 14., 7.)) - .5) * .03)) * step(.45, pfNoise(vec2(a * 6., 4.)));
+    c = mix(c, ppFringe, fr * .8);
+    c *= ppK.x;
+    alpha = 1.;
+  } else {
+    // ореол: свечение и радиальные «лучики»-штрихи
+    float h = exp(-(re - 1.) * 4.2) * ppK.y;
+    float rays = pfHatch(vec2(a * 55., re * 2.), 4.) * smoothstep(1.35, 1., re);
+    c = ppHalo * (h * .55 + rays * .12 * ppK.y);
+    alpha = 0.;
+    // петлистые «перелёты» линий у края (карандаш поверх)
+    float sc = 0.;
+    for (int i = 0; i < 4; i++) {
+      float fi = float(i);
+      float a0 = 2.2 + fi * .22 + pfH11(fi + 3.) * .3;
+      float rr = 1.06 + fi * .05 + sin(a * 3. + fi) * .02;
+      float d = abs(r - rr);
+      float span = smoothstep(.0, .05, a - a0 + .9) * smoothstep(.0, .05, a0 + .3 - a);
+      sc = max(sc, smoothstep(.012, .003, d) * span);
+    }
+    float sa = sc * ppK.w;
+    c = mix(c, ppScribble, sa); alpha = max(alpha, sa);
+  }
+  gl_FragColor = vec4(c, alpha);
+}`;
+
+// ---------------------------------------------------------------- рисованное небо / задник
+export const SKY_PRESETS = {
+  sewer: { name: 'Тоннель (тёмный)', top: '#1a0c08', mid: '#2a140c', low: '#3a1c10', cloud: '#4a2818', cloudShade: '#200e08', stroke: 0.6, clouds: 0 },
+  sunset: { name: 'Закат (видео 2.5D)', top: '#6a7ad0', mid: '#f4b8a0', low: '#ffe0a0', cloud: '#fff0e0', cloudShade: '#d890a8', stroke: 0.8, clouds: 0.8 },
+  night: { name: 'Ночь (видео)', top: '#1a0a24', mid: '#4a1834', low: '#7a3040', cloud: '#a04a48', cloudShade: '#2a1028', stroke: 0.9, clouds: 0.6 },
+  overcast: { name: 'Хмурый день (Русь)', top: '#5a6670', mid: '#8a9490', low: '#c0bca8', cloud: '#d8d4c4', cloudShade: '#707a80', stroke: 0.7, clouds: 0.9 },
+};
+export class PaintedSky {
+  constructor(style, opts = {}) {
+    const p = { ...SKY_PRESETS.sunset, ...(opts.colors ?? {}) };
+    this.uniforms = {
+      pfStep: style.u.pfStep, pfStrokeC: style.u.pfStrokeC,
+      psTop: { value: col(p.top) }, psMid: { value: col(p.mid) }, psLow: { value: col(p.low) },
+      psCloud: { value: col(p.cloud) }, psCloudShade: { value: col(p.cloudShade) },
+      psK: { value: new THREE.Vector4(p.stroke, p.clouds, opts.brightness ?? 1, 0) },
+    };
+    this.mesh = new THREE.Mesh(new THREE.SphereGeometry(opts.radius ?? 400, 48, 24), new THREE.ShaderMaterial({
+      uniforms: this.uniforms, vertexShader: SKY_VERT, fragmentShader: SKY_FRAG, side: THREE.BackSide, depthWrite: false,
+    }));
+    this.mesh.userData.pfSkip = true; this.mesh.renderOrder = -10; this.mesh.frustumCulled = false;
+  }
+  setColors(p) {
+    const U = this.uniforms;
+    for (const [k, u] of [['top', 'psTop'], ['mid', 'psMid'], ['low', 'psLow'], ['cloud', 'psCloud'], ['cloudShade', 'psCloudShade']]) if (p[k]) U[u].value.set(p[k]);
+    if (p.stroke != null) U.psK.value.x = p.stroke; if (p.clouds != null) U.psK.value.y = p.clouds;
+  }
+}
+const SKY_VERT = /* glsl */`varying vec3 vDir; void main(){ vDir = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.); gl_Position = p.xyww; }`;
+const SKY_FRAG = /* glsl */`
+uniform vec3 psTop, psMid, psLow, psCloud, psCloudShade; uniform vec4 psK; uniform float pfStep; uniform vec4 pfStrokeC;
+varying vec3 vDir;
+${GLSL_NOISE}
+${GLSL_STROKES}
+void main(){
+  vec3 d = normalize(vDir);
+  float az = atan(d.z, d.x); float el = d.y;
+  vec2 p = vec2(az * 6., el * 9.);
+  vec2 bj = (pfH22(vec2(pfStep, 2.2)) - .5) * pfStrokeC.y * .15;
+  // полосы-градиент, границы полос рвутся мазками (горизонтальные, как в видео)
+  vec4 s = pfStroke((p + bj) * vec2(1.3, 2.2), vec2(1., .05), 1.3, .15, .6, 1.);
+  float e = el + s.x * s.y * .06 * psK.x;
+  vec3 c = mix(psLow, psMid, smoothstep(-.05, .22, e));
+  c = mix(c, psTop, smoothstep(.25, .7, e));
+  c *= 1. + s.x * s.y * .06 * psK.x;
+  // облака: плоские пятна с тёмным низом
+  float cl = pfFbm(vec2(az * 2.2, el * 7.) + vec2(3.1, 0.));
+  float band = smoothstep(.0, .12, el) * smoothstep(.55, .2, el);
+  float m = smoothstep(.55, .6, cl + s.x * s.y * .05) * band * psK.y;
+  float lit = smoothstep(.5, .7, pfFbm(vec2(az * 2.2, el * 7. + .12) + vec2(3.1, 0.)) );
+  c = mix(c, mix(psCloud, psCloudShade, lit * .8), m);
+  gl_FragColor = vec4(c * psK.z, 1.);
+}`;
+
+// ---------------------------------------------------------------- пост-обработка
+// Сцена рисуется в текстуру (MSAA + глубина), затем: дрожь краёв кистью и анизотропная Кувахара,
+// bloom на четверти разрешения, набросок по глубине с перелётом, линии по цвету, бумага,
+// зерно, аберрация, виньетка, цветокор. Выход в sRGB.
+export class PaintPost {
+  constructor(renderer, style, opts = {}) {
+    this.r = renderer; this.style = style;
+    this.enabled = true;
+    this.splitX = 0;   // >0: левая часть экрана остаётся без пост-обработки (сравнение)
+    const size = renderer.getDrawingBufferSize(new THREE.Vector2());
+    const mk = (w, h, o = {}) => new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, ...o });
+    this.rtScene = mk(size.x, size.y, { samples: opts.samples ?? 4, depthTexture: new THREE.DepthTexture(size.x, size.y) });
+    this.rtK = mk(size.x, size.y);
+    this.rtB1 = mk(size.x >> 2, size.y >> 2); this.rtB2 = mk(size.x >> 2, size.y >> 2);
+    this.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2));
+    this.qs = new THREE.Scene(); this.qs.add(this.quad);
+    const common = { pfStep: style.u.pfStep, pfRes: { value: new THREE.Vector2(size.x, size.y) } };
+    this.common = common;
+    this.mKuwa = new THREE.ShaderMaterial({ uniforms: { ...common, tSrc: { value: null }, pk: { value: new THREE.Vector4() } }, vertexShader: Q_VERT, fragmentShader: KUWA_FRAG, depthTest: false, depthWrite: false });
+    this.mBright = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, pThr: { value: 1 } }, vertexShader: Q_VERT, fragmentShader: BRIGHT_FRAG, depthTest: false, depthWrite: false });
+    this.mBlur = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, pDir: { value: new THREE.Vector2() } }, vertexShader: Q_VERT, fragmentShader: BLUR_FRAG, depthTest: false, depthWrite: false });
+    this.mFinal = new THREE.ShaderMaterial({
+      uniforms: {
+        ...common, tK: { value: null }, tDepth: { value: null }, tBloom: { value: null },
+        pA: { value: new THREE.Vector4() }, pB: { value: new THREE.Vector4() }, pC: { value: new THREE.Vector4() }, pD: { value: new THREE.Vector4() },
+        pPaper: { value: new THREE.Color() }, pLift: { value: new THREE.Color() }, pGain: { value: new THREE.Color() }, pLine: { value: new THREE.Color() },
+        pCam: { value: new THREE.Vector2(0.1, 100) },
+      },
+      vertexShader: Q_VERT, fragmentShader: FINAL_FRAG, depthTest: false, depthWrite: false,
+    });
+  }
+
+  setSize(w, h) {
+    this.rtScene.setSize(w, h); this.rtScene.depthTexture.image.width = w; this.rtScene.depthTexture.image.height = h;
+    this.rtK.setSize(w, h); this.rtB1.setSize(Math.max(1, w >> 2), Math.max(1, h >> 2)); this.rtB2.setSize(Math.max(1, w >> 2), Math.max(1, h >> 2));
+    this.common.pfRes.value.set(w, h);
+  }
+
+  _pass(mat, target) { this.quad.material = mat; this.r.setRenderTarget(target); this.r.render(this.qs, this.cam); }
+
+  render(scene, camera) {
+    const r = this.r, q = this.style.params, L = this.style.layers;
+    const size = r.getDrawingBufferSize(new THREE.Vector2());
+    if (size.x !== this.rtScene.width || size.y !== this.rtScene.height) this.setSize(size.x, size.y);
+    if (!this.enabled) { r.setRenderTarget(null); r.render(scene, camera); return; }
+    const prevTM = r.toneMapping; r.toneMapping = THREE.NoToneMapping;
+    r.setRenderTarget(this.rtScene); r.clear(); r.render(scene, camera);
+    // 1) Кувахара + дрожь кисти
+    const kr = L.kuwahara ? q.kuwahara : 0;
+    this.mKuwa.uniforms.tSrc.value = this.rtScene.texture;
+    this.mKuwa.uniforms.pk.value.set(kr, q.kuwaAniso, L.kuwahara ? q.warp : 0, q.boil);
+    this._pass(this.mKuwa, this.rtK);
+    // 2) bloom
+    const bl = L.bloom ? q.bloom : 0;
+    if (bl > 0) {
+      this.mBright.uniforms.tSrc.value = this.rtK.texture; this.mBright.uniforms.pThr.value = q.bloomThreshold;
+      this._pass(this.mBright, this.rtB1);
+      for (let i = 0; i < 3; i++) {
+        const s = 1 + i;
+        this.mBlur.uniforms.tSrc.value = this.rtB1.texture; this.mBlur.uniforms.pDir.value.set(s / this.rtB1.width, 0); this._pass(this.mBlur, this.rtB2);
+        this.mBlur.uniforms.tSrc.value = this.rtB2.texture; this.mBlur.uniforms.pDir.value.set(0, s / this.rtB1.height); this._pass(this.mBlur, this.rtB1);
+      }
+    }
+    // 3) сборка
+    const U = this.mFinal.uniforms;
+    U.tK.value = this.rtK.texture; U.tDepth.value = this.rtScene.depthTexture; U.tBloom.value = this.rtB1.texture;
+    U.pA.value.set(L.sketch ? q.sketch : 0, q.sketchOver, L.sketch ? q.colorEdge : 0, L.paper ? q.paper : 0);
+    U.pB.value.set(q.paperScale, L.paper ? q.grain : 0, L.lens ? q.aberration : 0, bl);
+    U.pC.value.set(L.lens ? q.vignette : 0, q.saturation, q.contrast, q.postExposure);
+    U.pD.value.set(q.boil, 0, 0, 0);
+    U.pPaper.value.set(q.cPaper); U.pLift.value.set(q.cLift); U.pGain.value.set(q.cGain); U.pLine.value.set(q.cLine);
+    U.pCam.value.set(camera.near, camera.far);
+    this.quad.material = this.mFinal;
+    r.setRenderTarget(null);
+    if (this.splitX > 0) {
+      r.setScissorTest(true);
+      const w = r.domElement.width / r.getPixelRatio(), h = r.domElement.height / r.getPixelRatio();
+      r.setScissor(w * this.splitX, 0, w * (1 - this.splitX), h);
+    }
+    r.render(this.qs, this.cam);
+    r.setScissorTest(false);
+    r.toneMapping = prevTM;
+  }
+  dispose() { for (const t of [this.rtScene, this.rtK, this.rtB1, this.rtB2]) t.dispose(); }
+}
+
+const Q_VERT = /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }`;
+const KUWA_FRAG = /* glsl */`
+uniform sampler2D tSrc; uniform vec4 pk; uniform vec2 pfRes; uniform float pfStep;
+varying vec2 vUv;
+${GLSL_NOISE}
+void main(){
+  vec2 px = 1. / pfRes;
+  // дрожь краёв: сдвиг по полю мазков в экранных координатах, меняется шагами
+  vec2 sp = vUv * pfRes / 26.;
+  float st = pfStep * pk.w;
+  vec2 wv = vec2(pfNoise(sp + st * .71), pfNoise(sp * 1.3 + 17. + st * .53)) - .5;
+  vec2 uv = vUv + wv * pk.z * px * 2.2;
+  int R = int(pk.x);
+  if (R <= 0) { gl_FragColor = texture2D(tSrc, uv); return; }
+  // направление мазка по градиенту яркости
+  float l1 = pfLuma(texture2D(tSrc, uv + vec2(px.x * 2., 0.)).rgb), l2 = pfLuma(texture2D(tSrc, uv - vec2(px.x * 2., 0.)).rgb);
+  float l3 = pfLuma(texture2D(tSrc, uv + vec2(0., px.y * 2.)).rgb), l4 = pfLuma(texture2D(tSrc, uv - vec2(0., px.y * 2.)).rgb);
+  vec2 g = vec2(l1 - l2, l3 - l4);
+  float ang = length(g) > 1e-3 ? atan(g.y, g.x) + 1.5708 : (pfNoise(sp * .5) * 6.28);
+  float an = pk.y;
+  vec3 m[4]; vec3 s2[4];
+  for (int k = 0; k < 4; k++) { m[k] = vec3(0.); s2[k] = vec3(0.); }
+  float n = 0.;
+  for (int j = 0; j <= 7; j++) {
+    if (j > R) break;
+    for (int i = 0; i <= 7; i++) {
+      if (i > R) break;
+      vec2 o = vec2(float(i), float(j));
+      vec2 e = pfRot(vec2(o.x * an, o.y / an) * .75, ang) * px;
+      vec2 f = pfRot(vec2(-o.y * an, o.x / an) * .75, ang) * px;
+      vec3 c0 = texture2D(tSrc, uv + e).rgb, c1 = texture2D(tSrc, uv - e).rgb;
+      vec3 c2 = texture2D(tSrc, uv + f).rgb, c3 = texture2D(tSrc, uv - f).rgb;
+      m[0] += c0; s2[0] += c0 * c0; m[1] += c1; s2[1] += c1 * c1;
+      m[2] += c2; s2[2] += c2 * c2; m[3] += c3; s2[3] += c3 * c3;
+      n += 1.;
+    }
+  }
+  vec3 best = m[0] / n; float bv = 1e9;
+  for (int k = 0; k < 4; k++) {
+    vec3 mu = m[k] / n; vec3 v = abs(s2[k] / n - mu * mu);
+    float s = v.r + v.g + v.b;
+    if (s < bv) { bv = s; best = mu; }
+  }
+  gl_FragColor = vec4(best, 1.);
+}`;
+const BRIGHT_FRAG = /* glsl */`uniform sampler2D tSrc; uniform float pThr; varying vec2 vUv;
+void main(){ vec3 c = texture2D(tSrc, vUv).rgb; float l = max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c * smoothstep(pThr, pThr * 1.6, l), 1.); }`;
+const BLUR_FRAG = /* glsl */`uniform sampler2D tSrc; uniform vec2 pDir; varying vec2 vUv;
+void main(){ vec3 c = texture2D(tSrc, vUv).rgb * .227;
+  c += (texture2D(tSrc, vUv + pDir * 1.38).rgb + texture2D(tSrc, vUv - pDir * 1.38).rgb) * .316;
+  c += (texture2D(tSrc, vUv + pDir * 3.23).rgb + texture2D(tSrc, vUv - pDir * 3.23).rgb) * .07;
+  gl_FragColor = vec4(c, 1.); }`;
+const FINAL_FRAG = /* glsl */`
+uniform sampler2D tK, tDepth, tBloom; uniform vec4 pA, pB, pC, pD; uniform vec3 pPaper, pLift, pGain, pLine;
+uniform vec2 pfRes, pCam; uniform float pfStep;
+varying vec2 vUv;
+${GLSL_NOISE}
+float linD(vec2 uv){ float z = texture2D(tDepth, uv).x; float n = pCam.x, f = pCam.y; return n * f / (f - z * (f - n)); }
+vec3 toSRGB(vec3 c){ c = max(c, 0.); return mix(c * 12.92, 1.055 * pow(c, vec3(1. / 2.4)) - .055, step(.0031308, c)); }
+void main(){
+  vec2 px = 1. / pfRes;
+  // аберрация (радиально)
+  vec2 dc = vUv - .5; vec2 ab = dc * length(dc) * pB.z * px * 6.;
+  vec3 c = vec3(texture2D(tK, vUv + ab).r, texture2D(tK, vUv).g, texture2D(tK, vUv - ab).b);
+  // набросок по глубине: неровная линия + перелёт (вторая копия сдвинута шумом)
+  if (pA.x > 0.) {
+    float st = pfStep * pD.x;
+    vec2 jit = (vec2(pfNoise(vUv * pfRes / 40. + st), pfNoise(vUv * pfRes / 40. + 9. + st)) - .5) * 2.;
+    float e = 0.;
+    for (int k = 0; k < 2; k++) {
+      vec2 uv = vUv + jit * px * (1.5 + float(k) * pA.y);
+      float d = linD(uv);
+      float dx = abs(linD(uv + vec2(px.x, 0.)) - linD(uv - vec2(px.x, 0.)));
+      float dy = abs(linD(uv + vec2(0., px.y)) - linD(uv - vec2(0., px.y)));
+      float ed = smoothstep(.04, .12, (dx + dy) / max(d, .5));
+      float press = .5 + .5 * pfNoise(uv * pfRes / 60. + float(k) * 5.);
+      e = max(e, ed * press * (k == 0 ? 1. : .45));
+    }
+    c = mix(c, pLine * .8 + c * .15, e * pA.x);
+  }
+  if (pA.z > 0.) {
+    float l = pfLuma(c);
+    float lx = pfLuma(texture2D(tK, vUv + vec2(px.x, 0.)).rgb) - pfLuma(texture2D(tK, vUv - vec2(px.x, 0.)).rgb);
+    float ly = pfLuma(texture2D(tK, vUv + vec2(0., px.y)).rgb) - pfLuma(texture2D(tK, vUv - vec2(0., px.y)).rgb);
+    float e = smoothstep(.06, .2, length(vec2(lx, ly)) / max(l + .15, .15));
+    c = mix(c, c * .55, e * pA.z);
+  }
+  // bloom (экран)
+  vec3 bl = texture2D(tBloom, vUv).rgb * pB.w;
+  // экспозиция и мягкое сжатие света
+  c *= pC.w;
+  c = 1. - exp(-c * 1.15);
+  bl = 1. - exp(-bl);
+  c = 1. - (1. - c) * (1. - bl);
+  // цветокор: lift/gain, насыщенность, контраст
+  c = mix(pLift, pGain, c) ;
+  float l = pfLuma(c);
+  c = mix(vec3(l), c, pC.y);
+  c = (c - .5) * pC.z + .5;
+  // бумага: волокна, плетение, пятна; сильнее на светлом
+  if (pA.w > 0.) {
+    vec2 pp = vUv * pfRes / (2.2 * pB.x);
+    float fib = pfNoise(pp * vec2(.35, 2.2)) * .6 + pfNoise(pp * vec2(1.7, .3) + 7.) * .4;
+    float weave = (sin(pp.x * 1.9) * sin(pp.y * 1.9)) * .5 + .5;
+    float blot = pfFbm(vUv * vec2(pfRes.x / pfRes.y, 1.) * 3. / pB.x);
+    float pap = (fib - .5) * .5 + (weave - .5) * .12 + (blot - .5) * .5;
+    c *= 1. + pap * pA.w * .35;
+    c = mix(c, c * pPaper * 1.08, pA.w * .35 * smoothstep(.2, .9, l));
+  }
+  // зерно (шагами, сильнее в тенях)
+  float gr = pfH21(floor(vUv * pfRes / 1.6) + mod(pfStep, 64.) * 13.1) - .5;
+  c += gr * pB.y * (.5 + .7 * (1. - l)) * (.4 + .6 * smoothstep(.0, .25, l));
+  // виньетка
+  float v = smoothstep(.85, .2, length(dc * vec2(1., .8)) * 1.25);
+  c *= mix(1., v, pC.x * .7);
+  gl_FragColor = vec4(toSRGB(clamp(c, 0., 1.)), 1.);
+}`;
+
+export function lerpParams(a, b, t) {
+  const out = {};
+  for (const k in b) {
+    if (typeof b[k] === 'number' && typeof a[k] === 'number') out[k] = a[k] + (b[k] - a[k]) * t;
+    else if (typeof b[k] === 'string' && b[k][0] === '#' && typeof a[k] === 'string') out[k] = '#' + new THREE.Color(a[k]).lerp(new THREE.Color(b[k]), t).getHexString();
+    else out[k] = t < 0.5 ? a[k] : b[k];
+  }
+  return out;
+}
+
+function mulberry(a) { return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }

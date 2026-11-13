@@ -1,0 +1,16 @@
+<!-- @dsCard group="Illustrations" height=760 width=900 subtitle="Аватары видов животных: 26 голов-персонажей 160×160 в стиле маскотов для выбора вида, карточек случаев и карты." -->
+<style>
+  .sp { padding: 24px; background: var(--bg-app); color: var(--text-primary); font-family: var(--font-sans); }
+  .sp__g { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+  .sp__c { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 8px; border-radius: var(--radius-xl); background: var(--bg-surface); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); font: 700 12px/16px var(--font-sans); }
+  .sp__c code { color: var(--text-muted); font: 500 11px/14px var(--font-mono); }
+  .sp__row { display: flex; gap: 14px; align-items: center; margin-top: 20px; }
+  .sp__pin { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50% 50% 50% 12px; transform: rotate(-45deg); background: var(--bg-surface); border: 3px solid var(--bg-surface); box-shadow: var(--shadow-md); }
+  .sp__pin img { transform: rotate(45deg); }
+</style>
+<div class="sp"><div class="sp__g" id="g"></div><div class="sp__row" id="r"></div></div>
+<script>
+  var B = window.Buddy, names = { 'sp-cat': 'Кошка', 'sp-dog': 'Собака', 'sp-rabbit': 'Кролик', 'sp-fox': 'Лиса', 'sp-hedgehog': 'Ёж', 'sp-bird': 'Птица', 'sp-owl': 'Сова', 'sp-turtle': 'Рептилия', 'sp-horse': 'Лошадь', 'sp-goat': 'Коза', 'sp-sheep': 'Овца', 'sp-cow': 'Корова', 'sp-pig': 'Свинья', 'sp-hen': 'Курица', 'sp-hamster': 'Хомяк', 'sp-guinea': 'Морская свинка', 'sp-rat': 'Крыса', 'sp-ferret': 'Хорёк', 'sp-parrot': 'Попугай', 'sp-canary': 'Канарейка', 'sp-pigeon': 'Голубь', 'sp-lizard': 'Ящерица', 'sp-snake': 'Змея', 'sp-frog': 'Лягушка', 'sp-paw': 'Другое', 'sp-unknown': 'Не уверен(а)' };
+  document.getElementById('g').innerHTML = B.speciesList.map(function (n) { return '<div class="sp__c">' + B.species(n, { size: 72 }) + '<span>' + (names[n] || n) + '</span><code>' + n + '</code></div>'; }).join('');
+  document.getElementById('r').innerHTML = '<span class="sp__pin">' + B.species('sp-dog', { size: 36 }) + '</span><span style="font:600 13px/18px var(--font-sans);color:var(--text-secondary)">На карте аватар вписан в пин 56 px; в списках 52–76 px; в карточке вида 52 px.</span>';
+</script>

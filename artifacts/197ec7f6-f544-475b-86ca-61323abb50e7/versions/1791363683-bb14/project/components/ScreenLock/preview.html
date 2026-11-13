@@ -1,0 +1,26 @@
+<!-- @dsCard group="Platform" height=900 width=900 subtitle="Экран блокировки iOS с виджетами и стеклянными уведомлениями, шторка уведомлений Android." -->
+<style>
+  .lk { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 70px 14px 0; color: #FFFFFF; }
+  .bd-phone.wp-lock { background: linear-gradient(165deg, #5B4FC4 0%, #2B2266 45%, #1A1342 100%); }
+  .lk__date { margin: 22px 0 0; font: 700 20px/24px var(--font-sans); opacity: .9; }
+  .lk__time { margin: 0; font: 800 92px/92px var(--font-display); letter-spacing: -0.03em; }
+  .lk__w { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
+  .lk__stack { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 26px; }
+  .lk__btns { position: absolute; left: 48px; right: 48px; bottom: 46px; display: flex; justify-content: space-between; }
+  .lk__b { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; color: #fff; background: var(--glass-on-hero); -webkit-backdrop-filter: blur(var(--blur-md)); backdrop-filter: blur(var(--blur-md)); }
+  .lk .bd-push { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.22); color: #fff; } .lk .bd-push p, .lk .bd-push__head { color: rgba(255,255,255,.88); }
+  .ad { position: absolute; inset: 0; padding: 70px 14px 0; color: #fff; }
+  .ad h2 { margin: 18px 6px 4px; font: 800 56px/60px var(--font-display); } .ad__d { margin: 0 6px 20px; font: 600 16px/20px var(--font-sans); opacity: .85; }
+  .ad__stack { display: flex; flex-direction: column; gap: 8px; } .ad .bd-push--android { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.22); color: #fff; } .ad .bd-push--android p, .ad .bd-push__app { color: rgba(255,255,255,.9); }
+  .ad__bar { position: absolute; left: 50%; bottom: 14px; width: 110px; height: 5px; margin-left: -55px; border-radius: 3px; background: rgba(255,255,255,.7); }
+</style>
+<div class="bd-stage" id="root" data-theme="light"></div>
+<script>
+  var B = window.Buddy;
+  var ios = '<div class="lk">' + B.icon('lock', { size: 20 }) + '<p class="lk__date">Monday, October 5</p><h1 class="lk__time">9:41</h1>' +
+    '<div class="lk__w">' + B.LockWidget({ type: 'circle', pct: 60, icon: 'flame' }) + B.LockWidget({ type: 'rect', title: 'Today 3/5', text: 'Next: Move 20 mins' }) + B.LockWidget({ type: 'circle', pct: 37, icon: 'droplet' }) + '</div>' +
+    '<div class="lk__stack">' + B.Push({ title: '4 days streak!', text: 'One more habit keeps the fire going.', time: 'now' }) + B.Push({ title: 'Drink Water', text: 'Time for a glass. It takes 10 seconds.', time: '9:30' }) + B.Push({ title: 'New badge: Water hero', text: 'Three days of eight glasses.', time: '8:15' }) + '</div>' +
+    '<div class="lk__btns"><span class="lk__b">' + B.icon('bolt', { size: 22 }) + '</span><span class="lk__b">' + B.icon('camera', { size: 22 }) + '</span></div></div>';
+  var andr = '<div class="ad"><h2>9:41</h2><p class="ad__d">Mon, Oct 5 · 18°</p><div class="ad__stack">' + B.Push({ platform: 'android', title: '4 days streak!', text: 'One more habit keeps the fire going.', time: 'now' }) + B.Push({ platform: 'android', title: 'Drink Water', text: 'Time for a glass. It takes 10 seconds.', time: '9:30' }) + B.Push({ platform: 'android', title: 'New badge: Water hero', text: 'Three days of eight glasses.', time: '8:15' }) + '</div><span class="ad__bar"></span></div>';
+  document.getElementById('root').innerHTML = B.Phone(ios, { hero: true }).replace('class="bd-phone ', 'class="bd-phone wp-lock ') + B.Phone(andr, { hero: true }).replace('class="bd-phone ', 'class="bd-phone wp-lock ');
+</script>

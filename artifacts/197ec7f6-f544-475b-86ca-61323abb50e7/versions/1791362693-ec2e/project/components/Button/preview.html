@@ -1,0 +1,11 @@
+<!-- @dsCard group="Actions" height=330 subtitle="Пять вариантов, два размера, иконка, отключённое состояние." -->
+<style>.pv{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:20px;background:var(--bg-app);color:var(--text-primary)}.pv small{width:100%;font:800 11px/14px var(--font-sans);letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-top:4px}</style>
+<div class="pv" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    '<small>Варианты</small>' + B.Button({ label: 'Primary' }) + B.Button({ label: 'Secondary', variant: 'secondary' }) + B.Button({ label: 'Soft', variant: 'soft' }) + B.Button({ label: 'Dark', variant: 'dark' }) + B.Button({ label: 'Ghost', variant: 'ghost' }) +
+    '<small>С иконкой</small>' + B.Button({ label: 'Add habit', icon: 'plus' }) + B.Button({ label: 'Share', icon: 'share', variant: 'secondary' }) + B.Button({ label: 'Next', iconEnd: 'chevron-right', variant: 'soft' }) +
+    '<small>Крупные (56px)</small>' + B.Button({ label: 'Continue with Apple', variant: 'dark', size: 'lg', logo: 'A' }) + B.Button({ label: 'Continue with Google', variant: 'secondary', size: 'lg', logo: 'G' }) +
+    '<small>Отключённые</small>' + B.Button({ label: 'Disabled', disabled: true }) + B.Button({ label: 'Disabled', variant: 'secondary', disabled: true });
+</script>

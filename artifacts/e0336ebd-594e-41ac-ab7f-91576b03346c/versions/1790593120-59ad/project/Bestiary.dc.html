@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Бестиарий</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Kurale&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0A08;font-family:'Kurale',serif;color:#E8DFC8}
+a{color:#E08A3C}a:hover{color:#F2B26A}
+.rus{font-family:'Ruslan Display',serif;font-weight:400}
+.plank{position:relative;background:linear-gradient(180deg,rgba(255,225,190,.05),rgba(0,0,0,.3)),repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,transparent 1px 7px),repeating-linear-gradient(180deg,rgba(255,215,170,.035) 0 1px,transparent 1px 13px),linear-gradient(90deg,#231A14,#2B2019 30%,#211813 60%,#2A1F18);border:1px solid #0A0806;box-shadow:inset 0 1px 0 rgba(255,220,180,.1),inset 0 0 0 2px #3B2C20,inset 0 0 0 3px #120D0A,0 12px 30px rgba(0,0,0,.7)}
+.nail{position:absolute;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#B0A898 0,#5B5650 35%,#1B1917 75%);box-shadow:0 1px 1px rgba(0,0,0,.8)}
+.back{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 18px;background:linear-gradient(180deg,#1C1612,#100D0B);border:1px solid #4A382A;box-shadow:inset 0 0 12px rgba(0,0,0,.8);font-family:'Ruslan Display',serif;font-size:14px;letter-spacing:2px;color:#CDBFA2;text-decoration:none;transition:transform .15s,border-color .2s,color .2s,box-shadow .2s}
+.back svg{transition:transform .2s}
+.back:hover{border-color:#C8702F;color:#F6D29A;box-shadow:inset 0 0 12px rgba(200,112,47,.2),0 0 14px rgba(224,138,60,.35)}
+.back:hover svg{transform:translateX(-4px)}
+.back:active{transform:scale(.95)}
+.tab{position:relative;height:36px;padding:0 11px;border:0;background:transparent;font-family:'Ruslan Display',serif;font-size:12px;letter-spacing:1.5px;color:#9C8F78;cursor:pointer;transition:color .2s,transform .15s}
+.tab:hover{color:#F6D29A}
+.tab:active{transform:scale(.95)}
+.tab.on{color:#F3E6CC;background:linear-gradient(180deg,#9A2E24,#6A1C16);box-shadow:inset 0 0 0 1px #C4473A,0 3px 8px rgba(0,0,0,.5);clip-path:polygon(0 0,100% 0,100% 100%,55% 100%,50% 86%,45% 100%,0 100%)}
+.be{position:relative;display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;height:60px;padding:0 16px;background:linear-gradient(90deg,#1C1612,#120E0B);border:1px solid #4A382A;cursor:pointer;font-family:'Kurale',serif;color:#E8DFC8;text-align:left;transition:transform .2s,border-color .2s,box-shadow .2s,background .25s}
+.be:hover{transform:translateX(5px);border-color:#C8702F;box-shadow:0 0 12px rgba(224,138,60,.25)}
+.be:active{transform:translateX(5px) scale(.98)}
+.be.sel{border-color:#C8412F;background:linear-gradient(90deg,rgba(142,42,34,.35),#120E0B 70%);box-shadow:inset 0 0 0 1px #C8412F}
+.be.lock{color:#6B5E50}
+.parch{background:radial-gradient(ellipse at 25% 20%,rgba(120,80,30,.2),transparent 40%),radial-gradient(ellipse at 80% 85%,rgba(90,50,20,.28),transparent 45%),radial-gradient(ellipse at 50% 50%,#D8C7A0,#B49C70 95%);color:#2B2118;clip-path:polygon(0 1.5%,3% 0,20% 1%,38% 0,55% 1%,72% 0,90% 1%,100% 0,99.4% 20%,100% 45%,99% 70%,100% 100%,80% 99.3%,60% 100%,40% 99%,20% 100%,2% 99.3%,0 80%,.6% 55%,0 30%)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid #6A4A30;font-size:14px;color:#3A2A1C;background:rgba(255,240,210,.25);transition:transform .2s,background .2s}
+.chip:hover{transform:translateY(-2px);background:rgba(154,46,36,.18)}
+.sketch{animation:sketchIn .7s ease-out}
+@keyframes sketchIn{from{opacity:0;filter:blur(4px);transform:scale(.96)}to{opacity:1;filter:none;transform:none}}
+.eyes{animation:blink 3.5s infinite}
+@keyframes blink{0%,90%,100%{opacity:1}94%{opacity:0}}
+.lockq{animation:lockq 3s ease-in-out infinite}
+@keyframes lockq{0%,100%{opacity:.5}50%{opacity:.9}}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 60% 40%, #1A1E1A 0%, #0B0A08 70%); font-family: 'Kurale', serif; color: #E8DFC8">
+<svg width="0" height="0" style="position: absolute" aria-hidden="true"><defs>
+<pattern id="orn" width="28" height="14" patternUnits="userSpaceOnUse"><path d="M14 1.5 L21 7 L14 12.5 L7 7 Z" fill="none" stroke="#A8352A" stroke-width="1.3"></path><path d="M14 4.5 L17 7 L14 9.5 L11 7 Z" fill="#A8352A"></path><path d="M0 7 H5 M23 7 H28 M3 3 L5 7 L3 11 M25 3 L23 7 L25 11" stroke="#A8352A" stroke-width="1" fill="none"></path></pattern>
+<pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><path d="M0 0 V6" stroke="#3A2A1C" stroke-width="1" opacity="0.55"></path></pattern>
+<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+</defs></svg>
+
+<div style="position: absolute; left: 40px; top: 24px; right: 40px; height: 56px; display: flex; align-items: center; gap: 24px">
+<a class="back" href="Game.dc.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 4l-8 8 8 8"></path></svg>В ДЕРЕВНЮ</a>
+<h1 class="rus" style="margin: 0; font-size: 40px; letter-spacing: 2px; color: #E8DFC8; text-shadow: 0 3px 0 #000">Бестиарий</h1>
+<span style="font-size: 16px; font-style: italic; color: #A89A80">Записано о нечисти: {{known}} из {{total}}</span>
+</div>
+
+<div class="plank" style="position: absolute; left: 40px; top: 100px; width: 420px; height: 590px; box-sizing: border-box; padding: 16px 18px 20px; display: flex; flex-direction: column; gap: 8px">
+<span class="nail" style="left: 8px; bottom: 8px"></span><span class="nail" style="right: 8px; bottom: 8px"></span>
+<div style="display: flex; flex-wrap: wrap; gap: 2px; padding-bottom: 8px">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="5">
+<button class="{{f.cls}}" onClick="{{f.pick}}">{{f.name}}</button>
+</sc-for>
+</div>
+<sc-for list="{{list}}" as="b" hint-placeholder-count="7">
+<button class="{{b.cls}}" onClick="{{b.pick}}">
+<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 2 L28 15 L15 28 L2 15 Z" fill="#140F0C" stroke="{{b.ring}}" stroke-width="1.5"></path><circle cx="11.5" cy="14" r="1.8" fill="{{b.eye}}"></circle><circle cx="18.5" cy="14" r="1.8" fill="{{b.eye}}"></circle></svg>
+<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+<span style="font-size: 18px">{{b.name}}</span>
+<span style="font-size: 13px; color: #8F8570">{{b.where}}</span>
+</div>
+<div style="display: flex; gap: 3px">
+<sc-for list="{{b.danger}}" as="dg" hint-placeholder-count="5"><span style="{{dg}}"></span></sc-for>
+</div>
+</button>
+</sc-for>
+</div>
+
+<div class="parch" style="position: absolute; left: 490px; top: 100px; right: 40px; height: 590px; box-sizing: border-box; padding: 34px 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.6)">
+<sc-for list="{{page}}" as="p" hint-placeholder-count="1">
+<div class="sketch" style="display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 32px; height: 100%">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="height: 330px; border: 1px solid #8A6A48; position: relative; background: rgba(255,240,210,0.18); display: flex; align-items: center; justify-content: center">
+<sc-if value="{{p.open}}" hint-placeholder-val="{{ true }}">
+<svg width="260" height="310" viewBox="0 0 260 310" aria-label="Набросок существа">
+<path d="{{p.shape}}" fill="url(#hatch)" stroke="#3A2A1C" stroke-width="2.2" stroke-linejoin="round"></path>
+<g class="eyes"><circle cx="{{p.ex1}}" cy="{{p.ey}}" r="5" fill="#9A2E24"></circle><circle cx="{{p.ex2}}" cy="{{p.ey}}" r="5" fill="#9A2E24"></circle></g>
+<path d="M20 296 C80 286 180 286 240 296" stroke="#3A2A1C" stroke-width="1.5" fill="none"></path>
+</svg>
+</sc-if>
+<sc-if value="{{p.locked}}" hint-placeholder-val="{{ false }}">
+<div class="lockq rus" style="font-size: 120px; color: #8A6A48">?</div>
+</sc-if>
+<div style="position: absolute; left: 10px; bottom: 8px; font-size: 12px; font-style: italic; color: #6A5A44">{{p.sketchNote}}</div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between">
+<span style="font-size: 14px; color: #5A4634">Опасность</span>
+<div style="display: flex; gap: 5px"><sc-for list="{{p.danger}}" as="dg" hint-placeholder-count="5"><span style="{{dg}}"></span></sc-for></div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between">
+<span style="font-size: 14px; color: #5A4634">Изучено</span>
+<span style="font-size: 14px; color: #6A1C16">{{p.study}}</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: baseline; gap: 16px">
+<h2 class="rus" style="margin: 0; font-size: 40px; color: #2B2118">{{p.name}}</h2>
+<span style="font-size: 16px; font-style: italic; color: #6A5A44">{{p.kind}}</span>
+</div>
+<svg width="100%" height="14" style="opacity: 0.6" aria-hidden="true"><rect width="100%" height="14" fill="url(#orn)"></rect></svg>
+<p style="margin: 0; font-size: 18px; line-height: 1.6; color: #2B2118">{{p.desc}}</p>
+<div class="rus" style="font-size: 13px; letter-spacing: 2px; color: #6A1C16; margin-top: 4px">ПОВАДКИ</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.55; font-style: italic; color: #3A2A1C">{{p.habits}}</p>
+<div class="rus" style="font-size: 13px; letter-spacing: 2px; color: #6A1C16; margin-top: 4px">ЧЕГО БОИТСЯ</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{p.weak}}" as="w" hint-placeholder-count="3"><span class="chip"><span style="width: 7px; height: 7px; transform: rotate(45deg); background: #9A2E24"></span>{{w}}</span></sc-for>
+</div>
+<div style="flex-grow: 1"></div>
+<div style="font-size: 14px; font-style: italic; color: #6A5A44; border-top: 1px solid #8A6A48; padding-top: 10px">{{p.where}}</div>
+</div>
+</div>
+</sc-for>
+</div>
+<svg width="1280" height="720" style="position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0.09; mix-blend-mode: overlay" aria-hidden="true"><rect width="1280" height="720" filter="url(#gr)"></rect></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const F = [['all', 'ВСЕ'], ['forest', 'ЛЕС'], ['swamp', 'БОЛОТО'], ['village', 'ДЕРЕВНЯ'], ['grave', 'ПОГОСТ']];
+    const f = s.f || 'all';
+    const B = [
+      { id: 'leshy', name: 'Леший', kind: 'хозяин леса', hab: 'forest', open: true, lvl: 3, st: 2, where: 'Бор за Выселками, чаще — в сумерках',
+        desc: 'Высокий, как сосна, или маленький, как гриб — каким захочет. Водит путников кругами, пока те не падут без сил.',
+        habits: 'Отзывается чужими голосами. Любит, когда ему оставляют хлеб на пне. Обиду помнит долго.',
+        weak: ['вывернутая одежда', 'соль', 'матерное слово'],
+        shape: 'M130 20 C150 30 160 60 150 80 L190 60 L180 90 L200 100 L165 120 L175 200 L200 290 L160 290 L140 210 L120 210 L100 290 L60 290 L85 200 L95 120 L60 100 L80 90 L70 60 L110 80 C100 60 110 30 130 20 Z', ex1: 120, ex2: 142, ey: 60 },
+      { id: 'kikimora', name: 'Кикимора', kind: 'болотная и запечная', hab: 'swamp', open: true, lvl: 2, st: 3, where: 'Болото, а иногда — за печкой в брошенной избе',
+        desc: 'Сухонькая, с птичьей головой. Ночью прядёт — но не нитку, а беду для хозяев дома.',
+        habits: 'Путает пряжу, бьёт посуду, щиплет спящих. Боится шумных и весёлых домов.',
+        weak: ['куриный бог', 'можжевельник', 'громкая песня'],
+        shape: 'M130 40 C160 40 170 70 160 90 L150 100 L170 150 L160 220 L175 290 L145 290 L135 230 L125 230 L115 290 L85 290 L100 220 L90 150 L110 100 L100 90 C90 70 100 40 130 40 Z M160 70 L200 80 L165 85 Z', ex1: 122, ex2: 140, ey: 68 },
+      { id: 'bolotnik', name: 'Болотник', kind: 'водяной дух', hab: 'swamp', open: true, lvl: 4, st: 1, where: 'Топь за мельницей',
+        desc: 'Тучный, покрытый тиной старик. Сидит в трясине по шею и ждёт, когда путник оступится.',
+        habits: 'Зажигает огни над водой. Тех, кто пошёл на огни, находят седыми — если находят.',
+        weak: ['огонь', 'железо', 'молитва'],
+        shape: 'M130 90 C175 90 205 130 205 180 C205 240 175 270 130 270 C85 270 55 240 55 180 C55 130 85 90 130 90 Z M20 270 C80 255 180 255 240 270 L240 296 L20 296 Z', ex1: 115, ex2: 145, ey: 150 },
+      { id: 'anchutka', name: 'Анчутка', kind: 'мелкий бес', hab: 'swamp', open: true, lvl: 1, st: 3, where: 'Везде, где сыро',
+        desc: 'Беспятый бесёнок размером с кошку. Сам по себе не опасен, но всегда приводит кого-то побольше.',
+        habits: 'Дразнится, прячет вещи, подначивает людей на глупости.',
+        weak: ['соль', 'красная нить'],
+        shape: 'M130 150 C155 150 165 170 160 190 L175 180 L170 200 L160 205 L165 250 L150 260 L140 240 L120 240 L110 260 L95 250 L100 205 L90 200 L85 180 L100 190 C95 170 105 150 130 150 Z M112 150 L100 125 L120 145 Z M148 150 L160 125 L140 145 Z', ex1: 122, ex2: 138, ey: 172 },
+      { id: 'domovoy', name: 'Домовой', kind: 'хранитель дома', hab: 'village', open: true, lvl: 0, st: 3, where: 'За печью каждой живой избы',
+        desc: 'Мохнатый старичок. Не нечисть, а свой: бережёт дом, пока его уважают.',
+        habits: 'Любит кашу и ленточки. Обиженный — шалит, довольный — будит перед бедой.',
+        weak: ['неуважение (обижается)'],
+        shape: 'M130 120 C165 120 180 150 178 180 C176 220 160 250 130 250 C100 250 84 220 82 180 C80 150 95 120 130 120 Z M70 250 C80 230 180 230 190 250 L190 290 L70 290 Z', ex1: 118, ex2: 142, ey: 172 },
+      { id: 'upyr', name: 'Упырь', kind: '???', hab: 'grave', open: false, lvl: 5, st: 0, where: 'Говорят, на погосте что-то роется по ночам.' },
+      { id: 'poludnitsa', name: 'Полуденница', kind: '???', hab: 'forest', open: false, lvl: 3, st: 0, where: 'Ищите в поле, в самый жаркий полдень.' }
+    ];
+    const selId = s.sel || 'bolotnik';
+    const sel = B.find(b => b.id === selId);
+    const pips = (n, onCol, offCol, size) => Array.from({ length: 5 }, (_, i) => 'width: ' + size + 'px; height: ' + size + 'px; transform: rotate(45deg); ' + (i < n ? 'background: ' + onCol : 'border: 1px solid ' + offCol));
+    const list = B.filter(b => f === 'all' || b.hab === f);
+    return {
+      known: B.filter(b => b.open).length, total: B.length,
+      filters: F.map(([k, n]) => ({ name: n, cls: f === k ? 'tab on' : 'tab', pick: () => this.setState({ f: k }) })),
+      list: list.map(b => ({
+        name: b.open ? b.name : '???', where: b.open ? b.kind : 'не встречено',
+        ring: b.id === selId ? '#C8412F' : '#5A4634', eye: b.open ? '#E0604A' : '#3B332B',
+        danger: b.open ? pips(b.lvl, '#C8412F', '#4A382A', 7) : pips(0, '', '#3B2C20', 7),
+        cls: 'be' + (b.id === selId ? ' sel' : '') + (b.open ? '' : ' lock'),
+        pick: () => this.setState({ sel: b.id })
+      })),
+      page: [selId].map(() => sel.open ? {
+        open: true, locked: false, name: sel.name, kind: sel.kind, desc: sel.desc, habits: sel.habits, weak: sel.weak,
+        where: 'Где встречается: ' + sel.where, shape: sel.shape, ex1: sel.ex1, ex2: sel.ex2, ey: sel.ey,
+        danger: pips(sel.lvl, '#9A2E24', '#8A6A48', 11), study: sel.st + ' / 3 записей', sketchNote: 'набросок со слов очевидца'
+      } : {
+        open: false, locked: true, name: '???', kind: 'не встречено', desc: 'Страница пуста. Никто из живых не может описать это существо.',
+        habits: 'Неизвестно.', weak: ['???'], where: 'Подсказка: ' + sel.where, shape: '', ex1: 0, ex2: 0, ey: 0,
+        danger: pips(0, '', '#8A6A48', 11), study: '0 / 3 записей', sketchNote: ''
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

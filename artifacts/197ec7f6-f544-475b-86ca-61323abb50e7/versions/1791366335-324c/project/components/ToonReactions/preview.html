@@ -1,0 +1,57 @@
+<!-- @dsCard group="Illustrations" height=640 width=900 subtitle="Реакции маскота: нажатие, взгляд за касанием, поворот при прокрутке ленты, настроение в чате." -->
+<style>
+  .tr { padding: 20px; background: var(--bg-app); color: var(--text-primary); font-family: var(--font-sans); display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
+  .tr h4 { margin: 0 0 4px; font: 800 16px/20px var(--font-display); }
+  .tr p { margin: 0; font: 500 12px/16px var(--font-sans); color: var(--text-muted); }
+  .tr__ph { height: 560px; border-radius: 36px; border: 1px solid var(--bd-edge); background: var(--bg-surface-sunken); overflow: hidden; position: relative; box-shadow: var(--shadow-md); display: flex; flex-direction: column; }
+  .tr__top { flex: none; display: flex; justify-content: center; padding: 26px 0 0; background: linear-gradient(var(--bg-wash-violet), transparent); }
+  .tr__feed { flex: 1; overflow: auto; padding: 8px 14px 20px; display: flex; flex-direction: column; gap: 10px; scrollbar-width: none; }
+  .tr__feed::-webkit-scrollbar { display: none; }
+  .tr__feed i { display: block; height: 74px; border-radius: var(--radius-xl); background: var(--bg-surface); border: 1px solid var(--bd-edge); box-shadow: var(--shadow-sm); flex: none; }
+  .tr__feed i:nth-child(3n) { height: 104px; }
+  .tr__list { display: flex; flex-direction: column; gap: 10px; }
+  .tr__li { padding: 12px 14px; border-radius: var(--radius-xl); background: var(--bg-surface); border: 1px solid var(--bd-edge); }
+  .tr__li b { display: block; font: 800 14px/18px var(--font-display); }
+  .tr__li span { font: 500 12px/16px var(--font-sans); color: var(--text-secondary); }
+  .tr__chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .tr__chips .bd-btn { height: 34px; padding: 0 14px; font-size: 12px; }
+</style>
+<div class="tr bd-root">
+  <div class="tr__ph"><div class="tr__top" id="top"></div><div class="tr__feed" id="feed"></div></div>
+  <div>
+    <h4>Как маскот реагирует</h4>
+    <div class="tr__list">
+      <div class="tr__li"><b>Нажатие на зверя</b><span>Случайный клип из восьми (happy, laugh, surprise, bounce, nod_yes, shy, dance, sniff), сжатие-пружина и четыре сердечка. Пока клип идёт, повторные реакции не перебивают его; потом возвращается живой режим.</span></div>
+      <div class="tr__li"><b>Нажатие рядом</b><span>Зверь смотрит на точку касания и моргает; через 1,3 секунды взгляд отпускается (<code>Buddy.Toon.gaze</code>).</span></div>
+      <div class="tr__li"><b>Прокрутка ленты</b><span>Взгляд следует за направлением, голова плавно наклоняется (инерция 0.14 за кадр, до 0.32 рад). Большой рывок прокрутки вызывает «surprise». Попробуйте покрутить ленту слева.</span></div>
+      <div class="tr__li"><b>Настроение чата</b><span>Пока ассистент думает, зверь «curious»; при успехе «happy»; иначе живой режим.</span></div>
+    </div>
+    <div class="tr__chips" id="chips"></div>
+  </div>
+</div>
+<script>
+  var B = window.Buddy, host, api = null, lastTop = 0, busy = 0, py = 0.04, px = 0, ty = 0.04, tx = 0, raf = 0, lookT;
+  function loadToon(kinds) {
+    return Promise.all(kinds.map(function (k) {
+      var cls = Buddy.Toon.names[k].cls;
+      if (window[cls]) return 1;
+      return fetch('../../assets/Toon/' + k + '-toon.js').then(function (r) { return r.text(); }).then(function (t) { var s = document.createElement('script'); s.text = t; document.head.appendChild(s); }).catch(function () {});
+    }));
+  }
+  var feed = document.getElementById('feed'); feed.innerHTML = new Array(14).fill('<i></i>').join('');
+  document.getElementById('top').innerHTML = B.Toon.host('cat', 120);
+  host = document.querySelector('#top .bd-toon');
+  function ease() { if (raf) return; (function step() { py += (ty - py) * 0.14; px += (tx - px) * 0.14; if (api) api.setView(px, py, 0.7); raf = (Math.abs(ty - py) > 0.002 || Math.abs(tx - px) > 0.002) ? requestAnimationFrame(step) : 0; })(); }
+  feed.addEventListener('scroll', function () {
+    var top = feed.scrollTop, dy = top - lastTop; lastTop = top; if (!api || !dy || Date.now() < busy) return;
+    var dir = dy > 0 ? -1 : 1; api.lookAt(Math.sin(top / 90) * 0.35, dir * Math.min(1, 0.35 + Math.abs(dy) / 40));
+    ty = 0.04 - Math.max(-0.32, Math.min(0.32, dy * 0.012)); tx = Math.sin(top / 140) * 0.28; ease();
+    if (Math.abs(dy) > 70) { busy = Date.now() + 1500; api.react('surprise', 1500); }
+    clearTimeout(lookT); lookT = setTimeout(function () { if (api) { api.lookAt(null); ty = 0.04; tx = 0; ease(); } }, 380);
+  }, { passive: true });
+  document.addEventListener('pointerdown', function (e) { if (api && !e.target.closest('.bd-toon') && !e.target.closest('#chips')) B.Toon.gaze(api, host, e.clientX, e.clientY); });
+  var moods = [['Живой режим', ''], ['Думает: curious', 'curious'], ['Успех: happy', 'happy'], ['Сон: sleepy', 'sleepy']];
+  document.getElementById('chips').innerHTML = moods.map(function (m, i) { return '<button type="button" class="bd-btn bd-btn--soft" data-m="' + m[1] + '">' + m[0] + '</button>'; }).join('');
+  document.getElementById('chips').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b || !api) return; if (b.dataset.m) api.play(b.dataset.m); else api.auto(); });
+  loadToon(['cat']).then(function () { api = B.Toon.mount(host, 'cat'); });
+</script>

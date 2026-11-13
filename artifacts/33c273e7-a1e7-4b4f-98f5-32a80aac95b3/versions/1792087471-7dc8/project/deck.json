@@ -1,0 +1,63 @@
+{
+  "v": 4,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-15T09:50:00Z"
+  },
+  "lists": "css",
+  "title": "Подхват — презентация, новый дизайн",
+  "cover": "cover",
+  "order": [
+    "cover",
+    "about",
+    "problem",
+    "route",
+    "screens",
+    "nearby",
+    "scout",
+    "trust",
+    "guides",
+    "partners",
+    "papers",
+    "awards",
+    "design",
+    "closing"
+  ],
+  "sections": {
+    "s1": {
+      "description": "Что такое «Подхват» и какую проблему он решает",
+      "start": "cover"
+    },
+    "s2": {
+      "description": "Маршрут помощи и главные экраны приложения",
+      "start": "route"
+    },
+    "s3": {
+      "description": "Доверие, памятки, партнёры, документы и награды",
+      "start": "trust"
+    },
+    "s4": {
+      "description": "Дизайн-система и контакты",
+      "start": "design"
+    }
+  },
+  "faces": {
+    "nunito": {
+      "family": "Nunito",
+      "href": "https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap"
+    },
+    "manrope": {
+      "family": "Manrope",
+      "href": "https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap"
+    }
+  },
+  "designSystems": [
+    {
+      "title": "Buddy",
+      "namespace": "buddy",
+      "artifact": "https://claude.ai/artifact/49bkTQC3o2o81pTT3SmFk2",
+      "version": "1791366973-dc41",
+      "copiedAt": "2026-10-15T09:50:00Z"
+    }
+  ]
+}

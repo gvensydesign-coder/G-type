@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Пролог</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Kurale&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0A08;font-family:'Kurale',serif;color:#E8DFC8}
+a{color:#E08A3C}a:hover{color:#F2B26A}
+.plank{position:relative;background:linear-gradient(180deg,rgba(255,225,190,.05),rgba(0,0,0,.3)),repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,transparent 1px 7px),repeating-linear-gradient(180deg,rgba(255,215,170,.035) 0 1px,transparent 1px 13px),linear-gradient(90deg,#231A14,#2B2019 30%,#211813 60%,#2A1F18);border:1px solid #0A0806;box-shadow:inset 0 1px 0 rgba(255,220,180,.1),inset 0 0 0 2px #3B2C20,inset 0 0 0 3px #120D0A,0 30px 80px rgba(0,0,0,.8)}
+.nail{position:absolute;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#B0A898 0,#5B5650 35%,#1B1917 75%);box-shadow:0 1px 1px rgba(0,0,0,.8)}
+.frame{animation:frameIn 6s ease-in-out forwards}
+@keyframes frameIn{0%{opacity:0;transform:translateY(-30px) rotate(-1.2deg)}14%{opacity:1;transform:translateY(0) rotate(.4deg)}20%{transform:rotate(-.2deg)}26%{transform:rotate(0)}86%{opacity:1}100%{opacity:0;transform:translateY(10px) rotate(.6deg)}}
+.kb{animation:kb 6s linear forwards;transform-origin:50% 50%}
+@keyframes kb{from{transform:scale(1.04) translateX(-12px)}to{transform:scale(1.16) translateX(14px)}}
+.txt{animation:recede 6s ease-in forwards;transform-origin:50% 50%}
+@keyframes recede{
+0%{transform:scale(1.7);opacity:0;filter:blur(8px);z-index:3;letter-spacing:12px}
+16%{transform:scale(1.12);opacity:1;filter:blur(0);z-index:3;letter-spacing:2px}
+48%{transform:scale(.96) translateY(-20px);opacity:1;filter:blur(0);z-index:3}
+54%{z-index:1}
+100%{transform:scale(.42) translateY(-560px);opacity:0;filter:blur(3px);z-index:1}}
+.bar{animation:grow 6s linear forwards}
+@keyframes grow{from{width:0}to{width:100%}}
+.fog{animation:drift 18s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateX(-50px)}to{transform:translateX(50px)}}
+.eyes{animation:blink 2.6s infinite}
+@keyframes blink{0%,88%,100%{opacity:1}92%{opacity:0}}
+.win{animation:flick 1.8s ease-in-out infinite}
+@keyframes flick{0%,100%{opacity:1}40%{opacity:.6}60%{opacity:.9}}
+.cape{animation:cape 3s ease-in-out infinite;transform-box:fill-box;transform-origin:top center}
+@keyframes cape{0%,100%{transform:skewX(0)}50%{transform:skewX(-4deg)}}
+.end{animation:fadeUp 1.4s ease-out forwards}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.tile{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 18px;background:linear-gradient(180deg,#1C1612,#100D0B);border:1px solid #4A382A;box-shadow:inset 0 0 12px rgba(0,0,0,.8);font-family:'Ruslan Display',serif;font-size:14px;letter-spacing:2px;color:#CDBFA2;text-decoration:none;transition:transform .15s,border-color .2s,color .2s,box-shadow .2s}
+.tile:hover{border-color:#C8702F;color:#F6D29A;box-shadow:inset 0 0 12px rgba(200,112,47,.2),0 0 14px rgba(224,138,60,.35)}
+.tile:hover svg{transform:translateX(4px)}
+.tile svg{transition:transform .2s}
+.tile:active{transform:scale(.95)}
+.btn{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:54px;padding:0 40px;border:0;background:linear-gradient(180deg,#7A5334,#2A1B12);clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 50%,calc(100% - 16px) 100%,16px 100%,0 50%);cursor:pointer;font-family:'Ruslan Display',serif;font-size:17px;letter-spacing:3px;color:#E8DFC8;text-decoration:none;transition:transform .18s,filter .18s,color .2s,background .25s}
+.btn::before{content:'';position:absolute;inset:2px;z-index:-1;clip-path:inherit;background:linear-gradient(180deg,#2E2119,#150F0B);transition:background .25s}
+.btn::after{content:'';position:absolute;left:30px;right:30px;bottom:10px;height:1px;background:linear-gradient(90deg,transparent,#C8412F,transparent);transform:scaleX(.2);opacity:.5;transition:transform .35s,opacity .35s}
+.btn:hover{color:#F6D29A;transform:translateY(-2px);background:linear-gradient(180deg,#E08A3C,#6B2A15)}
+.btn:hover::before{background:linear-gradient(180deg,#3B2519,#1A100B)}
+.btn:hover::after{transform:scaleX(1);opacity:1}
+.btn:active{transform:translateY(1px) scale(.96);filter:brightness(.8)}
+.btn.red{background:linear-gradient(180deg,#C8412F,#5E1914)}
+.btn.red::before{background:linear-gradient(180deg,#8E2A22,#4A120E)}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 50% 50%, #161A16 0%, #0B0A08 75%); font-family: 'Kurale', serif; color: #E8DFC8">
+<svg width="0" height="0" style="position: absolute" aria-hidden="true"><defs>
+<pattern id="orn" width="28" height="14" patternUnits="userSpaceOnUse"><path d="M14 1.5 L21 7 L14 12.5 L7 7 Z" fill="none" stroke="#A8352A" stroke-width="1.3"></path><path d="M14 4.5 L17 7 L14 9.5 L11 7 Z" fill="#A8352A"></path><path d="M0 7 H5 M23 7 H28 M3 3 L5 7 L3 11 M25 3 L23 7 L25 11" stroke="#A8352A" stroke-width="1" fill="none"></path></pattern>
+<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+</defs></svg>
+
+<svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<g class="fog"><ellipse cx="640" cy="160" rx="820" ry="120" fill="#7F9681" opacity="0.06"></ellipse><ellipse cx="640" cy="600" rx="820" ry="140" fill="#7F9681" opacity="0.07"></ellipse></g>
+</svg>
+
+<sc-for list="{{beats}}" as="b" hint-placeholder-count="1">
+<sc-if value="{{b.on}}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px">
+<div class="frame" style="position: absolute; left: 262px; top: 128px; width: 756px; height: 441px; z-index: 2">
+<svg width="756" height="80" viewBox="0 0 756 80" style="position: absolute; left: 0; top: -72px" aria-hidden="true"><path d="M60 80 L378 4 L696 80" fill="none" stroke="#6B5440" stroke-width="2.5" stroke-dasharray="6 3"></path><circle cx="378" cy="6" r="5" fill="#5B5650"></circle></svg>
+<div class="plank" style="width: 756px; height: 441px; box-sizing: border-box; padding: 18px">
+<span class="nail" style="left: 5px; top: 5px"></span><span class="nail" style="right: 5px; top: 5px"></span><span class="nail" style="left: 5px; bottom: 5px"></span><span class="nail" style="right: 5px; bottom: 5px"></span>
+<div style="width: 720px; height: 405px; overflow: hidden; box-shadow: inset 0 0 40px rgba(0,0,0,0.9); position: relative">
+<div class="kb" style="width: 720px; height: 405px">
+<sc-if value="{{b.forest}}" hint-placeholder-val="{{ true }}">
+<svg width="720" height="405" viewBox="0 0 720 405" aria-hidden="true">
+<rect width="720" height="405" fill="#1B2A22"></rect>
+<rect width="720" height="200" fill="#C98A6A" opacity="0.14"></rect>
+<path d="M0 405 V200 L40 110 L80 210 L130 80 L180 220 L230 130 L280 230 L340 90 L400 230 L450 140 L500 220 L560 70 L620 220 L670 130 L720 200 V405 Z" fill="#3F684A"></path>
+<path d="M0 405 V290 L60 170 L120 300 L200 190 L270 310 L450 320 L520 180 L600 300 L660 200 L720 290 V405 Z" fill="#1F4032"></path>
+<rect y="300" width="720" height="60" fill="#B7C4AF" opacity="0.08"></rect>
+</svg>
+</sc-if>
+<sc-if value="{{b.fog}}" hint-placeholder-val="{{ false }}">
+<svg width="720" height="405" viewBox="0 0 720 405" aria-hidden="true">
+<rect width="720" height="405" fill="#121A18"></rect>
+<path d="M0 405 V230 L50 130 L100 240 L170 110 L240 250 L480 250 L550 120 L620 240 L680 150 L720 230 V405 Z" fill="#101614"></path>
+<rect y="220" width="720" height="70" fill="#B7C4AF" opacity="0.12"></rect><rect y="270" width="720" height="90" fill="#B7C4AF" opacity="0.1"></rect>
+<g class="eyes"><circle cx="210" cy="250" r="3" fill="#E0504A"></circle><circle cx="228" cy="250" r="3" fill="#E0504A"></circle><circle cx="470" cy="275" r="3" fill="#E0504A"></circle><circle cx="486" cy="275" r="3" fill="#E0504A"></circle><circle cx="600" cy="232" r="2.5" fill="#E0504A"></circle><circle cx="613" cy="232" r="2.5" fill="#E0504A"></circle></g>
+</svg>
+</sc-if>
+<sc-if value="{{b.village}}" hint-placeholder-val="{{ false }}">
+<svg width="720" height="405" viewBox="0 0 720 405" aria-hidden="true">
+<rect width="720" height="405" fill="#1A1614"></rect>
+<rect width="720" height="180" fill="#8A3A2A" opacity="0.12"></rect>
+<rect y="290" width="720" height="115" fill="#1E1C16"></rect>
+<g fill="#0E0D0A"><path d="M80 300 V230 L140 185 L200 230 V300 Z"></path><path d="M250 300 V220 L320 170 L390 220 V300 Z"></path><path d="M470 300 V240 L520 205 L570 240 V300 Z"></path><path d="M600 300 V225 L650 190 L700 225 V300 Z"></path><path d="M318 170 V140 H322 V170 Z M312 150 H328"></path></g>
+<rect class="win" x="305" y="240" width="18" height="16" fill="#FFB257"></rect>
+<rect class="win" x="296" y="231" width="36" height="34" fill="#FFB257" opacity="0.15"></rect>
+<path d="M120 300 L150 250 M520 300 L500 262" stroke="#433F39" stroke-width="3"></path>
+<rect y="260" width="720" height="60" fill="#B7C4AF" opacity="0.06"></rect>
+</svg>
+</sc-if>
+<sc-if value="{{b.hero}}" hint-placeholder-val="{{ false }}">
+<svg width="720" height="405" viewBox="0 0 720 405" aria-hidden="true">
+<rect width="720" height="405" fill="#1E1714"></rect>
+<rect y="110" width="720" height="130" fill="#E08A3C" opacity="0.1"></rect>
+<path d="M0 300 C200 280 520 280 720 300 V405 H0 Z" fill="#141A16"></path>
+<path d="M0 320 C240 310 480 310 720 320" stroke="#7F9681" stroke-width="1" opacity="0.3"></path>
+<path d="M340 130 L360 96 L380 130 Z" fill="#0C0B0A"></path>
+<path d="M334 128 H386 V160 H334 Z" fill="#0C0B0A"></path>
+<path d="M322 160 H398 L412 300 H308 Z" fill="#0C0B0A"></path>
+<g class="cape"><path d="M322 164 C290 210 286 270 296 312 L330 300 L336 170 Z" fill="#8E2A22"></path><path d="M398 164 C430 210 434 270 424 312 L390 300 L384 170 Z" fill="#8E2A22"></path></g>
+<circle cx="296" cy="236" r="30" fill="#8E2A22" stroke="#0C0B0A" stroke-width="4"></circle>
+<circle cx="296" cy="236" r="9" fill="#E0A04A"></circle>
+<path d="M420 180 L452 94" stroke="#8A8F84" stroke-width="4"></path>
+</svg>
+</sc-if>
+</div>
+</div>
+</div>
+</div>
+<div class="txt" style="position: absolute; left: 140px; right: 140px; top: 300px; text-align: center; font-family: 'Ruslan Display', serif; font-size: 44px; line-height: 1.3; letter-spacing: 2px; color: #F0E6CE; text-shadow: 0 0 18px rgba(200,65,47,0.5), 0 3px 0 #000, 0 2px 30px rgba(0,0,0,0.95)">{{b.text}}</div>
+<div style="position: absolute; left: 262px; top: 590px; width: 756px; height: 2px; background: #2A211A"><div class="bar" style="height: 2px; background: linear-gradient(90deg, #8E2A22, #E08A3C); box-shadow: 0 0 8px #E08A3C"></div></div>
+</div>
+</sc-if>
+</sc-for>
+
+<sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+<div class="end" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px">
+<div style="font-family: 'Ruslan Display', serif; font-size: 16px; letter-spacing: 6px; color: #A89A80">ПРОЛОГ</div>
+<h1 style="margin: 0; font-family: 'Ruslan Display', serif; font-weight: 400; font-size: 72px; letter-spacing: 4px; color: #E8DFC8; text-shadow: 0 0 30px rgba(200,65,47,0.35), 0 4px 0 #000">Русская хтонь</h1>
+<svg width="360" height="14" aria-hidden="true"><rect width="360" height="14" fill="url(#orn)"></rect></svg>
+<div style="display: flex; gap: 16px; margin-top: 10px">
+<a class="btn red" href="Novel.dc.html">НАЧАТЬ</a>
+<button class="btn" onClick="{{replay}}">СМОТРЕТЬ СНОВА</button>
+</div>
+</div>
+</sc-if>
+
+<div style="position: absolute; left: 0; top: 0; width: 1280px; height: 60px; background: #050605; z-index: 5; box-shadow: 0 6px 20px rgba(0,0,0,0.8)">
+<svg width="1280" height="14" style="position: absolute; left: 0; bottom: 0; opacity: 0.55" aria-hidden="true"><rect width="1280" height="14" fill="url(#orn)"></rect></svg>
+</div>
+<div style="position: absolute; left: 0; bottom: 0; width: 1280px; height: 60px; background: #050605; z-index: 5; display: flex; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 -6px 20px rgba(0,0,0,0.8)">
+<svg width="1280" height="14" style="position: absolute; left: 0; top: 0; opacity: 0.55" aria-hidden="true"><rect width="1280" height="14" fill="url(#orn)"></rect></svg>
+<sc-for list="{{dots}}" as="d" hint-placeholder-count="4">
+<span style="{{d.style}}"></span>
+</sc-for>
+</div>
+<div style="position: absolute; top: 76px; right: 24px; z-index: 6">
+<a class="tile" href="Novel.dc.html">ПРОПУСТИТЬ
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l7 7-7 7M12 5l7 7-7 7"></path></svg>
+</a>
+</div>
+<svg width="1280" height="720" style="position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0.1; mix-blend-mode: overlay; z-index: 7" aria-hidden="true"><rect width="1280" height="720" filter="url(#gr)"></rect></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  componentDidMount() { this.start(); }
+  componentWillUnmount() { clearInterval(this.t); }
+  start() {
+    clearInterval(this.t);
+    this.setState({ i: 0 });
+    this.t = setInterval(() => {
+      const i = ((this.state && this.state.i) || 0) + 1;
+      this.setState({ i: i });
+      if (i >= 4) clearInterval(this.t);
+    }, 6000);
+  }
+  renderVals() {
+    const i = (this.state && this.state.i) || 0;
+    const data = [
+      { scene: 'forest', text: 'Когда-то лес был просто лесом.' },
+      { scene: 'fog', text: 'Потом пришёл туман. А с ним — те, кто в нём живёт.' },
+      { scene: 'village', text: 'Деревни пустели одна за другой. Выселки остались последними.' },
+      { scene: 'hero', text: 'И тогда из-за реки пришёл богатырь.' }
+    ];
+    return {
+      beats: data.map((b, k) => ({
+        on: k === i, text: b.text,
+        forest: b.scene === 'forest', fog: b.scene === 'fog',
+        village: b.scene === 'village', hero: b.scene === 'hero'
+      })),
+      done: i >= data.length,
+      dots: data.map((b, k) => ({
+        style: 'width: 9px; height: 9px; transform: rotate(45deg); transition: all .4s; ' +
+          (k === i ? 'background: #C8412F; box-shadow: 0 0 10px #E0604A;' : k < i ? 'background: #6B4A34;' : 'border: 1px solid #5A4634;')
+      })),
+      replay: () => this.start()
+    };
+  }
+}
+</script>
+</body>
+</html>

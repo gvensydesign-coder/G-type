@@ -1,0 +1,24 @@
+<!-- @dsCard group="Screens" height=1120 width=1400 subtitle="Карта экранов «Подхвата» в светлой и тёмной теме: главная, нейро-чат, организации с тегами, чат с голосовым сообщением, создание случая, маршрут, лента." -->
+<style>html,body{margin:0}.ps{background:var(--bg-surface-sunken);padding:16px 0;display:flex;flex-direction:column;gap:8px}.ps__r{display:flex;justify-content:center}.ps__r>div{--pd-scale:.6;min-height:0!important;padding:0!important;flex:none;background:none!important;display:block!important}</style>
+<div class="ps" id="s"></div>
+<script>
+  function loadToon(kinds) {
+    return Promise.all(kinds.map(function (k) {
+      var cls = Buddy.Toon.names[k].cls;
+      if (window[cls]) return 1;
+      return fetch('../../assets/Toon/' + k + '-toon.js').then(function (r) { return r.text(); }).then(function (t) { var s = document.createElement('script'); s.text = t; document.head.appendChild(s); }).catch(function () {});
+    }));
+  }
+  var common = { onboardingDone: true, published: true, place: 'У входа в парк', photo: true, color: 'Белый с серым', features: 'Серый хвост', placeChecked: true, lastSeenAt: Date.now() };
+  var rows = [
+    ['light', [{ page: 'home' }, { page: 'profile', profileName: 'Аня' }, { page: 'notifications', taskRequested: true, taskAccepted: true }, { page: 'kb' }]],
+    ['dark', [{ page: 'medals', medalsFor: 'org:clinic', medalOpen: 'swift' }, { page: 'ai' }, { page: 'orgs', orgTags: ['24h'] }, { page: 'chat', chatTarget: 'support', chats: { support: [{ from: 'me', type: 'voice', dur: 12, time: '9:46' }, { from: 'them', text: 'Получили голосовое сообщение, спасибо! Ответим в течение нескольких минут.', time: '9:46' }] } }]]
+  ];
+  loadToon(['cat', 'dog']).then(function () {
+  var host = document.getElementById('s');
+  rows.forEach(function (r) {
+    var row = document.createElement('div'); row.className = 'ps__r'; host.appendChild(row);
+    r[1].forEach(function (st) { var d = document.createElement('div'); row.appendChild(d); Buddy.Podhvat.mount(d, { persist: false, fit: false, tools: false, skipBoot: true, theme: r[0], photos: {}, state: Object.assign({}, common, st) }); });
+  });
+  });
+</script>

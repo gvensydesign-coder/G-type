@@ -1,0 +1,9 @@
+<!-- @dsCard group="Content" height=420 width=700 subtitle="Карточка каталога: градиентная обложка, плитки интеграций, автор." -->
+<style>.pv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:20px;background:var(--bg-app)}</style>
+<div class="pv" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    B.AgentCard({ title: 'Morning Routine Coach', desc: 'A gentle wake-up plan that adapts to you', cover: 'aurora', apps: ['alarm', 'sun', 'list-check'], by: 'Buddy Team' }) +
+    B.AgentCard({ title: 'Workout Buddy', desc: 'Short sessions that fit your day', cover: 'sunset', apps: ['dumbbell', 'bike', 'flame'], by: 'Buddy Team' });
+</script>

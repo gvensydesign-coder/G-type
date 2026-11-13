@@ -1,0 +1,17 @@
+<!-- @dsCard group="Screens" height=900 width=900 subtitle="Профиль: аватар с кольцом уровня, статистика, витрина наград, настройки, подключённые соцсети." -->
+<div id="root"></div>
+<script>
+  var B = window.Buddy;
+  var tabs = [{ id: 'home', icon: 'home', label: 'Home' }, { id: 'tracker', icon: 'tracker', label: 'Tracker' }, { id: 'habits', icon: 'habits', label: 'Habits' }, { id: 'profile', icon: 'user', label: 'Profile' }];
+  function screen() {
+    var top = '<div style="display:flex;align-items:center;justify-content:space-between;padding:58px 20px 12px"><h1 class="title-xl" style="margin:0">Profile</h1>' + B.IconButton({ icon: 'settings', label: 'Settings', variant: 'soft' }) + '</div>';
+    var body = '<div class="bd-stack" style="padding:0 20px;gap:18px">' + B.ProfileHeader({ name: 'Lukman', handle: '@lukman · joined March 2026', level: 7 }) + B.StatRow({}) +
+      '<div><div class="bd-section-head"><h2 class="bd-section-title">Badges</h2>' + B.Button({ label: 'See all', variant: 'ghost' }) + '</div><div class="bd-medals">' +
+      B.Medal({ shape: 'shield', tone: 'orange', text: '7', label: 'Week streak', shine: true }) + B.Medal({ shape: 'round', tone: 'sky', emblem: 'droplet', label: 'Water hero' }) + B.Medal({ shape: 'hex', tone: 'violet', emblem: 'moon', label: 'Sleep ritual' }) + '</div></div>' +
+      B.SettingsGroup({ title: 'Preferences', rows: [{ icon: 'bell', tone: 'orange', title: 'Notifications', control: 'switch', checked: true }, { icon: 'palette', tone: 'pink', title: 'Appearance', value: 'System' }, { icon: 'shield-check', tone: 'green', title: 'Privacy' }] }) +
+      '<div><h3 class="bd-setgroup__t">Connected accounts</h3><div class="bd-setgroup__c">' + B.SocialAccount({ social: 'telegram', handle: '@lukman', connected: true }) + B.SocialAccount({ social: 'instagram' }) + B.SocialAccount({ social: 'x' }) + '</div></div></div>';
+    return B.Phone(top + body, { tabs: B.TabBar({ items: tabs, current: 'profile' }) });
+  }
+  document.getElementById('root').innerHTML = B.Stage(screen);
+  B.wire(document);
+</script>

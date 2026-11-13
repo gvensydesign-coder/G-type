@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Игровой экран</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Kurale&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0A08;font-family:'Kurale',serif;color:#E8DFC8}
+a{color:#E08A3C}a:hover{color:#F2B26A}
+.plank{position:relative;background:linear-gradient(180deg,rgba(255,225,190,.05),rgba(0,0,0,.3)),repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,transparent 1px 7px),repeating-linear-gradient(180deg,rgba(255,215,170,.035) 0 1px,transparent 1px 13px),linear-gradient(90deg,#231A14,#2B2019 30%,#211813 60%,#2A1F18);border:1px solid #0A0806;box-shadow:inset 0 1px 0 rgba(255,220,180,.1),inset 0 0 0 2px #3B2C20,inset 0 0 0 3px #120D0A,0 12px 30px rgba(0,0,0,.7)}
+.nail{position:absolute;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#B0A898 0,#5B5650 35%,#1B1917 75%);box-shadow:0 1px 1px rgba(0,0,0,.8)}
+.rus{font-family:'Ruslan Display',serif;font-weight:400}
+.ib{position:relative;width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#1E1713,#0F0C0A);border:1px solid #4A382A;box-shadow:inset 0 0 0 1px #0A0806,inset 0 0 14px rgba(0,0,0,.85),0 4px 10px rgba(0,0,0,.6);cursor:pointer;color:#D8CDB4;transition:transform .15s,border-color .2s,box-shadow .2s,color .2s}
+.ib .key{position:absolute;left:3px;top:3px;width:15px;height:15px;display:flex;align-items:center;justify-content:center;border:1px solid #5A4634;background:#0D0A08;font-family:'Kurale',serif;font-size:10px;color:#A89A80}
+.ib svg{transition:transform .3s}
+.ib:hover{border-color:#C8702F;color:#F6D29A;transform:translateY(-2px);box-shadow:inset 0 0 0 1px #0A0806,inset 0 0 16px rgba(200,112,47,.2),0 0 16px rgba(224,138,60,.4),0 6px 12px rgba(0,0,0,.6)}
+.ib:hover svg{animation:wob .5s ease}
+.ib:active{transform:translateY(1px) scale(.93);box-shadow:inset 0 0 0 1px #0A0806,inset 0 4px 14px rgba(0,0,0,.95)}
+.ib::after,.card::after{content:'';position:absolute;inset:-1px;border:1px solid #E08A3C;opacity:0;pointer-events:none}
+.ib:focus::after,.card:focus::after{animation:ring .5s ease-out}
+.ib:focus-visible,.card:focus-visible,.tab:focus-visible{outline:1px solid #E08A3C;outline-offset:2px}
+@keyframes ring{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.3)}}
+@keyframes wob{0%{transform:rotate(0)}30%{transform:rotate(-10deg) scale(1.1)}60%{transform:rotate(7deg)}100%{transform:rotate(0)}}
+.res{position:relative;display:flex;align-items:center;gap:6px;height:38px;padding:0 9px;background:linear-gradient(180deg,#120E0B,#1A1410);box-shadow:inset 0 2px 6px rgba(0,0,0,.8),inset 0 0 0 1px #0A0806;transition:transform .2s,box-shadow .2s;cursor:default}
+.res svg{transition:transform .3s}
+.res:hover{transform:translateY(-2px);box-shadow:inset 0 2px 6px rgba(0,0,0,.8),inset 0 0 0 1px #C8702F,0 0 10px rgba(224,138,60,.3)}
+.res:hover svg{transform:scale(1.2) rotate(-8deg)}
+.res::after{content:attr(data-name);position:absolute;left:50%;top:46px;transform:translate(-50%,-4px);white-space:nowrap;padding:4px 10px;background:#0D0A08;border:1px solid #5A4634;font-size:13px;color:#E8DFC8;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:5}
+.res:hover::after{opacity:1;transform:translate(-50%,0)}
+.tab{position:relative;height:38px;padding:0 20px;border:0;background:transparent;font-family:'Ruslan Display',serif;font-size:15px;letter-spacing:2px;color:#9C8F78;cursor:pointer;transition:color .2s,transform .15s}
+.tab:hover{color:#F6D29A}
+.tab:active{transform:scale(.95)}
+.tab.on{color:#F3E6CC;background:linear-gradient(180deg,#9A2E24,#6A1C16);box-shadow:inset 0 0 0 1px #C4473A,0 3px 8px rgba(0,0,0,.5);clip-path:polygon(0 0,100% 0,100% 100%,55% 100%,50% 86%,45% 100%,0 100%)}
+.tog{width:40px;height:38px;display:flex;align-items:center;justify-content:center;background:#140F0C;border:1px solid #4A382A;cursor:pointer;color:#CDBFA2;transition:border-color .2s,color .2s,transform .15s}
+.tog:hover{border-color:#C8702F;color:#F6D29A}
+.tog:active{transform:scale(.92)}
+.tog svg{transition:transform .35s cubic-bezier(.3,1.4,.5,1)}
+.card{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px 10px;background:linear-gradient(180deg,#1C1612,#0F0C0A);border:1px solid #4A382A;box-shadow:inset 0 0 0 1px #0A0806,inset 0 0 16px rgba(0,0,0,.85);cursor:pointer;font-family:'Kurale',serif;color:#E8DFC8;text-align:center;transition:transform .2s cubic-bezier(.3,1.4,.5,1),border-color .2s,box-shadow .2s}
+.card .num{position:absolute;left:4px;top:4px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;border:1px solid #5A4634;background:#0D0A08;font-size:10px;color:#A89A80}
+.card .ico{transition:transform .35s}
+.card:hover{transform:translateY(-5px);border-color:#C8702F;box-shadow:inset 0 0 0 1px #0A0806,inset 0 0 18px rgba(200,112,47,.15),0 0 16px rgba(224,138,60,.35),0 10px 16px rgba(0,0,0,.6)}
+.card:hover .ico{transform:translateY(-3px) scale(1.08) rotate(-4deg)}
+.card:active{transform:translateY(1px) scale(.95);box-shadow:inset 0 0 0 1px #0A0806,inset 0 4px 16px rgba(0,0,0,.95)}
+.card.locked{filter:grayscale(.85) brightness(.55);cursor:not-allowed}
+.card.locked:hover{transform:none;border-color:#6A2A22;box-shadow:inset 0 0 0 1px #0A0806,inset 0 0 16px rgba(0,0,0,.85)}
+.card.locked:hover .ico{transform:none;animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.x{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#140E0B;border:1px solid #4A382A;cursor:pointer;color:#CDBFA2;transition:transform .25s,border-color .2s,color .2s}
+.x:hover{transform:rotate(90deg);border-color:#C8412F;color:#F6D29A}
+.x:active{transform:rotate(90deg) scale(.9)}
+.btn{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 32px;border:0;background:linear-gradient(180deg,#7A5334,#2A1B12);clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%);cursor:pointer;font-family:'Ruslan Display',serif;font-size:14px;letter-spacing:2px;color:#E8DFC8;text-decoration:none;transition:transform .18s,filter .18s,color .2s,background .25s}
+.btn::before{content:'';position:absolute;inset:2px;z-index:-1;clip-path:inherit;background:linear-gradient(180deg,#2E2119,#150F0B)}
+.btn:hover{color:#F6D29A;transform:translateY(-2px);background:linear-gradient(180deg,#E08A3C,#6B2A15)}
+.btn:active{transform:scale(.96);filter:brightness(.8)}
+.parch{background:radial-gradient(ellipse at 25% 20%,rgba(120,80,30,.2),transparent 40%),radial-gradient(ellipse at 80% 85%,rgba(90,50,20,.28),transparent 45%),radial-gradient(ellipse at 50% 50%,#D8C7A0,#B49C70 95%);color:#2B2118;clip-path:polygon(0 2%,3% 0,20% 1%,38% 0,55% 1.5%,72% 0,90% 1%,100% 0,99% 20%,100% 45%,98.5% 70%,100% 100%,80% 99%,60% 100%,40% 98.5%,20% 100%,2% 99%,0 80%,1% 55%,0 30%)}
+.q{display:flex;align-items:flex-start;gap:12px;padding:8px 6px;transition:background .2s,transform .2s;cursor:default}
+.q:hover{background:rgba(142,42,34,.18);transform:translateX(4px)}
+.q .dm{width:12px;height:12px;margin-top:6px;flex-shrink:0;transform:rotate(45deg);transition:transform .35s}
+.q:hover .dm{transform:rotate(225deg)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;background:linear-gradient(90deg,#8E2A22,#3B2C20);border:1px solid #0A0806}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-6px;background:#E8C98A;transform:rotate(45deg);border:1px solid #3A2A1E;box-shadow:0 0 8px rgba(224,138,60,.6);transition:transform .15s}
+input[type=range]:active::-webkit-slider-thumb{transform:rotate(45deg) scale(1.3)}
+input[type=range]::-moz-range-track{height:4px;background:#5A2A1E}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:0;background:#E8C98A;border:1px solid #3A2A1E}
+.rise{animation:riseIn .35s cubic-bezier(.2,.8,.3,1)}
+@keyframes riseIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+.dim{animation:dimIn .3s ease-out}
+@keyframes dimIn{from{opacity:0}to{opacity:1}}
+.slideUp{animation:slideUp .35s cubic-bezier(.2,.8,.3,1)}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.beat{animation:beat 1s ease-in-out infinite;transform-origin:center}
+@keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.25)}30%{transform:scale(1)}45%{transform:scale(1.15)}}
+.seal{animation:sealIn .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes sealIn{from{transform:scale(0) rotate(-40deg)}to{transform:none}}
+.fog{animation:drift 16s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateX(-50px)}to{transform:translateX(50px)}}
+.win{animation:flick 2.4s ease-in-out infinite}
+@keyframes flick{0%,100%{opacity:1}30%{opacity:.6}55%{opacity:.95}70%{opacity:.7}}
+.smoke{animation:smoke 5s linear infinite;opacity:0}
+@keyframes smoke{0%{transform:translate(0,0) scale(.6);opacity:0}15%{opacity:.35}100%{transform:translate(24px,-90px) scale(2.2);opacity:0}}
+.tree{animation:tsway 6s ease-in-out infinite;transform-box:fill-box;transform-origin:bottom center}
+@keyframes tsway{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(1.2deg)}}
+.rag{animation:sway 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:top center}
+@keyframes sway{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(7deg)}}
+.totem{animation:totem 3s ease-in-out infinite}
+@keyframes totem{0%,100%{opacity:.25}50%{opacity:.7}}
+.wisp{animation:wisp 7s ease-in-out infinite}
+.wisp2{animation:wisp 9s ease-in-out infinite reverse}
+@keyframes wisp{0%,100%{transform:translate(0,0);opacity:.3}25%{transform:translate(20px,-14px);opacity:.9}50%{transform:translate(-10px,-26px);opacity:.5}75%{transform:translate(-24px,-8px);opacity:.85}}
+.march{stroke-dasharray:8 6;animation:march 1.2s linear infinite}
+@keyframes march{to{stroke-dashoffset:-14}}
+.ping{animation:ping 1.8s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ping{from{transform:scale(.5);opacity:.9}to{transform:scale(2.2);opacity:0}}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #121814; font-family: 'Kurale', serif; color: #E8DFC8">
+<svg width="0" height="0" style="position: absolute" aria-hidden="true"><defs>
+<pattern id="iso" width="80" height="46" patternUnits="userSpaceOnUse"><path d="M40 0 L80 23 L40 46 L0 23 Z" fill="none" stroke="#7D855D" stroke-width="0.6" opacity="0.3"></path></pattern>
+<radialGradient id="vig" cx="50%" cy="48%" r="68%"><stop offset="50%" stop-color="#0B0A08" stop-opacity="0"></stop><stop offset="100%" stop-color="#0B0A08" stop-opacity="0.92"></stop></radialGradient>
+<radialGradient id="lamp"><stop offset="0" stop-color="#FFB257" stop-opacity="0.5"></stop><stop offset="1" stop-color="#FFB257" stop-opacity="0"></stop></radialGradient>
+<radialGradient id="redg"><stop offset="0" stop-color="#E0504A" stop-opacity="0.8"></stop><stop offset="1" stop-color="#E0504A" stop-opacity="0"></stop></radialGradient>
+<radialGradient id="wispG"><stop offset="0" stop-color="#CDE8B0"></stop><stop offset="0.3" stop-color="#8FBF7A" stop-opacity="0.6"></stop><stop offset="1" stop-color="#8FBF7A" stop-opacity="0"></stop></radialGradient>
+<pattern id="orn" width="28" height="14" patternUnits="userSpaceOnUse"><path d="M14 1.5 L21 7 L14 12.5 L7 7 Z" fill="none" stroke="#A8352A" stroke-width="1.3"></path><path d="M14 4.5 L17 7 L14 9.5 L11 7 Z" fill="#A8352A"></path><path d="M0 7 H5 M23 7 H28 M3 3 L5 7 L3 11 M25 3 L23 7 L25 11" stroke="#A8352A" stroke-width="1" fill="none"></path></pattern>
+<pattern id="ornR" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#7E231C"></rect><path d="M8 2 L14 8 L8 14 L2 8 Z" fill="none" stroke="#D9C9A8" stroke-width="1"></path><rect x="7" y="7" width="2" height="2" fill="#D9C9A8"></rect></pattern>
+<pattern id="inkTrees" width="24" height="22" patternUnits="userSpaceOnUse"><path d="M6 18 L10 6 L14 18 Z M17 20 L20 11 L23 20 Z" fill="#3A2A1C" opacity="0.75"></path></pattern>
+<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+</defs></svg>
+
+<svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<rect width="1280" height="720" fill="#1C271E"></rect>
+<rect width="1280" height="720" fill="url(#iso)"></rect>
+<path d="M640 720 C600 600 520 520 560 430 C590 370 660 360 700 330" stroke="#3A332A" stroke-width="30" fill="none" opacity="0.8"></path>
+<path d="M640 720 C600 600 520 520 560 430 C590 370 660 360 700 330" stroke="#2A2620" stroke-width="2" fill="none" stroke-dasharray="3 9"></path>
+<ellipse cx="560" cy="520" rx="36" ry="10" fill="#2E4A48" opacity="0.7"></ellipse>
+<g transform="translate(600 300)">
+<ellipse cx="50" cy="96" rx="90" ry="22" fill="#000" opacity="0.35"></ellipse>
+<circle cx="24" cy="52" r="46" fill="url(#lamp)"></circle>
+<path d="M0 60 L50 88 L100 60 L100 20 L50 -8 L0 20 Z" fill="#3A322A"></path>
+<path d="M50 88 L100 60 L100 20 L50 48 Z" fill="#2E2720"></path>
+<path d="M-10 22 L50 -34 L110 22 L50 -4 Z" fill="#2A2420"></path>
+<path d="M50 -34 L110 22 L100 24 L50 -22 Z" fill="#1E1A16"></path>
+<rect x="72" y="-24" width="10" height="22" fill="#2A2420"></rect>
+<circle class="smoke" cx="77" cy="-28" r="6" fill="#9CAE9A"></circle>
+<circle class="smoke" cx="77" cy="-28" r="6" fill="#9CAE9A" style="animation-delay: 1.7s"></circle>
+<circle class="smoke" cx="77" cy="-28" r="6" fill="#9CAE9A" style="animation-delay: 3.4s"></circle>
+<rect class="win" x="18" y="46" width="12" height="10" fill="#FFB257"></rect>
+</g>
+<g class="tree" transform="translate(380 420)"><path d="M0 0 L20 -60 L40 0 Z" fill="#1F4032"></path><path d="M6 -20 L20 -80 L34 -20 Z" fill="#274D3B"></path></g>
+<g class="tree" transform="translate(860 250)" style="animation-delay: -2s"><path d="M0 0 L22 -66 L44 0 Z" fill="#1F4032"></path><path d="M7 -22 L22 -88 L37 -22 Z" fill="#274D3B"></path></g>
+<g class="tree" transform="translate(300 250)" style="animation-delay: -4s"><path d="M0 0 L18 -56 L36 0 Z" fill="#1F4032"></path><path d="M6 -18 L18 -72 L30 -18 Z" fill="#274D3B"></path></g>
+<g class="tree" transform="translate(1000 440)" style="animation-delay: -1s"><path d="M0 0 L24 -70 L48 0 Z" fill="#1F4032"></path><path d="M8 -24 L24 -94 L40 -24 Z" fill="#274D3B"></path></g>
+<g transform="translate(900 470)"><path d="M0 0 V-80" stroke="#2A2420" stroke-width="6"></path><path d="M-14 -66 H14" stroke="#2A2420" stroke-width="4"></path><g class="rag"><path d="M-2 -64 L10 -64 L8 -20 L3 -28 L-1 -16 Z" fill="#9A2E24"></path></g></g>
+<g transform="translate(450 330)">
+<circle class="totem" cx="0" cy="-40" r="34" fill="url(#redg)"></circle>
+<path d="M-4 0 L-3 -60 L3 -60 L4 0 Z" fill="#CFC5AE"></path>
+<path d="M-12 -62 C-12 -76 12 -76 12 -62 C12 -54 -12 -54 -12 -62 Z" fill="#D8CFB8"></path>
+<circle cx="-5" cy="-64" r="2" fill="#8E2A22"></circle><circle cx="5" cy="-64" r="2" fill="#8E2A22"></circle>
+<path d="M-14 -46 L14 -40 M-12 -30 L12 -34" stroke="#CFC5AE" stroke-width="2"></path>
+</g>
+<circle class="wisp" cx="760" cy="560" r="10" fill="url(#wispG)"></circle>
+<circle class="wisp2" cx="240" cy="520" r="8" fill="url(#wispG)"></circle>
+<circle class="wisp" cx="1080" cy="330" r="7" fill="url(#wispG)" style="animation-delay: -3s"></circle>
+<g class="fog"><ellipse cx="640" cy="640" rx="780" ry="120" fill="#B7C4AF" opacity="0.08"></ellipse><ellipse cx="200" cy="220" rx="420" ry="80" fill="#B7C4AF" opacity="0.06"></ellipse></g>
+<rect width="1280" height="720" fill="url(#vig)"></rect>
+</svg>
+
+<div class="plank" style="position: absolute; left: 20px; top: 16px; width: 340px; height: 108px; box-sizing: border-box; padding: 0 30px 0 14px; display: flex; align-items: center; gap: 22px; clip-path: polygon(0 0, 100% 0, calc(100% - 24px) 100%, 0 100%)">
+<span class="nail" style="left: 7px; top: 7px"></span><span class="nail" style="left: 7px; bottom: 7px"></span><span class="nail" style="right: 12px; top: 7px"></span>
+<div style="position: relative; width: 84px; height: 84px; flex-shrink: 0; margin-left: 6px">
+<div style="position: absolute; left: 8px; top: 8px; width: 68px; height: 68px; transform: rotate(45deg); border: 2px solid #8A6A48; box-shadow: 0 0 0 3px #120D0A, 0 0 0 4px #5A4634, inset 0 0 12px rgba(0,0,0,0.9); background: #2A1E1C; overflow: hidden">
+<div style="width: 96px; height: 96px; margin: -14px 0 0 -14px; transform: rotate(-45deg); display: flex; align-items: flex-end; justify-content: center">
+<svg width="72" height="72" viewBox="0 0 60 60" aria-label="Аватар богатыря">
+<path d="M30 4 L38 20 C44 22 46 28 46 34 H14 C14 28 16 22 22 20 Z" fill="#8A8F84"></path>
+<path d="M30 4 L38 20 C44 22 46 28 46 34 H34 L30 6 Z" fill="#646A61"></path>
+<rect x="20" y="34" width="20" height="12" fill="#9A704C"></rect>
+<path d="M6 60 C8 50 18 46 30 46 C42 46 52 50 54 60 Z" fill="#8E2A22"></path>
+<circle cx="30" cy="54" r="3" fill="#E0A04A"></circle>
+</svg>
+</div>
+</div>
+<div class="seal" style="position: absolute; right: -6px; bottom: -4px; width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #C8412F, #7E231C 60%, #4A120E); box-shadow: 0 2px 4px rgba(0,0,0,0.8), inset 0 0 0 2px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; font-family: 'Ruslan Display', serif; font-size: 15px; color: #F3E6CC" aria-label="Уровень">{{level}}</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1">
+<div style="display: flex; align-items: baseline; gap: 10px">
+<span class="rus" style="font-size: 21px; color: #E8DFC8; letter-spacing: 1px">Богатырь</span>
+<span style="font-size: 14px; color: #A89A80">ур. {{level}}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 8px" aria-label="Жизни">
+<svg class="{{heartClass}}" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.9A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z" fill="#C8412F"></path></svg>
+<div style="display: flex; gap: 3px">
+<sc-for list="{{hearts}}" as="h" hint-placeholder-count="5">
+<sc-if value="{{h.full}}" hint-placeholder-val="{{ true }}"><span style="width: 30px; height: 11px; background: linear-gradient(180deg, #E0604A, #9A2E24 60%, #6A1C16); box-shadow: inset 0 1px 0 rgba(255,200,180,0.4), 0 0 6px rgba(200,65,47,0.5); transition: all .3s"></span></sc-if>
+<sc-if value="{{h.empty}}" hint-placeholder-val="{{ false }}"><span style="width: 30px; height: 11px; background: #140F0C; box-shadow: inset 0 1px 3px rgba(0,0,0,0.9), inset 0 0 0 1px #3B2C20"></span></sc-if>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D8CFB8" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.8 2.8M16.2 16.2L19 19M5 19l2.8-2.8M16.2 7.8L19 5"></path></svg>
+<div style="width: 159px; height: 7px; background: #140F0C; box-shadow: inset 0 1px 3px rgba(0,0,0,0.9), inset 0 0 0 1px #3B2C20" aria-label="Опыт">
+<div style="height: 7px; width: {{xpStr}}; background: repeating-linear-gradient(135deg, #D8CFB8 0 5px, #A89A80 5px 8px); box-shadow: 0 0 6px rgba(216,207,184,0.4); transition: width .4s"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="position: absolute; left: 376px; right: 268px; top: 16px; display: flex; justify-content: center">
+<div class="plank" style="display: flex; align-items: center; gap: 4px; height: 58px; box-sizing: border-box; padding: 0 22px" aria-label="Ресурсы">
+<span class="nail" style="left: 7px; top: 25px"></span><span class="nail" style="right: 7px; top: 25px"></span>
+<sc-for list="{{resources}}" as="r" hint-placeholder-count="7">
+<div class="res" data-name="{{r.name}}" aria-label="{{r.label}}">
+<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="{{r.d}}" fill="{{r.fill}}" fill-rule="evenodd"></path></svg>
+<span style="font-size: 17px; font-variant-numeric: tabular-nums; color: #E8DFC8">{{r.n}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="position: absolute; right: 22px; top: 20px; display: flex; gap: 8px">
+<button class="ib" onClick="{{toggleSound}}" aria-label="Звук"><span class="key">З</span>
+<sc-if value="{{soundOn}}" hint-placeholder-val="{{ true }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h4l5-4v14l-5-4H4z"></path><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"></path></svg>
+</sc-if>
+<sc-if value="{{soundOff}}" hint-placeholder-val="{{ false }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8412F" stroke-width="1.6"><path d="M4 9h4l5-4v14l-5-4H4z"></path><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"></path></svg>
+</sc-if>
+</button>
+<button class="ib" onClick="{{openDiary}}" aria-label="Дневник"><span class="key">Д</span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h11M10 7l2 2 2-2"></path></svg>
+</button>
+<button class="ib" onClick="{{openMap}}" aria-label="Карта"><span class="key">К</span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"></path><path d="M9 4v14M15 6v14"></path></svg>
+</button>
+<button class="ib" onClick="{{openSettings}}" aria-label="Настройки"><span class="key">Н</span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg>
+</button>
+</div>
+
+<div class="plank" style="position: absolute; left: 190px; right: 190px; bottom: -3px; box-sizing: border-box; padding: 14px 18px 0">
+<svg width="100%" height="16" style="position: absolute; left: 0; top: -12px; box-shadow: 0 3px 6px rgba(0,0,0,0.6)" aria-hidden="true"><rect width="100%" height="16" fill="url(#ornR)"></rect></svg>
+<span class="nail" style="left: 8px; top: 12px"></span><span class="nail" style="right: 8px; top: 12px"></span>
+<div style="display: flex; align-items: center; gap: 6px; height: 44px; padding: 0 6px">
+<button class="tog" onClick="{{togglePanel}}" aria-label="Свернуть или развернуть меню">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="{{chevStyle}}"><path d="M5 15l7-7 7 7"></path></svg>
+</button>
+<button class="{{buildTabClass}}" onClick="{{tabBuild}}">ПОСТРОЙКИ</button>
+<button class="{{marketTabClass}}" onClick="{{tabMarket}}">РЫНОК</button>
+<div style="flex-grow: 1"></div>
+<div style="font-size: 14px; font-style: italic; color: #8F8570">{{hint}}</div>
+</div>
+<svg width="100%" height="14" style="display: block; opacity: 0.45; margin-top: 4px" aria-hidden="true"><rect width="100%" height="14" fill="url(#orn)"></rect></svg>
+<sc-if value="{{panelOpen}}" hint-placeholder-val="{{ true }}">
+<div class="slideUp" style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; padding: 12px 6px 18px">
+<sc-for list="{{items}}" as="it" hint-placeholder-count="6">
+<button class="{{it.cardClass}}" onClick="{{it.act}}" disabled="{{it.locked}}" aria-label="{{it.label}}">
+<span class="num">{{it.num}}</span>
+<sc-if value="{{it.hasCount}}" hint-placeholder-val="{{ false }}">
+<span class="seal" style="position: absolute; top: 4px; right: 4px; min-width: 22px; height: 22px; padding: 0 4px; box-sizing: border-box; border-radius: 11px; background: radial-gradient(circle at 35% 30%, #C8412F, #7E231C 70%); display: flex; align-items: center; justify-content: center; font-size: 12px; color: #F3E6CC">×{{it.count}}</span>
+</sc-if>
+<svg class="ico" width="58" height="44" viewBox="0 0 58 44" aria-hidden="true"><path d="M29 2 L56 22 L29 42 L2 22 Z" fill="#2A211A" stroke="#6B5440"></path><path d="M29 7 L49 22 L29 37 L9 22 Z" fill="none" stroke="#3B2C20"></path><path d="M29 12 L42 22 L29 32 L16 22 Z" fill="{{it.tint}}"></path><path d="M29 12 L42 22 L29 22 Z" fill="#FFFFFF" opacity="0.12"></path></svg>
+<span style="font-size: 16px; line-height: 1.15">{{it.name}}</span>
+<span style="font-size: 12px; color: #A89A80">{{it.note}}</span>
+<span style="font-size: 12px; color: #E08A3C">{{it.costStr}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+
+<sc-if value="{{modalOpen}}" hint-placeholder-val="{{ false }}">
+<div class="dim" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px; background: rgba(6,6,5,0.72); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center">
+<section class="plank rise" style="width: 780px; min-height: 460px; box-sizing: border-box; padding: 30px 36px 32px; display: flex; flex-direction: column; gap: 16px">
+<span class="nail" style="left: 9px; top: 9px"></span><span class="nail" style="right: 9px; top: 9px"></span><span class="nail" style="left: 9px; bottom: 9px"></span><span class="nail" style="right: 9px; bottom: 9px"></span>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<h2 class="rus" style="margin: 0; font-size: 38px; letter-spacing: 2px; color: #E8DFC8; text-shadow: 0 3px 0 #000">{{modalTitle}}</h2>
+<button class="x" onClick="{{closeModal}}" aria-label="Закрыть">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5l14 14M19 5L5 19"></path></svg>
+</button>
+</div>
+<svg width="100%" height="14" aria-hidden="true"><rect width="100%" height="14" fill="url(#orn)"></rect></svg>
+
+<sc-if value="{{isDiary}}" hint-placeholder-val="{{ true }}">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div class="rus" style="font-size: 14px; letter-spacing: 2px; color: #A89A80; padding-bottom: 6px; border-bottom: 1px solid #4A382A">ТЕКУЩАЯ ЗАДАЧА</div>
+<div class="q"><span class="dm" style="background: #C8412F; box-shadow: 0 0 8px #E0604A"></span>
+<div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 19px; color: #F0E6CE">{{curQuest}}</span><span style="font-size: 15px; line-height: 1.45; color: #A89A80">{{curDesc}}</span></div>
+</div>
+<div class="rus" style="font-size: 14px; letter-spacing: 2px; color: #A89A80; padding: 10px 0 6px; border-bottom: 1px solid #4A382A">ДРУГИЕ ЗАДАЧИ</div>
+<sc-for list="{{otherQuests}}" as="q" hint-placeholder-count="2">
+<div class="q"><span class="dm" style="background: #3B332B; border: 1px solid #6B5E50"></span><span style="font-size: 17px; color: #CDBFA2">{{q}}</span></div>
+</sc-for>
+</div>
+<div class="parch" style="padding: 26px 26px 30px; transform: rotate(1.2deg); align-self: start; box-shadow: 0 10px 20px rgba(0,0,0,0.5)">
+<div class="rus" style="font-size: 16px; letter-spacing: 1px; color: #6A1C16; margin-bottom: 10px">Записка</div>
+<p style="margin: 0; font-size: 17px; line-height: 1.55; font-style: italic; color: #2B2118">Марфа говорит, туман приходит с болота за мельницей. Надо поставить вышку, пока ночи короткие. На погост без соли не ходить.</p>
+<div style="margin-top: 14px; text-align: right; font-size: 14px; color: #5A4634">— из дневника</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isMap}}" hint-placeholder-val="{{ false }}">
+<div class="parch" style="position: relative; height: 330px; box-shadow: 0 10px 20px rgba(0,0,0,0.5)">
+<svg width="708" height="330" viewBox="0 0 708 330" aria-label="Карта окрестностей">
+<path d="M0 230 C120 210 180 250 280 220 C380 190 420 120 520 130 C600 138 650 90 708 100" stroke="#5E7A7C" stroke-width="7" fill="none" opacity="0.7"></path>
+<path d="M0 230 C120 210 180 250 280 220 C380 190 420 120 520 130 C600 138 650 90 708 100" stroke="#3A2A1C" stroke-width="1" fill="none" opacity="0.5"></path>
+<path d="M30 30 L240 20 L260 150 L50 170 Z" fill="url(#inkTrees)"></path>
+<path d="M460 180 L690 170 L690 310 L470 310 Z" fill="url(#inkTrees)"></path>
+<ellipse cx="560" cy="250" rx="80" ry="36" fill="#6E7F6A" opacity="0.35"></ellipse>
+<path d="M500 250 H530 M560 260 H600 M540 240 H570" stroke="#3A2A1C" stroke-width="1"></path>
+<g fill="#3A2A1C"><path d="M330 90 V76 L340 68 L350 76 V90 Z"></path><path d="M352 92 V80 L360 73 L368 80 V92 Z"></path><path d="M338 68 V58 H342 V68 Z"></path></g>
+<g fill="#3A2A1C"><path d="M120 250 V240 H124 V250 Z M116 244 H128"></path><path d="M140 258 V248 H144 V258 Z M136 252 H148"></path><path d="M160 250 V240 H164 V250 Z M156 244 H168"></path></g>
+<path class="march" d="M345 110 C360 160 420 180 470 220 C500 240 530 245 555 250" stroke="#9A2E24" stroke-width="2.5" fill="none"></path>
+<path d="M548 244 L562 256 M562 244 L548 256" stroke="#9A2E24" stroke-width="3"></path>
+<circle class="ping" cx="345" cy="100" r="10" fill="none" stroke="#9A2E24" stroke-width="2"></circle>
+<path d="M345 88 L352 104 L345 100 L338 104 Z" fill="#9A2E24"></path>
+<text x="130" y="100" fill="#2B2118" font-size="18" font-family="Kurale">Бор</text>
+<text x="370" y="84" fill="#2B2118" font-size="18" font-family="Kurale">Выселки</text>
+<text x="590" y="290" fill="#2B2118" font-size="18" font-family="Kurale">Болото</text>
+<text x="112" y="286" fill="#2B2118" font-size="18" font-family="Kurale">Погост</text>
+<g transform="translate(640 50)" stroke="#3A2A1C" fill="none"><circle r="24"></circle><path d="M0 -32 L5 0 L0 32 L-5 0 Z" fill="#3A2A1C"></path><path d="M-32 0 L0 5 L32 0 L0 -5 Z"></path></g>
+<text x="636" y="12" fill="#2B2118" font-size="12" font-family="Kurale">С</text>
+</svg>
+</div>
+<div style="font-size: 15px; font-style: italic; color: #A89A80">Красная стрелка — вы здесь. Пунктир ведёт к болоту. Неразведанные земли скрыты туманом.</div>
+</sc-if>
+
+<sc-if value="{{isSettings}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 20px; max-width: 440px">
+<label style="display: flex; flex-direction: column; gap: 8px; font-size: 17px; color: #CDBFA2">Музыка<input type="range" min="0" max="100" value="70"></label>
+<label style="display: flex; flex-direction: column; gap: 8px; font-size: 17px; color: #CDBFA2">Звуки<input type="range" min="0" max="100" value="80"></label>
+<label style="display: flex; align-items: center; gap: 12px; font-size: 17px; color: #CDBFA2; cursor: pointer"><input type="checkbox" checked style="accent-color: #B8392B; width: 18px; height: 18px">Субтитры в сценах</label>
+<div style="margin-top: 8px"><a class="btn" href="Start.dc.html">В ГЛАВНОЕ МЕНЮ</a></div>
+</div>
+</sc-if>
+</section>
+</div>
+</sc-if>
+<svg width="1280" height="720" style="position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0.09; mix-blend-mode: overlay" aria-hidden="true"><rect width="1280" height="720" filter="url(#gr)"></rect></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"level":{"editor":"int","default":3,"min":1,"max":99,"section":"Герой"},"hearts":{"editor":"int","default":3,"min":0,"max":5,"section":"Герой"},"xp":{"editor":"range","default":60,"min":0,"max":100,"unit":"%","section":"Герой"},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const open = s.open !== false;
+    const tab = s.tab || 'build';
+    const modal = s.modal || null;
+    const hp = this.props.hearts ?? 3;
+    const res = s.res || { wood: 48, stone: 22, grain: 35, salt: 6, candles: 12, cloth: 3, silver: 120 };
+    const built = s.built || {};
+    const R = [
+      { k: 'wood', name: 'Брёвна', fill: '#B08058', d: 'M3 5h15a3.5 3.5 0 0 1 0 7H3zM3 13h15a3.5 3.5 0 0 1 0 7H3z' },
+      { k: 'stone', name: 'Камень', fill: '#9A9F94', d: 'M4 19l3-9 6-4 7 5-1 8z' },
+      { k: 'grain', name: 'Зерно', fill: '#D2B06A', d: 'M12 2c2.2 2.2 2.2 5 0 7.2-2.2-2.2-2.2-5 0-7.2zM12 9.5c2.2 2.2 2.2 5 0 7.2-2.2-2.2-2.2-5 0-7.2zM11.2 16h1.6v6h-1.6z' },
+      { k: 'salt', name: 'Соль', fill: '#E4E0D4', d: 'M12 3l7 8-7 10-7-10z' },
+      { k: 'candles', name: 'Свечи', fill: '#F0CC8A', d: 'M9 10h6v11H9zM12 2.5c1.9 2 1.9 4 0 5.8-1.9-1.8-1.9-3.8 0-5.8z' },
+      { k: 'cloth', name: 'Красное сукно', fill: '#C8412F', d: 'M5 3h2v18H5zM7 4h12l-3 4 3 4H7z' },
+      { k: 'silver', name: 'Серебро', fill: '#C8D2C0', d: 'M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zm0 4a5 5 0 1 0 0 10 5 5 0 0 0 0-10z' }
+    ];
+    const unit = { wood: 'брёв.', stone: 'камня', grain: 'зерна', salt: 'соли', candles: 'свеч', cloth: 'сукна', silver: 'сер.' };
+    const costStr = c => Object.keys(c).map(k => c[k] + ' ' + unit[k]).join(' · ');
+    const can = c => Object.keys(c).every(k => (res[k] || 0) >= c[k]);
+    const pay = c => { const n = { ...res }; Object.keys(c).forEach(k => { n[k] -= c[k]; }); return n; };
+    const build = [
+      { name: 'Изба', note: 'жильё', tint: '#9A704C', cost: { wood: 20, stone: 5 } },
+      { name: 'Колодец', note: 'вода', tint: '#646A61', cost: { stone: 15, wood: 5 } },
+      { name: 'Печь', note: 'тепло и хлеб', tint: '#C27E32', cost: { stone: 12 } },
+      { name: 'Смотровая вышка', note: 'обзор', tint: '#7D855D', cost: { wood: 25 } },
+      { name: 'Ритуальный круг', note: 'обряды', tint: '#8E2A22', cost: { stone: 10, candles: 6, cloth: 2 } },
+      { name: 'Костяной тотем', note: 'оберег', tint: '#D8CFB8', cost: { wood: 8, salt: 3, cloth: 1 } }
+    ].map((x, j) => {
+      const ok = can(x.cost);
+      const c = built[x.name] || 0;
+      return { ...x, num: j + 1, costStr: costStr(x.cost), locked: !ok, cardClass: ok ? 'card' : 'card locked',
+        hasCount: c > 0, count: c, label: 'Построить: ' + x.name,
+        act: () => { if (ok) this.setState({ res: pay(x.cost), built: { ...built, [x.name]: c + 1 } }); } };
+    });
+    const market = [
+      { name: 'Зерно', gives: 'grain', qty: 5, price: 10, tint: '#C2A15A' },
+      { name: 'Брёвна', gives: 'wood', qty: 5, price: 12, tint: '#9A704C' },
+      { name: 'Камень', gives: 'stone', qty: 5, price: 15, tint: '#646A61' },
+      { name: 'Свечи', gives: 'candles', qty: 3, price: 9, tint: '#FFB257' },
+      { name: 'Соль', gives: 'salt', qty: 1, price: 10, tint: '#D8D4C6' },
+      { name: 'Красное сукно', gives: 'cloth', qty: 1, price: 15, tint: '#8E2A22' }
+    ].map((x, j) => {
+      const cost = { silver: x.price };
+      const ok = can(cost);
+      return { ...x, num: j + 1, note: '+' + x.qty + ' за покупку', costStr: costStr(cost), locked: !ok, cardClass: ok ? 'card' : 'card locked',
+        hasCount: false, count: 0, label: 'Купить: ' + x.name,
+        act: () => { if (ok) { const n = pay(cost); n[x.gives] += x.qty; this.setState({ res: n }); } } };
+    });
+    const titles = { diary: 'Дневник', map: 'Карта', settings: 'Настройки' };
+    return {
+      level: this.props.level ?? 3,
+      resources: R.map(r => ({ ...r, n: res[r.k], label: r.name + ': ' + res[r.k] })),
+      hint: tab === 'build' ? 'Нажмите на карточку, чтобы построить' : 'Нажмите на карточку, чтобы купить',
+      hearts: [0, 1, 2, 3, 4].map(i => ({ full: i < hp, empty: i >= hp })),
+      heartClass: hp <= 1 ? 'beat' : '',
+      xpStr: (this.props.xp ?? 60) + '%',
+      soundOn: !s.muted,
+      soundOff: !!s.muted,
+      toggleSound: () => this.setState({ muted: !s.muted }),
+      panelOpen: open,
+      togglePanel: () => this.setState({ open: !open }),
+      chevStyle: open ? 'transform: rotate(180deg)' : '',
+      items: tab === 'build' ? build : market,
+      buildTabClass: tab === 'build' ? 'tab on' : 'tab',
+      marketTabClass: tab === 'market' ? 'tab on' : 'tab',
+      tabBuild: () => this.setState({ tab: 'build', open: true }),
+      tabMarket: () => this.setState({ tab: 'market', open: true }),
+      modalOpen: !!modal,
+      modalTitle: titles[modal] || '',
+      isDiary: modal === 'diary',
+      isMap: modal === 'map',
+      isSettings: modal === 'settings',
+      openDiary: () => this.setState({ modal: 'diary' }),
+      openMap: () => this.setState({ modal: 'map' }),
+      openSettings: () => this.setState({ modal: 'settings' }),
+      closeModal: () => this.setState({ modal: null }),
+      curQuest: 'Разведать болото за мельницей',
+      curDesc: 'Туман приходит оттуда. Нужно понять, кто в нём ходит, и вернуться до темноты.',
+      otherQuests: ['Задобрить домового', 'Поставить смотровую вышку']
+    };
+  }
+}
+</script>
+</body>
+</html>

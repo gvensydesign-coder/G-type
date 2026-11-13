@@ -1,0 +1,23 @@
+<!-- @dsCard group="Поля" height=280 -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Input — превью</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;padding:16px;background:var(--bg);color:var(--ink);font:400 var(--fs-base)/var(--lh) var(--f-ui);-webkit-font-smoothing:antialiased}
+.row{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center}
+.row+.row,.cap+.row,.row+.cap{margin-top:var(--s3)}
+.cap{margin:0 0 var(--s2);font:var(--fw-sb) var(--fs-xs)/1.2 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.row+.cap,.stack+.cap{margin-top:var(--s5)}
+.stack{display:grid;gap:var(--s3);max-width:420px}
+.stack{max-width:440px}</style>
+</head>
+<body>
+<p class="cap">Текстовое поле</p>
+<div class="stack"><input class="inp" placeholder="Текст" aria-label="Текст"><input class="inp" value="Заполнено" aria-label="Заполнено"><input class="inp" value="Фокус" aria-label="Фокус" style="box-shadow:inset 0 0 0 2px var(--accent)"><input class="inp" value="Ошибка" aria-invalid="true" aria-label="Ошибка"><input class="inp" value="Недоступно" disabled aria-label="Недоступно"><input class="inp pill" placeholder="Скруглённое" aria-label="Скруглённое"></div>
+<p class="cap">Поиск</p>
+<div class="stack"><div class="srch"><i class="ico i-search"></i><input placeholder="Название или слово" aria-label="Поиск"><button class="btn pri" type="button">Найти</button></div><textarea class="inp" placeholder="Многострочное поле" aria-label="Образец текста"></textarea></div>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Сохранения</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Kurale&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0A08;font-family:'Kurale',serif;color:#E8DFC8}
+a{color:#E08A3C}a:hover{color:#F2B26A}
+.rus{font-family:'Ruslan Display',serif;font-weight:400}
+.plank{position:relative;background:linear-gradient(180deg,rgba(255,225,190,.05),rgba(0,0,0,.3)),repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,transparent 1px 7px),repeating-linear-gradient(180deg,rgba(255,215,170,.035) 0 1px,transparent 1px 13px),linear-gradient(90deg,#231A14,#2B2019 30%,#211813 60%,#2A1F18);border:1px solid #0A0806;box-shadow:inset 0 1px 0 rgba(255,220,180,.1),inset 0 0 0 2px #3B2C20,inset 0 0 0 3px #120D0A,0 12px 30px rgba(0,0,0,.7)}
+.nail{position:absolute;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#B0A898 0,#5B5650 35%,#1B1917 75%);box-shadow:0 1px 1px rgba(0,0,0,.8)}
+.back{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 18px;background:linear-gradient(180deg,#1C1612,#100D0B);border:1px solid #4A382A;box-shadow:inset 0 0 12px rgba(0,0,0,.8);font-family:'Ruslan Display',serif;font-size:14px;letter-spacing:2px;color:#CDBFA2;text-decoration:none;transition:transform .15s,border-color .2s,color .2s,box-shadow .2s}
+.back svg{transition:transform .2s}
+.back:hover{border-color:#C8702F;color:#F6D29A;box-shadow:inset 0 0 12px rgba(200,112,47,.2),0 0 14px rgba(224,138,60,.35)}
+.back:hover svg{transform:translateX(-4px)}
+.back:active{transform:scale(.95)}
+.tab{position:relative;height:40px;padding:0 22px;border:0;background:transparent;font-family:'Ruslan Display',serif;font-size:15px;letter-spacing:2px;color:#9C8F78;cursor:pointer;transition:color .2s,transform .15s}
+.tab:hover{color:#F6D29A}
+.tab:active{transform:scale(.95)}
+.tab.on{color:#F3E6CC;background:linear-gradient(180deg,#9A2E24,#6A1C16);box-shadow:inset 0 0 0 1px #C4473A,0 3px 8px rgba(0,0,0,.5);clip-path:polygon(0 0,100% 0,100% 100%,55% 100%,50% 86%,45% 100%,0 100%)}
+.btn{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:50px;padding:0 34px;border:0;background:linear-gradient(180deg,#7A5334,#2A1B12);clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%);cursor:pointer;font-family:'Ruslan Display',serif;font-size:15px;letter-spacing:2px;color:#E8DFC8;text-decoration:none;transition:transform .18s,filter .18s,color .2s,background .25s}
+.btn::before{content:'';position:absolute;inset:2px;z-index:-1;clip-path:inherit;background:linear-gradient(180deg,#2E2119,#150F0B)}
+.btn:hover{color:#F6D29A;transform:translateY(-2px);background:linear-gradient(180deg,#E08A3C,#6B2A15)}
+.btn:active{transform:scale(.96);filter:brightness(.8)}
+.btn.red{background:linear-gradient(180deg,#C8412F,#5E1914)}
+.btn.red::before{background:linear-gradient(180deg,#8E2A22,#4A120E)}
+.btn[disabled]{filter:grayscale(1) brightness(.5);cursor:not-allowed;transform:none}
+.slot{position:relative;display:flex;gap:18px;padding:16px;box-sizing:border-box;height:236px;background:linear-gradient(180deg,#1C1612,#0F0C0A);border:1px solid #4A382A;box-shadow:inset 0 0 0 1px #0A0806,inset 0 0 18px rgba(0,0,0,.85);cursor:pointer;font-family:'Kurale',serif;color:#E8DFC8;text-align:left;transition:transform .25s cubic-bezier(.3,1.4,.5,1),border-color .2s,box-shadow .25s}
+.slot .thumb{transition:transform .5s}
+.slot:hover{transform:translateY(-4px);border-color:#C8702F;box-shadow:inset 0 0 0 1px #0A0806,0 0 18px rgba(224,138,60,.3),0 10px 18px rgba(0,0,0,.6)}
+.slot:hover .thumb{transform:scale(1.06)}
+.slot:active{transform:scale(.98)}
+.slot.sel{border-color:#C8412F;box-shadow:inset 0 0 0 1px #C8412F,0 0 22px rgba(200,65,47,.4)}
+.slot.empty{border-style:dashed}
+.rise{animation:riseIn .35s cubic-bezier(.2,.8,.3,1)}
+@keyframes riseIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+.dim{animation:dimIn .3s ease-out}
+@keyframes dimIn{from{opacity:0}to{opacity:1}}
+.toast{animation:toast 2.6s ease forwards}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-14px)}10%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
+.quill{animation:quill 1.6s ease-in-out infinite}
+@keyframes quill{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg) translateY(-2px)}}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 50% 30%, #1E1A14 0%, #0B0A08 70%); font-family: 'Kurale', serif; color: #E8DFC8">
+<svg width="0" height="0" style="position: absolute" aria-hidden="true"><defs>
+<pattern id="orn" width="28" height="14" patternUnits="userSpaceOnUse"><path d="M14 1.5 L21 7 L14 12.5 L7 7 Z" fill="none" stroke="#A8352A" stroke-width="1.3"></path><path d="M14 4.5 L17 7 L14 9.5 L11 7 Z" fill="#A8352A"></path><path d="M0 7 H5 M23 7 H28 M3 3 L5 7 L3 11 M25 3 L23 7 L25 11" stroke="#A8352A" stroke-width="1" fill="none"></path></pattern>
+<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+</defs></svg>
+
+<div style="position: absolute; left: 40px; top: 24px; right: 40px; height: 56px; display: flex; align-items: center; gap: 16px">
+<a class="back" href="Start.dc.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 4l-8 8 8 8"></path></svg>В МЕНЮ</a>
+<a class="back" href="Game.dc.html">В ДЕРЕВНЮ</a>
+<h1 class="rus" style="margin: 0 0 0 12px; font-size: 40px; letter-spacing: 2px; color: #E8DFC8; text-shadow: 0 3px 0 #000">Летопись</h1>
+<div style="flex-grow: 1"></div>
+<button class="{{tabLoad}}" onClick="{{goLoad}}">ЗАГРУЗИТЬ</button>
+<button class="{{tabSave}}" onClick="{{goSave}}">СОХРАНИТЬ</button>
+</div>
+
+<div style="position: absolute; left: 40px; right: 40px; top: 100px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px">
+<sc-for list="{{slots}}" as="sl" hint-placeholder-count="4">
+<button class="{{sl.cls}}" onClick="{{sl.pick}}">
+<div style="width: 250px; height: 202px; flex-shrink: 0; overflow: hidden; border: 1px solid #5A4634; box-shadow: 0 0 0 3px #0A0806; position: relative">
+<sc-if value="{{sl.has}}" hint-placeholder-val="{{ true }}">
+<svg class="thumb" width="250" height="202" viewBox="0 0 250 202" aria-hidden="true">
+<rect width="250" height="202" fill="{{sl.sky}}"></rect>
+<circle cx="190" cy="50" r="18" fill="{{sl.moon}}" opacity="0.8"></circle>
+<path d="M0 202 V120 L20 80 L40 120 L60 70 L85 125 L110 90 L130 130 L160 95 L185 130 L210 80 L250 120 V202 Z" fill="{{sl.far}}"></path>
+<path d="{{sl.fg}}" fill="#0C0B09"></path>
+<rect x="{{sl.winX}}" y="{{sl.winY}}" width="6" height="5" fill="#FFB257"></rect>
+<rect y="150" width="250" height="30" fill="#B7C4AF" opacity="0.08"></rect>
+</svg>
+</sc-if>
+<sc-if value="{{sl.none}}" hint-placeholder-val="{{ false }}">
+<div style="width: 250px; height: 202px; display: flex; align-items: center; justify-content: center; background: #0F0C0A">
+<svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#4A382A" stroke-width="1.2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+</div>
+</sc-if>
+<sc-if value="{{sl.auto}}" hint-placeholder-val="{{ false }}">
+<div class="rus" style="position: absolute; left: 0; top: 10px; padding: 4px 10px; background: linear-gradient(180deg, #9A2E24, #6A1C16); font-size: 11px; letter-spacing: 2px; color: #F3E6CC">АВТО</div>
+</sc-if>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<span class="rus" style="font-size: 22px; color: #E8DFC8">{{sl.title}}</span>
+<svg width="200" height="14" style="opacity: 0.45" aria-hidden="true"><rect width="200" height="14" fill="url(#orn)"></rect></svg>
+<span style="font-size: 17px; color: #F0E6CE">{{sl.line1}}</span>
+<span style="font-size: 15px; color: #A89A80">{{sl.line2}}</span>
+<span style="font-size: 15px; color: #A89A80">{{sl.line3}}</span>
+<div style="flex-grow: 1"></div>
+<span style="font-size: 13px; font-style: italic; color: #7C7462">{{sl.date}}</span>
+</div>
+</button>
+</sc-for>
+</div>
+
+<div class="plank" style="position: absolute; left: 40px; right: 40px; bottom: 24px; height: 76px; box-sizing: border-box; padding: 0 28px; display: flex; align-items: center; gap: 16px">
+<span class="nail" style="left: 8px; top: 34px"></span><span class="nail" style="right: 8px; top: 34px"></span>
+<span style="font-size: 16px; font-style: italic; color: #A89A80; flex-grow: 1">{{hint}}</span>
+<sc-if value="{{isLoad}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 12px">
+<button class="btn" onClick="{{askDelete}}" disabled="{{noData}}">СТЕРЕТЬ</button>
+<sc-if value="{{canLoad}}" hint-placeholder-val="{{ true }}"><a class="btn red" href="Game.dc.html">ЗАГРУЗИТЬ</a></sc-if>
+<sc-if value="{{noData}}" hint-placeholder-val="{{ false }}"><button class="btn red" disabled="{{noData}}">ЗАГРУЗИТЬ</button></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{isSave}}" hint-placeholder-val="{{ false }}">
+<button class="btn red" onClick="{{doSave}}" disabled="{{isAutoSel}}">{{saveLabel}}</button>
+</sc-if>
+</div>
+
+<sc-if value="{{confirm}}" hint-placeholder-val="{{ false }}">
+<div class="dim" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px; background: rgba(6,6,5,0.75); display: flex; align-items: center; justify-content: center">
+<section class="plank rise" style="width: 520px; box-sizing: border-box; padding: 32px 36px; display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center">
+<span class="nail" style="left: 9px; top: 9px"></span><span class="nail" style="right: 9px; top: 9px"></span><span class="nail" style="left: 9px; bottom: 9px"></span><span class="nail" style="right: 9px; bottom: 9px"></span>
+<svg class="quill" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#E08A3C" stroke-width="1.5" aria-hidden="true"><path d="M20 3C12 4 7 10 5 20M20 3c-1 6-5 10-11 12M9 15l-3 1"></path></svg>
+<h2 class="rus" style="margin: 0; font-size: 28px; color: #E8DFC8">{{confirmTitle}}</h2>
+<p style="margin: 0; font-size: 17px; line-height: 1.5; color: #CDBFA2">{{confirmText}}</p>
+<div style="display: flex; gap: 14px; margin-top: 6px">
+<button class="btn" onClick="{{cancel}}">НЕТ</button>
+<button class="btn red" onClick="{{confirmYes}}">ДА</button>
+</div>
+</section>
+</div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+<div class="toast plank" style="position: absolute; left: 50%; top: 90px; padding: 10px 22px; font-size: 15px; color: #F0E6CE">{{toast}}</div>
+</sc-if>
+<svg width="1280" height="720" style="position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0.09; mix-blend-mode: overlay" aria-hidden="true"><rect width="1280" height="720" filter="url(#gr)"></rect></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  say(msg) {
+    clearTimeout(this.tt);
+    this.setState({ toast: null });
+    setTimeout(() => this.setState({ toast: msg }), 20);
+    this.tt = setTimeout(() => this.setState({ toast: null }), 2700);
+  }
+  componentWillUnmount() { clearTimeout(this.tt); }
+  renderVals() {
+    const s = this.state || {};
+    const mode = s.mode || 'load';
+    const LOC = {
+      village: { sky: '#1A1614', moon: '#C8412F', far: '#1F2A22', fg: 'M30 202 V150 L60 128 L90 150 V202 Z M120 202 V140 L155 115 L190 140 V202 Z', winX: 150, winY: 150 },
+      swamp: { sky: '#101816', moon: '#D8DDE8', far: '#142420', fg: 'M40 202 V110 L32 90 M40 130 L60 110 M0 180 C80 170 170 170 250 180 V202 H0 Z', winX: -10, winY: -10 },
+      forest: { sky: '#15201A', moon: '#E0A04A', far: '#1F4032', fg: 'M0 202 V150 L25 100 L50 150 L80 90 L110 150 L140 110 L170 150 V202 Z', winX: -10, winY: -10 }
+    };
+    const S0 = [
+      { auto: true, title: 'Автосохранение', day: 3, place: 'Выселки', loc: 'village', play: '2 ч 14 мин', fear: 35, date: 'записано сегодня, 13:40' },
+      { title: 'Ячейка I', day: 2, place: 'Болото за мельницей', loc: 'swamp', play: '1 ч 38 мин', fear: 50, date: 'записано вчера, 22:15' },
+      { title: 'Ячейка II', day: 1, place: 'Бор', loc: 'forest', play: '0 ч 41 мин', fear: 20, date: 'записано 26 сентября' },
+      { title: 'Ячейка III', empty: true }
+    ];
+    const slots = s.slots || S0;
+    const sel = s.sel ?? 0;
+    const cur = slots[sel];
+    const has = !cur.empty;
+    const writeSlot = i => {
+      const n = slots.slice();
+      n[i] = { title: slots[i].title, day: 3, place: 'Выселки', loc: 'village', play: '2 ч 15 мин', fear: 35, date: 'записано только что' };
+      this.setState({ slots: n, confirm: null });
+      this.say('Записано в ' + slots[i].title.toLowerCase());
+    };
+    const conf = s.confirm;
+    return {
+      tabLoad: mode === 'load' ? 'tab on' : 'tab', tabSave: mode === 'save' ? 'tab on' : 'tab',
+      goLoad: () => this.setState({ mode: 'load' }), goSave: () => this.setState({ mode: 'save', sel: sel === 0 ? 1 : sel }),
+      isLoad: mode === 'load', isSave: mode === 'save',
+      slots: slots.map((x, i) => {
+        const l = LOC[x.loc] || LOC.village;
+        return { title: x.title, has: !x.empty, none: !!x.empty, auto: !!x.auto,
+          sky: l.sky, moon: l.moon, far: l.far, fg: l.fg, winX: l.winX, winY: l.winY,
+          line1: x.empty ? 'Пустая ячейка' : 'День ' + x.day + ' · ' + x.place,
+          line2: x.empty ? 'Здесь ещё ничего не записано.' : 'В пути: ' + x.play,
+          line3: x.empty ? '' : 'Страх деревни: ' + x.fear,
+          date: x.empty ? '' : x.date,
+          cls: 'slot' + (i === sel ? ' sel' : '') + (x.empty ? ' empty' : ''),
+          pick: () => this.setState({ sel: i }) };
+      }),
+      hint: mode === 'load' ? (has ? 'Выбрано: ' + cur.title + ' — день ' + cur.day + ', ' + cur.place : 'Ячейка пуста — загружать нечего') : (cur.auto ? 'В автосохранение записывать вручную нельзя' : has ? 'Запись будет перезаписана' : 'Запишем текущий день в пустую ячейку'),
+      noData: !has, canLoad: has,
+      askDelete: () => { if (has) this.setState({ confirm: 'delete' }); },
+      isAutoSel: !!cur.auto,
+      saveLabel: has ? 'ПЕРЕЗАПИСАТЬ' : 'СОХРАНИТЬ СЮДА',
+      doSave: () => { if (cur.auto) return; if (has) this.setState({ confirm: 'overwrite' }); else writeSlot(sel); },
+      confirm: !!conf,
+      confirmTitle: conf === 'delete' ? 'Стереть запись?' : 'Перезаписать?',
+      confirmText: conf === 'delete' ? 'Запись «' + cur.title + '» исчезнет, будто её и не было. Вернуть не выйдет.' : 'Старая запись в «' + cur.title + '» пропадёт, на её место ляжет текущий день.',
+      cancel: () => this.setState({ confirm: null }),
+      confirmYes: () => {
+        if (conf === 'delete') { const n = slots.slice(); n[sel] = { title: cur.title, empty: true }; this.setState({ slots: n, confirm: null }); this.say('Запись стёрта'); }
+        else writeSlot(sel);
+      },
+      hasToast: !!s.toast, toast: s.toast || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

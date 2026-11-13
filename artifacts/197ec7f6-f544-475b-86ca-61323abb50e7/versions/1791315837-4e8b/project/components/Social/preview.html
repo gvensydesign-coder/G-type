@@ -1,0 +1,19 @@
+<!-- @dsCard group="Platform" height=820 width=900 subtitle="Иконки соцсетей 2026 (Simple Icons 16.34, CC0): плитка, цветной глиф, монохром. Кнопки входа, share-строка, подключённые аккаунты." -->
+<style>
+  .so { display: flex; flex-direction: column; gap: 22px; padding: 20px; background: var(--bg-app); color: var(--text-primary); }
+  .so h4 { margin: 0 0 10px; font: 800 11px/14px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+  .so__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 14px 8px; }
+  .so__c { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 4px 10px; border-radius: var(--radius-lg); background: var(--bg-surface); border: 1px solid var(--bd-edge); font: 600 12px/16px var(--font-sans); color: var(--text-secondary); }
+  .so__r { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+  .so__cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+</style>
+<div class="so bd-root" id="root"></div>
+<script>
+  var B = window.Buddy, names = B.socials;
+  document.getElementById('root').innerHTML =
+    '<div><h4>Плитка 512 (глиф белый, у Snapchat чёрный)</h4><div class="so__grid">' + names.map(function (n) { return '<div class="so__c">' + B.social(n, { size: 52 }) + B.socialInfo[n].t + '</div>'; }).join('') + '</div></div>' +
+    '<div class="so__cols"><div><h4>Цветной глиф</h4><div class="so__r">' + names.slice(0, 12).map(function (n) { return B.social(n, { variant: 'color', size: 28 }); }).join('') + '</div></div>' +
+    '<div><h4>Монохром (currentColor)</h4><div class="so__r" style="color:var(--text-secondary)">' + names.slice(0, 12).map(function (n) { return B.social(n, { variant: 'mono', size: 28 }); }).join('') + '</div></div></div>' +
+    '<div class="so__cols"><div><h4>Кнопки входа (56px)</h4><div class="bd-stack">' + B.SocialButton({ social: 'apple' }) + B.SocialButton({ social: 'google' }) + B.SocialButton({ social: 'telegram', label: 'Continue with Telegram' }) + '</div></div>' +
+    '<div><h4>Поделиться</h4>' + B.ShareRow({ items: ['telegram', 'whatsapp', 'instagram', 'x', 'vk', 'max', 'threads', 'bluesky'] }) + '<h4 style="margin-top:20px">Аккаунты</h4><div class="bd-setgroup__c">' + B.SocialAccount({ social: 'telegram', handle: '@lukman', connected: true }) + B.SocialAccount({ social: 'x' }) + '</div></div></div>';
+</script>

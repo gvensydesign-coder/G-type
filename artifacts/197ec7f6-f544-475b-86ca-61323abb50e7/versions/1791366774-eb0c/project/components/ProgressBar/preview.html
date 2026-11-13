@@ -1,0 +1,9 @@
+<!-- @dsCard group="Data" height=300 width=420 subtitle="Непрерывная полоса и сегментированный счётчик в цветах категорий." -->
+<style>.pv{display:flex;flex-direction:column;gap:14px;padding:20px;background:var(--bg-surface);color:var(--text-primary)}.pv small{font:800 11px/14px var(--font-sans);letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}</style>
+<div class="pv" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    '<small>Полоса</small>' + B.ProgressBar({ value: 72, tone: 'violet' }) + B.ProgressBar({ value: 45, tone: 'orange' }) + B.ProgressBar({ value: 88, tone: 'green' }) +
+    '<small>Сегменты</small>' + B.ProgressBar({ segments: 8, value: 3, tone: 'sky' }) + B.ProgressBar({ segments: 8, value: 6, tone: 'orange' }) + B.ProgressBar({ segments: 6, value: 4, tone: 'pink' });
+</script>

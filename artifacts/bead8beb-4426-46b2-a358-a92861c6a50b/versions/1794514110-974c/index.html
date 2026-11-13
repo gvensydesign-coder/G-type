@@ -1,0 +1,122 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta charset="utf-8">
+<title>Огонь как механика</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root {
+  --night: #0c1612; --panel: rgba(12, 20, 17, .86); --line: #2e5a52; --paper: #d8e0c4; --muted: #8fa394;
+  --fire: #ff9a40; --fire-hi: #ffd25a; --blood: #c8382a; --moss: #7fae5a;
+  --f-title: 'SkazanieRub', 'PT Serif', Georgia, serif; --f-body: 'PT Sans', system-ui, sans-serif;
+  color-scheme: dark;
+}
+@font-face { font-family: 'SkazanieRub'; src: url('fonts/SkazanieRub.woff2') format('woff2'); font-display: swap; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--night); color: var(--paper); font: 14px/1.4 var(--f-body); overflow: hidden; user-select: none; }
+#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#ui { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); width: 250px; max-height: calc(100% - 24px); overflow: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; display: grid; gap: 12px; backdrop-filter: blur(3px); }
+#ui h1 { font: 400 25px/1 var(--f-title); margin: 0; color: var(--fire-hi); letter-spacing: .02em; }
+#ui .sub { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.sec { display: grid; gap: 6px; }
+.sec h2 { margin: 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+.row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+button { font: 600 13px var(--f-body); color: var(--paper); background: #15241f; border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+button:hover { border-color: var(--muted); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--fire-hi); outline-offset: 1px; }
+button.on { background: #3a1a0c; border-color: var(--fire); color: var(--fire-hi); }
+label.sl { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 12px; }
+label.sl input { grid-column: 1 / -1; width: 100%; accent-color: var(--fire); }
+label.sl output { color: var(--muted); font-variant-numeric: tabular-nums; }
+label.ck { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+.keys { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
+.keys b { color: var(--paper); font-weight: 600; display: inline-block; min-width: 64px; }
+#stats { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; border-top: 1px solid var(--line); padding-top: 8px; display: grid; gap: 2px; }
+#stats b { color: var(--paper); font-weight: 600; }
+#hud { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: 284px; right: 12px; margin-inline: auto; max-width: 440px; display: grid; gap: 6px; pointer-events: none; }
+.bar { display: grid; grid-template-columns: 82px 1fr; align-items: center; gap: 8px; font-size: 12px; }
+.bar .nm { text-align: right; color: var(--paper); font-weight: 600; }
+.track { height: 9px; background: rgba(8, 12, 10, .8); border: 1px solid #0c0e16; border-radius: 2px; overflow: hidden; }
+.fill { height: 100%; width: 100%; transition: width .08s steps(2); }
+#hpH { background: var(--moss); } #hpL { background: var(--blood); } #fearL { background: var(--fire); }
+.track.thin { height: 5px; }
+#lineL { font-size: 12px; color: var(--muted); text-align: center; }
+#lineL b { color: var(--fire-hi); font-weight: 600; }
+#toast { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); font: 400 24px/1.1 var(--f-title); color: var(--fire-hi); text-shadow: 0 2px 0 #1a0c08, 0 0 12px #1a0c08; opacity: 0; transition: opacity .2s steps(3); pointer-events: none; text-align: center; max-width: 90%; }
+#toast.on { opacity: 1; }
+#over { position: fixed; inset: 0; display: none; place-items: center; background: rgba(6, 10, 8, .55); }
+#over.on { display: grid; }
+#over div { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 20px 26px; text-align: center; display: grid; gap: 12px; }
+#overT { font: 400 32px/1 var(--f-title); color: var(--fire-hi); }
+#loading { position: fixed; inset: 0; display: grid; place-items: center; font: 400 22px var(--f-title); color: var(--muted); background: var(--night); }
+#touch { display: none; position: fixed; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; padding: 0 14px; justify-content: space-between; pointer-events: none; }
+#touch .pad { display: grid; grid-template-columns: repeat(3, 46px); grid-template-rows: repeat(2, 46px); gap: 4px; pointer-events: auto; }
+#touch .acts { display: grid; grid-template-columns: repeat(2, 64px); gap: 6px; pointer-events: auto; }
+#touch button { padding: 0; height: 46px; background: var(--panel); font-size: 13px; }
+#toggle { display: none; position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); z-index: 2; background: var(--panel); }
+@media (pointer: coarse) { #touch { display: flex; } }
+@media (max-width: 760px) {
+  #ui { width: calc(100% - 24px); top: calc(56px + env(safe-area-inset-top, 0px)); max-height: 50%; }
+  #ui.closed { display: none; }
+  #toggle { display: block; }
+  #hud { left: 110px; right: 12px; }
+}
+</style>
+
+<canvas id="c"></canvas>
+<div id="loading">Загружаю опушку…</div>
+<button id="toggle" type="button">Панель</button>
+<div id="ui" class="closed-mobile">
+  <header>
+    <h1>Огонь как механика</h1>
+    <p class="sub">превью на тестовой сцене · Сказанье о Тени</p>
+  </header>
+  <div class="sec">
+    <h2>Управление</h2>
+    <ul class="keys">
+      <li><b>WASD</b> идти, Shift — бегом</li>
+      <li><b>ЛКМ / J</b> удар факелом</li>
+      <li><b>E</b> поднести к земле (трава, сено)</li>
+      <li><b>F</b> зажечь / погасить факел</li>
+      <li><b>Пробел</b> рывок в сторону</li>
+      <li><b>← → ↑ ↓</b> камера</li>
+      <li><b>R</b> заново</li>
+    </ul>
+  </div>
+  <div class="sec">
+    <h2>Ветер</h2>
+    <label class="sl">Направление <output id="oDir"></output><input id="windDir" type="range" min="0" max="359" value="270"></label>
+    <label class="sl">Сила <output id="oStr"></output><input id="windStr" type="range" min="0" max="100" value="40"></label>
+    <label class="ck"><input id="gusts" type="checkbox" checked> порывы</label>
+    <label class="ck"><input id="drift" type="checkbox"> ветер гуляет сам</label>
+  </div>
+  <div class="sec">
+    <h2>Огонь</h2>
+    <label class="sl">Скорость распространения <output id="oSpread"></output><input id="spread" type="range" min="40" max="220" value="100"></label>
+    <label class="ck"><input id="haze" type="checkbox" checked> марево над огнём</label>
+  </div>
+  <div class="sec">
+    <h2>Сцена</h2>
+    <div class="row">
+      <button id="bAI" class="on" type="button">Леший: нападает</button>
+      <button id="bReset" type="button">Заново</button>
+    </div>
+  </div>
+  <div id="stats"></div>
+</div>
+<div id="hud">
+  <div class="bar"><span class="nm">Богатырь</span><div class="track"><div id="hpH" class="fill"></div></div></div>
+  <div class="bar"><span class="nm">Леший</span><div class="track"><div id="hpL" class="fill"></div></div></div>
+  <div class="bar"><span class="nm">страх</span><div class="track thin"><div id="fearL" class="fill"></div></div></div>
+  <div id="lineL">Леший: <b id="lState"></b> · <span id="torchS"></span></div>
+</div>
+<div id="toast"></div>
+<div id="over"><div><div id="overT"></div><button id="overB" type="button">Заново</button></div></div>
+<div id="touch">
+  <div class="pad"><span></span><button id="tU" type="button" aria-label="Вперёд">▲</button><span></span><button id="tL" type="button" aria-label="Влево">◀</button><button id="tD" type="button" aria-label="Назад">▼</button><button id="tR" type="button" aria-label="Вправо">▶</button></div>
+  <div class="acts"><button id="bSwing" type="button">Удар</button><button id="bPoke" type="button">К земле</button><button id="bTorch" type="button">Факел</button><button id="bDodge" type="button">Рывок</button><button id="cL" type="button" aria-label="Камера влево">⟲</button><button id="cR" type="button" aria-label="Камера вправо">⟳</button></div>
+</div>
+
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }</script>
+<script type="module" src="src/game.js"></script>
+
+</body></html>

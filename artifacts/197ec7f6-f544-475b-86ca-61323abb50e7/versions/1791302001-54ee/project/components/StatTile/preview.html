@@ -1,0 +1,8 @@
+<!-- @dsCard group="Data" height=230 width=420 subtitle="Тройка плиток метрик: иллюстрация, подпись, значение, единица." -->
+<style>.pv{padding:20px;background:var(--bd-grad-hero)}</style>
+<div class="pv"><div class="bd-grid-3" id="root"></div></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    B.StatTile({ object: 'water-glass', label: 'Water', value: '3', unit: 'Glass' }) + B.StatTile({ mascot: 'sunny-sleepy', label: 'Sleep', value: '8.5', unit: 'Hours' }) + B.StatTile({ object: 'bike', label: 'Exercise', value: 'Bike', unit: '18.6 Km' });
+</script>

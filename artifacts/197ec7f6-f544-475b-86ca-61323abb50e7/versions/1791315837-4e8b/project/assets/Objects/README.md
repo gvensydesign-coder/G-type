@@ -1,0 +1,5 @@
+Пятнадцать объектов-иллюстраций 64 × 64 для плиток привычек: `apple`, `bike`, `book`, `bottle`, `bulb`, `calendar`, `cloud`, `dumbbell`, `flame`, `heart`, `leaf`, `moon`, `sparkle`, `target`, `water-glass`.
+
+Многоцветные, без контура, цвета не зависят от темы. Размер в плитке 40px: объект 28px, в плитке метрики 48px. Подбор цвета плитки по категории: раздел «Цвет и темы».
+
+**Расширение (v1.6).** В библиотеку добавлено 30 иллюстраций в том же стиле: `bell`, `bolt`, `bowl`, `camera`, `car`, `car-orange`, `chat`, `check`, `clipboard`, `clock`, `firstaid`, `gift`, `globe`, `house`, `lock`, `megaphone`, `palette`, `people`, `phone`, `pin`, `route`, `search`, `shield`, `siren`, `star`, `stop`, `trophy`, `user`, `wallet`, `weather`. Они заменяют линейные иконки в плитках списков, уведомлениях, настройках, тегах и самопомощи. Линейные иконки остаются только для действий и навигации (назад, отправить, вкладки).

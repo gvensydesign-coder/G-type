@@ -1,0 +1,10 @@
+<!-- @dsCard group="Inputs" height=150 subtitle="Переключатель с пружинным движением ползунка." -->
+<style>.pv{display:flex;flex-direction:column;gap:14px;padding:20px;background:var(--bg-app);color:var(--text-primary);font:700 16px/22px var(--font-sans)}.r{display:flex;align-items:center;justify-content:space-between;max-width:320px}</style>
+<div class="pv" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    '<div class="r"><span>Daily reminders</span>' + B.Switch({ checked: true, label: 'Daily reminders' }) + '</div>' +
+    '<div class="r"><span>Sound</span>' + B.Switch({ checked: false, label: 'Sound' }) + '</div>';
+  B.wire(document);
+</script>

@@ -1,0 +1,1485 @@
+// Стихии и ауры в рисованном стиле (дополнение к paintfx.js).
+//   PaintedAura  — активация ауры персонажа: оболочки-языки по силуэту (кольцами: ядро, середина, край, тушь),
+//                  вспышка-звезда за спиной, ударное кольцо по земле, взлетающие штрихи, искры или листья, свет.
+//   PaintedFire  — костёр: языки пламени тонами с тушевой кромкой, отрывающиеся капли, дым клубами, угли, мерцающий свет.
+//   PaintedRiver — река: полосы глубины, рваная пена у берега, мазки течения, рябь бликами, отражение источника.
+//   PaintedFall  — водопад: струи полосами, пена клубами у подножия.
+// Всё живёт шагами (как рисованная анимация), а не плавно. Кромки и тушь пишут альфу 0,5,
+// поэтому Кувахара их не размывает (так же защищены линии эмоций).
+import * as THREE from 'three';
+import { GLSL_NOISE } from './paintfx.js';
+
+const col = (v) => new THREE.Color(v);
+
+// ---------------------------------------------------------------- пресеты
+export const AURA_PRESETS = {
+  grace: { name: 'Благодать (Богатырь)', core: '#fffbe6', mid: '#ffd35a', edge: '#e8862a', ink: '#4a1c06', light: '#ffc060',
+    push: 0.085, lift: 0.22, particles: 'spark', burst: '#fff2b0' },
+  forest: { name: 'Дух леса (Леший)', core: '#eafff0', mid: '#6dff96', edge: '#1f9a52', ink: '#06210f', light: '#6dff96',
+    push: 0.1, lift: 0.3, particles: 'leaf', burst: '#c8ffd8' },
+  rage: { name: 'Ярость', core: '#fff0e0', mid: '#ff6a3a', edge: '#b0141e', ink: '#2a0406', light: '#ff5030',
+    push: 0.095, lift: 0.26, particles: 'spark', burst: '#ffd0a0' },
+  frost: { name: 'Иней', core: '#ffffff', mid: '#9ee8ff', edge: '#3a78d0', ink: '#0a1a3a', light: '#8ad8ff',
+    push: 0.08, lift: 0.18, particles: 'spark', burst: '#e0f8ff' },
+};
+export const FIRE_PRESETS = {
+  hearth: { name: 'Костёр', out: '#d8401c', mid: '#ff8a2a', core: '#ffd25a', hot: '#fff6d0', ink: '#3a0c06', smoke: '#4a4048', smokeHi: '#7a6a70', light: '#ff9a40' },
+  witch: { name: 'Колдовской (Леший)', out: '#127a46', mid: '#3fd06a', core: '#b8ff7a', hot: '#f0ffe0', ink: '#04200f', smoke: '#2a3a34', smokeHi: '#4a6a58', light: '#70ff90' },
+  spirit: { name: 'Синий дух', out: '#2a3ab8', mid: '#3a8aff', core: '#9ae0ff', hot: '#f0fbff', ink: '#0a0a30', smoke: '#30304a', smokeHi: '#56567a', light: '#70b0ff' },
+};
+export const WATER_PRESETS = {
+  stream: { name: 'Ручей (день)', deep: '#1c4a5a', mid: '#2f7c86', shallow: '#62b0a8', foam: '#f2fbf4', sky: '#bfe6ec', ink: '#0c2228', glint: '#fffbe8' },
+  night: { name: 'Ночная вода', deep: '#0e1a34', mid: '#1c3458', shallow: '#3a6080', foam: '#d8e8ff', sky: '#8aa8e0', ink: '#050a18', glint: '#ffe8b0' },
+  swamp: { name: 'Болотная', deep: '#1a2a12', mid: '#34502a', shallow: '#5e7a3a', foam: '#d8e8b0', sky: '#a8c090', ink: '#0a1206', glint: '#f0ffc0' },
+};
+
+// ---------------------------------------------------------------- общее
+// Шаговые часы: каждый эффект живёт своей частотой (огонь 12 к/с, аура 10, вода 6).
+class StepClock {
+  constructor(fps) { this.fps = fps; this.t = 0; this.u = { value: 0 }; }
+  tick(dt) { this.t += dt; const s = Math.floor(this.t * this.fps); const n = s !== this.u.value; this.u.value = s; return n; }
+}
+// Картинка на холсте → текстура (искра-ромб, лист, мазок).
+function canvasTex(draw, w = 64, h = 64) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const TEX = {};
+function sparkTex() {
+  return TEX.spark ??= canvasTex((g, w, h) => {
+    g.translate(w / 2, h / 2);
+    const rh = (k, c) => { g.beginPath(); g.moveTo(0, -h * .46 * k); g.lineTo(w * .2 * k, 0); g.lineTo(0, h * .46 * k); g.lineTo(-w * .2 * k, 0); g.closePath(); g.fillStyle = c; g.fill(); };
+    rh(1, '#3a1a08'); rh(.8, '#ffffff'); rh(.42, '#fff8e0');
+  });
+}
+function leafTex() {
+  return TEX.leaf ??= canvasTex((g, w, h) => {
+    g.translate(w / 2, h / 2); g.rotate(-0.5);
+    const leaf = (k) => { g.beginPath(); g.moveTo(0, -h * .44 * k); g.quadraticCurveTo(w * .36 * k, -h * .1 * k, 0, h * .42 * k); g.quadraticCurveTo(-w * .36 * k, -h * .1 * k, 0, -h * .44 * k); g.closePath(); };
+    leaf(1); g.fillStyle = '#06210f'; g.fill();
+    leaf(.82); g.fillStyle = '#ffffff'; g.fill();
+    g.strokeStyle = '#7a9a80'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(0, -h * .32); g.lineTo(0, h * .36); g.stroke();
+    for (let i = -2; i <= 2; i++) { g.beginPath(); g.moveTo(0, i * h * .1); g.lineTo(w * .14, i * h * .1 - h * .08); g.moveTo(0, i * h * .1); g.lineTo(-w * .14, i * h * .1 - h * .08); g.lineWidth = 1.5; g.stroke(); }
+  });
+}
+// Спрайт с защитой от Кувахары: чёткий край (alphaTest), альфа 0,5 в буфере.
+function protSprite(map, color) {
+  const m = new THREE.SpriteMaterial({ map, color, alphaTest: 0.4, depthWrite: false, transparent: false, fog: false });
+  m.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <fog_fragment>', '#include <fog_fragment>\ngl_FragColor.a = .5;'); };
+  const s = new THREE.Sprite(m); s.userData.pfMark = true; s.renderOrder = 3; return s;
+}
+
+// Плоскость, повёрнутая к камере вокруг вертикали (языки огня и штрихи остаются стоячими).
+const BB_VERT = /* glsl */`
+uniform vec2 uSize; uniform vec3 uOff;
+varying vec2 vP;
+void main(){
+  vP = position.xy;
+  vec3 C = (modelMatrix * vec4(uOff, 1.)).xyz;
+  vec3 R = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]); R.y = 0.; R = normalize(R + vec3(1e-5, 0., 0.));
+  vec3 W = C + R * position.x * uSize.x + vec3(0., 1., 0.) * position.y * uSize.y;
+  gl_Position = projectionMatrix * viewMatrix * vec4(W, 1.);
+}`;
+// Полностью повёрнутая к камере (вспышка-звезда).
+const BB_FULL_VERT = /* glsl */`
+uniform vec2 uSize; uniform vec3 uOff; uniform float uPush;
+varying vec2 vP;
+void main(){
+  vP = position.xy;
+  vec4 C = viewMatrix * modelMatrix * vec4(uOff, 1.);
+  C.xyz += normalize(C.xyz) * uPush;            // отодвинуть за персонажа
+  C.xy += position.xy * uSize;
+  gl_Position = projectionMatrix * C;
+}`;
+function bbGeo(y0 = 0) { const g = new THREE.PlaneGeometry(1, 1); g.translate(0, 0.5 - y0, 0); return g; }
+
+// ---------------------------------------------------------------- языки пламени (общий шейдер)
+// Поле f: >0 внутри языка. Тоны режутся жёстко: тушь по краю, наружный, средний, ядро, белое горячее.
+const FLAME_FRAG = /* glsl */`
+uniform float uStep, uSeed, uAmt; uniform vec4 uK;        // x: дикость, y: тушь, z: отрыв капель, w: высота ядра
+uniform vec3 cOut, cMid, cCore, cHot, cInk;
+varying vec2 vP;
+${GLSL_NOISE}
+void main(){
+  vec2 p = vP; p.x *= 1.6; float y = p.y; float st = uStep;              // пламя занимает середину плоскости
+  float sway = (pfNoise(vec2(y * 2.1 - st * .41, uSeed)) - .5) * .26 * y;
+  float x = p.x - sway;
+  float w = .36 * pow(max(1. - y, 0.), .7) * smoothstep(-.02, .16, y) * uAmt;
+  float f = 1. - abs(x) / max(w, 1e-3);
+  float n = pfNoise(vec2(x * 5.2, y * 3.1 - st * .93) + uSeed * 7.1);
+  float n2 = pfNoise(vec2(x * 11., y * 6.3 - st * 1.71) + uSeed * 3.7);
+  f -= (n * .6 + n2 * .28) * (.12 + y * 1.15) * uK.x;
+  f += .3 * (1. - y);
+  // оторвавшиеся капли над языком
+  vec2 dq = vec2(x * 3.2, y * 2.4 - st * .55 + uSeed);
+  vec2 di = floor(dq); vec2 df = fract(dq) - .5;
+  vec2 dc = (pfH22(di + uSeed) - .5) * .5;
+  // ворс кисти вдоль языка
+  f += (pfNoise(vec2(x * 22., y * 2.6 - st * .6) + uSeed) - .5) * .1;
+  float dm = step(.72, pfH21(di * 1.3 + uSeed)) * smoothstep(.45, .8, y) * (1. - smoothstep(.12, .26, abs(x))) * uK.z;
+  if (dm > .01) f = max(f, (.3 - length((df - dc) * vec2(1., .75))) * 3. * dm);
+  if (f <= 0.) discard;
+  float coreF = f - y * uK.w;
+  vec3 c = cOut;
+  if (f < .07 * uK.y) c = cInk;
+  else if (coreF > .78) c = cHot;
+  else if (coreF > .52) c = cCore;
+  else if (f > .28) c = cMid;
+  gl_FragColor = vec4(c, .5);
+}`;
+// Клубы (дым, пена): кружки, всплывающие шагами, два тона и тушь.
+const PUFF_FRAG = /* glsl */`
+uniform float uStep, uSeed, uAmt; uniform vec4 uK;        // x: число клубов, y: скорость подъёма, z: тушь, w: расход в стороны
+uniform vec3 cA, cB, cInk;
+varying vec2 vP;
+${GLSL_NOISE}
+void main(){
+  vec2 p = vP; float best = -1.; float shade = 0.;
+  for (int i = 0; i < 7; i++) {
+    float fi = float(i); if (fi >= uK.x) break;
+    float ph = fract(uStep * uK.y * .01 + fi / uK.x + pfH11(fi + uSeed) * .3);
+    vec2 c = vec2((pfH11(fi * 3.1 + uSeed) - .5) * .3 + (pfNoise(vec2(ph * 3., fi)) - .5) * uK.w * ph, ph * .85 + .06);
+    float r = (.08 + ph * .22) * (1. - smoothstep(.75, 1., ph)) * uAmt;
+    vec2 d = p - c;
+    float edge = (pfNoise(vec2(atan(d.y, d.x) * 2.5 + fi, uStep * .3)) - .5) * .05;
+    float f = (r + edge - length(d * vec2(1., 1.15))) / max(r, 1e-3);
+    if (f > best) { best = f; shade = dot(normalize(d + vec2(1e-4)), normalize(vec2(-.6, .8))); }
+  }
+  if (best <= 0.) discard;
+  vec3 c = shade > .15 ? cB : cA;
+  if (best < .12 * uK.z) c = cInk;
+  gl_FragColor = vec4(c, .5);
+}`;
+
+function flameMat(p, o = {}) {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uSize: { value: new THREE.Vector2(o.w ?? 0.9, o.h ?? 1.4) }, uOff: { value: new THREE.Vector3(...(o.off ?? [0, 0, 0])) },
+      uStep: o.step, uSeed: { value: o.seed ?? 0 }, uAmt: { value: 1 }, uK: { value: new THREE.Vector4(o.wild ?? 1, o.ink ?? 1, o.drops ?? 1, o.coreH ?? .55) },
+      cOut: { value: col(p.out) }, cMid: { value: col(p.mid) }, cCore: { value: col(p.core) }, cHot: { value: col(p.hot) }, cInk: { value: col(p.ink) },
+    },
+    vertexShader: BB_VERT, fragmentShader: FLAME_FRAG, side: THREE.DoubleSide,
+  });
+}
+function puffMat(cA, cB, cInk, o = {}) {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uSize: { value: new THREE.Vector2(o.w ?? 1, o.h ?? 2) }, uOff: { value: new THREE.Vector3(...(o.off ?? [0, 0, 0])) },
+      uStep: o.step, uSeed: { value: o.seed ?? 0 }, uAmt: { value: 1 }, uK: { value: new THREE.Vector4(o.n ?? 6, o.speed ?? 2.5, o.ink ?? 1, o.spread ?? .4) },
+      cA: { value: col(cA) }, cB: { value: col(cB) }, cInk: { value: col(cInk) },
+    },
+    vertexShader: BB_VERT, fragmentShader: PUFF_FRAG, side: THREE.DoubleSide,
+  });
+}
+function fxMesh(mat, geo = bbGeo()) { const m = new THREE.Mesh(geo, mat); m.userData.pfSkip = true; m.frustumCulled = false; m.castShadow = false; m.receiveShadow = false; return m; }
+
+// ---------------------------------------------------------------- рисованные линии: почеркушки или процедурные
+// Классы почеркушек для стихий. Пока Michael их не нарисовал, работают процедурные образцы
+// в том же формате ({w, p: [[x, y, нажим]]}, 0..1, y вниз), поэтому замена — без правок кода.
+export const ELEMENT_CLASSES = ['fire', 'water', 'splash', 'smoke', 'aura', 'runes', 'env'];
+function rng(seed) { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+function poly(f, n = 28, w = 0.014, pr = (t) => 0.35 + 0.65 * Math.sin(Math.PI * t)) { const p = []; for (let i = 0; i <= n; i++) { const t = i / n; const [x, y] = f(t); p.push([x, y, pr(t)]); } return { w, p }; }
+const seg = (a, b, w = 0.02) => poly((t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], 6, w, () => 0.8);
+const PROC = {
+  // языки: S-образные линии снизу вверх с крючком на кончике
+  fire: (r) => Array.from({ length: 6 }, (_, i) => Array.from({ length: 2 + (i % 2) }, (_, j) => {
+    const ph = r() * 6, a = 0.08 + r() * 0.1, x0 = 0.35 + j * 0.15 + r() * 0.06;
+    return poly((t) => [x0 + Math.sin(t * 5 + ph) * a * (0.3 + t) + (t > 0.85 ? (t - 0.85) * 0.8 : 0), 0.95 - t * (0.7 + r() * 0.0 + j * 0.06)], 30, 0.016);
+  })),
+  // рябь: дуги-«чайки», двойные волны
+  water: (r) => Array.from({ length: 6 }, (_, i) => {
+    const out = [poly((t) => [0.15 + t * 0.7, 0.5 + Math.sin(t * Math.PI * (i % 3 ? 1 : 2)) * 0.12], 24, 0.02)];
+    if (i % 2) out.push(poly((t) => [0.3 + t * 0.4, 0.68 + Math.sin(t * Math.PI) * 0.07], 16, 0.014));
+    return out;
+  }),
+  // капли и короны брызг
+  splash: (r) => Array.from({ length: 6 }, (_, i) => i % 2
+    ? [poly((t) => { const a = t * Math.PI * 2; const k = Math.pow(Math.sin(a / 2), 1.5); return [0.5 + Math.sin(a) * 0.16 * k, 0.62 - Math.cos(a) * 0.22 * (0.5 + 0.5 * k) - 0.05]; }, 30, 0.018, () => 0.8)]
+    : Array.from({ length: 4 }, (_, j) => { const a = -Math.PI / 2 + (j - 1.5) * 0.45; return seg([0.5 + Math.cos(a) * 0.1, 0.8 + Math.sin(a) * 0.1], [0.5 + Math.cos(a) * (0.32 + r() * 0.1), 0.8 + Math.sin(a) * (0.42 + r() * 0.1)], 0.018); })),
+  // завитки дыма и пара
+  smoke: (r) => Array.from({ length: 6 }, (_, i) => { const dir = i % 2 ? 1 : -1, ph = r() * 6; return [poly((t) => { const a = t * Math.PI * 3.2 + ph; const rr = 0.04 + 0.2 * (1 - t); return [0.5 + Math.cos(a) * rr * dir, 0.45 + Math.sin(a) * rr - t * 0.15]; }, 40, 0.016)]; }),
+  // линии ауры: высокие языки, 2–3 рядом
+  aura: (r) => Array.from({ length: 6 }, (_, i) => Array.from({ length: 2 + (i % 2) }, (_, j) => {
+    const ph = r() * 6, x0 = 0.38 + j * 0.12;
+    return poly((t) => [x0 + Math.sin(t * 4 + ph) * 0.06 * t, 0.96 - t * (0.85 - j * 0.12)], 30, 0.018, (t) => 0.3 + 0.7 * Math.sin(Math.PI * Math.min(1, t * 1.2)));
+  })),
+  // знаки для круга под ногами (руны из прямых, солнечный круг, завиток)
+  runes: () => {
+    const c = (cx, cy, rr, w = 0.02) => poly((t) => [cx + Math.cos(t * 6.283) * rr, cy + Math.sin(t * 6.283) * rr], 32, w, () => 0.8);
+    return [
+      [seg([0.5, 0.1], [0.5, 0.9]), seg([0.5, 0.3], [0.78, 0.12]), seg([0.5, 0.5], [0.78, 0.32])],
+      [seg([0.5, 0.15], [0.5, 0.9]), seg([0.5, 0.15], [0.25, 0.4]), seg([0.5, 0.15], [0.75, 0.4])],
+      [seg([0.25, 0.15], [0.75, 0.85]), seg([0.75, 0.15], [0.25, 0.85])],
+      [seg([0.5, 0.1], [0.8, 0.5]), seg([0.8, 0.5], [0.5, 0.9]), seg([0.5, 0.9], [0.2, 0.5]), seg([0.2, 0.5], [0.5, 0.1])],
+      [c(0.5, 0.5, 0.3), seg([0.5, 0.2], [0.5, 0.8]), seg([0.2, 0.5], [0.8, 0.5])],
+      [seg([0.35, 0.1], [0.35, 0.9]), seg([0.35, 0.1], [0.7, 0.3]), seg([0.7, 0.3], [0.35, 0.5]), seg([0.35, 0.5], [0.7, 0.9])],
+      [seg([0.5, 0.15], [0.85, 0.8]), seg([0.85, 0.8], [0.15, 0.8]), seg([0.15, 0.8], [0.5, 0.15]), c(0.5, 0.6, 0.05)],
+      [poly((t) => { const a = t * Math.PI * 3; const rr = 0.04 + 0.3 * t; return [0.5 + Math.cos(a) * rr, 0.5 + Math.sin(a) * rr]; }, 40, 0.02, () => 0.8)],
+    ];
+  },
+  // наброски окружения: длинные линии с перелётом, иногда двойные, с петлёй на конце
+  env: (r) => Array.from({ length: 6 }, (_, i) => {
+    const bow = (r() - 0.5) * 0.25, y0 = 0.45 + r() * 0.1;
+    const out = [poly((t) => [0.02 + t * 0.96, y0 + Math.sin(t * Math.PI) * bow], 30, 0.01, (t) => 0.2 + 0.8 * Math.sin(Math.PI * t))];
+    if (i % 2) out.push(poly((t) => [0.12 + t * 0.8, y0 + 0.05 + Math.sin(t * Math.PI) * bow * 0.9], 26, 0.008));
+    if (i % 3 === 0) out.push(poly((t) => { const a = t * 5.5; return [0.88 + Math.cos(a) * 0.05, y0 + Math.sin(a) * 0.05]; }, 20, 0.008));
+    return out;
+  }),
+};
+// Атласы: lib — почеркушки из loadScribbles(); пустой класс берётся процедурным.
+export function elementHand(lib = {}, sampleAtlas) {
+  const out = {};
+  ELEMENT_CLASSES.forEach((c, i) => {
+    const hand = !!lib[c]?.length; const samples = hand ? lib[c] : PROC[c](rng(11 + i * 7));
+    const o = { fire: [0.8, 1.6], aura: [1.2, 2], env: [1.1, 1.8], smoke: [1.3, 2] }[c] ?? [1.6, 2.2];
+    out[c] = { samples, hand, A: sampleAtlas(samples, { wK: o[0], minW: o[1] }) };
+  });
+  return out;
+}
+function handOf(style, c) { return style?.handEl?.[c]?.A ?? null; }
+
+// Наклейка из атласа: клетка = образец, меняется шагами. flat — лежит на земле/воде, иначе к камере.
+const ATLAS_VERT = /* glsl */`
+uniform vec2 uSize; uniform vec3 uOff; uniform float uRot, uPush;
+varying vec2 vUv;
+void main(){
+  vUv = uv;
+  vec2 q = position.xy; float c = cos(uRot), s = sin(uRot); q = vec2(c * q.x - s * q.y, s * q.x + c * q.y);
+#ifdef FLAT
+  gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(uOff + vec3(q.x * uSize.x, 0., -q.y * uSize.y), 1.);
+#else
+  vec4 C = viewMatrix * modelMatrix * vec4(uOff, 1.);
+  C.xyz += normalize(C.xyz) * uPush;
+  C.xy += q * uSize;
+  gl_Position = projectionMatrix * C;
+#endif
+}`;
+const ATLAS_FRAG = /* glsl */`
+uniform sampler2D tA; uniform vec3 uA; uniform float uCell, uOn; uniform vec3 cA;
+varying vec2 vUv;
+void main(){
+  if (uOn < .5) discard;
+  float i = mod(uCell, uA.z); float cl = mod(i, uA.x); float rw = floor(i / uA.x);
+  vec2 uv = vec2((cl + vUv.x) / uA.x, 1. - (rw + 1. - vUv.y) / uA.y);
+  // полупрозрачные штрихи (маркер, сухая кисть) — зерном, без размытия
+  float al = texture2D(tA, uv).a;
+  if (al < .9 && al < .2 + .6 * fract(sin(dot(floor(gl_FragCoord.xy * .5), vec2(12.9898, 78.233))) * 43758.5453)) discard;
+  gl_FragColor = vec4(cA, .5);
+}`;
+function decal(A, color, { flat = false, w = 1, h = 1, push = 0 } = {}) {
+  const U = { tA: { value: A.tex }, uA: { value: new THREE.Vector3(A.cols, A.rows, A.n) }, uCell: { value: 0 }, uOn: { value: 1 }, cA: { value: col(color) },
+    uSize: { value: new THREE.Vector2(w, h) }, uOff: { value: new THREE.Vector3() }, uRot: { value: 0 }, uPush: { value: push } };
+  const m = fxMesh(new THREE.ShaderMaterial({ uniforms: U, vertexShader: ATLAS_VERT, fragmentShader: ATLAS_FRAG, side: THREE.DoubleSide, defines: flat ? { FLAT: '' } : {} }), new THREE.PlaneGeometry(1, 1));
+  m.renderOrder = 6; m.userData.U = U; return m;
+}
+const sd = (m, o) => { const U = m.userData.U; if (o.p) U.uOff.value.set(...o.p); if (o.cell != null) U.uCell.value = o.cell; if (o.rot != null) U.uRot.value = o.rot; if (o.w != null) U.uSize.value.set(o.w, o.h ?? o.w); if (o.on != null) U.uOn.value = o.on ? 1 : 0; if (o.c) U.cA.value.set(o.c); };
+// звёздочка-блёстка (4 луча) и искра-штрих
+function starTex() {
+  return TEX.star ??= canvasTex((g, w, h) => {
+    g.translate(w / 2, h / 2);
+    const st = (k, c) => { g.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, r = (i % 2 ? .1 : .48) * w * k; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); } g.closePath(); g.fillStyle = c; g.fill(); };
+    st(1, '#2a1406'); st(.78, '#ffffff');
+  });
+}
+function streakTex() {
+  return TEX.streak ??= canvasTex((g, w, h) => {
+    g.fillStyle = '#2a1406'; g.beginPath(); g.moveTo(w / 2, 2); g.lineTo(w / 2 + 5, h * .75); g.lineTo(w / 2, h - 2); g.lineTo(w / 2 - 5, h * .75); g.closePath(); g.fill();
+    g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(w / 2, 8); g.lineTo(w / 2 + 3, h * .75); g.lineTo(w / 2, h - 6); g.lineTo(w / 2 - 3, h * .75); g.closePath(); g.fill();
+  }, 32, 128);
+}
+
+// Аддитивное свечение без порчи альфы (Кувахара и защита линий остаются как были)
+const ADD = { transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor };
+// Ореол источника: две ступени света и лучи-чёрточки (как лампа в видео)
+const HALO_FRAG = /* glsl */`
+uniform float uStep, uAmt; uniform vec3 cA, cB; varying vec2 vP;
+${GLSL_NOISE}
+void main(){
+  vec2 p = vP * 2.; float r = length(p); float a = atan(p.y, p.x);
+  float s2 = floor(uStep * .5);
+  // ореол мазками-дугами (как кромка проёма): клетки по кругу, в каждой короткий мазок вдоль окружности
+  float cr = r * 7.; float ri = floor(cr);
+  float ca = a / 6.2832 * (14. + ri * 4.) + pfH11(ri * 3.7 + s2) * .7; float ai = floor(ca);
+  vec2 f = vec2(fract(ca), fract(cr));
+  float dens = smoothstep(.98, .3, r);
+  float on = step(pfH11(ai * 1.31 + ri * 7.7 + s2 * .37), dens);
+  float lens = .3 * (1. - pow(2. * f.x - 1., 2.));
+  vec3 c = vec3(0.);
+  if (on > .5 && abs(f.y - .5) < lens) c = (r < .5 || pfH11(ai + ri * 5.1) > .75) ? cB : cA;
+  // лучи-чёрточки за мазками
+  float k = 44.; float sa = a * k / 6.2832; float ci = floor(sa); float fa = fract(sa);
+  float r0 = .55 + pfH11(ci * 3.1 + s2) * .3, len = .1 + pfH11(ci * 7.7 + s2) * .22;
+  float ray = step(abs(fa - .5), .09) * step(r0, r) * step(r, r0 + len) * step(.5, pfH11(ci * 1.7 + floor(uStep / 3.)));
+  c += cB * ray * 1.3;
+  if (dot(c, c) < 1e-6) discard;
+  gl_FragColor = vec4(c * uAmt, 0.);
+}`;
+// Пятно света на земле: ступени и радиальные мазки
+const POOL_FRAG = /* glsl */`
+uniform float uStep, uAmt; uniform vec3 cA, cB; varying vec2 vUv;
+${GLSL_NOISE}
+void main(){
+  vec2 p = (vUv - .5) * 2.; float r = length(p); float a = atan(p.y, p.x);
+  float e = (pfNoise(vec2(a * 4., uStep * .4)) - .5) * .16 + (pfNoise(vec2(a * 17., 2.)) - .5) * .06;
+  float br = pfNoise(vec2(a * 9., r * 1.5)) ;
+  vec3 c = r + e < .32 ? cB : r + e < .7 ? cA : vec3(0.);
+  if (r + e > .7 && r + e < .95 && br > .62) c = cA * .6;                 // рваные мазки за краем
+  c *= .75 + .5 * step(.5, br);
+  if (dot(c, c) < 1e-6) discard;
+  gl_FragColor = vec4(c * uAmt, 0.);
+}`;
+// Пена вокруг камня в воде: рваное кольцо с тушью и пунктир снаружи
+const FOAMRING_FRAG = /* glsl */`
+uniform float uStep; uniform vec3 cA, cInk; varying vec2 vUv;
+${GLSL_NOISE}
+void main(){
+  vec2 p = (vUv - .5) * 2.; p.x *= .8; float r = length(p); float a = atan(p.y, p.x);
+  float e = (pfNoise(vec2(a * 6., uStep * .6)) - .5) * .14 + (pfNoise(vec2(a * 21., uStep * .3)) - .5) * .06;
+  float d = r + e;
+  vec3 c;
+  if (d > .5 && d < .7) c = cA;
+  else if (d >= .7 && d < .74) c = cInk;
+  else if (abs(d - .86) < .022 && pfNoise(vec2(a * 9., uStep)) > .5) c = cA;
+  else discard;
+  gl_FragColor = vec4(c, .5);
+}`;
+// Расходящийся круг на воде пунктиром
+const RINGLINE_FRAG = /* glsl */`
+uniform float uStep, uT, uSeed; uniform vec3 cA; varying vec2 vUv;
+${GLSL_NOISE}
+void main(){
+  if (uT <= 0. || uT >= 1.) discard;
+  vec2 p = (vUv - .5) * 2.; float r = length(p); float a = atan(p.y, p.x);
+  float R = .15 + .8 * uT; float wdt = .05 * (1. - uT) + .012;
+  if (abs(r - R + (pfNoise(vec2(a * 5., uSeed)) - .5) * .06) > wdt) discard;
+  if (pfNoise(vec2(a * 7. + uSeed, uStep * .3)) < .25 + uT * .5) discard;
+  gl_FragColor = vec4(cA, .5);
+}`;
+// Круг со знаками под ногами: текстура из образцов «Знаки», проявляется по кругу и поворачивается шагами
+const SIGIL_FRAG = /* glsl */`
+uniform sampler2D tS; uniform float uReveal, uRot, uStep; uniform vec3 cA, cInk; varying vec2 vUv;
+${GLSL_NOISE}
+void main(){
+  vec2 p = vUv - .5; float c = cos(uRot), s = sin(uRot); p = vec2(c * p.x - s * p.y, s * p.x + c * p.y);
+  p += (pfH22(vec2(uStep, 2.)) - .5) * .004;
+  float a = fract(atan(p.y, p.x) / 6.2832 + .25);
+  if (a > uReveal) discard;
+  vec4 t = texture2D(tS, p + .5);
+  if (t.a < .4) discard;
+  gl_FragColor = vec4(t.r > .5 ? cA : cInk, .5);
+}`;
+function flatMat(frag, U, add = false) {
+  return new THREE.ShaderMaterial({ uniforms: U, vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`, fragmentShader: frag, side: THREE.DoubleSide, ...(add ? ADD : {}) });
+}
+function flatQuad(frag, U, size, add = false) { const m = fxMesh(flatMat(frag, U, add), new THREE.PlaneGeometry(size, size)); m.rotation.x = -Math.PI / 2; return m; }
+
+// ---------------------------------------------------------------- костёр
+export class PaintedFire {
+  constructor(style, opts = {}) {
+    this.o = { size: 1, preset: 'hearth', smoke: true, embers: 9, light: true, logs: true, ...opts };
+    this.style = style; this.clock = new StepClock(this.o.fps ?? 12); this.smokeClock = new StepClock(6);
+    this.group = new THREE.Group(); this.group.userData.pfFire = true;
+    const p = FIRE_PRESETS[this.o.preset] ?? FIRE_PRESETS.hearth; this.p = p;
+    const S = this.o.size; const st = this.clock.u;
+    // три языка: задний широкий тёмный, средний, передний узкий — объём без 3D
+    this.flames = [
+      fxMesh(flameMat(p, { step: st, seed: 1.3, w: 1.45 * S, h: 1.25 * S, off: [-.08 * S, 0, -.06 * S], wild: 1.1, coreH: .8 })),
+      fxMesh(flameMat(p, { step: st, seed: 4.7, w: 1.25 * S, h: 1.55 * S, off: [.06 * S, 0, 0], wild: 1, coreH: .6 })),
+      fxMesh(flameMat(p, { step: st, seed: 8.9, w: .8 * S, h: .95 * S, off: [-.03 * S, 0, .08 * S], wild: .9, coreH: .4, drops: .5 })),
+    ];
+    this.flames.forEach((f, i) => { f.renderOrder = 4 + i; this.group.add(f); });
+    if (this.o.smoke) {
+      this.smoke = fxMesh(puffMat(p.smoke, p.smokeHi, p.ink, { step: this.smokeClock.u, seed: 2.2, w: .8 * S, h: 1.4 * S, off: [0, 1.05 * S, -.1 * S], n: 4, speed: 4, spread: .6 }));
+      this.group.add(this.smoke);
+    }
+    this.embers = [];
+    for (let i = 0; i < this.o.embers; i++) {
+      const s = protSprite(sparkTex(), i % 3 ? p.core : p.hot); s.userData.ph = Math.random(); s.userData.a = Math.random() * 6.28;
+      this.group.add(s); this.embers.push(s);
+    }
+    if (this.o.light) {
+      this.light = new THREE.PointLight(p.light, 14 * S, 9 * S, 1.6); this.light.position.set(0, .55 * S, 0); this.group.add(this.light);
+      this.baseI = this.light.intensity;
+    }
+    if (this.o.logs && style) this.addLogs(S);
+    // --- рисованные слои поверх языков ---
+    const add = (m) => { this.group.add(m); return m; };
+    // ореол за огнём (ступени + лучи-чёрточки) и пятно света на земле
+    this.haloU = { uSize: { value: new THREE.Vector2(2.2 * S, 2.2 * S) }, uOff: { value: new THREE.Vector3(0, .62 * S, 0) }, uPush: { value: .35 * S }, uStep: st, uAmt: { value: 1 },
+      cA: { value: col(p.out).multiplyScalar(.07) }, cB: { value: col(p.mid).multiplyScalar(.16) } };
+    this.halo = add(fxMesh(new THREE.ShaderMaterial({ uniforms: this.haloU, vertexShader: BB_FULL_VERT, fragmentShader: HALO_FRAG, side: THREE.DoubleSide, ...ADD }), new THREE.PlaneGeometry(1, 1)));
+    this.halo.renderOrder = 2;
+    this.poolU = { uStep: st, uAmt: { value: 1 }, cA: { value: col(p.out).multiplyScalar(.16) }, cB: { value: col(p.mid).multiplyScalar(.24) } };
+    this.pool = add(flatQuad(POOL_FRAG, this.poolU, 4.2 * S, true)); this.pool.position.y = .015; this.pool.renderOrder = 1;
+    // угли под шалашом: мерцают тонами огня
+    this.coals = [];
+    for (let i = 0; i < 9; i++) {
+      const m = new THREE.Mesh(new THREE.DodecahedronGeometry(.045 * S * (0.7 + (i % 3) * .3)), new THREE.MeshBasicMaterial({ color: p.core }));
+      const a = i * 2.4, r = (.05 + (i % 4) * .05) * S; m.position.set(Math.cos(a) * r, .02 * S, Math.sin(a) * r); m.scale.y = .6; m.userData.pfSkip = true;
+      add(m); this.coals.push(m);
+    }
+    // линии внутри языков: тёмные и светлые, из почеркушек «Огонь»
+    const FA = handOf(style, 'fire');
+    this.lines = FA ? [[p.ink, .62, .95, -.12], [p.hot, .5, .75, -.2], [p.ink, .5, .8, -.16]].map(([c, w, h, push], i) => {
+      const m = add(decal(FA, c, { w: w * S, h: h * S, push: push * S })); m.userData.base = [(i - 1) * .06 * S, (h * .5 + .04) * S, 0]; sd(m, { p: m.userData.base }); m.renderOrder = 8; return m;
+    }) : [];
+    // жар над огнём: завитки «Дым и пар» тёплым светлым
+    const SA = handOf(style, 'smoke');
+    this.heat = SA ? Array.from({ length: 3 }, (_, i) => { const m = add(decal(SA, i % 2 ? p.core : p.mid, { w: .32 * S, h: .32 * S })); m.userData.ph = i / 3; return m; }) : [];
+    this.curls = SA && this.o.smoke ? Array.from({ length: 2 }, (_, i) => { const m = add(decal(SA, p.ink, { w: .5 * S, h: .5 * S, push: -.05 })); m.userData.ph = i / 2; return m; }) : [];
+    // искры-штрихи и звёздочки
+    this.streaks = Array.from({ length: 8 }, () => { const s = protSprite(streakTex(), p.hot); s.userData.ph = Math.random(); this.group.add(s); return s; });
+    this.stars = Array.from({ length: 4 }, () => { const s = protSprite(starTex(), p.hot); s.visible = false; this.group.add(s); return s; });
+  }
+  addLogs(S) {
+    const wood = style2(this.style, '#5a3a22'); const stone = style2(this.style, '#6e6a62');
+    for (let i = 0; i < 4; i++) {
+      const g = new THREE.CylinderGeometry(.06 * S, .075 * S, .75 * S, 7); const m = new THREE.Mesh(g, wood);
+      const a = i * Math.PI / 2 + .4;
+      // бревно опирается на землю нижним концом и сходится к центру шалашом
+      const foot = new THREE.Vector3(Math.cos(a) * .34 * S, .04 * S, Math.sin(a) * .34 * S), top = new THREE.Vector3(Math.cos(a) * .04 * S, .5 * S, Math.sin(a) * .04 * S);
+      m.position.copy(foot).add(top).multiplyScalar(.5);
+      m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), top.clone().sub(foot).normalize());
+      m.scale.y = top.distanceTo(foot) / (.75 * S);
+      m.castShadow = true; this.group.add(m);
+    }
+    for (let i = 0; i < 9; i++) {
+      const a = i / 9 * Math.PI * 2; const m = new THREE.Mesh(new THREE.DodecahedronGeometry(.1 * S * (0.8 + (i % 3) * .15)), stone);
+      m.position.set(Math.cos(a) * .48 * S, .05 * S, Math.sin(a) * .48 * S); m.rotation.set(i, i * 2, 0); m.scale.y = .7; this.group.add(m);
+    }
+  }
+  setPreset(k) {
+    const p = FIRE_PRESETS[k]; if (!p) return; this.p = p;
+    for (const f of this.flames) { const U = f.material.uniforms; U.cOut.value.set(p.out); U.cMid.value.set(p.mid); U.cCore.value.set(p.core); U.cHot.value.set(p.hot); U.cInk.value.set(p.ink); }
+    if (this.smoke) { const U = this.smoke.material.uniforms; U.cA.value.set(p.smoke); U.cB.value.set(p.smokeHi); U.cInk.value.set(p.ink); }
+    this.embers.forEach((s, i) => s.material.color.set(i % 3 ? p.core : p.hot));
+    if (this.light) this.light.color.set(p.light);
+    this.haloU.cA.value.set(p.out).multiplyScalar(.07); this.haloU.cB.value.set(p.mid).multiplyScalar(.16);
+    this.poolU.cA.value.set(p.out).multiplyScalar(.16); this.poolU.cB.value.set(p.mid).multiplyScalar(.24);
+    this.lines.forEach((m, i) => sd(m, { c: i === 1 ? p.hot : p.ink }));
+    this.heat.forEach((m, i) => sd(m, { c: i % 2 ? p.core : p.mid })); this.curls.forEach((m) => sd(m, { c: p.ink }));
+    for (const s of [...this.streaks, ...this.stars]) s.material.color.set(p.hot);
+  }
+  set amount(v) { for (const f of this.flames) f.material.uniforms.uAmt.value = v; if (this.smoke) this.smoke.material.uniforms.uAmt.value = Math.min(1, v); }
+  update(dt) {
+    const nw = this.clock.tick(dt); this.smokeClock.tick(dt);
+    const S = this.o.size;
+    if (nw) {
+      const st = this.clock.u.value;
+      if (this.light) this.light.intensity = this.baseI * (0.8 + 0.4 * hash(st * 1.7));
+      for (const s of this.embers) {
+        const life = (this.clock.t * 0.45 + s.userData.ph) % 1;
+        if (life < 0.1) { s.userData.a = Math.random() * 6.28; s.userData.r = Math.random() * .25; }
+        const a = s.userData.a + life * 2.5; const r = (s.userData.r ?? .1) * S + life * .25 * S;
+        s.position.set(Math.cos(a) * r, (.35 + life * 2.1) * S, Math.sin(a) * r);
+        s.scale.set(.05 * S * (1 - life * .6), .09 * S * (1 - life * .6), 1);
+        s.material.rotation = (hash(st + a) - .5) * 1.2;
+        s.visible = life < 0.9 && hash(st * 3.1 + a) > .15;
+      }
+      const fl = 0.85 + 0.3 * hash(st * 2.3);
+      this.haloU.uAmt.value = fl; this.poolU.uAmt.value = fl;
+      const P = this.p, tones = [P.hot, P.core, P.mid, P.out];
+      this.coals.forEach((m, i) => m.material.color.set(tones[Math.floor(hash(st * .5 + i * 3.7) * 3.2)]));
+      // линии в языках сменяются каждые 2 шага, чуть дрожат
+      this.lines.forEach((m, i) => { const b = m.userData.base; sd(m, { cell: Math.floor(st / 2) * 3 + i * 5, p: [b[0] + (hash(st + i) - .5) * .04 * S, b[1], b[2]], rot: (hash(st * 1.3 + i) - .5) * .12 }); });
+      this.heat.forEach((m, i) => { const life = (this.clock.t * .5 + m.userData.ph) % 1; sd(m, { p: [(hash(i * 9 + Math.floor(this.clock.t * .5 + m.userData.ph)) - .5) * .4 * S, (1.35 + life * .8) * S, 0], cell: st + i * 3, rot: (hash(st + i) - .5) * .6, w: .34 * S * (1 - life * .4), on: life < .8 }); });
+      this.curls.forEach((m, i) => { const life = (this.smokeClock.t * .18 + m.userData.ph) % 1; sd(m, { p: [(i - .5) * .25 * S, (1.6 + life * 1.1) * S, 0], cell: Math.floor(this.smokeClock.t * 2) + i * 2, on: life < .75 }); });
+      for (const s of this.streaks) {
+        const life = (this.clock.t * .7 + s.userData.ph) % 1;
+        if (life < .1 || !s.userData.v) s.userData.v = [(Math.random() - .5) * 1.4, 2 + Math.random() * 1.5, (Math.random() - .5) * .6];
+        const v = s.userData.v, t = life * .9;
+        s.position.set(v[0] * t * S, (.4 + v[1] * t - 1.6 * t * t) * S, v[2] * t * S);
+        const vy = v[1] - 3.2 * t; s.material.rotation = Math.atan2(-v[0], vy);
+        s.scale.set(.025 * S, .16 * S * (1 - life * .5), 1); s.visible = life < .85;
+      }
+      for (const s of this.stars) {
+        if (s.visible && hash(st * 7.1 + s.id) < .55) { s.visible = false; continue; }
+        if (!s.visible && hash(st * 3.3 + s.id) > .82) { s.visible = true; s.position.set((hash(st + s.id) - .5) * .7 * S, (.5 + hash(st * 2 + s.id) * 1.1) * S, .1 * S); const k = (.06 + hash(st * 5 + s.id) * .07) * S; s.scale.set(k, k, 1); }
+      }
+    }
+  }
+}
+function style2(style, c) { return style ? style.material({ color: c, rimScale: 0, strokeScale: .4 }) : new THREE.MeshStandardMaterial({ color: c }); }
+function hash(x) { const s = Math.sin(x * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); }
+
+// ---------------------------------------------------------------- аура персонажа
+// Аура рисуется по экранному силуэту: персонаж отдельно рендерится белой маской (1/2 разрешения),
+// плоскость за его спиной ищет расстояние до силуэта в 40 точках. Сэмплы сдвинуты шумом вниз —
+// поэтому языки тянутся вверх; шум меняется шагами. Расстояние режется на кольца тонов:
+// ядро у тела → середина → край → тушь. Тело всегда перед плоскостью, ауру видно только вокруг.
+const AURA_FRAG = /* glsl */`
+uniform sampler2D tMask; uniform vec2 uRes; uniform float uStep, uSeed, uAmt, uW, uLift;
+uniform vec3 cCore, cMid, cEdge, cInk;
+varying vec2 vP;
+${GLSL_NOISE}
+float m(vec2 px){ return texture2D(tMask, px / uRes).r; }
+void main(){
+  if (uAmt < .01) discard;
+  vec2 fc = gl_FragCoord.xy;
+  if (m(fc) > .5) discard;
+  float st = uStep;
+  float W = uW * uAmt;                                         // ширина ауры, px
+  vec2 q = fc / max(uW, 1.);
+  // языки: точку опускаем на величину шума — силуэт «вытягивается» вверх
+  float n1 = pfNoise(vec2(q.x * 2.3 + uSeed, q.y * .9 - st * .55));
+  float n2 = pfNoise(vec2(q.x * 5.1 - uSeed, q.y * 2.1 - st * .9));
+  float tong = smoothstep(.42, .95, n1) * 1.2 + n2 * .15;     // редкие длинные языки, между ними — короткие
+  vec2 o = vec2((n2 - .5) * W * .3, -tong * uLift * uAmt);
+  vec2 p = fc + o;
+  // ближайший силуэт: 5 колец × 8 направлений
+  float d = 99.;
+  for (int r = 1; r <= 5; r++) {
+    float rr = float(r) / 5. * W;
+    for (int k = 0; k < 8; k++) {
+      float a = float(k) * .785398 + float(r) * .4;
+      if (m(p + vec2(cos(a), sin(a)) * rr) > .5) d = min(d, rr);
+    }
+  }
+  if (m(p) > .5) d = 0.;
+  float t = d / max(W, 1.);
+  t += (pfNoise(fc * .08 + st * 1.3) - .5) * .12;              // рваная граница тонов
+  if (t > 1.) discard;
+  vec3 c = t < .16 ? cCore : t < .44 ? cMid : t < .86 ? cEdge : cInk;
+  // штриховка по краю и светлые процарапы по середине — как карандаш поверх заливки
+  if (t >= .44 && t < .86 && fract((fc.x + fc.y) * .09) > .78 && pfNoise(fc * .02 + st * .9) > .4) c = cInk;
+  if (t >= .16 && t < .44 && fract((fc.x - fc.y * .4) * .07) > .9 && pfNoise(fc * .03 - st * .7) > .5) c = cCore;
+  gl_FragColor = vec4(c, .5);
+}`;
+// Ударное кольцо по земле.
+const RING_FRAG = /* glsl */`
+uniform float uStep, uT, uR; uniform vec3 cA, cB, cInk;
+varying vec2 vUv;
+${GLSL_NOISE}
+void main(){
+  vec2 p = (vUv - .5) * 2.; float r = length(p) * uR; float a = atan(p.y, p.x);
+  float t = uT; if (t <= 0. || t >= 1.) discard;
+  float R = uR * .95 * (1. - pow(1. - t, 3.));
+  float wdt = .22 * (1. - t) + .03;
+  float e = (pfNoise(vec2(a * 6., uStep * .5)) - .5) * .12 + (pfNoise(vec2(a * 23., 3.)) - .5) * .05;
+  float d = (r - R + e) / wdt;                     // 0 = фронт, <0 внутри
+  if (d > 0. || d < -1.) discard;
+  // зазубренные «осколки» за фронтом
+  float shard = step(.45 + t * .4, pfNoise(vec2(a * 14., floor(uStep * .5))));
+  if (d < -.55 && shard < .5) discard;
+  vec3 c = d > -.18 ? cA : cB;
+  if (d > -.06) c = cInk;
+  gl_FragColor = vec4(c, .5);
+}`;
+// Вспышка-звезда за спиной в момент активации.
+const BURST_FRAG = /* glsl */`
+uniform float uStep, uT; uniform vec3 cA, cB, cInk;
+varying vec2 vP;
+${GLSL_NOISE}
+void main(){
+  if (uT <= 0. || uT >= 1.) discard;
+  vec2 p = vP * 2.; float r = length(p); float a = atan(p.y, p.x);
+  float k = 14.; float sa = a * k / 6.2832;
+  float ci = floor(sa + .5); float fa = abs(sa - ci) * 2.;
+  float len = .45 + .55 * pfH11(ci * 7.3 + floor(uStep * .5));
+  float grow = smoothstep(0., .25, uT) * (1. - smoothstep(.55, 1., uT));
+  float spike = (1. - fa) * len * grow - r * .95;
+  float core = (.32 * grow - r);
+  float f = max(spike, core);
+  // линии-удары (как в манге): тонкие радиальные штрихи за лучами
+  float sb = a * 70. / 6.2832; float cb = floor(sb); float fb = fract(sb); float s2 = floor(uStep * .5);
+  float r0 = .55 + pfH11(cb * 5.3 + s2) * .25, l0 = .12 + pfH11(cb * 2.1 + s2) * .3;
+  float sl = step(abs(fb - .5), .04 + .08 * clamp(1. - (r - r0) / max(l0, .01), 0., 1.)) * step(r0, r) * step(r, r0 + l0) * step(.45, pfH11(cb * 9.1 + s2)) * step(uT, .8);
+  if (f <= 0. && sl > .5) { gl_FragColor = vec4(mod(cb, 3.) < .5 ? cA : cInk, .5); return; }
+  if (f <= 0.) discard;
+  vec3 c = f > .12 ? cA : cB;
+  if (f < .03) c = cInk;
+  gl_FragColor = vec4(c, .5);
+}`;
+// Взлетающие штрихи вокруг персонажа.
+const STREAK_FRAG = /* glsl */`
+uniform float uStep, uSeed, uAmt; uniform vec3 cA, cInk;
+varying vec2 vP;
+${GLSL_NOISE}
+void main(){
+  float y = vP.y; float x = vP.x * 2.;
+  float ph = fract(uStep * .045 + uSeed);
+  float y0 = ph * 1.4 - .4, y1 = y0 + .25 + .25 * pfH11(uSeed * 9.);
+  float tap = smoothstep(y0, y0 + .08, y) * (1. - smoothstep(y1 - .12, y1, y));
+  float wob = (pfNoise(vec2(y * 5., uSeed * 4. + floor(uStep * .5))) - .5) * .4;
+  float d = abs(x - wob) - tap * .55;
+  if (d > 0. || uAmt < .05 || tap < .05) discard;
+  gl_FragColor = vec4(d > -.15 ? cInk : cA, .5);
+}`;
+
+// Текстура круга: два кольца, засечки, 8 знаков по кругу, внутреннее кольцо с точками.
+// Белое — цвет ауры, тёмное — тушь (обводка под линиями для читаемости).
+function sigilTex(samples, N = 512) {
+  const c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d'); g.translate(N / 2, N / 2); g.lineCap = 'round'; g.lineJoin = 'round';
+  const pass = (fn) => { g.strokeStyle = '#141414'; g.lineWidth = 9; fn(); g.strokeStyle = '#ffffff'; g.lineWidth = 4; fn(); };
+  const circ = (r) => { g.beginPath(); for (let i = 0; i <= 90; i++) { const a = i / 90 * 6.2832; const rr = r * (1 + Math.sin(a * 7) * .006); g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } g.stroke(); };
+  pass(() => { circ(N * .47); circ(N * .41); circ(N * .19); });
+  pass(() => { for (let i = 0; i < 48; i++) { const a = i / 48 * 6.2832, l = i % 6 ? .02 : .045; g.beginPath(); g.moveTo(Math.cos(a) * N * .41, Math.sin(a) * N * .41); g.lineTo(Math.cos(a) * N * (.41 + l), Math.sin(a) * N * (.41 + l)); g.stroke(); } });
+  const S = samples.length ? samples : PROC.runes();
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * 6.2832; const sm = S[i % S.length];
+    g.save(); g.rotate(a + Math.PI / 2); g.translate(0, -N * .3); const sc = N * .13;
+    pass(() => { for (const st of sm) { g.beginPath(); st.p.forEach((q, j) => { const x = (q[0] - .5) * sc, y = (q[1] - .5) * sc; j ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); } });
+    g.restore();
+  }
+  pass(() => { for (let i = 0; i < 12; i++) { const a = i / 12 * 6.2832; g.beginPath(); g.arc(Math.cos(a) * N * .14, Math.sin(a) * N * .14, 3, 0, 6.2832); g.stroke(); } });
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.NoColorSpace; return t;
+}
+
+export class PaintedAura {
+  // root — персонаж (Object3D с SkinnedMesh), h — рост, м
+  constructor(style, root, opts = {}) {
+    this.o = { preset: 'grace', h: 1.8, streaks: 10, particles: 14, fps: 10, ...opts };
+    this.root = root; this.style = style;
+    this.clock = new StepClock(this.o.fps); const st = this.clock.u;
+    this.p = { ...(AURA_PRESETS[this.o.preset] ?? AURA_PRESETS.grace), ...(opts.colors ?? {}) };
+    const k = this.o.h / 1.8; this.k = k;
+    this.amt = 0; this.state = 'off'; this.t = 0; this.burstT = 0;
+    // маска силуэта: только меши персонажа на своём слое
+    this.maskLayer = opts.maskLayer ?? (6 + (PaintedAura.n = ((PaintedAura.n ?? -1) + 1) % 20));
+    root.traverse((m) => { if (m.isMesh && !m.userData.pfSkip && !m.userData.pfOutline) m.layers.enable(this.maskLayer); });
+    this.mask = new THREE.WebGLRenderTarget(4, 4, { depthBuffer: true });
+    this.maskMat = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+    this.auraU = { tMask: { value: this.mask.texture }, uRes: { value: new THREE.Vector2(4, 4) }, uStep: st, uSeed: { value: Math.random() * 9 }, uAmt: { value: 0 },
+      uW: { value: 20 }, uLift: { value: 30 }, uSize: { value: new THREE.Vector2(2.8 * k, 3.2 * k) }, uOff: { value: new THREE.Vector3(0, 1.25 * k, 0) }, uPush: { value: .55 * k },
+      cCore: { value: col(this.p.core) }, cMid: { value: col(this.p.mid) }, cEdge: { value: col(this.p.edge) }, cInk: { value: col(this.p.ink) } };
+    this.sheet = fxMesh(new THREE.ShaderMaterial({ uniforms: this.auraU, vertexShader: BB_FULL_VERT, fragmentShader: AURA_FRAG, side: THREE.DoubleSide }), new THREE.PlaneGeometry(1, 1));
+    this.sheet.renderOrder = -2; this.sheet.visible = false;
+    // земля, вспышка, штрихи, частицы, свет — в группе у ног (группа кладётся в сцену рядом с персонажем)
+    this.group = new THREE.Group(); this.group.userData.pfAura = true;
+    const ringU = { uStep: st, uT: { value: 0 }, uR: { value: 2.4 * k }, cA: { value: col(this.p.mid) }, cB: { value: col(this.p.edge) }, cInk: { value: col(this.p.ink) } };
+    this.ring = fxMesh(new THREE.ShaderMaterial({ uniforms: ringU, vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`, fragmentShader: RING_FRAG, side: THREE.DoubleSide }),
+      new THREE.PlaneGeometry(4.8 * k, 4.8 * k));
+    this.ring.rotation.x = -Math.PI / 2; this.ring.position.y = 0.02; this.group.add(this.ring);
+    this.burst = fxMesh(new THREE.ShaderMaterial({
+      uniforms: { uSize: { value: new THREE.Vector2(3.2 * k, 3.2 * k) }, uOff: { value: new THREE.Vector3(0, 1.05 * k, 0) }, uPush: { value: .7 * k }, uStep: st, uT: { value: 0 },
+        cA: { value: col(this.p.burst) }, cB: { value: col(this.p.mid) }, cInk: { value: col(this.p.ink) } },
+      vertexShader: BB_FULL_VERT, fragmentShader: BURST_FRAG, side: THREE.DoubleSide,
+    }), new THREE.PlaneGeometry(1, 1));
+    this.burst.renderOrder = -5; this.group.add(this.burst, this.sheet);
+    this.streaks = [];
+    for (let i = 0; i < this.o.streaks; i++) {
+      const a = i / this.o.streaks * Math.PI * 2 + Math.random() * .4; const r = (.38 + Math.random() * .22) * k;
+      const m = fxMesh(new THREE.ShaderMaterial({
+        uniforms: { uSize: { value: new THREE.Vector2(.07 * k, 2.3 * k) }, uOff: { value: new THREE.Vector3(Math.cos(a) * r, .05, Math.sin(a) * r) }, uStep: st, uSeed: { value: Math.random() },
+          uAmt: { value: 0 }, cA: { value: col(i % 2 ? this.p.core : this.p.mid) }, cInk: { value: col(this.p.edge) } },
+        vertexShader: BB_VERT, fragmentShader: STREAK_FRAG, side: THREE.DoubleSide,
+      }));
+      this.group.add(m); this.streaks.push(m);
+    }
+    this.parts = [];
+    const tex = this.p.particles === 'leaf' ? leafTex() : sparkTex();
+    for (let i = 0; i < this.o.particles; i++) {
+      const s = protSprite(tex, this.p.particles === 'leaf' ? (i % 2 ? this.p.mid : this.p.edge) : (i % 3 ? this.p.mid : this.p.core));
+      s.userData.ph = Math.random(); s.userData.a = Math.random() * 6.28; s.visible = false; this.group.add(s); this.parts.push(s);
+    }
+    this.light = new THREE.PointLight(this.p.light, 0, 6 * k, 1.5); this.light.position.set(0, 1.0 * k, .3 * k); this.group.add(this.light);
+    // круг со знаками под ногами, рисованные языки ауры, у Лешего завитки
+    // вспышка-кадр на весь экран в момент удара (2 шага)
+    this.flashU = { uK: { value: 0 }, cA: { value: col(this.p.burst) }, uStep: st };
+    this.flash = fxMesh(new THREE.ShaderMaterial({ uniforms: this.flashU, vertexShader: 'varying vec2 vP; void main(){ vP = position.xy; gl_Position = vec4(position.xy, 0., 1.); }',
+      fragmentShader: `uniform float uK, uStep; uniform vec3 cA; varying vec2 vP; ${GLSL_NOISE}
+        void main(){ if (uK <= 0.) discard; float r = length(vP); float a = atan(vP.y, vP.x);
+          float ln = step(.9, pfH11(floor(a * 30.) + uStep)) * step(.45, r);
+          gl_FragColor = vec4(cA * uK * (.55 + .45 * r + ln * .8), 0.); }`, depthTest: false, ...ADD }), new THREE.PlaneGeometry(2, 2));
+    this.flash.renderOrder = 999; this.group.add(this.flash);
+    this.sigilU = { tS: { value: sigilTex(style?.handEl?.runes?.samples ?? PROC.runes()) }, uReveal: { value: 0 }, uRot: { value: 0 }, uStep: st, cA: { value: col(this.p.mid) }, cInk: { value: col(this.p.ink) } };
+    this.sigil = flatQuad(SIGIL_FRAG, this.sigilU, 2.1 * k); this.sigil.position.y = .025; this.sigil.renderOrder = 1; this.group.add(this.sigil); this.reveal = 0;
+    const AA = handOf(style, 'aura');
+    this.hlines = AA ? Array.from({ length: 9 }, (_, i) => { const m = decal(AA, i % 3 ? this.p.mid : this.p.core, { w: .42 * k, h: .75 * k, push: .35 * k }); m.userData.ph = i / 9; m.userData.a = i / 9 * 6.283; this.group.add(m); return m; }) : [];
+    const SA = handOf(style, 'smoke');
+    this.curls = SA && this.p.particles === 'leaf' ? Array.from({ length: 5 }, (_, i) => { const m = decal(SA, i % 2 ? this.p.mid : this.p.core, { w: .34 * k, h: .34 * k, push: .2 * k }); m.userData.ph = i / 5; this.group.add(m); return m; }) : [];
+    this.follow = root;
+  }
+  // Включить: собирается (0,3 с), вспышка и ударное кольцо, потом держится.
+  activate() { if (this.state === 'on' || this.state === 'charge') return; this.state = 'charge'; this.t = 0; this.onChange?.(true); }
+  deactivate() { if (this.state === 'off' || this.state === 'release') return; this.state = 'release'; this.t = 0; this.onChange?.(false); }
+  toggle() { (this.state === 'on' || this.state === 'charge') ? this.deactivate() : this.activate(); }
+  get active() { return this.state === 'on' || this.state === 'charge'; }
+  update(dt) {
+    const nw = this.clock.tick(dt); this.t += dt;
+    const k = this.k;
+    // кривая силы: сбор → удар с перелётом → ровно → гаснет
+    let a = this.amt;
+    if (this.state === 'charge') { a = Math.min(.35, this.t / .3 * .35); if (this.t >= .3) { this.state = 'on'; this.t = 0; this.burstT = 0.0001; } }
+    else if (this.state === 'on') { const b = Math.max(0, 1 - this.t / .5); a = 1 + .7 * b * b; }
+    else if (this.state === 'release') { a = Math.max(0, 1 - this.t / .45); if (a <= 0) this.state = 'off'; }
+    else a = 0;
+    // сила меняется только на шаге — как рисованные фазы
+    if (nw || this.state === 'off') this.amt = Math.round(a * 8) / 8;
+    if (this.burstT > 0) { this.burstT += dt / .7; if (this.burstT >= 1) this.burstT = 0; }
+    const st = this.clock.u.value;
+    this.auraU.uAmt.value = this.amt * (0.92 + 0.16 * hash(st * 1.3));
+    this.sheet.visible = this.amt > 0;
+    // группа у ног персонажа
+    this.follow.getWorldPosition(this.group.position);
+    if (this.group.parent) this.group.parent.worldToLocal(this.group.position);
+    const qT = Math.floor(this.burstT * 10) / 10;
+    this.ring.material.uniforms.uT.value = qT; this.burst.material.uniforms.uT.value = qT;
+    const on = Math.min(1, this.amt);
+    for (const m of this.streaks) m.material.uniforms.uAmt.value = on;
+    this.light.intensity = (this.amt * 9 + (this.burstT > 0 ? 25 * (1 - this.burstT) : 0)) * k * (nw || true ? 0.9 + 0.2 * hash(st) : 1);
+    if (nw) {
+      const leaf = this.p.particles === 'leaf';
+      for (const s of this.parts) {
+        const life = (this.clock.t * (leaf ? .3 : .5) + s.userData.ph) % 1;
+        if (life < .08) { s.userData.a = Math.random() * 6.28; s.userData.r = (.35 + Math.random() * .35) * k; }
+        const ang = s.userData.a + life * (leaf ? 4.5 : 1.5); const r = (s.userData.r ?? .5 * k) * (1 + life * (leaf ? .6 : .2));
+        s.position.set(Math.cos(ang) * r, (.1 + life * (leaf ? 2.4 : 2.1)) * k, Math.sin(ang) * r);
+        const sz = (leaf ? .12 : .06) * k * (1 - life * .5);
+        s.scale.set(sz, leaf ? sz : sz * 1.9, 1);
+        s.material.rotation = leaf ? ang * 2 + life * 6 : (hash(st + ang) - .5) * .8;
+        s.visible = on > .1 && life < .92;
+      }
+      this.hlines.forEach((m, i) => { const d = m.userData; const life = (this.clock.t * .55 + d.ph) % 1; const a = d.a + life * .6; const r = .45 * k;
+        sd(m, { p: [Math.cos(a) * r, (.15 + life * 1.7) * k, Math.sin(a) * r], cell: st + i * 2, rot: (hash(st + i) - .5) * .25, on: on > .1 && life < .85 }); });
+      this.curls.forEach((m, i) => { const d = m.userData; const life = (this.clock.t * .3 + d.ph) % 1; const a = d.ph * 6.283 + life * 3;
+        sd(m, { p: [Math.cos(a) * .55 * k, (.3 + life * 2) * k, Math.sin(a) * .55 * k], cell: Math.floor(st / 2) + i, rot: life * 3, on: on > .1 && life < .9 }); });
+      this.sigilU.uRot.value += .045;
+    }
+    // круг проявляется по ходу часовой стрелки шагами, гаснет обратно
+    this.reveal = Math.max(0, Math.min(1, this.reveal + dt * (this.amt > 0 && this.state !== 'release' ? 1.6 : -2.2)));
+    this.sigilU.uReveal.value = Math.ceil(this.reveal * 16) / 16 * (this.reveal > 0 ? 1 : 0);
+    this.sigil.visible = this.reveal > 0;
+    this.flashU.uK.value = this.burstT > 0 && this.burstT < .2 ? .45 : 0;
+  }
+  // точка отсвета ауры: за спиной персонажа относительно камеры — даёт цветную контровую кромку и пятна на земле
+  bounce(camera) {
+    if (this.amt <= 0) return null; const c = new THREE.Vector3(); this.follow.getWorldPosition(c); c.y += this.o.h * .55;
+    const away = c.clone().sub(camera.position).setY(0).normalize().multiplyScalar(.55 * this.k);
+    return { pos: c.add(away), color: this.p.light, radius: 3.4 * this.k, k: Math.min(1.2, this.amt) * .85 };
+  }
+  // Маска силуэта: вызывать перед кадром (renderer, scene, camera). Ширина ауры в пикселях — по росту на экране.
+  renderMask(renderer, scene, camera) {
+    if (!this.sheet.visible) return;
+    const s = renderer.getDrawingBufferSize(new THREE.Vector2());
+    const w = Math.max(4, Math.round(s.x / 2)), h = Math.max(4, Math.round(s.y / 2));
+    if (this.mask.width !== w || this.mask.height !== h) this.mask.setSize(w, h);
+    this.auraU.uRes.value.set(s.x, s.y);
+    // метры → пиксели у персонажа
+    const c = new THREE.Vector3(); this.follow.getWorldPosition(c); c.y += this.o.h * .5;
+    const dist = c.distanceTo(camera.position);
+    const pxPerM = s.y / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * dist);
+    this.auraU.uW.value = this.p.push * 1.6 * this.o.h / 1.8 * pxPerM;
+    this.auraU.uLift.value = this.p.lift * this.o.h / 1.8 * pxPerM;
+    const keep = { bg: scene.background, fog: scene.fog, ov: scene.overrideMaterial, rt: renderer.getRenderTarget(), mask: camera.layers.mask, cc: renderer.getClearColor(new THREE.Color()), ca: renderer.getClearAlpha(), tm: renderer.toneMapping };
+    scene.background = null; scene.fog = null; scene.overrideMaterial = this.maskMat; camera.layers.set(this.maskLayer); renderer.toneMapping = THREE.NoToneMapping;
+    const sh = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false;
+    renderer.setRenderTarget(this.mask); renderer.setClearColor(0x000000, 1); renderer.clear(true, true, false);
+    renderer.render(scene, camera); renderer.shadowMap.autoUpdate = sh;
+    scene.background = keep.bg; scene.fog = keep.fog; scene.overrideMaterial = keep.ov; camera.layers.mask = keep.mask; renderer.toneMapping = keep.tm;
+    renderer.setRenderTarget(keep.rt); renderer.setClearColor(keep.cc, keep.ca);
+  }
+  dispose() {
+    this.root.traverse((m) => m.layers?.disable(this.maskLayer));
+    this.mask.dispose(); this.group.parent?.remove(this.group);
+  }
+}
+
+// ---------------------------------------------------------------- река
+const RIVER_VERT = /* glsl */`
+uniform float uStep;
+varying vec2 vUv; varying vec3 vW;
+${GLSL_NOISE}
+void main(){
+  vUv = uv; vec3 p = position;
+  p.z += (pfNoise(vec2(uv.x * 9. - uStep * .5, uv.y * 3.)) - .5) * .03;
+  vec4 w = modelMatrix * vec4(p, 1.); vW = w.xyz;
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`;
+const RIVER_FRAG = /* glsl */`
+uniform float uStep, uFlow, uLen, uWid; uniform vec3 cDeep, cMid, cShallow, cFoam, cSky, cInk, cGlint, uLight;
+uniform vec4 uK;   // x: пена, y: мазки течения, z: блики, w: тушь берега
+uniform vec4 uRf[4]; uniform vec4 uRfC[4]; uniform int uRfN;   // отражения: x, z начала, полуширина, длина со знаком направления
+varying vec2 vUv; varying vec3 vW;
+${GLSL_NOISE}
+void main(){
+  float st = uStep;
+  vec2 m = vec2(vUv.x * uLen, vUv.y * uWid);               // метры: x вдоль течения
+  float flow = st * uFlow / 6.;                              // течение шагами
+  // берег рваный: расстояние до кромки с шумом
+  float bankN = (pfNoise(vec2(m.x * .9, vUv.y > .5 ? 3. : 9.)) - .5) * .5 + (pfNoise(vec2(m.x * 3.7, vUv.y > .5 ? 1. : 5.)) - .5) * .18;
+  float e = min(vUv.y, 1. - vUv.y) * uWid + bankN;            // м от берега
+  if (e < 0.) discard;
+  // полосы глубины
+  float depth = e + (pfNoise(m * .7 - vec2(flow * .3, 0.)) - .5) * .5;
+  vec3 c = depth > 1.0 ? cDeep : depth > .45 ? cMid : cShallow;
+  // небо в воде: широкие мазки по течению
+  vec2 sq = vec2(m.x * .45 - flow * .6, m.y * 2.4);
+  float sky = smoothstep(.58, .64, pfNoise(sq + floor(sq.y) * 3.1));
+  c = mix(c, cSky, sky * .55);
+  // мазки течения: вытянутые штрихи, бегут шагами
+  vec2 fq = vec2(m.x * 1.6 - flow * 2.2, m.y * 6.);
+  float row = floor(fq.y);
+  float dash = smoothstep(.6, .7, pfNoise(vec2(fq.x * .7 + row * 5.3, row))) * (1. - smoothstep(.12, .38, abs(fract(fq.y) - .5)));
+  c = mix(c, mix(cShallow, cSky, .5), dash * .8 * uK.y);
+  // отражение источника: столб из коротких бликов к зрителю
+  vec3 V = normalize(vW - cameraPosition);
+  vec2 wob = (vec2(pfNoise(m * 2. + st * .7), pfNoise(m * 2. + 5. + st * .7)) - .5) * .35;
+  vec3 N = normalize(vec3(wob.x, 1., wob.y));
+  float spec = pow(max(dot(reflect(V, N), normalize(uLight - vW)), 0.), 22.);
+  vec2 gq = vec2(m.x * 3. - flow * 1.5, m.y * 9.);
+  float gr = floor(gq.y);
+  float gd = smoothstep(.45, .55, pfNoise(vec2(gq.x * .8 + gr * 3.1, gr + st * .37)));
+  float glint = step(.25, spec * gd) * uK.z;
+  // пена у берега и вокруг камней: рваная полоса, обведённая тушью
+  float fn = pfNoise(vec2(m.x * 2.4 - flow * 1.2, e * 4. + st * .2));
+  float foamW = .16 + fn * .22;
+  float foam = step(e, foamW) * uK.x;
+  float foamDash = step(e, foamW + .2) * step(.68, pfNoise(vec2(m.x * 5. - flow * 3., e * 9.))) * uK.x;
+  float a = 1.;
+  // отражения источников и предметов: столбы из горизонтальных мазков, рвутся рябью
+  for (int i = 0; i < 4; i++) {
+    if (i >= uRfN) break;
+    vec4 Rf = uRf[i]; float L = abs(Rf.w); float dz = (vW.z - Rf.y) * sign(Rf.w);
+    if (dz < 0. || dz > L) continue;
+    float rowR = floor(vW.z * 9.); float sr = floor(st * .5);
+    float hw = Rf.z * (1. - dz / L * .55) * (.5 + .8 * pfH11(rowR + sr * 1.3 + float(i)));
+    float off = (pfH11(rowR * 3.1 + sr) - .5) * Rf.z * .5;
+    float inRow = step(abs(fract(vW.z * 9.) - .5), .3);
+    if (abs(vW.x - Rf.x - off) < hw && inRow > .5) { c = mix(c, uRfC[i].rgb, uRfC[i].w); a = .5; }
+  }
+  if (glint > .5) { c = cGlint; a = .5; }
+  if (foamDash > .5) { c = mix(cFoam, cSky, .3); a = .5; }
+  if (foam > .5) { c = cFoam; a = .5; if (abs(e - foamW) < .035) c = cInk * 1.6; }
+  if (e < .045 * uK.w) { c = cInk; a = .5; }
+  gl_FragColor = vec4(c, a);
+}`;
+export class PaintedRiver {
+  constructor(style, opts = {}) {
+    this.o = { length: 24, width: 3.2, flow: 1, preset: 'stream', light: [0, 6, -20], ...opts };
+    this.clock = new StepClock(this.o.fps ?? 8);
+    const p = WATER_PRESETS[this.o.preset] ?? WATER_PRESETS.stream;
+    this.uniforms = {
+      uStep: this.clock.u, uFlow: { value: this.o.flow }, uLen: { value: this.o.length }, uWid: { value: this.o.width },
+      cDeep: { value: col(p.deep) }, cMid: { value: col(p.mid) }, cShallow: { value: col(p.shallow) }, cFoam: { value: col(p.foam) },
+      cSky: { value: col(p.sky) }, cInk: { value: col(p.ink) }, cGlint: { value: col(p.glint) },
+      uLight: { value: new THREE.Vector3(...this.o.light) }, uK: { value: new THREE.Vector4(1, 1, 1, 1) },
+      uRf: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, uRfC: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, uRfN: { value: 0 },
+    };
+    const g = new THREE.PlaneGeometry(this.o.length, this.o.width, 96, 12);
+    this.mesh = fxMesh(new THREE.ShaderMaterial({ uniforms: this.uniforms, vertexShader: RIVER_VERT, fragmentShader: RIVER_FRAG }), g);
+    this.mesh.rotation.x = -Math.PI / 2;
+    this.group = new THREE.Group(); this.group.add(this.mesh); this.p = p; this.style = style;
+    // рябь линиями: «Вода: рябь и волны», плывёт по течению шагами
+    const WA = handOf(style, 'water'); const L = this.o.length, W = this.o.width;
+    this.ripples = WA ? Array.from({ length: this.o.ripples ?? 44 }, (_, i) => {
+      const m = decal(WA, [p.foam, p.ink, p.sky, p.ink][i % 4], { flat: true });
+      m.userData.ph = Math.random(); m.userData.k = .6 + Math.random() * .6; m.userData.seed = Math.random() * 99; this.group.add(m); return m;
+    }) : [];
+    this.twinkles = Array.from({ length: 7 }, () => { const s = protSprite(starTex(), p.glint); s.visible = false; this.group.add(s); return s; });
+    this.rocks = [];
+  }
+  // камень в русле: пена кольцом и усы ряби ниже по течению
+  addRock(x, z, r) {
+    const U = { uStep: this.clock.u, cA: { value: col(this.p.foam) }, cInk: { value: col(this.p.ink) } };
+    const ring = flatQuad(FOAMRING_FRAG, U, r * 3.2); ring.position.set(x, .02, z); this.group.add(ring);
+    const WA = handOf(this.style, 'water'); const wakes = [];
+    if (WA) for (let i = 0; i < 2; i++) { const m = decal(WA, this.p.foam, { flat: true, w: r * 2.6, h: r * 1.1 }); sd(m, { p: [x + r * (1.4 + i * 1.3), .02, z], rot: 0 }); this.group.add(m); wakes.push(m); }
+    this.rocks.push({ ring, U, wakes }); return ring;
+  }
+  setPreset(k) { const p = WATER_PRESETS[k]; if (!p) return; const U = this.uniforms; this.p = p; this.ripples.forEach((m, i) => sd(m, { c: [p.foam, p.ink, p.sky, p.ink][i % 4] })); this.twinkles.forEach((s) => s.material.color.set(p.glint)); for (const r of this.rocks) { r.U.cA.value.set(p.foam); r.U.cInk.value.set(p.ink); r.wakes.forEach((m) => sd(m, { c: p.foam })); } for (const [a, b] of [['cDeep', 'deep'], ['cMid', 'mid'], ['cShallow', 'shallow'], ['cFoam', 'foam'], ['cSky', 'sky'], ['cInk', 'ink'], ['cGlint', 'glint']]) U[a].value.set(p[b]); this.fall?.setPreset(k); }
+  get light() { return this.uniforms.uLight.value; }
+  // Отражения в воде (мировые x, z начала столба; dir +1 — к +z, -1 — от): [{ x, z, w, len, dir, color, k }], до 4
+  setReflectors(list = []) {
+    const U = this.uniforms; const n = Math.min(4, list.length); const c = new THREE.Color();
+    for (let i = 0; i < n; i++) { const r = list[i]; U.uRf.value[i].set(r.x, r.z, r.w ?? .5, (r.len ?? 1.5) * (r.dir ?? -1)); c.set(r.color); U.uRfC.value[i].set(c.r, c.g, c.b, r.k ?? .85); }
+    U.uRfN.value = n;
+  }
+  update(dt, camera) {
+    const nw = this.clock.tick(dt); if (!nw) return;
+    const st = this.clock.u.value, t = this.clock.t, L = this.o.length, W = this.o.width, fl = this.o.flow;
+    for (const m of this.ripples) {
+      const d = m.userData; const life = (t * .28 + d.ph) % 1; const gen = Math.floor(t * .28 + d.ph);
+      const x0 = (hash(d.seed + gen * 1.7) - .5) * L * .9, z = (hash(d.seed * 3 + gen) - .5) * W * .7;
+      sd(m, { p: [x0 + life * 1.6 * fl, .016, z], cell: Math.floor(st / 3) + Math.floor(d.seed), w: 1.1 * d.k, h: .45 * d.k, on: life > .05 && life < .85, rot: (hash(d.seed + st * .1) - .5) * .1 });
+    }
+    for (const r of this.rocks) r.wakes.forEach((m, i) => sd(m, { cell: Math.floor(st / 2) + i * 3 }));
+    // блёстки на дорожке отражения: между камерой и светом
+    if (camera) {
+      const cam = this.group.worldToLocal(camera.position.clone()); const li = this.group.worldToLocal(this.light.clone());
+      const dx = li.x - cam.x, dz = li.z - cam.z; const k = (0 - cam.z) / (dz || 1e-3);
+      for (const s of this.twinkles) {
+        if (s.visible && hash(st * 7.1 + s.id) < .5) { s.visible = false; continue; }
+        if (!s.visible && hash(st * 3.3 + s.id) > .75) {
+          const zz = (hash(st + s.id * 1.3) - .5) * W * .8; const kk = (zz - cam.z) / (dz || 1e-3);
+          s.position.set(cam.x + dx * kk + (hash(st * 2 + s.id) - .5) * .8, .1, zz); const sc = .08 + hash(st * 5 + s.id) * .1; s.scale.set(sc, sc, 1); s.visible = Math.abs(zz) < W * .45 && k > 0;
+        }
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------- водопад
+const FALL_FRAG = /* glsl */`
+uniform float uStep; uniform vec3 cDeep, cMid, cFoam, cSky, cInk;
+varying vec2 vUv;
+${GLSL_NOISE}
+void main(){
+  float st = uStep; vec2 p = vUv;
+  // рваные края струи
+  float ex = (pfNoise(vec2(p.y * 6. + st * .9, 1.)) - .5) * .12;
+  float side = min(p.x, 1. - p.x) + ex;
+  if (side < 0.) discard;
+  // струи: вертикальные полосы, бегут вниз шагами
+  float col = floor(p.x * 9.);
+  float run = pfNoise(vec2(col * 3.7, p.y * 2.2 + st * .9));
+  vec3 c = run > .62 ? cSky : run > .4 ? cMid : cDeep;
+  float streak = step(.82, pfNoise(vec2(p.x * 30., p.y * 1.5 + st * 1.4)));
+  c = mix(c, cFoam, streak);
+  // линии струй: тёмные по стыкам полос, светлые «нитки» бегут вниз, с разрывами
+  float wig = (pfNoise(vec2(p.y * 4. + st * .7, col)) - .5) * .25;
+  float fx = fract(p.x * 9. + wig);
+  float inkL = step(fx, .06) * step(.35, pfNoise(vec2(col * 2.1, p.y * 3. + st * 1.1)));
+  float liteL = step(abs(fx - .5), .025) * step(.55, pfNoise(vec2(col * 5.3, p.y * 5. + st * 1.6)));
+  if (inkL > .5) c = cInk; if (liteL > .5) c = cFoam;
+  // пенная кромка сверху
+  float lip = step(1. - p.y, .06 + pfNoise(vec2(p.x * 12., st)) * .05);
+  float a = 1.;
+  if (lip > .5 || streak > .5 || inkL > .5 || liteL > .5) a = .5;
+  if (lip > .5) c = cFoam;
+  if (side < .03) { c = cInk; a = .5; }
+  gl_FragColor = vec4(c, a);
+}`;
+export class PaintedFall {
+  constructor(style, opts = {}) {
+    this.o = { width: 1.4, height: 2.6, preset: 'stream', ...opts };
+    this.clock = new StepClock(10); this.foamClock = new StepClock(8);
+    const p = WATER_PRESETS[this.o.preset] ?? WATER_PRESETS.stream;
+    this.uniforms = { uStep: this.clock.u, cDeep: { value: col(p.mid) }, cMid: { value: col(p.shallow) }, cFoam: { value: col(p.foam) }, cSky: { value: col(p.sky) }, cInk: { value: col(p.ink) } };
+    // слегка выпуклая струя: верх выносится вперёд
+    const g = new THREE.PlaneGeometry(this.o.width, this.o.height, 8, 16); const pos = g.attributes.position;
+    for (let i = 0; i < pos.count; i++) { const y = pos.getY(i) / this.o.height + .5; pos.setZ(i, Math.pow(y, 2) * .35 - Math.abs(pos.getX(i)) * .1); }
+    g.translate(0, this.o.height / 2, 0); g.computeVertexNormals();
+    this.group = new THREE.Group();
+    this.mesh = fxMesh(new THREE.ShaderMaterial({ uniforms: this.uniforms, vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`, fragmentShader: FALL_FRAG, side: THREE.DoubleSide }), g);
+    this.group.add(this.mesh);
+    this.foam = [];
+    for (let i = 0; i < 3; i++) {
+      const f = fxMesh(puffMat(p.foam, p.sky, p.ink, { step: this.foamClock.u, seed: i * 3.3, w: this.o.width * (1.5 - i * .25), h: .9, off: [(i - 1) * .35, -.12, .3 + i * .05], n: 6, speed: 7, spread: 1.4 }));
+      f.material.uniforms.cA.value.set(p.sky); f.material.uniforms.cB.value.set(p.foam);
+      this.group.add(f); this.foam.push(f);
+    }
+    // туман у подножия, брызги дугами («Брызги и капли»), круги по воде
+    this.mist = fxMesh(puffMat(p.mid, p.shallow, p.mid, { step: this.foamClock.u, seed: 9.1, w: this.o.width * 1.8, h: 1.2, off: [0, -.15, .05], n: 4, speed: 3, spread: 1.2, ink: 0 }));
+    this.mist.renderOrder = -1; this.group.add(this.mist);
+    const SP = handOf(style, 'splash');
+    this.drops = SP ? Array.from({ length: 12 }, (_, i) => { const m = decal(SP, i % 3 ? p.foam : p.sky, { w: .24, h: .24 }); m.userData.ph = Math.random(); this.group.add(m); return m; }) : [];
+    this.rings = Array.from({ length: 3 }, (_, i) => { const U = { uStep: this.foamClock.u, uT: { value: 0 }, uSeed: { value: i * 3.1 }, cA: { value: col(p.foam) } }; const m = flatQuad(RINGLINE_FRAG, U, this.o.width * 2.2); m.position.set((i - 1) * .3, .03, .55); m.userData.U = U; m.userData.ph = i / 3; this.group.add(m); return m; });
+  }
+  setPreset(k) {
+    const p = WATER_PRESETS[k]; if (!p) return; const U = this.uniforms;
+    U.cDeep.value.set(p.mid); U.cMid.value.set(p.shallow); U.cFoam.value.set(p.foam); U.cSky.value.set(p.sky); U.cInk.value.set(p.ink);
+    for (const f of this.foam) { const V = f.material.uniforms; V.cA.value.set(p.sky); V.cB.value.set(p.foam); V.cInk.value.set(p.ink); }
+    const M = this.mist.material.uniforms; M.cA.value.set(p.mid); M.cB.value.set(p.shallow); M.cInk.value.set(p.mid);
+    this.drops.forEach((m, i) => sd(m, { c: i % 3 ? p.foam : p.sky })); this.rings.forEach((m) => m.userData.U.cA.value.set(p.foam));
+  }
+  update(dt) {
+    this.clock.tick(dt); const nw = this.foamClock.tick(dt); if (!nw) return;
+    const t = this.foamClock.t, st = this.foamClock.u.value, Wd = this.o.width;
+    for (const m of this.rings) m.userData.U.uT.value = Math.floor(((t * .6 + m.userData.ph) % 1) * 12) / 12;
+    for (const m of this.drops) {
+      const d = m.userData; const life = (t * .9 + d.ph) % 1; const gen = Math.floor(t * .9 + d.ph);
+      const vx = (hash(gen * 3.1 + d.ph * 9) - .5) * 2.2, vy = 1.4 + hash(gen * 1.7 + d.ph) * 1.6, x0 = (hash(gen + d.ph * 5) - .5) * Wd;
+      const tt = life * .8; sd(m, { p: [x0 + vx * tt, .05 + vy * tt - 4.9 * tt * tt, .45], cell: gen + Math.floor(d.ph * 7), rot: Math.atan2(-vx, vy - 9.8 * tt) * .6, w: .28 * (1 - life * .4), on: vy * tt - 4.9 * tt * tt > -.02 });
+    }
+  }
+}
+
+// ---------------------------------------------------------------- наброски окружения
+// Свободные карандашные линии с перелётом у крупных форм (как над проёмом и по своду тоннеля на фото).
+// items: [{p: [x, y, z], w, h, rot}] в координатах сцены. Линии «кипят» 4 раза в секунду.
+export class EnvSketch {
+  constructor(style, items, { color = '#1c1410', light = '#e8dcb8' } = {}) {
+    this.group = new THREE.Group(); this.clock = new StepClock(4); this.items = [];
+    const A = handOf(style, 'env'); if (!A) return;
+    items.forEach((it, i) => {
+      const m = decal(A, it.light ? light : color, { w: it.w ?? 2, h: it.h ?? 0.6, push: it.push ?? 0 });
+      sd(m, { p: it.p, rot: it.rot ?? 0, cell: i * 3 }); m.userData.it = it; m.userData.i = i; this.group.add(m); this.items.push(m);
+    });
+  }
+  update(dt) {
+    if (!this.clock.tick(dt)) return; const st = this.clock.u.value;
+    for (const m of this.items) { const it = m.userData.it, i = m.userData.i; sd(m, { cell: i * 3 + (st % 3), p: [it.p[0] + (hash(st + i) - .5) * .03, it.p[1] + (hash(st * 1.7 + i) - .5) * .03, it.p[2]], rot: (it.rot ?? 0) + (hash(st * 2.3 + i) - .5) * .03 }); }
+  }
+}
+
+// ---------------------------------------------------------------- дальний план 2.5D
+// Силуэты на больших плоскостях: лес елями, холмы, деревня с крышами и маковками, туман полосами зерном.
+// Дальше — светлее и холоднее (воздушная перспектива), по верхнему краю тонкая тушь, внутри горизонтальные мазки.
+const BACK_FRAG = /* glsl */`
+uniform float uStep, uKind, uW, uH, uY0, uHt, uSeed; uniform vec3 cA, cB, cInk, cWin;
+varying vec2 vUv;
+${GLSL_NOISE}
+float spruce(float x, float cell, float h, float sd){ float ci = floor(x / cell); float fx = fract(x / cell); float th = h * (.45 + .55 * pfH11(ci * 1.7 + sd));
+  float tri = th * (1. - abs(fx * 2. - 1.)); float saw = fract(fx * 4.) * th * .06; return tri + saw; }
+void main(){
+  float x = (vUv.x - .5) * uW + uSeed * 31.; float y = vUv.y * uH + uY0;
+  float st = floor(uStep * .5);
+  float base = uY0 + 1. + (pfNoise(vec2(x * .05, uSeed)) - .2) * uHt * .35;
+  float top = base; float win = 0.;
+  if (uKind < .5) { top = base + max(spruce(x, 1.7, uHt, uSeed), spruce(x + .85, 1.3, uHt * .8, uSeed + 5.)); }
+  else if (uKind < 1.5) { top = base + pfNoise(vec2(x * .03, uSeed)) * uHt * .8 + pfNoise(vec2(x * .12, uSeed)) * uHt * .2; }
+  else {
+    top = base + pfNoise(vec2(x * .04, uSeed)) * uHt * .2;
+    float ci = floor(x / 4.), fx = fract(x / 4.); float hsd = pfH11(ci * 2.3 + uSeed);
+    if (hsd > .45) {                                           // изба: сруб и двускатная крыша
+      float hw = .3, wall = 1.3 + hsd * .7; float d = abs(fx - .5);
+      if (d < hw) top = max(top, base + wall + (hw + .08 - d) * 2.2);
+      if (d < .06 && y > base + .5 && y < base + .95 && pfH11(ci + 7.) > .45) win = 1.;
+    } else if (hsd < .1) {                                     // церковь: барабан и маковка
+      float d = abs(fx - .5) * 6.; float tw = 4. + hsd * 10.;
+      if (d < .5) top = max(top, base + tw);
+      float dy = y - (base + tw + .5); if (length(vec2(d * 1.1, dy)) < .55) top = max(top, y + .01);
+      if (d < .05 && y > base + tw + 1. && y < base + tw + 1.8) top = max(top, y + .01);
+    }
+  }
+  if (y > top) discard;
+  float strokes = pfNoise(vec2(x * .25, y * 3.5 + st * .3));
+  vec3 c = mix(cA, cB, step(.55, strokes) * .6 + smoothstep(top - 3., top, y) * .4);
+  if (win > .5) c = cWin;
+  if (y > top - .09 - pfNoise(vec2(x * 2., st)) * .06) c = cInk;
+  gl_FragColor = vec4(c, 1.);
+}`;
+const MIST_FRAG = /* glsl */`
+uniform float uStep, uW, uH, uY0, uSeed, uDens; uniform vec3 cA, cB;
+varying vec2 vUv;
+${GLSL_NOISE}
+void main(){
+  float x = (vUv.x - .5) * uW, y = vUv.y * uH;
+  float st = floor(uStep * .25);
+  float band = abs(y - uH * .5 - (pfNoise(vec2(x * .04 + st * .05, uSeed)) - .5) * uH * .5) / (uH * .5);
+  float d = (1. - band) * uDens * (.6 + .6 * pfNoise(vec2(x * .08 - st * .07, y * .6 + uSeed)));
+  // мягкая дымка альфой (как в видео a_iwaac), рваная верхняя кромка светлее
+  float a = smoothstep(.12, .5, d);
+  if (a < .02) discard;
+  float lip = smoothstep(.25, .6, (y - uH * .5) / (uH * .5) + (pfNoise(vec2(x * .3, st)) - .5) * .3);
+  vec3 cc = mix(cA, cB, step(.6, pfNoise(vec2(x * .2, y * 2.))));
+  gl_FragColor = vec4(mix(cc, cB * 1.15, lip * .5), a * .6);
+}`;
+export const BACKDROP_PRESETS = {
+  // ночь под красным небом: чем дальше, тем ближе к цвету неба
+  night: [
+    { kind: 'village', z: -16, y0: -1.2, ht: 0.6, color: '#2e1a2a', color2: '#3a2232', ink: '#12080e', win: '#ffb850' },
+    { kind: 'mist', z: -19, y0: -0.6, h: 2.6, color: '#6a2a42', color2: '#7a3450', dens: .55 },
+    { kind: 'forest', z: -23, y0: -0.8, ht: 4, color: '#3e1e34', color2: '#48243c', ink: '#1a0a14' },
+    { kind: 'mist', z: -28, y0: 0.3, h: 3.4, color: '#7a3050', color2: '#8a3a5a', dens: .5 },
+    { kind: 'hills', z: -36, y0: -0.5, ht: 8, color: '#54243e', color2: '#5e2a46', ink: '#2a0e1e' },
+  ],
+};
+export class PaintedBackdrop {
+  constructor(style, { layers = BACKDROP_PRESETS.night, width = 140 } = {}) {
+    this.group = new THREE.Group(); this.clock = new StepClock(4);
+    layers.forEach((L, i) => {
+      const H = L.kind === 'mist' ? L.h : (L.ht ?? 4) * 2.6 + 14; const W = width * (1 + Math.abs(L.z) / 60);
+      const U = { uStep: this.clock.u, uW: { value: W }, uH: { value: H }, uY0: { value: L.y0 ?? 0 }, uSeed: { value: i * 3.7 + 1 }, cA: { value: col(L.color) }, cB: { value: col(L.color2 ?? L.color) } };
+      let frag;
+      const soft = L.kind === 'mist';
+      if (L.kind === 'mist') { U.uDens = { value: L.dens ?? .8 }; frag = MIST_FRAG; }
+      else { Object.assign(U, { uKind: { value: { forest: 0, hills: 1, village: 2 }[L.kind] ?? 0 }, uHt: { value: L.ht ?? 4 }, cInk: { value: col(L.ink ?? '#000') }, cWin: { value: col(L.win ?? L.color) } }); frag = BACK_FRAG; }
+      const m = fxMesh(new THREE.ShaderMaterial({ uniforms: U, vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`, fragmentShader: frag, transparent: soft, depthWrite: !soft }), new THREE.PlaneGeometry(W, H));
+      m.position.set(0, (L.kind === 'mist' ? (L.y0 ?? 0) : (L.y0 ?? 0)) + H / 2, L.z); m.renderOrder = -8 + i;
+      this.group.add(m);
+    });
+  }
+  update(dt) { this.clock.tick(dt); }
+}
+
+// ---------------------------------------------------------------- трава и кусты пучками
+const TUFT_VERT = /* glsl */`
+attribute vec4 aT;
+uniform float uStep; uniform vec4 uB;
+varying vec2 vP; varying vec4 vT; varying float vWarm;
+${GLSL_NOISE}
+void main(){
+  vP = position.xy; vT = aT;
+  vec4 C4 = modelMatrix * instanceMatrix * vec4(0., 0., 0., 1.);
+  float sx = length(instanceMatrix[0].xyz), sy = length(instanceMatrix[1].xyz);
+  vec3 R = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]); R.y = 0.; R = normalize(R + vec3(1e-5, 0., 0.));
+  float sway = (pfH11(floor(uStep * .5) + aT.x * 13.) - .5) * .12 * position.y * (1. - aT.y);
+  vec3 W = C4.xyz + R * (position.x + sway) * sx + vec3(0., 1., 0.) * position.y * sy;
+  vWarm = clamp(1. - length(C4.xyz - uB.xyz) / uB.w, 0., 1.);
+  gl_Position = projectionMatrix * viewMatrix * vec4(W, 1.);
+}`;
+const TUFT_FRAG = /* glsl */`
+uniform float uStep; uniform vec3 cDark, cLight, cInk, cWarm, cBush, cBushL;
+varying vec2 vP; varying vec4 vT; varying float vWarm;
+${GLSL_NOISE}
+void main(){
+  vec2 p = vec2(vP.x, vP.y); float sd = vT.x * 17.;
+  vec3 c; bool hit = false; bool ink = false;
+  if (vT.y < .5) {
+    // травинки: острые клинья, клонятся, верхние перекрывают нижние
+    for (int i = 0; i < 7; i++) {
+      float fi = float(i);
+      float bx = (pfH11(fi + sd) - .5) * .7, h = .45 + .55 * pfH11(fi * 3.1 + sd), lean = (pfH11(fi * 5.3 + sd) - .5) * .7;
+      float t = p.y / h; if (t < 0. || t > 1.) continue;
+      float cx = bx + lean * t * t; float w = .085 * (1. - t) + .004;
+      float d = abs(p.x - cx);
+      if (d < w) { hit = true; ink = p.x - cx > w - .022 && t > .05; c = t > .5 + (pfH11(fi + sd * 2.) - .5) * .2 ? cLight : cDark; }
+    }
+  } else {
+    // куст: комья листвы, свет сверху-слева, низ темнее
+    for (int i = 0; i < 7; i++) {
+      float fi = float(i);
+      vec2 cc = vec2((pfH11(fi + sd) - .5) * .6, .3 + pfH11(fi * 2.7 + sd) * .45); float r = .2 + pfH11(fi * 4.1 + sd) * .14;
+      vec2 d = p - cc; float e = (pfNoise(vec2(atan(d.y, d.x) * 2.5 + fi, floor(uStep * .5))) - .5) * .04;
+      float L = length(d) + e;
+      if (L < r) { hit = true; ink = L > r - .03; c = dot(normalize(d + 1e-4), vec2(-.55, .83)) > .25 && L > r * .35 ? cBushL : cBush; if (p.y < .2) c *= .7; }
+    }
+  }
+  if (!hit) discard;
+  c = mix(c, c * .6 + cWarm * .5, vWarm * .55);
+  if (ink) c = cInk;
+  gl_FragColor = vec4(c, .5);
+}`;
+export class PaintedTufts {
+  // items: [{ p: [x, y, z], s: размер м, bush: bool }]
+  constructor(style, items, { colors = {} } = {}) {
+    const C = { dark: '#3a4424', light: '#7a8a44', ink: '#141a0c', warm: '#ff9a40', bush: '#2e3a22', bushL: '#5a7034', ...colors };
+    this.clock = new StepClock(6);
+    this.uB = { value: new THREE.Vector4(0, 0, 0, 1) };
+    const g = new THREE.PlaneGeometry(1, 1); g.translate(0, .5, 0);
+    const aT = new Float32Array(items.length * 4);
+    const mat = new THREE.ShaderMaterial({ uniforms: { uStep: this.clock.u, uB: this.uB, cDark: { value: col(C.dark) }, cLight: { value: col(C.light) }, cInk: { value: col(C.ink) }, cWarm: { value: col(C.warm) }, cBush: { value: col(C.bush) }, cBushL: { value: col(C.bushL) } },
+      vertexShader: TUFT_VERT, fragmentShader: TUFT_FRAG, side: THREE.DoubleSide });
+    this.mesh = new THREE.InstancedMesh(g, mat, items.length); this.mesh.userData.pfSkip = true; this.mesh.frustumCulled = false;
+    const M = new THREE.Matrix4();
+    items.forEach((it, i) => { const s = it.s ?? .35; M.makeScale(it.bush ? s * 1.4 : s, s, 1).setPosition(...it.p); this.mesh.setMatrixAt(i, M); aT.set([Math.random(), it.bush ? 1 : 0, 0, 0], i * 4); });
+    g.setAttribute('aT', new THREE.InstancedBufferAttribute(aT, 4));
+  }
+  // тёплый отсвет от огня: позиция и радиус
+  setWarm(pos, radius) { this.uB.value.set(pos.x, pos.y, pos.z, radius); }
+  update(dt) { this.clock.tick(dt); }
+}
+
+// ---------------------------------------------------------------- мазки по форме вокруг источника
+// Плоские мазки из почеркушек «Мазки кисти» ложатся дугами вокруг центра (костра): земля «закручена» светом.
+export class ArcStrokes {
+  constructor(style, { center = [0, 0, 0], r0 = 1, r1 = 2.6, count = 46, colors = ['#7a6234', '#8e7038', '#5a5230', '#a07a3c'] } = {}) {
+    this.group = new THREE.Group(); this.clock = new StepClock(2); this.items = [];
+    const A = style?.handBrush ?? handOf(style, 'env'); if (!A) return;
+    for (let i = 0; i < count; i++) {
+      const th = (i / count) * Math.PI * 2 + Math.random() * .2, r = r0 + Math.random() * (r1 - r0);
+      const m = decal(A, colors[i % colors.length], { flat: true, w: .5 + Math.random() * .3, h: .16 + Math.random() * .06 });
+      sd(m, { p: [center[0] + Math.cos(th) * r, .012, center[2] + Math.sin(th) * r], rot: -(th + Math.PI / 2), cell: i * 3 });
+      m.renderOrder = 0; this.group.add(m); this.items.push(m);
+    }
+  }
+  update(dt) { if (!this.clock.tick(dt)) return; const st = this.clock.u.value; this.items.forEach((m, i) => { if (i % 3 === st % 3) sd(m, { cell: i * 3 + st }); }); }
+}
+
+
+// ---------------------------------------------------------------- осколки-вспышка (по видео a_iwaac: гитара)
+// Жёсткий кадр без растворения: вокруг персонажа сразу появляются плоские осколки-многоугольники и ленты-зигзаги
+// с полосками «зебра» внутри и цветной копией сзади; число растёт ~0,8 с, позы перескакивают шагами 12 к/с,
+// на импульс (pulse) все осколки за один шаг встают в новую позу. Исчезают тоже резко.
+const SHARD_FRAG = /* glsl */`
+uniform vec3 cA, cB, cS; uniform float uAng, uK; varying vec2 vUv;
+void main(){
+  vec2 p = vUv - .5; vec2 q = vec2(cos(uAng) * p.x - sin(uAng) * p.y, sin(uAng) * p.x + cos(uAng) * p.y);
+  // 3–4 тонкие продольные полоски, не через весь осколок
+  float z = fract(q.y * 5.);
+  float stripe = step(.86, z) * step(abs(q.x), .3 + .1 * sin(q.y * 7.)) * step(abs(q.y), .36);
+  vec3 c = mix(cA, cS, stripe * uK);
+  gl_FragColor = vec4(c, .5);
+}`;
+const SHARD_VERT = /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`;
+function shardGeo(rnd, zig) {
+  const sh = new THREE.Shape();
+  if (zig) {
+    // лента-зигзаг: 3–6 звеньев с поворотом 40–70°, концы срезаны
+    const n = 3 + Math.floor(rnd() * 4); let x = 0, y = 0, a = 0; const top = [], bot = []; const w = 0.09 + rnd() * 0.06;
+    for (let i = 0; i <= n; i++) { const nx = -Math.sin(a), ny = Math.cos(a); top.push([x + nx * w, y + ny * w]); bot.push([x - nx * w, y - ny * w]); const l = 0.18 + rnd() * 0.14; x += Math.cos(a) * l; y += Math.sin(a) * l; a += (i % 2 ? 1 : -1) * (0.7 + rnd() * 0.5); }
+    const pts = top.concat(bot.reverse()); const cx = x / 2, cy = y / 2;
+    pts.forEach(([px, py], i) => (i ? sh.lineTo(px - cx, py - cy) : sh.moveTo(px - cx, py - cy)));
+  } else {
+    const n = 4 + Math.floor(rnd() * 4); const sx = 0.35 + rnd() * 0.25, sy = 0.15 + rnd() * 0.3;
+    for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + rnd() * 0.5; const r = 0.6 + rnd() * 0.5; const px = Math.cos(a) * sx * r, py = Math.sin(a) * sy * r; i ? sh.lineTo(px, py) : sh.moveTo(px, py); }
+  }
+  const g = new THREE.ShapeGeometry(sh); g.computeBoundingBox(); const bb = g.boundingBox; const uv = g.attributes.uv; const P = g.attributes.position;
+  for (let i = 0; i < P.count; i++) uv.setXY(i, (P.getX(i) - bb.min.x) / (bb.max.x - bb.min.x + 1e-4), (P.getY(i) - bb.min.y) / (bb.max.y - bb.min.y + 1e-4));
+  return g;
+}
+export const SHARD_PRESETS = {
+  guitar: { a: '#d94be0', b: '#7a8dd3', s: '#f4eeff' },
+  grace: { a: '#ffc24a', b: '#e8642a', s: '#fff8e0' },
+  forest: { a: '#6dff96', b: '#1f7a8a', s: '#eafff0' },
+  hit: { a: '#fff2c8', b: '#d94be0', s: '#1a0c06' },
+};
+export class ShardBurst {
+  constructor(style, { count = 24, preset = 'guitar' } = {}) {
+    this.group = new THREE.Group(); this.group.visible = false; this.clock = new StepClock(12); this.items = [];
+    let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < count; i++) {
+      const g = shardGeo(rnd, i % 3 === 0); const p = SHARD_PRESETS[preset] ?? SHARD_PRESETS.guitar;
+      const mk = (c) => new THREE.ShaderMaterial({ uniforms: { cA: { value: col(c) }, cB: { value: col(p.b) }, cS: { value: col(p.s) }, uAng: { value: rnd() * 3 }, uK: { value: c === p.a ? 1 : 0 } }, vertexShader: SHARD_VERT, fragmentShader: SHARD_FRAG, side: THREE.DoubleSide, depthWrite: false });
+      const back = fxMesh(mk(p.b), g); const front = fxMesh(mk(p.a), g);
+      const o = new THREE.Group(); o.add(back, front); back.position.set(0.05, -0.05, -0.01); back.renderOrder = 7; front.renderOrder = 8;
+      o.userData = { seed: i * 3.17 + 1, front, back }; this.group.add(o); this.items.push(o);
+    }
+    this.t = 0; this.life = 0; this.pulses = 0;
+  }
+  setPreset(k) { const p = SHARD_PRESETS[k]; if (!p) return; for (const o of this.items) { const { front, back } = o.userData; front.material.uniforms.cA.value.set(p.a); front.material.uniforms.cS.value.set(p.s); back.material.uniforms.cA.value.set(p.b); } }
+  // center: Vector3, radius: м, life: с (0 = держится до stop()), pulseEvery: с
+  fire(center, radius = 1, { life = 1.2, pulseEvery = 0.58, preset = null, count = null } = {}) {
+    if (preset) this.setPreset(preset);
+    this.c = center.clone(); this.r = radius; this.life = life; this.pe = pulseEvery; this.t = 0; this.pt = 0; this.pulses = 0; this.n = count ?? this.items.length;
+    this.seedBase = Math.random() * 100; this.group.visible = true; this._pose(true);
+  }
+  stop() { this.group.visible = false; this.life = 0; }
+  pulse() { this.pulses++; this.seedBase += 11.3; this._pose(true); }
+  _pose(snap) {
+    const st = this.clock.u.value;
+    this.items.forEach((o, i) => {
+      const d = o.userData; const h = (k) => hash(d.seed * k + this.seedBase);
+      const k = this.n * Math.min(1, 1 - Math.pow(1 - Math.min(1, this.t / 0.8), 2));
+      o.visible = i < Math.max(8, k);
+      if (snap || !d.base) {
+        const a = h(1.3) * Math.PI * 2, rr = this.r * (1.2 + 0.5 * h(2.1)); const zig = this.pulses % 3 === 2;
+        d.base = new THREE.Vector3(Math.cos(a) * rr, Math.sin(a) * rr * 0.8 + this.r * 0.3, (h(3.7) - 0.5) * this.r);
+        d.rot = zig ? -a : a + (h(4.1) - 0.5) * 0.9; d.s = this.r * (zig ? 0.9 : 0.35 + h(5.3) * 0.55); d.spin = (h(6.1) - 0.5) * 0.35;
+      }
+      const drift = 1 + 0.03 * this.t;
+      o.position.copy(d.base).multiplyScalar(drift); o.userData.r = d.rot + d.spin * Math.floor(this.t * 12) / 12; o.scale.setScalar(d.s);
+    });
+  }
+  update(dt, camera) {
+    if (!this.group.visible) return;
+    this.t += dt; this.pt += dt;
+    if (this.life > 0 && this.t >= this.life) { this.stop(); return; }
+    if (this.pe > 0 && this.pt >= this.pe) { this.pt = 0; this.pulse(); }
+    if (this.clock.tick(dt)) this._pose(false);
+    this.group.position.copy(this.c);
+    // осколки плоские, лицом в камеру, повёрнуты вокруг взгляда
+    for (const o of this.items) { o.quaternion.copy(camera.quaternion); o.rotateZ(o.userData.r ?? 0); }
+  }
+  follow(v) { if (this.c) this.c.copy(v); }
+}
+
+// ---------------------------------------------------------------- пламя-лента (видео a_iwaac: «Insane flame»)
+// Нарисованная S-лента 6:1, края смещаются клетками (как Displace по Вороному), перерисовка шагами 15 к/с:
+// изгиб ±5% высоты, кончик прыгает ±8%, вздутие ползёт вверх. Цвета: ядро → середина → край, тугой ореол ≤1,5 ширины.
+// ignite(): капля падает 0,25 с, пламя вырастает за 0,2 с в 3 шага.
+const RIB_VERT = /* glsl */`
+uniform float uStep, uSeed, uH, uGrow, uWide; varying vec2 vQ;
+float h1(float n){ return fract(sin(n * 127.1 + 311.7) * 43758.5453); }
+void main(){
+  float y = position.y; float st = uStep + uSeed * 13.;
+  float tip = 1. + (h1(st * 1.3) - .5) * .16;
+  float Y = y * tip * uGrow;
+  float ph = h1(floor(st) * .7) * 6.28;
+  float cx = (sin(y * 4.2 + ph) * .05 + (h1(st + 2.) - .5) * .06 * y) * y;          // S-изгиб, сильнее к кончику
+  float w = mix(.12, .03, pow(y, .8)) * (1. - smoothstep(.85, 1., y) * .9);
+  float yb = fract(st * .11 + uSeed); w *= 1. + .35 * exp(-pow((y - yb) / .08, 2.));    // вздутие ползёт вверх
+  w *= .82 + .36 * h1(floor(y * 7.) + st * 3.1);                                      // края клетками
+  w *= uWide;
+  vQ = vec2(position.x * 2., y);
+  vec3 C = (modelMatrix * vec4(0., 0., 0., 1.)).xyz;
+  vec3 R = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]); R.y = 0.; R = normalize(R + vec3(1e-5, 0., 0.));
+  vec3 W = C + R * (cx + position.x * 2. * w) * uH + vec3(0., 1., 0.) * Y * uH;
+  gl_Position = projectionMatrix * viewMatrix * vec4(W, 1.);
+}`;
+const RIB_FRAG = /* glsl */`
+uniform vec3 cCore, cMid, cEdge; uniform float uHalo; varying vec2 vQ;
+void main(){
+  float u = abs(vQ.x);
+  if (uHalo > .5) { float a = (1. - smoothstep(.2, 1., u)) * (1. - smoothstep(.75, 1., vQ.y)) * .35; if (a < .01) discard; gl_FragColor = vec4(cEdge * a, 0.); return; }
+  float t = u + vQ.y * .35;
+  vec3 c = t < .45 ? cCore : t < .8 ? cMid : cEdge;
+  gl_FragColor = vec4(c * 1.7, .5);
+}`;
+export const RIBBON_PRESETS = {
+  candle: { core: '#fff4e0', mid: '#ff9a6a', edge: '#e84a3a' },
+  torch: { core: '#fff0c8', mid: '#ffa040', edge: '#d8401c' },
+  witch: { core: '#f0ffe0', mid: '#7aff8a', edge: '#127a46' },
+};
+export class FlameRibbon {
+  constructor(style, { h = 0.5, preset = 'candle', seed = Math.random() * 9 } = {}) {
+    const p = RIBBON_PRESETS[preset] ?? RIBBON_PRESETS.candle;
+    this.clock = new StepClock(15); this.h = h;
+    const g = new THREE.PlaneGeometry(0.5, 1, 1, 24); g.translate(0, 0.5, 0);
+    this.U = { uStep: this.clock.u, uSeed: { value: seed }, uH: { value: h }, uGrow: { value: 1 }, uWide: { value: 1 }, uHalo: { value: 0 }, cCore: { value: col(p.core) }, cMid: { value: col(p.mid) }, cEdge: { value: col(p.edge) } };
+    this.group = new THREE.Group();
+    this.mesh = fxMesh(new THREE.ShaderMaterial({ uniforms: this.U, vertexShader: RIB_VERT, fragmentShader: RIB_FRAG, side: THREE.DoubleSide }), g); this.mesh.renderOrder = 4;
+    const HU = { ...this.U, uWide: { value: 3.2 }, uHalo: { value: 1 } };
+    this.halo = fxMesh(new THREE.ShaderMaterial({ uniforms: HU, vertexShader: RIB_VERT, fragmentShader: RIB_FRAG, side: THREE.DoubleSide, ...ADD }), g); this.halo.renderOrder = 3;
+    this.drop = new THREE.Mesh(new THREE.SphereGeometry(0.035 * h / 0.5, 8, 6), new THREE.MeshBasicMaterial({ color: p.core })); this.drop.userData.pfSkip = true; this.drop.visible = false;
+    this.group.add(this.halo, this.mesh, this.drop); this.ig = null;
+  }
+  ignite(delay = 0) { this.ig = -delay; this.U.uGrow.value = 0; this.mesh.visible = this.halo.visible = false; this.drop.visible = false; }
+  update(dt) {
+    this.clock.tick(dt);
+    if (this.ig !== null) {
+      this.ig += dt; if (this.ig < 0) return;
+      if (this.ig < 0.25) { this.drop.visible = true; this.drop.position.y = this.h * 1.4 * (1 - this.ig / 0.25) ** 0.6; }
+      else { this.drop.visible = false; this.mesh.visible = this.halo.visible = true; const k = Math.min(1, Math.ceil((this.ig - 0.25) / 0.2 * 3) / 3); this.U.uGrow.value = k; if (k >= 1) this.ig = null; }
+    }
+  }
+}
+
+// ---------------------------------------------------------------- оболочка силуэта (видео a_iwaac: гитара)
+// Рваная многоугольная оболочка вокруг персонажа по той же маске, что и аура: 3 цветных слоя, звёздные шипы
+// на углах, продольные штрихи внутри. Появляется жёстко, без нарастания; форма перескакивает на каждый импульс.
+const SHELL_FRAG = /* glsl */`
+uniform sampler2D tMask; uniform vec2 uRes; uniform float uOn, uW, uSeed; uniform vec3 cA, cB, cC, cInk;
+varying vec2 vP;
+${GLSL_NOISE}
+float m(vec2 px){ return texture2D(tMask, px / uRes).r; }
+void main(){
+  if (uOn < .5) discard;
+  vec2 fc = gl_FragCoord.xy; if (m(fc) > .5) discard;
+  float W = uW;
+  // клетки: в каждой свой сдвиг порога — края получаются прямыми гранями и шипами
+  vec2 cp = fc / (W * .55); vec2 ci = floor(cp + pfH22(floor(cp) + uSeed) * .5);
+  float jag = pfH21(ci + uSeed * 1.7);
+  // расстояние до силуэта считаем от центра клетки — края оболочки ложатся гранями, без точек
+  float cs = max(4., W * .3); vec2 gi = floor(fc / cs); vec2 q = fc; float bd = 9.;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) { vec2 g = gi + vec2(i, j); vec2 c = (g + .15 + .7 * pfH22(g + uSeed)) * cs; float dd = length(fc - c); if (dd < bd) { bd = dd; q = c; } }
+  float d = 99.;
+  for (int r = 0; r <= 6; r++) { float rr = (float(r) + .5) / 6. * W * 1.3; for (int k = 0; k < 12; k++) { float a = float(k) * .5236 + float(r) * .26; if (m(q + vec2(cos(a), sin(a)) * rr) > .5) d = min(d, rr); } }
+  float t = d / W - (jag - .5) * .45;
+  if (t > 1.) discard;
+  vec3 c = t < .38 ? cA : t < .72 ? cB : cC;
+  // штрихи внутри оболочки
+  float sl = fract(dot(fc, vec2(.07, .045)) + jag * 3.);
+  if (sl > .9 && t < .8) c = mix(c, cInk, .7);
+  if (t > .92) c = cInk;
+  gl_FragColor = vec4(c, .5);
+}`;
+export const SHELL_PRESETS = {
+  guitar: { a: '#669faf', b: '#539e7a', c: '#7a8dd3', ink: '#1a1630' },
+  grace: { a: '#ffe08a', b: '#e8862a', c: '#7a8dd3', ink: '#2a1206' },
+  forest: { a: '#669faf', b: '#539e7a', c: '#7a8dd3', ink: '#06210f' },
+};
+// aura — PaintedAura: оболочка берёт её маску и положение
+export function addShell(aura, preset) {
+  const p = SHELL_PRESETS[preset] ?? SHELL_PRESETS.guitar; const k = aura.k;
+  aura.shellU = { tMask: aura.auraU.tMask, uRes: aura.auraU.uRes, uOn: { value: 0 }, uW: { value: 20 }, uSeed: { value: 0 }, cA: { value: col(p.a) }, cB: { value: col(p.b) }, cC: { value: col(p.c) }, cInk: { value: col(p.ink) },
+    uSize: { value: new THREE.Vector2(3.8 * k, 4.0 * k) }, uOff: { value: new THREE.Vector3(0, 1.3 * k, 0) }, uPush: { value: .75 * k } };
+  aura.shell = fxMesh(new THREE.ShaderMaterial({ uniforms: aura.shellU, vertexShader: BB_FULL_VERT, fragmentShader: SHELL_FRAG, side: THREE.DoubleSide }), new THREE.PlaneGeometry(1, 1));
+  aura.shell.renderOrder = -3; aura.group.add(aura.shell);
+  const up = aura.update.bind(aura);
+  aura.update = (dt) => {
+    up(dt); aura.shellT = (aura.shellT ?? 0) + dt;
+    const on = aura.amt > 0 && aura.state !== 'release';
+    aura.shellU.uOn.value = on ? 1 : 0; aura.shell.visible = on;
+    aura.shellU.uW.value = aura.auraU.uW.value * 2.0;
+    aura.shellU.uSeed.value = Math.floor(aura.shellT / 0.58) * 3.7;   // форма перескакивает на импульс
+  };
+  return aura;
+}
+
+// ---------------------------------------------------------------- облака слоями (видео a_iwaac: город)
+// Кольца-цилиндры вокруг сцены: комья (объединение кругов вдоль шумной линии), светлая верхняя губа,
+// плоский тёмный низ, мягкий край, без контура. Ближние слои тёмные, дальние светлые — глубина ступенями тона.
+const CLOUD_VERT = /* glsl */`varying vec2 vQ; uniform float uR, uH; void main(){ vQ = vec2(uv.x * 6.2832 * uR, uv.y * uH); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`;
+const CLOUD_FRAG = /* glsl */`
+uniform float uStep, uSeed, uLump, uH; uniform vec3 cTop, cBody, cUnder; uniform float uA;
+varying vec2 vQ;
+${GLSL_NOISE}
+void main(){
+  float x = vQ.x, y = vQ.y; float st = floor(uStep);
+  float ix = floor(x / uLump); float best = 9.; float by = 0., br = 1.;
+  for (int i = -2; i <= 2; i++) {
+    float j = ix + float(i);
+    float cx = (j + .5 + (pfH11(j + uSeed) - .5) * .6) * uLump;
+    float r = uLump * (.55 + .6 * pfH11(j * 1.7 + uSeed));
+    float cy = uH * .35 + (pfNoise(vec2(j * .37, uSeed)) - .5) * uH * .3;
+    float d = length(vec2(x - cx, (y - cy) * 1.25)) - r;
+    if (d < best) { best = d; by = cy; br = r; }
+  }
+  float base = uH * .22 + (pfNoise(vec2(x * .05, uSeed + 3.)) - .5) * uH * .08;  // плоский низ
+  best = max(best, base - y);
+  float e = (pfNoise(vec2(x * .4, y * .4 + st * .1)) - .5) * uLump * .08;
+  float a = 1. - smoothstep(-uLump * .06, uLump * .06, best + e);
+  if (a < .02) discard;
+  float rel = (y - by) / br;
+  vec3 c = rel > .45 ? cTop : (y < base + uH * .07 ? cUnder : cBody);
+  gl_FragColor = vec4(c, a * uA);
+}`;
+export const CLOUD_PRESETS = {
+  // слои от ближнего к дальнему: { r радиус кольца, y0 низ, h высота, lump размер кома, top/body/under, a непрозрачность }
+  onisme: [
+    { r: 60, y0: -2, h: 9, lump: 5, top: '#2c2c63', body: '#1b1f45', under: '#12142e', a: 1 },
+    { r: 90, y0: 2, h: 14, lump: 8, top: '#835fd8', body: '#724eba', under: '#4e3488', a: 1 },
+    { r: 120, y0: 0, h: 10, lump: 6, top: '#da35e7', body: '#b93ce4', under: '#7a2aa0', a: 0.95 },
+  ],
+  night: [
+    { r: 34, y0: -1.5, h: 4, lump: 2.8, top: '#4a2238', body: '#2e1424', under: '#1a0a14', a: 1 },
+    { r: 60, y0: 1.5, h: 8, lump: 5, top: '#8a3a52', body: '#6a2a44', under: '#481a30', a: 1 },
+    { r: 100, y0: 6, h: 12, lump: 8, top: '#d07a80', body: '#a85a68', under: '#7a3a50', a: 1 },
+  ],
+  swamp: [
+    { r: 70, y0: -1, h: 7, lump: 5, top: '#12241c', body: '#081410', under: '#040a08', a: 1 },
+    { r: 110, y0: 6, h: 12, lump: 8, top: '#3c7a5e', body: '#1e4a3c', under: '#12302a', a: 0.9 },
+    { r: 160, y0: 14, h: 18, lump: 12, top: '#8ab49a', body: '#5e8a74', under: '#3c6a58', a: 0.8 },
+  ],
+};
+export class PaintedCloudBank {
+  constructor(style, { layers = CLOUD_PRESETS.night, center = [0, 0, 0], arc = 1 } = {}) {
+    this.group = new THREE.Group(); this.group.position.set(...center); this.clock = new StepClock(2);
+    layers.forEach((L, i) => {
+      const U = { uStep: this.clock.u, uSeed: { value: i * 5.3 + 1 }, uLump: { value: L.lump }, uH: { value: L.h }, uR: { value: L.r }, uA: { value: L.a ?? 1 }, cTop: { value: col(L.top) }, cBody: { value: col(L.body) }, cUnder: { value: col(L.under ?? L.body) } };
+      const g = new THREE.CylinderGeometry(L.r, L.r, L.h, 96, 1, true, 0, Math.PI * 2 * arc); g.translate(0, L.y0 + L.h / 2, 0);
+      const m = fxMesh(new THREE.ShaderMaterial({ uniforms: U, vertexShader: CLOUD_VERT, fragmentShader: CLOUD_FRAG, side: THREE.BackSide, transparent: true, depthWrite: false, fog: false }), g);
+      m.renderOrder = -6 - i; this.group.add(m);
+    });
+  }
+  update(dt) { this.clock.tick(dt); }
+}
+
+// ---------------------------------------------------------------- огни фонарей как аура (кадры TMNT, Michael 2026-11-08)
+// Один лист к камере вокруг огня: ореол двумя ступенями с рваным краем, лучи-чёрточки, росчерки-дуги вокруг,
+// искры-ромбики летят вверх. Всё шагами 12 к/с, сложением, альфа .5 (Кувахара не размывает).
+const LAMP_VERT = /* glsl */`uniform float uSize; varying vec2 vP; void main(){ vP = position.xy * 2.; vec4 mv = modelViewMatrix * vec4(0., 0., 0., 1.); mv.xy += position.xy * uSize; gl_Position = projectionMatrix * mv; }`;
+const LAMP_FRAG = /* glsl */`
+uniform float uStep, uSeed, uK; uniform vec3 cCore, cMid, cEdge, uFx; varying vec2 vP;
+${GLSL_NOISE}
+void main(){
+  vec2 p = vP; float st = floor(uStep); float r = length(p); float a = atan(p.y, p.x);
+  vec3 c = vec3(0.);
+  float n1 = pfNoise(vec2(a * 3. + uSeed, st * .7)) - .5;
+  float h2 = 1. - smoothstep(0., .02, r - (.4 + n1 * .09));
+  float h1 = 1. - smoothstep(0., .02, r - (.2 + n1 * .05));
+  c += cEdge * h2 * .28 + cMid * h1 * .4;
+  // лучи-чёрточки
+  float u = a / 6.2832 * 20.; float ra = floor(u + .5); float rh = pfH11(ra * 1.37 + st * 3.1 + uSeed);
+  float ray = (1. - smoothstep(.06, .12, abs(u - ra))) * step(.55, rh) * smoothstep(.42, .46, r) * (1. - smoothstep(.5 + rh * .3, .54 + rh * .3, r));
+  c += cMid * ray * uFx.x;
+  // росчерки: вытянутые дуги вокруг огня, рвутся, перескакивают шагами
+  for (int k = 0; k < 2; k++) {
+    float fk = float(k); float tl = pfH11(floor(st * .5) + fk * 3. + uSeed) * 6.28;
+    vec2 q = mat2(cos(tl), -sin(tl), sin(tl), cos(tl)) * p;
+    float el = length(q * vec2(1., 2.4 + fk)); float rr = .58 + fk * .16;
+    float fw = max(fwidth(el), 1e-4); float ln = 1. - smoothstep(fw * .7, fw * 2., abs(el - rr));
+    float brk = smoothstep(-.1, .5, sin(atan(q.y, q.x) + fk * 2. + st * .4));
+    c += cEdge * ln * brk * 1.1 * uFx.y;
+  }
+  // искры-ромбики
+  for (int k = 0; k < 8; k++) {
+    float fk = float(k); float life = fract(uStep * .055 + pfH11(fk * 7.3 + uSeed));
+    vec2 sp = vec2((pfH11(fk * 3.1 + uSeed) - .5) * .5 + sin(life * 6. + fk) * .1, -.05 + life * .9);
+    vec2 dd = abs(p - sp); float dm = dd.x * 1.6 + dd.y;
+    float s = 1. - smoothstep(.022, .034, dm);
+    c += mix(cCore, cEdge, life) * s * (1. - life) * 1.6 * step(fk + .5, uFx.z);
+  }
+  c *= uK;
+  if (max(c.r, max(c.g, c.b)) < .01) discard;
+  gl_FragColor = vec4(c, .5);
+}`;
+export const LAMP_PRESETS = {
+  torch: { core: '#fff2c0', mid: '#ffa040', edge: '#ff5a1e' },
+  witch: { core: '#f0ffe0', mid: '#7aff8a', edge: '#1aa060' },
+  cold: { core: '#f0ffff', mid: '#8ae0ff', edge: '#3a7aff' },
+};
+export class LampFX {
+  // rays, arcs: 0..1 сила лучей и росчерков; sparks: сколько искр (0..8)
+  constructor(style, { size = 1, preset = 'torch', seed = Math.random() * 9, k = 1, rays = 1, arcs = 1, sparks = 8 } = {}) {
+    const p = LAMP_PRESETS[preset] ?? LAMP_PRESETS.torch; this.clock = new StepClock(12);
+    this.U = { uStep: this.clock.u, uSeed: { value: seed }, uK: { value: k }, uSize: { value: size }, uFx: { value: new THREE.Vector3(rays, arcs, sparks) }, cCore: { value: col(p.core) }, cMid: { value: col(p.mid) }, cEdge: { value: col(p.edge) } };
+    this.mesh = fxMesh(new THREE.ShaderMaterial({ uniforms: this.U, vertexShader: LAMP_VERT, fragmentShader: LAMP_FRAG, ...ADD, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.ZeroFactor }), new THREE.PlaneGeometry(1, 1));
+    this.mesh.frustumCulled = false; this.mesh.renderOrder = 5;
+    this.group = new THREE.Group(); this.group.add(this.mesh);
+  }
+  update(dt) { this.clock.tick(dt); }
+}

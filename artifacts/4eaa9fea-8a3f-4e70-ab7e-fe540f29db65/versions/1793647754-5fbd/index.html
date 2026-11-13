@@ -1,0 +1,59 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta charset="utf-8">
+<title>Лаборатория материалов</title>
+<style>
+  /* Один тёмный вид: окно-холст сцены, панель приборов слева. */
+  :root { --bg:#0d1716; --panel:rgba(14,26,25,0.82); --ink:#efe6d2; --muted:#a9b7a8; --acc:#e8c27a; --line:rgba(239,230,210,0.14); --chip:#1f2a28; --chipbg:rgba(253,240,214,0.86); color-scheme:dark; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:13px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; overflow:hidden; }
+  #stage { position:absolute; inset:0; }
+  #c { position:absolute; display:block; }
+  #cmp { position:absolute; display:none; pointer-events:none; }
+  #cmpImg { width:100%; height:100%; object-fit:fill; clip-path:inset(0 50% 0 0); display:block; }
+  #splitLine { position:absolute; top:0; bottom:0; left:50%; width:2px; background:var(--acc); box-shadow:0 0 6px rgba(0,0,0,.5); }
+  .tag { position:absolute; top:8px; padding:2px 8px; background:rgba(0,0,0,.55); border-radius:4px; font-size:12px; }
+  #panel { position:absolute; left:calc(12px + env(safe-area-inset-left, 0px)); top:calc(12px + env(safe-area-inset-top, 0px)); width:236px; max-height:calc(100% - 24px); overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 12px; backdrop-filter:blur(6px); }
+  #panel h1 { font-size:14px; margin:0 0 2px; color:var(--acc); font-weight:600; }
+  #panel .sub { color:var(--muted); font-size:12px; margin-bottom:8px; }
+  #panel h2 { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:10px 0 5px; font-weight:600; }
+  #presets { display:flex; flex-direction:column; gap:4px; }
+  #presets button, .btn { text-align:left; background:rgba(255,255,255,0.05); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:5px 8px; cursor:pointer; font:inherit; }
+  #presets button.on { border-color:var(--acc); background:rgba(232,194,122,0.16); }
+  #toggles { display:grid; grid-template-columns:1fr 1fr; gap:3px 8px; }
+  #toggles label { cursor:pointer; white-space:nowrap; }
+  #toggles label:nth-last-child(1) { grid-column:1 / -1; }
+  input[type=range] { width:100%; }
+  #fps { position:absolute; right:calc(12px + env(safe-area-inset-right, 0px)); top:calc(10px + env(safe-area-inset-top, 0px)); color:var(--muted); font-size:12px; background:rgba(0,0,0,.35); padding:2px 6px; border-radius:4px; }
+  #labels { position:absolute; inset:0; pointer-events:none; display:none; }
+  .lab { position:absolute; transform:translate(-50%,-100%); width:104px; text-align:center; font-size:11px; color:var(--chip); background:var(--chipbg); border-radius:5px; padding:3px 5px; }
+  #hide { position:absolute; left:calc(12px + env(safe-area-inset-left, 0px)); bottom:calc(12px + env(safe-area-inset-bottom, 0px)); }
+  button:focus-visible, input:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
+  @media (max-width:640px) { #panel { width:auto; right:12px; max-height:44%; } .lab { width:90px; font-size:10px; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="cmp"><img id="cmpImg" alt="кадр из видео"><div id="splitLine"></div><span class="tag" style="left:8px">Кадр из видео</span><span class="tag" style="right:8px">Прототип</span></div>
+  <div id="labels"></div>
+</div>
+<div id="panel">
+  <h1>Лаборатория материалов</h1>
+  <div class="sub">Свет, материалы и цвет по видео. Клавиши 1–8 переключают ракурсы, стрелки слегка поворачивают камеру.</div>
+  <h2>Ракурс</h2>
+  <div id="presets"></div>
+  <h2>Слои</h2>
+  <div id="toggles"></div>
+  <h2>Шторка сравнения</h2>
+  <input id="split" type="range" min="0" max="100" value="50">
+  <h2>Действия</h2>
+  <button class="btn" id="dustBtn">Поднять пыль</button>
+</div>
+<button class="btn" id="hide">Панель</button>
+<div id="fps"></div>
+<script type="module" src="src/main.js"></script>
+
+</body></html>

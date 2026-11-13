@@ -1,0 +1,25 @@
+<!-- @dsCard group="Выбор" height=210 -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Checkbox — превью</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;padding:16px;background:var(--bg);color:var(--ink);font:400 var(--fs-base)/var(--lh) var(--f-ui);-webkit-font-smoothing:antialiased}
+.row{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center}
+.row+.row,.cap+.row,.row+.cap{margin-top:var(--s3)}
+.cap{margin:0 0 var(--s2);font:var(--fw-sb) var(--fs-xs)/1.2 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.row+.cap,.stack+.cap{margin-top:var(--s5)}
+.stack{display:grid;gap:var(--s3);max-width:420px}
+</style>
+</head>
+<body>
+<p class="cap">Флажок</p>
+<div class="row"><label class="chk"><input type="checkbox" checked><span>Кернинг</span></label><label class="chk"><input type="checkbox"><span>Лигатуры</span></label><label class="chk"><input type="checkbox" disabled><span>Недоступно</span></label></div>
+<p class="cap">Радио</p>
+<div class="row"><label class="chk"><input type="radio" name="r" checked><span>Прямой</span></label><label class="chk"><input type="radio" name="r"><span>Италик</span></label></div>
+<p class="cap">Переключатель</p>
+<div class="row"><label class="tgl"><input type="checkbox" role="switch" checked><span>Скелет</span></label><label class="tgl"><input type="checkbox" role="switch"><span>Сетка</span></label><label class="tgl"><input type="checkbox" role="switch" disabled><span>Недоступно</span></label></div>
+</body>
+</html>

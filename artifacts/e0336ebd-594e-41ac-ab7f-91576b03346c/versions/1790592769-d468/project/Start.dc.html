@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Главное меню</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&amp;family=Kurale&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0A08;font-family:'Kurale',serif;color:#E8DFC8}
+a{color:#E08A3C}a:hover{color:#F2B26A}
+.plank{position:relative;background:linear-gradient(180deg,rgba(255,225,190,.05),rgba(0,0,0,.3)),repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,transparent 1px 7px),repeating-linear-gradient(180deg,rgba(255,215,170,.035) 0 1px,transparent 1px 13px),linear-gradient(90deg,#231A14,#2B2019 30%,#211813 60%,#2A1F18);border:1px solid #0A0806;box-shadow:inset 0 1px 0 rgba(255,220,180,.1),inset 0 0 0 2px #3B2C20,inset 0 0 0 3px #120D0A,0 14px 40px rgba(0,0,0,.7)}
+.nail{position:absolute;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#B0A898 0,#5B5650 35%,#1B1917 75%);box-shadow:0 1px 1px rgba(0,0,0,.8)}
+.mi{position:relative;display:flex;align-items:center;gap:16px;width:100%;box-sizing:border-box;height:54px;padding:0 20px;background:none;border:0;cursor:pointer;font-family:'Ruslan Display',serif;font-size:23px;letter-spacing:2px;color:#CDBFA2;text-decoration:none;text-align:left;transition:color .2s,transform .25s}
+.mi::before{content:'';position:absolute;inset:5px 6px;background:linear-gradient(90deg,rgba(142,42,34,.4),transparent 80%);opacity:0;transition:opacity .25s}
+.mi::after{content:'';position:absolute;left:48px;right:20px;bottom:8px;height:1px;background:linear-gradient(90deg,#C8412F,transparent);transform:scaleX(0);transform-origin:left;transition:transform .4s}
+.mi>span{position:relative}
+.mi .mk{width:10px;height:10px;flex-shrink:0;transform:rotate(45deg);border:1px solid #6B5440;transition:transform .4s,background .2s,box-shadow .2s,border-color .2s}
+.mi:hover{color:#F6D29A;transform:translateX(8px)}
+.mi:hover::before{opacity:1}
+.mi:hover::after{transform:scaleX(1)}
+.mi:hover .mk{transform:rotate(225deg);background:#B8392B;border-color:#E0604A;box-shadow:0 0 12px #E0604A}
+.mi:active{transform:translateX(8px) scale(.97);color:#FFF4DE}
+.mi:focus-visible{outline:1px solid #E08A3C;outline-offset:-2px}
+.x{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#140E0B;border:1px solid #4A382A;cursor:pointer;color:#CDBFA2;transition:transform .2s,border-color .2s,color .2s}
+.x:hover{transform:rotate(90deg);border-color:#C8412F;color:#F6D29A}
+.x:active{transform:rotate(90deg) scale(.9)}
+.moon{animation:moon 6s ease-in-out infinite}
+@keyframes moon{0%,100%{opacity:.85}50%{opacity:1}}
+.rag{animation:sway 4.5s ease-in-out infinite;transform-box:fill-box;transform-origin:top center}
+.rag2{animation:sway 5.5s ease-in-out infinite reverse;transform-box:fill-box;transform-origin:top center}
+@keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
+.fog{animation:drift 22s ease-in-out infinite alternate}
+.fog2{animation:drift 16s ease-in-out infinite alternate-reverse}
+@keyframes drift{from{transform:translateX(-70px)}to{transform:translateX(70px)}}
+.ember{position:absolute;bottom:-10px;width:3px;height:3px;border-radius:50%;background:#F2A25A;box-shadow:0 0 6px #E08A3C,0 0 12px #B8392B;animation:rise linear infinite;opacity:0}
+@keyframes rise{0%{transform:translate(0,0);opacity:0}10%{opacity:.95}70%{opacity:.6}100%{transform:translate(40px,-700px);opacity:0}}
+.rise{animation:riseIn .35s cubic-bezier(.2,.8,.3,1)}
+@keyframes riseIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;background:linear-gradient(90deg,#8E2A22,#3B2C20);border:1px solid #0A0806}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-6px;background:#E8C98A;transform:rotate(45deg);border:1px solid #3A2A1E;box-shadow:0 0 8px rgba(224,138,60,.6);transition:transform .15s}
+input[type=range]:active::-webkit-slider-thumb{transform:rotate(45deg) scale(1.3)}
+input[type=range]::-moz-range-track{height:4px;background:#5A2A1E}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:0;background:#E8C98A;border:1px solid #3A2A1E}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: linear-gradient(180deg, #2A1E1E 0%, #1A1917 35%, #0E100D 75%); font-family: 'Kurale', serif; color: #E8DFC8">
+<svg width="0" height="0" style="position: absolute" aria-hidden="true"><defs>
+<pattern id="orn" width="28" height="14" patternUnits="userSpaceOnUse"><path d="M14 1.5 L21 7 L14 12.5 L7 7 Z" fill="none" stroke="#A8352A" stroke-width="1.3"></path><path d="M14 4.5 L17 7 L14 9.5 L11 7 Z" fill="#A8352A"></path><path d="M0 7 H5 M23 7 H28 M3 3 L5 7 L3 11 M25 3 L23 7 L25 11" stroke="#A8352A" stroke-width="1" fill="none"></path></pattern>
+<pattern id="ornR" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#7E231C"></rect><path d="M8 2 L14 8 L8 14 L2 8 Z" fill="none" stroke="#D9C9A8" stroke-width="1"></path><rect x="7" y="7" width="2" height="2" fill="#D9C9A8"></rect></pattern>
+<radialGradient id="moonG"><stop offset="0" stop-color="#B84A3A"></stop><stop offset="0.45" stop-color="#7A2A22"></stop><stop offset="1" stop-color="#7A2A22" stop-opacity="0"></stop></radialGradient>
+<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+</defs></svg>
+
+<svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<circle class="moon" cx="930" cy="170" r="150" fill="url(#moonG)" opacity="0.5"></circle>
+<circle class="moon" cx="930" cy="170" r="58" fill="#8A3228"></circle>
+<circle cx="912" cy="158" r="10" fill="#76271F"></circle><circle cx="948" cy="186" r="6" fill="#76271F"></circle>
+<path d="M0 720 L0 470 L30 410 L48 450 L80 340 L112 450 L140 390 L170 460 L205 330 L240 455 L270 410 L300 470 L340 380 L372 465 L410 420 L450 480 L520 490 L600 470 L680 490 L760 460 L800 400 L830 450 L870 330 L905 450 L940 390 L975 460 L1010 300 L1048 450 L1080 395 L1110 455 L1150 350 L1185 450 L1220 400 L1250 460 L1280 410 L1280 720 Z" fill="#1A221C"></path>
+<g class="fog"><rect x="-80" y="440" width="1440" height="90" fill="#9CAE9A" opacity="0.07"></rect></g>
+<path d="M0 720 L0 580 L50 530 L70 570 L110 490 L150 575 L200 555 L260 590 L400 600 L560 580 L700 595 L860 580 L960 590 L1030 530 L1060 570 L1100 470 L1140 570 L1190 540 L1230 580 L1280 560 L1280 720 Z" fill="#101511"></path>
+<g fill="#0B0D0B">
+<path d="M1060 600 L1068 420 L1082 420 L1090 600 Z"></path>
+<path d="M1054 420 L1075 390 L1096 420 Z"></path>
+<rect x="1040" y="455" width="70" height="8"></rect>
+<path d="M1170 610 L1176 470 L1188 470 L1194 610 Z"></path>
+<path d="M1166 470 L1182 448 L1198 470 Z"></path>
+<path d="M720 620 L730 560 M760 622 L766 566 M800 618 L812 558 M840 624 L846 572" stroke="#0B0D0B" stroke-width="6"></path>
+<path d="M710 585 L860 578" stroke="#0B0D0B" stroke-width="5"></path>
+</g>
+<g class="rag"><path d="M1098 455 L1112 455 L1110 540 L1104 530 L1099 545 Z" fill="#8E2A22"></path></g>
+<g class="rag2"><path d="M1190 480 L1200 480 L1199 540 L1194 532 L1190 544 Z" fill="#8E2A22"></path></g>
+<circle cx="1075" cy="430" r="2" fill="#E0604A"></circle><circle cx="1085" cy="430" r="2" fill="#E0604A"></circle>
+<g class="fog2"><rect x="-80" y="560" width="1440" height="160" fill="#9CAE9A" opacity="0.08"></rect></g>
+</svg>
+
+<sc-for list="{{embers}}" as="e" hint-placeholder-count="10"><span class="ember" style="{{e.style}}"></span></sc-for>
+
+<div style="position: absolute; left: 96px; top: 70px; display: flex; flex-direction: column; gap: 14px">
+<h1 style="margin: 0; font-family: 'Ruslan Display', serif; font-weight: 400; font-size: 88px; line-height: 0.95; letter-spacing: 4px; color: #E8DFC8; text-shadow: 0 0 30px rgba(200,65,47,0.3), 0 4px 0 #000">Русская<br>хтонь</h1>
+<svg width="360" height="14" aria-hidden="true"><rect width="360" height="14" fill="url(#orn)"></rect></svg>
+<div style="font-size: 20px; font-style: italic; color: #A89A80">Деревня на краю леса. Лес — на краю света.</div>
+</div>
+
+<nav class="plank" aria-label="Главное меню" style="position: absolute; left: 96px; top: 358px; width: 380px; box-sizing: border-box; padding: 26px 16px 22px; display: flex; flex-direction: column; gap: 2px">
+<span class="nail" style="left: 9px; top: 9px"></span><span class="nail" style="right: 9px; top: 9px"></span><span class="nail" style="left: 9px; bottom: 9px"></span><span class="nail" style="right: 9px; bottom: 9px"></span>
+<svg width="340" height="16" style="position: absolute; left: 20px; top: -9px; box-shadow: 0 3px 6px rgba(0,0,0,0.6)" aria-hidden="true"><rect width="340" height="16" fill="url(#ornR)"></rect></svg>
+<a class="mi" href="Prologue.dc.html"><span class="mk"></span><span>Новая игра</span></a>
+<a class="mi" href="Game.dc.html"><span class="mk"></span><span>Продолжить</span></a>
+<button class="mi" onClick="{{toggleSettings}}"><span class="mk"></span><span>Настройки</span></button>
+<button class="mi"><span class="mk"></span><span>Выход</span></button>
+</nav>
+
+<sc-if value="{{showSettings}}" hint-placeholder-val="{{ false }}">
+<section class="plank rise" style="position: absolute; right: 96px; top: 250px; width: 380px; box-sizing: border-box; padding: 30px 30px 28px; display: flex; flex-direction: column; gap: 20px" aria-label="Настройки">
+<span class="nail" style="left: 9px; top: 9px"></span><span class="nail" style="right: 9px; top: 9px"></span><span class="nail" style="left: 9px; bottom: 9px"></span><span class="nail" style="right: 9px; bottom: 9px"></span>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<h2 style="margin: 0; font-family: 'Ruslan Display', serif; font-weight: 400; font-size: 28px; letter-spacing: 1px; color: #E8DFC8">Настройки</h2>
+<button class="x" onClick="{{toggleSettings}}" aria-label="Закрыть">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5l14 14M19 5L5 19"></path></svg>
+</button>
+</div>
+<svg width="100%" height="14" aria-hidden="true"><rect width="100%" height="14" fill="url(#orn)"></rect></svg>
+<label style="display: flex; flex-direction: column; gap: 8px; font-size: 17px; color: #CDBFA2">Музыка<input type="range" min="0" max="100" value="70"></label>
+<label style="display: flex; flex-direction: column; gap: 8px; font-size: 17px; color: #CDBFA2">Звуки<input type="range" min="0" max="100" value="80"></label>
+<label style="display: flex; align-items: center; gap: 12px; font-size: 17px; color: #CDBFA2; cursor: pointer"><input type="checkbox" checked="" style="accent-color: #B8392B; width: 18px; height: 18px">Субтитры</label>
+</section>
+</sc-if>
+
+<div style="position: absolute; right: 32px; bottom: 24px; font-size: 14px; color: #7C7462; font-style: italic">v0.1 · черновой прототип</div>
+<svg width="1280" height="720" style="position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0.1; mix-blend-mode: overlay" aria-hidden="true"><rect width="1280" height="720" filter="url(#gr)"></rect></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const open = !!(this.state && this.state.settings);
+    const embers = Array.from({ length: 10 }, (_, k) => ({
+      style: 'left: ' + ((k * 131) % 1240 + 20) + 'px; animation-duration: ' + (8 + (k * 29) % 6) + 's; animation-delay: ' + ((k * 17) % 10) + 's'
+    }));
+    return {
+      embers: embers,
+      showSettings: open,
+      toggleSettings: () => this.setState({ settings: !open })
+    };
+  }
+}
+</script>
+</body>
+</html>

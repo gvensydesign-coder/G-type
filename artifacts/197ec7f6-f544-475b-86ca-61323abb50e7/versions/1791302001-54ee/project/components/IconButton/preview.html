@@ -1,0 +1,9 @@
+<!-- @dsCard group="Actions" height=190 subtitle="Круглые кнопки-иконки: стандартная, мягкая, glass на шапке, отправка." -->
+<style>.pv{display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:20px;background:var(--bg-app)}.hero{display:flex;gap:12px;align-items:center;padding:12px 16px;border-radius:var(--radius-xl);background:var(--bd-grad-hero)}</style>
+<div class="pv" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    B.IconButton({ icon: 'plus', label: 'Add' }) + B.IconButton({ icon: 'edit', label: 'Edit', variant: 'soft' }) + B.IconButton({ icon: 'arrow-up', label: 'Send', variant: 'send' }) + B.IconButton({ icon: 'trash', label: 'Delete', size: 'sm' }) + B.IconButton({ icon: 'plus', label: 'Disabled', disabled: true }) +
+    '<div class="hero">' + B.IconButton({ icon: 'menu', label: 'Menu', variant: 'glass' }) + '<span class="bd-pill-group">' + B.IconButton({ icon: 'bell', label: 'Notifications', variant: 'glass', dot: true, size: 'sm' }) + B.IconButton({ icon: 'search', label: 'Search', variant: 'glass', size: 'sm' }) + '</span></div>';
+</script>

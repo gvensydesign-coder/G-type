@@ -1,0 +1,22 @@
+<!-- @dsCard group="Screens" height=1180 width=980 subtitle="Каталог помощников (десктоп): заголовок, фильтры-чипы, сетка карточек с градиентными обложками." -->
+<style>
+  .disc { display: flex; flex-direction: column; gap: 24px; padding: 40px; min-width: 0; background: var(--bg-app); color: var(--text-primary); }
+  .disc__title { display: flex; align-items: center; gap: 12px; margin: 0; font: 800 28px/34px var(--font-display); letter-spacing: -0.01em; }
+  .disc__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .disc__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+</style>
+<div id="root"></div>
+<script>
+  var B = window.Buddy;
+  function page() {
+    var chips = ['All Agents', 'Sleep', 'Fitness', 'Nutrition', 'Mindfulness', 'Focus'].map(function (l, i) { return B.Chip({ filter: true, label: l, pressed: i === 0 }); }).join('');
+    var cards = [
+      B.AgentCard({ title: 'Morning Routine Coach', desc: 'A gentle wake-up plan that adapts to you', cover: 'aurora', apps: ['alarm', 'sun', 'list-check'], by: 'Buddy Team' }),
+      B.AgentCard({ title: 'Water Reminder', desc: 'Friendly nudges every 30 minutes', cover: 'lagoon', apps: ['droplet', 'bell', 'tracker'], by: 'Buddy Team' }),
+      B.AgentCard({ title: 'Sleep Wind-down', desc: 'An evening ritual that actually sticks', cover: 'candy', apps: ['moon', 'book', 'heart'], by: 'Buddy Team' }),
+      B.AgentCard({ title: 'Workout Buddy', desc: 'Short sessions that fit your day', cover: 'sunset', apps: ['dumbbell', 'bike', 'flame'], by: 'Buddy Team' })
+    ].join('');
+    return '<div class="disc bd-root"><h1 class="disc__title">' + B.icon('compass', { size: 28 }) + 'Discover Agent</h1><div class="disc__chips">' + chips + '</div><div class="disc__grid bd-stagger">' + cards + '</div></div>';
+  }
+  document.getElementById('root').innerHTML = '<div data-theme="light">' + page() + '</div><div data-theme="dark">' + page() + '</div>';
+</script>

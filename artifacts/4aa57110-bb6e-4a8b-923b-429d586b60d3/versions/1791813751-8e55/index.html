@@ -1,0 +1,162 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Сруб: сравнение текстур</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Golos+Text:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: full-screen 3D viewport, slim control bar on top, draggable before/after divider.
+   Palette is dark and single-theme on purpose: cold teal night, ember orange, bark brown. */
+:root{
+  --night:#0c1315; --teal:#1d3a3d; --ember:#e8913a; --bark:#c9b79a; --ink:#e9e2d3; --muted:#8c9a96;
+  --panel:rgba(12,19,21,.82); --line:rgba(201,183,154,.22);
+  --display:'Ruslan Display',Georgia,serif; --body:'Golos Text',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-family:var(--body);overflow:hidden}
+#stage{position:fixed;inset:0;background:radial-gradient(120% 90% at 50% 20%,#27474a 0%,#142225 45%,#080d0e 100%)}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+header{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(var(--panel),transparent);z-index:5;pointer-events:none}
+header>*{pointer-events:auto}
+h1{font:400 clamp(1.1rem,3.2vw,1.6rem)/1.1 var(--display);margin:0;letter-spacing:.02em;color:var(--bark)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:600 .8rem var(--body);color:var(--ink);background:var(--panel);border:1px solid var(--line);padding:8px 14px;border-radius:4px;cursor:pointer}
+button[aria-pressed=true]{background:var(--ember);color:#1a0e03;border-color:var(--ember)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--ember);outline-offset:2px}
+label{font-size:.78rem;color:var(--muted);display:flex;gap:8px;align-items:center}
+input[type=range]{accent-color:var(--ember);width:110px}
+#split{position:fixed;top:0;bottom:0;width:44px;margin-left:-22px;cursor:ew-resize;z-index:4;touch-action:none}
+#split::before{content:"";position:absolute;left:21px;top:0;bottom:0;width:2px;background:var(--ember);box-shadow:0 0 14px rgba(232,145,58,.6)}
+#split i{position:absolute;left:4px;top:50%;width:36px;height:36px;margin-top:-18px;border-radius:50%;background:var(--night);border:2px solid var(--ember);display:grid;place-items:center;color:var(--ember);font-style:normal;font-size:.9rem}
+.tag{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));padding:6px 12px;background:var(--panel);border:1px solid var(--line);border-radius:4px;font-size:.78rem;z-index:3;pointer-events:none}
+#tagL{left:16px}#tagR{right:16px;color:var(--ember)}
+#load{position:fixed;inset:0;display:grid;place-items:center;z-index:9;background:var(--night);font:400 1.2rem var(--display);color:var(--bark);text-align:center;padding:16px}
+#load small{display:block;font:400 .8rem var(--body);color:var(--muted);margin-top:8px}
+#hint{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));font-size:.75rem;color:var(--muted);z-index:2;pointer-events:none;text-align:center;max-width:40vw}
+@media(max-width:700px){#hint{display:none}}
+</style>
+
+<div id="stage"></div>
+<header>
+  <h1>Сруб · текстуры 4K</h1>
+  <div class="ctl">
+    <button id="bSplit" aria-pressed="true">Сравнение</button>
+    <button id="bOld" aria-pressed="false">До</button>
+    <button id="bNew" aria-pressed="false">После</button>
+    <button id="bRot" aria-pressed="false">Вращать</button>
+    <label for="rBump">Рельеф <input id="rBump" type="range" min="0" max="3" step="0.05" value="1.2"></label>
+  </div>
+</header>
+<div id="split" hidden><i>⇆</i></div>
+<div class="tag" id="tagL">До</div>
+<div class="tag" id="tagR">После · 4096×4096</div>
+<div id="hint">Левая кнопка: вращение · колесо: масштаб · правая: сдвиг</div>
+<div id="load">Загрузка модели<small id="lp">геометрия…</small></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(async function(){
+const $=id=>document.getElementById(id);
+const stage=$('stage'), lp=$('lp');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.15;
+stage.appendChild(renderer.domElement);
+const maxAniso=renderer.capabilities.getMaxAnisotropy();
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(35,1,0.01,50);
+camera.position.set(0.9,0.55,1.35);
+const controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.target.set(0,0.33,0); controls.enableDamping=true; controls.dampingFactor=.08;
+controls.minDistance=0.25; controls.maxDistance=4; controls.maxPolarAngle=Math.PI*0.52;
+controls.autoRotateSpeed=1.2; controls.update();
+
+scene.add(new THREE.HemisphereLight(0x7fa3a8,0x1c130b,0.85));
+const sun=new THREE.DirectionalLight(0xffd9a8,2.1); sun.position.set(-1.2,1.6,1.0); scene.add(sun);
+const rim=new THREE.DirectionalLight(0x6ea0b0,1.0); rim.position.set(1.4,0.8,-1.2); scene.add(rim);
+const warm=new THREE.PointLight(0xff9a40,0.6,1.2); warm.position.set(0,0.2,0.6); scene.add(warm);
+const ground=new THREE.Mesh(new THREE.CircleGeometry(1.6,64),new THREE.MeshStandardMaterial({color:0x0f1612,roughness:1}));
+ground.rotation.x=-Math.PI/2; ground.position.y=-0.002; scene.add(ground);
+
+// geometry
+const meta=await (await fetch('geo.json')).json();
+const buf=await (await fetch('geo.wasm')).arrayBuffer();
+lp.textContent='сборка сетки…';
+const o=meta.off,n=meta.n;
+const pq=new Int16Array(buf,o[0],n*3), nq=new Int8Array(buf,o[1],n*4), uq=new Uint16Array(buf,o[2],n*2), ix=new Uint32Array(buf,o[3],meta.ni*3);
+const pos=new Float32Array(n*3), nor=new Float32Array(n*3);
+for(let i=0;i<n;i++){
+  for(let k=0;k<3;k++){pos[i*3+k]=pq[i*3+k]/32767*meta.e[k]+meta.c[k]; nor[i*3+k]=nq[i*4+k]/127;}
+}
+const geo=new THREE.BufferGeometry();
+geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+geo.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+geo.setAttribute('uv',new THREE.BufferAttribute(uq,2,true));
+geo.setIndex(new THREE.BufferAttribute(ix,1));
+geo.computeTangents&&0;
+
+function loadTex(url,srgb,label){
+  return new Promise((res,rej)=>new THREE.TextureLoader().load(url,t=>{
+    t.flipY=false; t.anisotropy=maxAniso; if(srgb)t.encoding=THREE.sRGBEncoding; t.generateMipmaps=true;
+    t.minFilter=THREE.LinearMipmapLinearFilter; lp.textContent=label; res(t);},undefined,rej));
+}
+const [tOld,tNew,tNorm,tEm]=await Promise.all([
+  loadTex('old_4096.jpg',true,'текстуры…'),loadTex('new_4096.jpg',true,'текстуры…'),
+  loadTex('normal_4096.jpg',false,'текстуры…'),loadTex('emissive_2048.jpg',true,'текстуры…')]);
+
+const mOld=new THREE.MeshStandardMaterial({map:tOld,roughness:.95,metalness:0});
+const mNew=new THREE.MeshStandardMaterial({map:tNew,normalMap:tNorm,normalScale:new THREE.Vector2(1.2,1.2),
+  emissiveMap:tEm,emissive:new THREE.Color(0xffa050),emissiveIntensity:1.6,roughness:.88,metalness:0});
+const meshOld=new THREE.Mesh(geo,mOld), meshNew=new THREE.Mesh(geo,mNew);
+scene.add(meshOld,meshNew);
+
+let mode='split', split=0.5;
+const sp=$('split'), tagL=$('tagL'), tagR=$('tagR');
+function setMode(m){
+  mode=m;
+  for(const [id,k] of [['bSplit','split'],['bOld','old'],['bNew','new']]) $(id).setAttribute('aria-pressed',String(k===m));
+  sp.hidden=m!=='split'; tagL.hidden=m==='new'; tagR.hidden=m==='old';
+  tagL.style.left='16px'; tagR.style.right='16px';
+  layout();
+}
+$('bSplit').onclick=()=>setMode('split'); $('bOld').onclick=()=>setMode('old'); $('bNew').onclick=()=>setMode('new');
+$('bRot').onclick=e=>{controls.autoRotate=!controls.autoRotate; e.currentTarget.setAttribute('aria-pressed',String(controls.autoRotate));};
+$('rBump').oninput=e=>{const v=+e.target.value; mNew.normalScale.set(v,v);};
+
+let W=1,H=1;
+function layout(){
+  W=innerWidth; H=innerHeight; renderer.setSize(W,H); camera.aspect=W/H; camera.updateProjectionMatrix();
+  sp.style.left=(split*W)+'px';
+}
+addEventListener('resize',layout);
+let drag=false;
+sp.addEventListener('pointerdown',e=>{drag=true;sp.setPointerCapture(e.pointerId);});
+sp.addEventListener('pointermove',e=>{if(!drag)return; split=Math.min(.95,Math.max(.05,e.clientX/W)); sp.style.left=(split*W)+'px';});
+sp.addEventListener('pointerup',()=>drag=false);
+
+function draw(){
+  renderer.setScissorTest(false); renderer.clear();
+  const dpr=1;
+  const pass=(x0,x1,old)=>{
+    meshOld.visible=old; meshNew.visible=!old;
+    renderer.setScissorTest(true); renderer.setViewport(0,0,W,H); renderer.setScissor(x0,0,Math.max(1,x1-x0),H);
+    renderer.render(scene,camera);
+  };
+  if(mode==='old') pass(0,W,true);
+  else if(mode==='new') pass(0,W,false);
+  else { const x=Math.round(split*W); pass(0,x,true); pass(x,W,false); }
+}
+const clock=new THREE.Clock();
+function loop(){
+  requestAnimationFrame(loop);
+  const t=clock.getElapsedTime(); warm.intensity=0.55+0.12*Math.sin(t*7.3)*Math.sin(t*2.1);
+  controls.update(); draw();
+}
+layout(); setMode('split');
+$('load').remove(); loop();
+})().catch(e=>{const l=document.getElementById('load'); if(l) l.innerHTML='Не удалось загрузить модель<small>'+e.message+'</small>';});
+</script>
+
+</body></html>

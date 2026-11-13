@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Герой</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Kurale&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0A08;font-family:'Kurale',serif;color:#E8DFC8}
+a{color:#E08A3C}a:hover{color:#F2B26A}
+.rus{font-family:'Ruslan Display',serif;font-weight:400}
+.plank{position:relative;background:linear-gradient(180deg,rgba(255,225,190,.05),rgba(0,0,0,.3)),repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,transparent 1px 7px),repeating-linear-gradient(180deg,rgba(255,215,170,.035) 0 1px,transparent 1px 13px),linear-gradient(90deg,#231A14,#2B2019 30%,#211813 60%,#2A1F18);border:1px solid #0A0806;box-shadow:inset 0 1px 0 rgba(255,220,180,.1),inset 0 0 0 2px #3B2C20,inset 0 0 0 3px #120D0A,0 12px 30px rgba(0,0,0,.7)}
+.nail{position:absolute;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#B0A898 0,#5B5650 35%,#1B1917 75%);box-shadow:0 1px 1px rgba(0,0,0,.8)}
+.inset{background:linear-gradient(180deg,#120E0B,#17120E);box-shadow:inset 0 2px 8px rgba(0,0,0,.85),inset 0 0 0 1px #0A0806}
+.back{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 18px;background:linear-gradient(180deg,#1C1612,#100D0B);border:1px solid #4A382A;box-shadow:inset 0 0 12px rgba(0,0,0,.8);font-family:'Ruslan Display',serif;font-size:14px;letter-spacing:2px;color:#CDBFA2;text-decoration:none;transition:transform .15s,border-color .2s,color .2s,box-shadow .2s}
+.back svg{transition:transform .2s}
+.back:hover{border-color:#C8702F;color:#F6D29A;box-shadow:inset 0 0 12px rgba(200,112,47,.2),0 0 14px rgba(224,138,60,.35)}
+.back:hover svg{transform:translateX(-4px)}
+.back:active{transform:scale(.95)}
+.tab{position:relative;height:40px;padding:0 22px;border:0;background:transparent;font-family:'Ruslan Display',serif;font-size:15px;letter-spacing:2px;color:#9C8F78;cursor:pointer;transition:color .2s,transform .15s}
+.tab:hover{color:#F6D29A}
+.tab:active{transform:scale(.95)}
+.tab.on{color:#F3E6CC;background:linear-gradient(180deg,#9A2E24,#6A1C16);box-shadow:inset 0 0 0 1px #C4473A,0 3px 8px rgba(0,0,0,.5);clip-path:polygon(0 0,100% 0,100% 100%,55% 100%,50% 86%,45% 100%,0 100%)}
+.btn{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:46px;padding:0 30px;border:0;background:linear-gradient(180deg,#7A5334,#2A1B12);clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%);cursor:pointer;font-family:'Ruslan Display',serif;font-size:14px;letter-spacing:2px;color:#E8DFC8;text-decoration:none;transition:transform .18s,filter .18s,color .2s,background .25s}
+.btn::before{content:'';position:absolute;inset:2px;z-index:-1;clip-path:inherit;background:linear-gradient(180deg,#2E2119,#150F0B)}
+.btn:hover{color:#F6D29A;transform:translateY(-2px);background:linear-gradient(180deg,#E08A3C,#6B2A15)}
+.btn:active{transform:scale(.96);filter:brightness(.8)}
+.btn.red{background:linear-gradient(180deg,#C8412F,#5E1914)}
+.btn.red::before{background:linear-gradient(180deg,#8E2A22,#4A120E)}
+.btn[disabled]{filter:grayscale(1) brightness(.5);cursor:not-allowed;transform:none}
+.pm{width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#140F0C;border:1px solid #5A4634;cursor:pointer;color:#E8DFC8;font-family:'Kurale',serif;font-size:18px;transition:transform .15s,border-color .2s,color .2s,box-shadow .2s}
+.pm:hover{border-color:#E08A3C;color:#F6D29A;box-shadow:0 0 10px rgba(224,138,60,.4)}
+.pm:active{transform:scale(.88)}
+.pm[disabled]{opacity:.3;cursor:not-allowed;box-shadow:none;border-color:#3B2C20}
+.emo{height:34px;padding:0 10px;background:#140F0C;border:1px solid #3B2C20;cursor:pointer;font-family:'Kurale',serif;font-size:14px;color:#A89A80;transition:all .2s}
+.emo:hover{border-color:#C8702F;color:#F6D29A;transform:translateY(-2px)}
+.emo:active{transform:scale(.94)}
+.emo.on{background:linear-gradient(180deg,#9A2E24,#6A1C16);border-color:#C4473A;color:#F3E6CC}
+.node{position:relative;width:78px;height:78px;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .25s cubic-bezier(.3,1.5,.5,1)}
+.node .dia{position:absolute;inset:10px;transform:rotate(45deg);border:2px solid #5A4634;background:#140F0C;box-shadow:0 0 0 3px #0A0806;transition:all .25s}
+.node svg{position:relative;transition:transform .3s}
+.node:hover{transform:scale(1.08)}
+.node:hover svg{transform:rotate(-10deg)}
+.node:active{transform:scale(.94)}
+.node.learned .dia{border-color:#E08A3C;background:radial-gradient(circle,#5A2A17,#1A100B);box-shadow:0 0 0 3px #0A0806,0 0 18px rgba(224,138,60,.5)}
+.node.sel .dia{border-color:#E0604A;box-shadow:0 0 0 3px #0A0806,0 0 0 5px #C8412F,0 0 22px rgba(200,65,47,.6)}
+.slot{position:relative;display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;height:62px;padding:0 14px;background:linear-gradient(90deg,#1C1612,#120E0B);border:1px solid #4A382A;cursor:pointer;font-family:'Kurale',serif;color:#E8DFC8;text-align:left;transition:transform .2s,border-color .2s,box-shadow .2s}
+.slot:hover{transform:translateX(4px);border-color:#C8702F;box-shadow:0 0 12px rgba(224,138,60,.3)}
+.slot.sel{border-color:#C8412F;box-shadow:inset 0 0 0 1px #C8412F}
+.itm{position:relative;height:74px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#1C1612,#0F0C0A);border:1px solid #4A382A;box-shadow:inset 0 0 14px rgba(0,0,0,.85);cursor:pointer;transition:transform .2s cubic-bezier(.3,1.5,.5,1),border-color .2s,box-shadow .2s}
+.itm svg{transition:transform .3s}
+.itm:hover{transform:translateY(-4px);border-color:#C8702F;box-shadow:inset 0 0 14px rgba(200,112,47,.15),0 0 14px rgba(224,138,60,.35)}
+.itm:hover svg{transform:scale(1.12) rotate(-6deg)}
+.itm:active{transform:scale(.93)}
+.itm.sel{border-color:#C8412F;box-shadow:inset 0 0 0 1px #C8412F,0 0 16px rgba(200,65,47,.45)}
+.itm.empty{cursor:default;opacity:.45}
+.itm.empty:hover{transform:none;border-color:#4A382A;box-shadow:inset 0 0 14px rgba(0,0,0,.85)}
+.rise{animation:riseIn .35s cubic-bezier(.2,.8,.3,1)}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.aura{animation:aura 3.5s ease-in-out infinite}
+@keyframes aura{0%,100%{opacity:.25;transform:scale(.96)}50%{opacity:.5;transform:scale(1.04)}}
+.cape{animation:cape 4s ease-in-out infinite;transform-box:fill-box;transform-origin:top center}
+@keyframes cape{0%,100%{transform:skewX(0)}50%{transform:skewX(-3deg)}}
+.toast{animation:toast 2.6s ease forwards}
+@keyframes toast{0%{opacity:0;transform:translateY(-14px)}10%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+.pip{width:14px;height:14px;transform:rotate(45deg);transition:all .3s}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 20% 50%, #231A16 0%, #0E0C0A 70%); font-family: 'Kurale', serif; color: #E8DFC8">
+<svg width="0" height="0" style="position: absolute" aria-hidden="true"><defs>
+<pattern id="orn" width="28" height="14" patternUnits="userSpaceOnUse"><path d="M14 1.5 L21 7 L14 12.5 L7 7 Z" fill="none" stroke="#A8352A" stroke-width="1.3"></path><path d="M14 4.5 L17 7 L14 9.5 L11 7 Z" fill="#A8352A"></path><path d="M0 7 H5 M23 7 H28 M3 3 L5 7 L3 11 M25 3 L23 7 L25 11" stroke="#A8352A" stroke-width="1" fill="none"></path></pattern>
+<pattern id="ornR" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#7E231C"></rect><path d="M8 2 L14 8 L8 14 L2 8 Z" fill="none" stroke="#D9C9A8" stroke-width="1"></path><rect x="7" y="7" width="2" height="2" fill="#D9C9A8"></rect></pattern>
+<pattern id="lam" width="8" height="6" patternUnits="userSpaceOnUse"><rect width="8" height="6" fill="#4A4F4A"></rect><path d="M0 5.5 H8 M4 0 V5.5" stroke="#2A2E2A" stroke-width="1"></path></pattern>
+<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+</defs></svg>
+
+<div style="position: absolute; left: 40px; top: 24px; right: 40px; height: 56px; display: flex; align-items: center; gap: 24px">
+<a class="back" href="Game.dc.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 4l-8 8 8 8"></path></svg>В ДЕРЕВНЮ</a>
+<h1 class="rus" style="margin: 0; font-size: 40px; letter-spacing: 2px; color: #E8DFC8; text-shadow: 0 3px 0 #000">Богатырь</h1>
+<div style="width: 38px; height: 38px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #C8412F, #7E231C 60%, #4A120E); box-shadow: 0 2px 4px rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; font-family: 'Ruslan Display', serif; font-size: 17px; color: #F3E6CC">3</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; color: #A89A80">Опыт 60 / 100</span>
+<div style="width: 180px; height: 7px; background: #140F0C; box-shadow: inset 0 0 0 1px #3B2C20"><div style="width: 60%; height: 7px; background: repeating-linear-gradient(135deg, #D8CFB8 0 5px, #A89A80 5px 8px)"></div></div>
+</div>
+<div style="flex-grow: 1"></div>
+<div style="display: flex; gap: 12px">
+<div class="inset" style="padding: 8px 14px; font-size: 14px; color: #CDBFA2">Очки силы: <span style="color: #E08A3C; font-size: 17px">{{free}}</span></div>
+<div class="inset" style="padding: 8px 14px; font-size: 14px; color: #CDBFA2">Очки умений: <span style="color: #E08A3C; font-size: 17px">{{sp}}</span></div>
+</div>
+</div>
+
+<div class="plank" style="position: absolute; left: 40px; top: 100px; width: 400px; height: 590px; box-sizing: border-box; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<span class="nail" style="left: 8px; top: 8px"></span><span class="nail" style="right: 8px; top: 8px"></span><span class="nail" style="left: 8px; bottom: 8px"></span><span class="nail" style="right: 8px; bottom: 8px"></span>
+<div class="inset" style="position: relative; height: 380px; overflow: hidden; display: flex; align-items: flex-end; justify-content: center">
+<svg width="356" height="380" viewBox="0 0 356 380" aria-label="Богатырь-защитник">
+<circle class="aura" cx="178" cy="190" r="150" fill="{{emoColor}}" style="transform-origin: 178px 190px"></circle>
+<path d="M0 340 C100 320 256 320 356 340 V380 H0 Z" fill="#0E0C0A"></path>
+<g class="cape"><path d="M120 150 C80 220 70 300 78 370 L278 370 C286 300 276 220 236 150 Z" fill="#7E231C"></path><path d="M120 150 C96 210 90 280 94 370 L110 370 C108 290 114 220 132 160 Z" fill="#5E1914"></path></g>
+<path d="M178 38 L192 72 C210 76 220 92 220 110 L136 110 C136 92 146 76 164 72 Z" fill="#8A8F84"></path>
+<path d="M178 38 L192 72 C210 76 220 92 220 110 L190 110 L180 42 Z" fill="#646A61"></path>
+<path d="M174 30 H182 V40 H174 Z" fill="#8A8F84"></path>
+<path d="M140 110 H216 V150 C216 162 200 170 178 170 C156 170 140 162 140 150 Z" fill="#2A211C"></path>
+<path d="M158 124 H170 M186 124 H198" stroke="#{{eyeHex}}" stroke-width="3"></path>
+<path d="M140 132 L136 170 L150 162 Z M216 132 L220 170 L206 162 Z" fill="url(#lam)"></path>
+<path d="M128 170 H228 L240 300 H116 Z" fill="url(#lam)"></path>
+<path d="M128 170 H228 L230 190 H126 Z" fill="#646A61"></path>
+<path d="M116 300 H240 L246 340 H110 Z" fill="#3A3F3A"></path>
+<path d="M120 236 H236" stroke="#9A704C" stroke-width="8"></path>
+<rect x="170" y="230" width="16" height="12" fill="#C27E32"></rect>
+<circle cx="98" cy="250" r="54" fill="#8E2A22" stroke="#2A1E18" stroke-width="6"></circle>
+<circle cx="98" cy="250" r="44" fill="none" stroke="#6A1C16" stroke-width="2"></circle>
+<g transform="translate(98 250)" fill="#E0A04A"><circle r="14"></circle><path d="M0 -30 L4 -16 L-4 -16 Z M0 30 L4 16 L-4 16 Z M-30 0 L-16 4 L-16 -4 Z M30 0 L16 4 L16 -4 Z M-21 -21 L-9 -13 L-13 -9 Z M21 21 L9 13 L13 9 Z M21 -21 L13 -9 L9 -13 Z M-21 21 L-13 9 L-9 13 Z"></path></g>
+<path d="M262 330 L272 120" stroke="#B8BCB4" stroke-width="7"></path>
+<path d="M262 330 L272 120" stroke="#E8ECE4" stroke-width="2"></path>
+<path d="M248 132 L292 140" stroke="#9A704C" stroke-width="6"></path>
+<circle cx="273" cy="112" r="6" fill="#C27E32"></circle>
+</svg>
+<div style="position: absolute; left: 12px; top: 10px; font-size: 12px; color: #8F8570">[концепт-арт героя]</div>
+</div>
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<span class="rus" style="font-size: 16px; letter-spacing: 1px; color: #E8DFC8">{{emoName}}</span>
+<span style="font-size: 13px; font-style: italic; color: #A89A80">{{emoNote}}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+<sc-for list="{{emos}}" as="e" hint-placeholder-count="8">
+<button class="{{e.cls}}" onClick="{{e.pick}}">{{e.name}}</button>
+</sc-for>
+</div>
+</div>
+
+<div class="plank" style="position: absolute; left: 470px; top: 100px; right: 40px; height: 590px; box-sizing: border-box; padding: 0 28px 24px">
+<span class="nail" style="left: 8px; bottom: 8px"></span><span class="nail" style="right: 8px; bottom: 8px"></span>
+<div style="display: flex; align-items: center; gap: 6px; height: 64px; padding-top: 10px; box-sizing: border-box">
+<button class="{{tabStats}}" onClick="{{goStats}}">ХАРАКТЕРИСТИКИ</button>
+<button class="{{tabSkills}}" onClick="{{goSkills}}">УМЕНИЯ</button>
+<button class="{{tabGear}}" onClick="{{goGear}}">СНАРЯЖЕНИЕ</button>
+</div>
+<svg width="100%" height="14" style="display: block; opacity: 0.5; margin-bottom: 18px" aria-hidden="true"><rect width="100%" height="14" fill="url(#orn)"></rect></svg>
+
+<sc-if value="{{isStats}}" hint-placeholder-val="{{ true }}">
+<div class="rise" style="display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{stats}}" as="st" hint-placeholder-count="4">
+<div class="inset" style="display: flex; align-items: center; gap: 18px; padding: 12px 18px">
+<div style="width: 180px; display: flex; flex-direction: column; gap: 2px">
+<span class="rus" style="font-size: 18px; color: #E8DFC8">{{st.name}}</span>
+<span style="font-size: 13px; color: #A89A80">{{st.desc}}</span>
+</div>
+<div style="display: flex; gap: 8px; flex-grow: 1">
+<sc-for list="{{st.pips}}" as="p" hint-placeholder-count="10"><span class="pip" style="{{p}}"></span></sc-for>
+</div>
+<button class="pm" onClick="{{st.dec}}" disabled="{{st.noDec}}" aria-label="Уменьшить">−</button>
+<span style="width: 28px; text-align: center; font-size: 20px; color: #F0E6CE">{{st.v}}</span>
+<button class="pm" onClick="{{st.inc}}" disabled="{{st.noInc}}" aria-label="Увеличить">+</button>
+</div>
+</sc-for>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 6px">
+<sc-for list="{{derived}}" as="d" hint-placeholder-count="3">
+<div class="inset" style="padding: 12px 16px; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 13px; color: #A89A80">{{d.name}}</span>
+<span class="rus" style="font-size: 24px; color: #E08A3C">{{d.v}}</span>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; justify-content: flex-end"><button class="btn" onClick="{{resetStats}}">СБРОСИТЬ</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{isSkills}}" hint-placeholder-val="{{ false }}">
+<div class="rise" style="display: flex; flex-direction: column; gap: 18px">
+<div class="inset" style="position: relative; height: 150px; display: flex; align-items: center; justify-content: space-around; padding: 0 20px">
+<svg width="100%" height="150" style="position: absolute; left: 0; top: 0" aria-hidden="true"><path d="M90 75 H680" stroke="#5A4634" stroke-width="2" stroke-dasharray="6 5"></path></svg>
+<sc-for list="{{skills}}" as="k" hint-placeholder-count="5">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative">
+<button class="{{k.cls}}" onClick="{{k.pick}}" aria-label="{{k.name}}">
+<span class="dia"></span>
+<svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="{{k.d}}" fill="{{k.col}}" fill-rule="evenodd"></path></svg>
+</button>
+<span style="font-size: 13px; color: {{k.labelCol}}">{{k.name}}</span>
+</div>
+</sc-for>
+</div>
+<div class="inset rise" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: baseline; gap: 14px">
+<span class="rus" style="font-size: 26px; color: #E8DFC8">{{selSkill.name}}</span>
+<span style="font-size: 14px; color: {{selSkill.stateCol}}">{{selSkill.state}}</span>
+</div>
+<p style="margin: 0; font-size: 17px; line-height: 1.55; color: #D8CDB4">{{selSkill.desc}}</p>
+<div style="display: flex; gap: 20px; font-size: 14px; color: #A89A80">
+<span>Действие: <span style="color: #E8DFC8">{{selSkill.effect}}</span></span>
+<span>Перезарядка: <span style="color: #E8DFC8">{{selSkill.cd}}</span></span>
+</div>
+<div style="display: flex; justify-content: flex-end"><button class="btn red" onClick="{{learn}}" disabled="{{cantLearn}}">{{learnLabel}}</button></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isGear}}" hint-placeholder-val="{{ false }}">
+<div class="rise" style="display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 22px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{slots}}" as="sl" hint-placeholder-count="5">
+<button class="{{sl.cls}}" onClick="{{sl.pick}}">
+<svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="{{sl.d}}" fill="{{sl.col}}" fill-rule="evenodd"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 1px">
+<span style="font-size: 12px; color: #A89A80">{{sl.slotName}}</span>
+<span style="font-size: 15px">{{sl.item}}</span>
+</div>
+</button>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="rus" style="font-size: 13px; letter-spacing: 2px; color: #A89A80">СУМА</div>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{inv}}" as="it" hint-placeholder-count="10">
+<button class="{{it.cls}}" onClick="{{it.pick}}" aria-label="{{it.name}}">
+<svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><path d="{{it.d}}" fill="{{it.col}}" fill-rule="evenodd"></path></svg>
+<sc-if value="{{it.hasQty}}" hint-placeholder-val="{{ false }}"><span style="position: absolute; right: 5px; bottom: 3px; font-size: 13px; color: #E8DFC8">{{it.qty}}</span></sc-if>
+</button>
+</sc-for>
+</div>
+<div class="inset" style="padding: 14px 18px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; box-sizing: border-box">
+<div style="display: flex; align-items: baseline; gap: 12px"><span class="rus" style="font-size: 20px; color: #E8DFC8">{{selItem.name}}</span><span style="font-size: 13px; color: #A89A80">{{selItem.type}}</span></div>
+<p style="margin: 0; font-size: 15px; line-height: 1.5; font-style: italic; color: #CDBFA2">{{selItem.desc}}</p>
+<sc-if value="{{hasItemAction}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; justify-content: flex-end"><button class="btn" onClick="{{itemAction}}">{{itemActionLabel}}</button></div>
+</sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+</div>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+<div class="toast plank" style="position: absolute; left: 50%; top: 24px; transform: translateX(-50%); padding: 10px 22px; font-size: 15px; color: #F0E6CE">{{toast}}</div>
+</sc-if>
+<svg width="1280" height="720" style="position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0.09; mix-blend-mode: overlay" aria-hidden="true"><rect width="1280" height="720" filter="url(#gr)"></rect></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  say(msg) {
+    clearTimeout(this.tt);
+    this.setState({ toast: null });
+    setTimeout(() => this.setState({ toast: msg }), 20);
+    this.tt = setTimeout(() => this.setState({ toast: null }), 2700);
+  }
+  componentWillUnmount() { clearTimeout(this.tt); }
+  renderVals() {
+    const s = this.state || {};
+    const tab = s.tab || 'stats';
+    const BASE = { str: 6, end: 5, faith: 4, luck: 3 };
+    const st = s.st || BASE;
+    const spent = Object.keys(st).reduce((a, k) => a + st[k] - BASE[k], 0);
+    const free = 3 - spent;
+    const EMO = [
+      { n: 'Нейтральный', c: '#7F9681', e: 'D8CFB8', note: 'смотрит в туман' },
+      { n: 'Решимость', c: '#C27E32', e: 'F0CC8A', note: 'готов к бою' },
+      { n: 'Ярость', c: '#C8412F', e: 'FF5A4A', note: 'не щадит нечисть' },
+      { n: 'Спокойствие', c: '#6A8AA8', e: 'C8D8E8', note: 'дышит ровно' },
+      { n: 'Скорбь', c: '#4A5A6A', e: '8A9AAA', note: 'помнит павших' },
+      { n: 'Радость', c: '#D2B06A', e: 'FFE0A0', note: 'редкий гость' },
+      { n: 'Насмешка', c: '#8A6A9A', e: 'D8B8E8', note: 'не боится лешего' },
+      { n: 'Удивление', c: '#7AA890', e: 'C8F0D8', note: 'такого не видал' }
+    ];
+    const emo = s.emo ?? 1;
+    const STATS = [
+      { k: 'str', name: 'Сила', desc: 'урон мечом и топором' },
+      { k: 'end', name: 'Стойкость', desc: 'жизни и защита' },
+      { k: 'faith', name: 'Вера', desc: 'сила оберегов и обрядов' },
+      { k: 'luck', name: 'Удача', desc: 'находки и случай' }
+    ];
+    const SK = [
+      { id: 'hit', name: 'Удар богатыря', d: 'M12 2l2 3v11h-4V5zM7 16h10v2H7zM11 18h2v4h-2z', desc: 'Сокрушительный удар мечом «Правосудие». Отбрасывает нечисть и сбивает с неё морок.', effect: 'урон ×2, отбрасывание', cd: '1 ночь', cost: 0 },
+      { id: 'circle', name: 'Защитный круг', d: 'M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', desc: 'Очертить мечом круг на земле — до первых петухов нечисть его не переступит.', effect: 'защищает постройку', cd: '2 ночи', cost: 0 },
+      { id: 'cry', name: 'Клич Отваги', d: 'M4 9h4l6-5v16l-6-5H4zM17 8l4-2M17 12h5M17 16l4 2', desc: 'Громовой клич, от которого жители перестают дрожать, а мелкая нечисть разбегается.', effect: '−20 страха деревни', cd: '3 ночи', cost: 2 },
+      { id: 'wall', name: 'Стена щитом', d: 'M4 4h16v8c0 5-4 8-8 10-4-2-8-5-8-10z', desc: 'Щит «Верный страж» принимает на себя всё, что летит в спину товарищам.', effect: 'блок урона на ход', cd: '1 ночь', cost: 2 },
+      { id: 'bless', name: 'Благословение', d: 'M11 2h2v7h7v2h-7v11h-2V11H4V9h7z', desc: 'Обращение к светлым силам: раны затягиваются, а обереги горят ярче.', effect: '+1 жизнь, обереги ×1.5', cd: '4 ночи', cost: 3 }
+    ];
+    const learned = s.learned || { hit: true, circle: true };
+    const sp = s.sp ?? 2;
+    const selId = s.sk || 'cry';
+    const sel = SK.find(k => k.id === selId);
+    const ITEMS = {
+      sword: { name: 'Меч «Правосудие»', type: 'оружие', slot: 'weapon', d: 'M12 2l2 3v11h-4V5zM7 16h10v2H7zM11 18h2v4h-2z', col: '#C8CCC4', desc: 'Клинок деда. На доле — буквы, которых никто уже не прочтёт.' },
+      axe: { name: 'Топор', type: 'оружие', slot: 'weapon', d: 'M11 3h2v19h-2zM13 4c5 0 7 3 7 6-3 0-5-1-7-2z', col: '#A8ACA4', desc: 'Рубит и дрова, и то, что похуже дров.' },
+      shield: { name: 'Щит «Верный страж»', type: 'щит', slot: 'shield', d: 'M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z', col: '#C8412F', desc: 'Красный щит с золотым солнцем. Нечисть отводит от него глаза.' },
+      helm: { name: 'Шишак', type: 'шлем', slot: 'helm', d: 'M12 1l3 6c3 1 5 4 5 8H4c0-4 2-7 5-8zM4 16h16v3H4z', col: '#8A8F84', desc: 'Остроконечный шлем с бармицей.' },
+      armor: { name: 'Пластинчатый доспех', type: 'доспех', slot: 'armor', d: 'M6 4h12l2 5-2 1v10H6V10L4 9z', col: '#646A61', desc: 'Пластины на кольчуге. Тяжёл, но спасает.' },
+      cloak: { name: 'Красный плащ', type: 'плащ', slot: 'cloak', d: 'M8 3h8l4 18H4z', col: '#8E2A22', desc: 'С вышитым солнцем. Видно издалека — и своим, и чужим.' },
+      coat: { name: 'Старый тулуп', type: 'плащ', slot: 'cloak', d: 'M8 3h8l4 18H4z', col: '#7A5A3A', desc: 'Тёплый, пахнет дымом. Не приметен в тумане.' },
+      lantern: { name: 'Фонарь', type: 'снаряжение', d: 'M9 2h6v3H9zM7 6h10v13H7zM10 20h4v2h-4z', col: '#F0CC8A', desc: 'Свет, который туман не ест.' },
+      note: { name: 'Записка', type: 'находка', d: 'M5 3h11l3 3v15H5z', col: '#D8C7A0', desc: '«Не ходи за огнями». Почерк Марфы.' },
+      root: { name: 'Корень плакун-травы', type: 'зелье', use: true, d: 'M12 2c2 3 2 6 0 9-2-3-2-6 0-9zM11 11h2v4l4 5-1.5 1-3.5-4-3.5 4L7 20l4-5z', col: '#8FBF7A', desc: 'Вернёт одну жизнь. Говорят, плачет, если выдернуть без молитвы.' },
+      tooth: { name: 'Волчий зуб', type: 'оберег', d: 'M8 3c3-1 5-1 8 0l-2 18h-2z', col: '#E4E0D4', desc: 'Носить на шее. Отгоняет дурной сон.' },
+      nail: { name: 'Железный гвоздь', type: 'оберег', d: 'M6 3h12v3H6zM11 6h2v13l-1 3-1-3z', col: '#9A9F94', desc: 'Вбитый в порог, не пустит в дом незваных.' }
+    };
+    const equip = s.equip || { weapon: 'sword', shield: 'shield', helm: 'helm', armor: 'armor', cloak: 'cloak' };
+    const bag = s.bag || [['axe', 1], ['coat', 1], ['lantern', 3], ['note', 1], ['root', 2], ['tooth', 1], ['nail', 5]];
+    const selIt = s.it || 'lantern';
+    const SLOTS = [['weapon', 'Оружие'], ['shield', 'Щит'], ['helm', 'Шлем'], ['armor', 'Доспех'], ['cloak', 'Плащ']];
+    const cells = bag.map(b => b).concat(Array.from({ length: Math.max(0, 10 - bag.length) }, () => null));
+    const si = ITEMS[selIt];
+    const isEquipped = Object.values(equip).includes(selIt);
+    let actLabel = '', act = null;
+    if (si && si.slot && !isEquipped) { actLabel = 'НАДЕТЬ'; act = () => {
+      const old = equip[si.slot];
+      const nb = bag.filter(b => b[0] !== selIt).concat(old ? [[old, 1]] : []);
+      this.setState({ equip: { ...equip, [si.slot]: selIt }, bag: nb, it: selIt });
+      this.say('Надето: ' + si.name);
+    }; }
+    if (si && si.use) { actLabel = 'ИСПОЛЬЗОВАТЬ'; act = () => {
+      const nb = bag.map(b => b[0] === selIt ? [b[0], b[1] - 1] : b).filter(b => b[1] > 0);
+      this.setState({ bag: nb, it: nb.find(b => b[0] === selIt) ? selIt : 'lantern' });
+      this.say(si.name + ': +1 жизнь');
+    }; }
+    const tabCls = t => tab === t ? 'tab on' : 'tab';
+    return {
+      free: free, sp: sp,
+      emos: EMO.map((e, i) => ({ name: e.n, cls: i === emo ? 'emo on' : 'emo', pick: () => this.setState({ emo: i }) })),
+      emoName: EMO[emo].n, emoNote: EMO[emo].note, emoColor: EMO[emo].c, eyeHex: EMO[emo].e,
+      tabStats: tabCls('stats'), tabSkills: tabCls('skills'), tabGear: tabCls('gear'),
+      goStats: () => this.setState({ tab: 'stats' }), goSkills: () => this.setState({ tab: 'skills' }), goGear: () => this.setState({ tab: 'gear' }),
+      isStats: tab === 'stats', isSkills: tab === 'skills', isGear: tab === 'gear',
+      stats: STATS.map(x => {
+        const v = st[x.k];
+        return { name: x.name, desc: x.desc, v: v,
+          pips: Array.from({ length: 10 }, (_, i) => i < BASE[x.k] ? 'background: #8A6A48; border: 1px solid #B08A60' : i < v ? 'background: #C8412F; border: 1px solid #E0604A; box-shadow: 0 0 8px #E0604A' : 'border: 1px solid #4A382A'),
+          inc: () => { if (free > 0 && v < 10) this.setState({ st: { ...st, [x.k]: v + 1 } }); },
+          dec: () => { if (v > BASE[x.k]) this.setState({ st: { ...st, [x.k]: v - 1 } }); },
+          noInc: free <= 0 || v >= 10, noDec: v <= BASE[x.k] };
+      }),
+      derived: [
+        { name: 'Жизни', v: 3 + Math.floor(st.end / 3) },
+        { name: 'Урон', v: (st.str * 2) + '–' + (st.str * 3) },
+        { name: 'Сила оберегов', v: '×' + (1 + st.faith / 10).toFixed(1) }
+      ],
+      resetStats: () => this.setState({ st: BASE }),
+      skills: SK.map(k => {
+        const l = !!learned[k.id];
+        return { name: k.name, d: k.d, col: l ? '#F0CC8A' : '#6B5E50', labelCol: l ? '#E8DFC8' : '#8F8570',
+          cls: 'node' + (l ? ' learned' : '') + (k.id === selId ? ' sel' : ''), pick: () => this.setState({ sk: k.id }) };
+      }),
+      selSkill: { name: sel.name, desc: sel.desc, effect: sel.effect, cd: sel.cd,
+        state: learned[sel.id] ? 'изучено' : 'стоимость: ' + sel.cost + ' оч.', stateCol: learned[sel.id] ? '#A8C890' : '#E08A3C' },
+      cantLearn: !!learned[sel.id] || sp < sel.cost,
+      learnLabel: learned[sel.id] ? 'ИЗУЧЕНО' : sp < sel.cost ? 'НЕ ХВАТАЕТ ОЧКОВ' : 'ИЗУЧИТЬ',
+      learn: () => { if (!learned[sel.id] && sp >= sel.cost) { this.setState({ learned: { ...learned, [sel.id]: true }, sp: sp - sel.cost }); this.say('Изучено: ' + sel.name); } },
+      slots: SLOTS.map(([k, n]) => { const it = ITEMS[equip[k]]; return { slotName: n, item: it ? it.name : '—', d: it ? it.d : '', col: it ? it.col : '#333',
+        cls: equip[k] === selIt ? 'slot sel' : 'slot', pick: () => this.setState({ it: equip[k] }) }; }),
+      inv: cells.map(c => c ? { name: ITEMS[c[0]].name, d: ITEMS[c[0]].d, col: ITEMS[c[0]].col, hasQty: c[1] > 1, qty: c[1],
+        cls: c[0] === selIt ? 'itm sel' : 'itm', pick: () => this.setState({ it: c[0] }) }
+        : { name: 'пусто', d: '', col: '#333', hasQty: false, qty: 0, cls: 'itm empty', pick: () => {} }),
+      selItem: si ? { name: si.name, type: si.type + (isEquipped ? ' · надето' : ''), desc: si.desc } : { name: '', type: '', desc: '' },
+      hasItemAction: !!act, itemAction: act || (() => {}), itemActionLabel: actLabel,
+      hasToast: !!s.toast, toast: s.toast || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

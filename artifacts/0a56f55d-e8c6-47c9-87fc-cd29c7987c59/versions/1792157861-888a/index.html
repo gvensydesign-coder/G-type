@@ -1,0 +1,328 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Подхват</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Golos+Text:wght@400;500;600&display=swap">
+<style>
+/* Раскладка: бумажный разворот — крупные плотные заголовки слева, экран или 3D-объект справа; один тёмный разворот под маршрут помощи. */
+:root{
+  --paper:#F3F4F2; --surface:#FFFFFF; --ink:#17191B; --muted:#556166; --line:#E2E6E1;
+  --lime:#DBF95B; --lime-deep:#CBEA39; --lime-ink:#4A5A20;
+  --air:#658592; --air-surface:#DBE5E9; --ink-deep:#101619;
+  --r-card:32px; --r-control:24px;
+  --display:'Onest',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --body:'Golos Text','Onest',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --shadow:0 2px 4px rgba(23,25,27,.04),0 18px 44px rgba(23,25,27,.09);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#101619; --surface:#182026; --ink:#F1F4F1; --muted:#A3B0B6; --line:#2A343A;
+  --lime:#D7F554; --lime-deep:#C2E436; --lime-ink:#17191B;
+  --air:#8FAAB6; --air-surface:#25323A; --ink-deep:#0A0F12;
+  --shadow:0 2px 4px rgba(0,0,0,.4),0 20px 48px rgba(0,0,0,.45);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#101619; --surface:#182026; --ink:#F1F4F1; --muted:#A3B0B6; --line:#2A343A;
+  --lime:#D7F554; --lime-deep:#C2E436; --lime-ink:#17191B;
+  --air:#8FAAB6; --air-surface:#25323A; --ink-deep:#0A0F12;
+  --shadow:0 2px 4px rgba(0,0,0,.4),0 20px 48px rgba(0,0,0,.45);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
+ font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+.wrap{max-width:1180px;margin-inline:auto;
+ padding-left:max(16px,env(safe-area-inset-left,0px));
+ padding-right:max(16px,env(safe-area-inset-right,0px))}
+section{padding-block:clamp(56px,8vw,112px)}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.035em;line-height:1.02}
+h1{font-size:clamp(40px,7.4vw,86px);font-weight:600}
+h2{font-size:clamp(32px,5.2vw,62px);font-weight:600}
+h3{font-size:19px;font-weight:600;letter-spacing:-.02em;line-height:1.25}
+p{margin:0}
+.lead{color:var(--muted);font-size:clamp(16px,1.5vw,19px);max-width:60ch}
+.eyebrow{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:.09em;
+ text-transform:uppercase;color:var(--air)}
+.accent{color:var(--lime-ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .accent{color:var(--lime)}}
+:root[data-theme="dark"] .accent{color:var(--lime)}
+
+/* --- служебные --- */
+.stack{display:flex;flex-direction:column;gap:22px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px,5vw,76px);align-items:center}
+.split.narrow-left{grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr)}
+@media (max-width:860px){.split{grid-template-columns:minmax(0,1fr)}}
+.mark{width:58px;height:58px;object-fit:contain;margin-bottom:6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 30px;
+ border:0;border-radius:999px;font-family:var(--body);font-size:16px;font-weight:600;cursor:pointer;
+ color:#17191B;background:linear-gradient(180deg,#EDFF92 0%,var(--lime) 44%,var(--lime-deep) 100%);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 2px 6px rgba(140,180,30,.22),0 14px 32px rgba(170,215,50,.34);
+ transition:transform .18s cubic-bezier(.16,1,.3,1),box-shadow .18s,filter .18s;text-decoration:none}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.04);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 4px 10px rgba(140,180,30,.24),0 22px 44px rgba(170,215,50,.42)}
+.btn:active{transform:translateY(1px) scale(.985)}
+.btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line);
+ box-shadow:0 1px 2px rgba(23,25,27,.05)}
+.btn:focus-visible{outline:3px solid var(--air);outline-offset:3px}
+.cta-row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.note{font-size:14px;color:var(--muted)}
+
+/* --- телефон --- */
+.phone{position:relative;justify-self:center;width:min(100%,340px)}
+.phone img{width:100%;border-radius:38px;box-shadow:var(--shadow);position:relative;z-index:1;
+ border:1px solid var(--line)}
+.blob{position:absolute;border-radius:50%;filter:blur(2px);z-index:0;
+ background:radial-gradient(circle at 34% 30%,#ECFF9A,var(--lime-deep));opacity:.85}
+.blob.b1{width:150px;height:150px;left:-54px;top:12%}
+.blob.b2{width:104px;height:104px;right:-38px;top:46%}
+.blob.b3{width:76px;height:76px;left:-24px;bottom:9%}
+@media (max-width:860px){.blob{display:none}}
+
+/* --- hero --- */
+.hero{padding-top:clamp(28px,5vw,60px)}
+.hero .brand{display:flex;align-items:center;gap:14px;margin-bottom:clamp(26px,4vw,44px)}
+.hero .brand img{width:52px;height:52px;border-radius:14px;box-shadow:0 6px 18px rgba(23,25,27,.14)}
+.hero .brand b{font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:-.02em}
+.hero h1 .q{color:var(--air)}
+.facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.fact{display:inline-flex;align-items:center;gap:9px;height:42px;padding:0 16px;border-radius:999px;
+ background:var(--surface);border:1px solid var(--line);font-size:14px;font-weight:500}
+.fact img{width:22px;height:22px;object-fit:contain}
+
+/* --- маршрут, тёмный разворот --- */
+.dark-band{background:var(--ink-deep);color:#F1F4F1}
+.dark-band .lead,.dark-band .note{color:#A3B0B6}
+.dark-band .eyebrow{color:var(--lime)}
+.stages{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;margin-top:clamp(32px,4vw,52px)}
+@media (max-width:980px){.stages{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.stages{grid-template-columns:minmax(0,1fr)}}
+.stage{background:#1A2228;border:1px solid #28333A;border-radius:var(--r-card);padding:22px 20px 20px;
+ display:flex;flex-direction:column;gap:14px;min-width:0}
+.stage .num{width:30px;height:30px;border-radius:50%;background:var(--lime);color:#17191B;
+ display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;font-weight:600}
+.stage h3{color:#F1F4F1}
+.stage ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px}
+.stage li{font-size:14.5px;line-height:1.4;color:#B6C2C8;padding-left:16px;position:relative}
+.stage li::before{content:"";position:absolute;left:0;top:.52em;width:6px;height:6px;border-radius:50%;
+ background:#46535B}
+
+/* --- карточки возможностей --- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:18px;margin-top:clamp(28px,4vw,44px)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);
+ padding:26px 24px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card img.mark{width:50px;height:50px;margin:0}
+.card p{font-size:15.5px;color:var(--muted);line-height:1.5}
+
+/* --- памятки --- */
+.guides{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.guide{display:inline-flex;align-items:center;height:44px;padding:0 18px;border-radius:999px;
+ background:var(--air-surface);color:var(--ink);font-size:15px;font-weight:500}
+
+/* --- ошейник --- */
+.collar{margin-top:30px;background:var(--surface);border:1px dashed var(--lime-deep);border-radius:var(--r-control);
+ padding:16px 18px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.collar .nm{font-family:var(--display);font-size:22px;font-weight:600;letter-spacing:-.02em}
+.collar .tel{font-family:var(--display);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.collar .qr{width:58px;height:58px;border-radius:10px;background:
+ repeating-conic-gradient(var(--ink) 0 25%,transparent 0 50%) 0 0/14px 14px;opacity:.85}
+.collar .lab{font-size:13px;color:var(--muted)}
+
+/* --- финал --- */
+.finale{text-align:center;display:flex;flex-direction:column;align-items:center;gap:26px}
+.finale img.icon{width:110px;height:110px;border-radius:26px;box-shadow:0 18px 44px rgba(23,25,27,.2)}
+.finale h2{max-width:16ch}
+footer{border-top:1px solid var(--line);padding-block:30px;font-size:14px;color:var(--muted)}
+.foot-row{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:space-between}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="wrap hero">
+  <div class="brand">
+    <img src="a/appicon.webp" alt="Иконка приложения «Подхват»" width="52" height="52">
+    <b>Подхват</b>
+  </div>
+  <div class="split narrow-left">
+    <div class="stack">
+      <p class="eyebrow">ИИ-помощник · первая помощь животным</p>
+      <h1>Вы нашли животное и не знаете, что делать<span class="q">?</span></h1>
+      <p class="lead">Скаут задаёт шесть коротких вопросов, подсказывает безопасные первые шаги,
+        находит помощь рядом и доводит случай до передачи хозяину или в учреждение.</p>
+      <div class="cta-row">
+        <a class="btn" href="#route">Посмотреть, как это работает</a>
+        <a class="btn ghost" href="#scout">Кто такой Скаут</a>
+      </div>
+      <div class="facts">
+        <span class="fact"><img src="a/ic/chats.webp" alt="">Круглосуточно</span>
+        <span class="fact"><img src="a/ic/book.webp" alt="">20+ памяток офлайн</span>
+        <span class="fact"><img src="a/ic/privacy.webp" alt="">Без точного адреса</span>
+      </div>
+    </div>
+    <div class="phone">
+      <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+      <img src="a/scr-home.webp" alt="Главный экран приложения: Скаут, кнопка «Попросить помощи» и разделы «Рядом», «Волонтёры», «Организации»" width="430" height="935">
+    </div>
+  </div>
+</header>
+
+<section class="wrap" id="scout">
+  <div class="split">
+    <div class="stack">
+      <img class="mark" src="a/ic/chats.webp" alt="">
+      <h2>Это Скаут — ваш личный <span class="accent">помощник</span></h2>
+      <p class="lead">Скаут живёт внутри приложения. Пишите ему текстом, записывайте голосовые,
+        присылайте фото или видео: он задаёт короткие вопросы, подсказывает безопасные первые шаги
+        и собирает ответы в карточку случая.</p>
+      <p class="lead">Если ситуация выходит за рамки самопомощи, Скаут называет подходящую службу
+        или специалиста и помогает связаться. Он работает круглосуточно.</p>
+    </div>
+    <img src="a/scout.webp" alt="Скаут — 3D-персонаж, собака в лаймовом ошейнике" width="760" height="760" style="justify-self:center;width:min(100%,430px)">
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="split">
+    <div class="phone" style="order:-1">
+      <span class="blob b2"></span>
+      <img src="a/scr-chat.webp" alt="Экран чата: Скаут спрашивает о безопасности и предлагает три варианта ответа" width="430" height="935">
+    </div>
+    <div class="stack">
+      <img class="mark" src="a/ic/search.webp" alt="">
+      <h2>Шесть вопросов вместо паники</h2>
+      <p class="lead">Первым идёт вопрос о непосредственной опасности для людей или животного.
+        Приближаться ради ответа не нужно — так и написано на экране.</p>
+      <p class="lead">По ответам Скаут показывает ориентир для следующего шага: наблюдение, внимание
+        или срочно. Это подсказка, а не диагноз, и приложение прямо об этом говорит.</p>
+    </div>
+  </div>
+</section>
+
+<div class="dark-band" id="route">
+  <section class="wrap">
+    <div class="stack" style="gap:16px">
+      <p class="eyebrow">Маршрут помощи</p>
+      <h2>От находки до хозяина — пять этапов</h2>
+      <p class="lead">Случай всегда один и виден целиком: что уже сделано, что идёт сейчас
+        и какой шаг следующий.</p>
+    </div>
+    <div class="stages">
+      <div class="stage"><div class="num">1</div><h3>Оценка</h3>
+        <ul><li>Шесть вопросов</li><li>Результат оценки</li><li>Срочная помощь</li></ul></div>
+      <div class="stage"><div class="num">2</div><h3>Карточка находки</h3>
+        <ul><li>Новая находка</li><li>Описание и фото</li><li>Текущий случай</li></ul></div>
+      <div class="stage"><div class="num">3</div><h3>Поиск помощи</h3>
+        <ul><li>Скаут в чате</li><li>Помощники рядом</li><li>Маршрут помощи</li><li>Самопомощь и памятки</li></ul></div>
+      <div class="stage"><div class="num">4</div><h3>Связь</h3>
+        <ul><li>Согласие на контакты</li><li>Чат по случаю</li><li>Звонок и видео</li></ul></div>
+      <div class="stage"><div class="num">5</div><h3>Завершение</h3>
+        <ul><li>Хозяин найден</li><li>Передано в учреждение</li><li>История случая</li></ul></div>
+    </div>
+  </section>
+</div>
+
+<section class="wrap">
+  <div class="split">
+    <div class="stack">
+      <img class="mark" src="a/ic/volunteer.webp" alt="">
+      <h2>Рядом — <span class="accent">люди</span>, а не алгоритм</h2>
+      <p class="lead">В разделе «Связь» собраны волонтёры, клиники, приюты и фонды. Их можно
+        отфильтровать по расстоянию, скорости ответа и рейтингу; у каждого видно, чем он готов помочь.
+        Есть быстрый запрос на передержку на ночь.</p>
+      <p class="note">Предложение помощи ещё не означает, что место найдено: приём подтверждается
+        отдельно, и приложение так и пишет.</p>
+    </div>
+    <div class="phone">
+      <span class="blob b1"></span><span class="blob b3"></span>
+      <img src="a/scr-next.webp" alt="Экран диалога: ответ принят, Скаут задаёт следующий вопрос" width="430" height="935">
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="stack" style="gap:14px">
+    <p class="eyebrow">Что ещё внутри</p>
+    <h2>Функции, которые усиливают основной сценарий</h2>
+  </div>
+  <div class="cards">
+    <div class="card">
+      <img class="mark" src="a/ic/map.webp" alt="">
+      <h3>Карта случаев</h3>
+      <p>Случаи пропажи и помощи рядом с вами: можно проверить, нет ли поблизости хозяина с подходящим
+        объявлением, сравнить карточки или самому поехать на помощь. На карте только то, что отмечено
+        местом и подтверждено фото, видео или панорамой 360.</p>
+    </div>
+    <div class="card">
+      <img class="mark" src="a/ic/book.webp" alt="">
+      <h3>База знаний</h3>
+      <p>Больше двадцати памяток на одну-две минуты чтения. Работают офлайн — открываются даже тогда,
+        когда нет сети.</p>
+      <div class="guides">
+        <span class="guide">Нашли животное. С чего начать?</span>
+        <span class="guide">Вижу травму. Что дальше?</span>
+        <span class="guide">Кошка во дворе — потерялась?</span>
+        <span class="guide">Дикое животное рядом</span>
+      </div>
+    </div>
+    <div class="card">
+      <img class="mark" src="a/ic/camera.webp" alt="">
+      <h3>ID-слепок носа и мордочки</h3>
+      <p>Нос собаки уникален, у кошки — черты мордочки. По снимкам собирается слепок признаков,
+        который можно сверить с объявлениями. Это не биометрическая идентификация: совпадение
+        нужно проверять отдельно. Если животное напугано или ранено, скан пропускают.</p>
+    </div>
+    <div class="card">
+      <img class="mark" src="a/ic/medal.webp" alt="">
+      <h3>Награда за вашу помощь</h3>
+      <p>Уровень растёт вместе с добрыми делами. Скаут поддерживает на разных этапах — благодарит
+        и отмечает подтверждённые случаи. Наград за рискованные действия нет.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="split">
+    <div class="stack">
+      <img class="mark" src="a/ic/saved.webp" alt="">
+      <h2>Страховка на случай пропажи</h2>
+      <p class="lead">Из карточки питомца Скаут готовит бумажный ошейник: четыре полоски на листе.
+        На каждой — имя, телефон владельца, QR-код и надпись «Нашли меня?».</p>
+      <p class="lead">Цифровая листовка собирается из фото и района, с QR-кодом на карточку.
+        Телефон, чип и точный адрес в неё не попадают. Листовку можно скачать готовым файлом
+        и распечатать, а документы питомца хранятся приватно в вашем кабинете.</p>
+      <div class="collar">
+        <div style="flex:1;min-width:150px">
+          <div class="lab">Меня зовут</div>
+          <div class="nm">Марта</div>
+          <div class="tel">+7 900 123-45-67</div>
+        </div>
+        <div class="qr" role="img" aria-label="QR-код на карточку находки"></div>
+        <div style="min-width:120px">
+          <div style="font-family:var(--display);font-weight:600">Нашли меня?</div>
+          <div class="lab">Наведите камеру на QR-код — откроется карточка</div>
+        </div>
+      </div>
+    </div>
+    <img src="a/scout-listen.webp" alt="Скаут слушает" width="560" height="560" style="justify-self:center;width:min(100%,360px)">
+  </div>
+</section>
+
+<section class="wrap finale">
+  <img class="icon" src="a/appicon.webp" alt="Иконка приложения «Подхват»" width="110" height="110">
+  <h2>Первая помощь тому, кто решил оказать помощь другому</h2>
+  <p class="lead" style="text-align:center">Подхват доводит случай до конца: от первого вопроса
+    до момента, когда животное дома.</p>
+  <div class="cta-row" style="justify-content:center">
+    <a class="btn" href="#route">Пройти маршрут помощи</a>
+  </div>
+</section>
+
+<footer class="wrap">
+  <div class="foot-row">
+    <span>«Подхват» — прототип. Скаут подсказывает следующий шаг и не ставит диагноз.</span>
+    <span>LIME / iOS · дизайн-система v21</span>
+  </div>
+</footer>
+
+</body></html>

@@ -1,0 +1,23 @@
+<!-- @dsCard group="Выбор" height=150 -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Segmented — превью</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;padding:16px;background:var(--bg);color:var(--ink);font:400 var(--fs-base)/var(--lh) var(--f-ui);-webkit-font-smoothing:antialiased}
+.row{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center}
+.row+.row,.cap+.row,.row+.cap{margin-top:var(--s3)}
+.cap{margin:0 0 var(--s2);font:var(--fw-sb) var(--fs-xs)/1.2 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.row+.cap,.stack+.cap{margin-top:var(--s5)}
+.stack{display:grid;gap:var(--s3);max-width:420px}
+</style>
+</head>
+<body>
+<p class="cap">Тёмный выбранный</p>
+<div class="row"><div class="seg" role="group" aria-label="Стиль"><button type="button" class="on">Прямой</button><button type="button">Италик</button></div><div class="seg" role="group" aria-label="Режим"><button type="button">Скелет</button><button type="button" class="on">Контур</button><button type="button">Рисовать</button></div></div>
+<p class="cap">Светлый</p>
+<div class="row"><div class="seg light" role="group" aria-label="Тема"><button type="button" class="on">Светлая</button><button type="button">Тёмная</button></div></div>
+</body>
+</html>

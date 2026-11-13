@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Новелльные сцены</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0E100D;font-family:'Alegreya Sans',sans-serif;color:#E4DFD2}
+a{color:#D9A15A}a:hover{color:#F0C07E}
+.nx{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 20px;background:none;border:1px solid #4A4F43;border-radius:2px;cursor:pointer;font-family:'Alegreya Sans',sans-serif;font-size:17px;letter-spacing:1px;color:#E4DFD2;text-decoration:none}
+.nx:hover{border-color:#C27E32;color:#F3EDDD}
+.skip{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;background:rgba(14,16,13,.6);border:1px solid #3A3F35;font-size:15px;letter-spacing:1px;color:#CFCABB;text-decoration:none}
+.skip:hover{color:#F3EDDD;border-color:#C27E32}
+.fog{animation:drift 14s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateX(-30px)}to{transform:translateX(30px)}}
+.eyes{animation:blink 5s infinite}
+@keyframes blink{0%,92%,100%{opacity:1}95%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #0E100D; font-family: 'Alegreya Sans', sans-serif; color: #E4DFD2">
+
+<sc-if value="{{bgForest}}" hint-placeholder-val="{{ true }}">
+<svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<rect width="1280" height="720" fill="#16211B"></rect>
+<path d="M0 720 L0 330 L60 190 L120 340 L180 150 L250 350 L330 220 L400 360 L480 170 L560 380 L640 260 L720 390 L800 180 L880 370 L960 230 L1040 360 L1120 160 L1200 340 L1280 220 L1280 720 Z" fill="#1F4032" opacity="0.55"></path>
+<path d="M0 720 L0 430 L90 260 L170 450 L260 300 L350 470 L900 480 L990 290 L1080 460 L1170 280 L1280 440 L1280 720 Z" fill="#101812"></path>
+<path d="M300 720 C520 560 760 560 980 720 Z" fill="#433F39" opacity="0.5"></path>
+<g class="fog"><rect x="-60" y="430" width="1400" height="160" fill="#B7C4AF" opacity="0.08"></rect><rect x="-60" y="500" width="1400" height="120" fill="#B7C4AF" opacity="0.07"></rect></g>
+</svg>
+</sc-if>
+
+<sc-if value="{{bgIzba}}" hint-placeholder-val="{{ false }}">
+<svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<rect width="1280" height="720" fill="#1A1714"></rect>
+<g stroke="#2A241E" stroke-width="2"><path d="M0 120 H1280 M0 220 H1280 M0 320 H1280 M0 420 H1280"></path></g>
+<rect x="780" y="150" width="200" height="170" fill="#2B2116" stroke="#433F39" stroke-width="6"></rect>
+<rect x="790" y="160" width="180" height="150" fill="#C27E32" opacity="0.18"></rect>
+<path d="M880 160 V310 M790 235 H970" stroke="#433F39" stroke-width="5"></path>
+<path d="M120 720 V360 L180 330 H420 L470 360 V720 Z" fill="#3A342D"></path>
+<rect x="210" y="520" width="170" height="110" rx="60" fill="#0E0C0A"></rect>
+<ellipse cx="295" cy="600" rx="60" ry="22" fill="#C27E32" opacity="0.55"></ellipse>
+<rect x="0" y="640" width="1280" height="80" fill="#12100D"></rect>
+<rect x="0" y="0" width="1280" height="720" fill="#C27E32" opacity="0.04"></rect>
+</svg>
+</sc-if>
+
+<sc-if value="{{bgSwamp}}" hint-placeholder-val="{{ false }}">
+<svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<rect width="1280" height="720" fill="#121A18"></rect>
+<rect y="440" width="1280" height="280" fill="#15302C"></rect>
+<g stroke="#7F9681" stroke-width="1" opacity="0.25"><path d="M100 500 H380 M520 540 H900 M200 600 H560 M760 620 H1180 M60 670 H420"></path></g>
+<path d="M220 450 V210 L190 150 M220 260 L270 200 L300 210 M220 320 L170 290" stroke="#0B0F0D" stroke-width="10" fill="none"></path>
+<path d="M1030 450 V180 L1060 120 M1030 250 L980 200 M1030 330 L1090 290 L1110 300" stroke="#0B0F0D" stroke-width="12" fill="none"></path>
+<path d="M1078 294 L1086 330 L1072 334 Z" fill="#8E3B3B"></path>
+<g class="eyes"><circle cx="640" cy="470" r="3.5" fill="#D04A4A"></circle><circle cx="664" cy="470" r="3.5" fill="#D04A4A"></circle></g>
+<g class="fog"><rect x="-60" y="380" width="1400" height="140" fill="#B7C4AF" opacity="0.1"></rect></g>
+</svg>
+</sc-if>
+
+<div style="position: absolute; top: 24px; right: 24px">
+<a class="skip" href="Game.dc.html">Пропустить
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5l7 7-7 7M12 5l7 7-7 7"></path></svg>
+</a>
+</div>
+
+<sc-if value="{{hasPortrait}}" hint-placeholder-val="{{ true }}">
+<div style="{{portraitStyle}}">
+<svg width="300" height="360" viewBox="0 0 300 360" aria-hidden="true">
+<path d="M150 30 C110 30 90 70 95 110 C98 140 118 160 150 160 C182 160 202 140 205 110 C210 70 190 30 150 30 Z" fill="{{tint}}"></path>
+<path d="M30 360 C40 250 90 190 150 190 C210 190 260 250 270 360 Z" fill="{{tint}}"></path>
+</svg>
+<div style="position: absolute; left: 0; right: 0; top: 150px; text-align: center; font-size: 13px; color: #8B8E80">[портрет: {{speaker}}]</div>
+</div>
+</sc-if>
+
+<div style="position: absolute; left: 120px; right: 120px; bottom: 28px; min-height: 176px; box-sizing: border-box; padding: 22px 32px 18px; background: rgba(12,14,11,0.9); border: 1px solid #3A3F35; display: flex; flex-direction: column; gap: 12px">
+<div style="position: absolute; left: 32px; top: -1px; width: 64px; height: 2px; background: #8E3B3B"></div>
+<div style="font-family: 'Ruslan Display', serif; font-size: 22px; letter-spacing: 1px; color: #D9A15A">{{speaker}}</div>
+<p style="margin: 0; font-size: 22px; line-height: 1.5; color: #E4DFD2; flex-grow: 1">{{text}}</p>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 14px; color: #7C7F72">{{counter}}</span>
+<sc-if value="{{notLast}}" hint-placeholder-val="{{ true }}">
+<button class="nx" onClick="{{next}}">Далее
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 4l8 8-8 8"></path></svg>
+</button>
+</sc-if>
+<sc-if value="{{isLast}}" hint-placeholder-val="{{ false }}">
+<a class="nx" href="Game.dc.html">В деревню
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 4l8 8-8 8"></path></svg>
+</a>
+</sc-if>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const scenes = [
+      { bg: 'forest', speaker: 'Рассказчик', side: '', text: 'Третью ночь над Выселками стоит туман. Птицы замолчали ещё до заката, а собаки воют в сторону леса.' },
+      { bg: 'izba', speaker: 'Ведунья Марфа', side: 'left', tint: '#2E2A25', text: 'Пришёл-таки, богатырь. Не ждали мы тебя — а всё ж ждали. Садись к печи, да от окна подальше.' },
+      { bg: 'izba', speaker: 'Богатырь', side: 'right', tint: '#3A2222', text: 'Кто в тумане ходит, бабушка? На дороге следы — не звериные и не людские.' },
+      { bg: 'swamp', speaker: 'Голос из болота', side: 'left', tint: '#16241F', text: 'Тише, тише… Подойди ближе, путник. Мы давно тебя ждём.' },
+      { bg: 'izba', speaker: 'Ведунья Марфа', side: 'left', tint: '#2E2A25', text: 'Вот и началось. Деревню поднимать надо — одним мечом тут не отобьёшься.' }
+    ];
+    const i = Math.min((this.state && this.state.i) || 0, scenes.length - 1);
+    const s = scenes[i];
+    const last = i === scenes.length - 1;
+    const pos = s.side === 'right' ? 'right: 160px;' : 'left: 160px;';
+    return {
+      bgForest: s.bg === 'forest',
+      bgIzba: s.bg === 'izba',
+      bgSwamp: s.bg === 'swamp',
+      hasPortrait: !!s.side,
+      portraitStyle: 'position: absolute; bottom: 200px; width: 300px; height: 360px; ' + pos,
+      tint: s.tint || '#222',
+      speaker: s.speaker,
+      text: s.text,
+      counter: (i + 1) + ' / ' + scenes.length,
+      notLast: !last,
+      isLast: last,
+      next: () => this.setState({ i: i + 1 })
+    };
+  }
+}
+</script>
+</body>
+</html>

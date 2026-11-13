@@ -1,0 +1,12 @@
+<!-- @dsCard group="Data" height=300 width=420 subtitle="Строка привычки с плиткой-иконкой и отметкой. Нажмите на кружок." -->
+<style>.pv{padding:20px;background:var(--bg-surface)}</style>
+<div class="pv"><div class="bd-stack" id="root"></div></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    B.HabitRow({ object: 'bottle', tone: 'sky', title: 'Drink Water', meta: 'Every 30 minutes', checked: true }) +
+    B.HabitRow({ object: 'dumbbell', tone: 'orange', title: 'Workout', meta: 'For 30 minutes' }) +
+    B.HabitRow({ object: 'book', tone: 'pink', title: 'Write Journal', meta: 'End of the day' }) +
+    B.HabitRow({ icon: 'leaf', tone: 'green', title: 'Walk outside', meta: '15 minutes of fresh air' });
+  B.wire(document);
+</script>

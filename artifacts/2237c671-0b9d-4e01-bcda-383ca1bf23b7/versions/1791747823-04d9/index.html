@@ -1,0 +1,777 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Межевая карта деревни</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=PT+Sans:wght@400;700&family=PT+Mono&display=swap">
+<style>
+/* Layout: инструмент землемера. Верхняя планка, слева рабочее поле (2D и 3D рядом), справа журнал клетки, инструменты, легенда. */
+:root {
+  --bg: #e6e9e4;
+  --panel: #f4f6f2;
+  --ink: #1d2a2c;
+  --muted: #5b6a69;
+  --line: #c3cbc4;
+  --field: #d4dad3;
+  --ember: #c4621f;
+  --ember-ink: #fff7ef;
+  --ok: #3f7a3a;
+  --bad: #a23a2a;
+  --display: "Ruslan Display", "PT Sans", Georgia, serif;
+  --body: "PT Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "PT Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111719; --panel: #182124; --ink: #dfe6e2; --muted: #8fa09d; --line: #2c3a3d; --field: #0c1113;
+  --ember: #e88a3e; --ember-ink: #1a0f06; --ok: #7fc277; --bad: #f08a76; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111719; --panel: #182124; --ink: #dfe6e2; --muted: #8fa09d; --line: #2c3a3d; --field: #0c1113;
+  --ember: #e88a3e; --ember-ink: #1a0f06; --ok: #7fc277; --bad: #f08a76; color-scheme: dark }
+
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 var(--body); }
+.app { height: 100%; display: grid; grid-template-rows: auto 1fr; padding-inline: 16px; padding-block: 10px; box-sizing: border-box; gap: 10px; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+h1 { font: 22px/1.1 var(--display); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+h1 small { display: block; font: 12px var(--body); color: var(--muted); letter-spacing: .04em; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; background: transparent; color: var(--ink); font: inherit; padding: 5px 10px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ember); color: var(--ember-ink); }
+.layers { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+.layers label, .row label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; white-space: nowrap; }
+.lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+select, input[type=range] { accent-color: var(--ember); }
+select { font: inherit; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 5px; padding: 3px 5px; }
+button:focus-visible, select:focus-visible, input:focus-visible, canvas:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+
+main { min-height: 0; display: grid; grid-template-columns: 1fr 290px; gap: 10px; }
+.views { min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.views[data-view="2d"] { grid-template-columns: 1fr; } .views[data-view="2d"] #v3 { display: none; }
+.views[data-view="3d"] { grid-template-columns: 1fr; } .views[data-view="3d"] #v2 { display: none; }
+.view { position: relative; min-height: 0; min-width: 0; background: var(--field); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.view canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.view .tag { position: absolute; left: 10px; top: 8px; font: 11px var(--mono); color: #e9efe9; background: #0f1416b3; padding: 2px 7px; border-radius: 4px; pointer-events: none; }
+.view .cams { position: absolute; right: 10px; top: 8px; background: #0f1416b3; border-color: #ffffff30; }
+.view .cams button { color: #e9efe9; font-size: 12px; padding: 3px 8px; }
+.view .cams button + button { border-left-color: #ffffff30; }
+.view .hint { position: absolute; right: 10px; bottom: 8px; font-size: 11px; color: #e9efe9; background: #0f1416b3; padding: 2px 7px; border-radius: 4px; pointer-events: none; max-width: 70%; }
+#v2 canvas { cursor: crosshair; }
+
+aside { min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.card h2 { margin: 0; font: 700 11px var(--body); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+dl.cell { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font: 13px var(--mono); font-variant-numeric: tabular-nums; }
+dl.cell dt { color: var(--muted); font-family: var(--body); }
+dl.cell dd { margin: 0; text-align: right; }
+.zonechip { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; border: 1px solid #0003; flex: none; }
+.walk-yes { color: var(--ok); } .walk-no { color: var(--bad); }
+.tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.tools button, .btn { font: inherit; font-size: 13px; padding: 5px 6px; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 5px; cursor: pointer; }
+.tools button[aria-pressed="true"] { background: var(--ember); color: var(--ember-ink); border-color: var(--ember); }
+.btn:hover, .tools button:hover { border-color: var(--ember); }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.row input[type=range] { flex: 1; min-width: 80px; }
+.legend { display: flex; flex-direction: column; gap: 2px; }
+.legend button { display: grid; grid-template-columns: 14px 1fr auto; gap: 8px; align-items: center; text-align: left; font: inherit; font-size: 13px; color: var(--ink); background: transparent; border: 1px solid transparent; border-radius: 5px; padding: 3px 5px; cursor: pointer; }
+.legend button[aria-pressed="true"] { border-color: var(--ember); }
+.legend .n { font: 12px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.ramp { height: 10px; border-radius: 3px; }
+.ramp-l { display: flex; justify-content: space-between; font: 11px var(--mono); color: var(--muted); }
+.btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.note { font-size: 12px; color: var(--muted); margin: 0; }
+.status { font-size: 12px; color: var(--ember); min-height: 1em; margin: 0; }
+textarea#jsonout { width: 100%; height: 90px; font: 11px var(--mono); box-sizing: border-box; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 5px; }
+
+@media (max-width: 900px) {
+  .app { height: auto; min-height: 100%; }
+  main { grid-template-columns: 1fr; }
+  .views { grid-template-columns: 1fr; }
+  .view { height: 62vh; }
+  aside { overflow: visible; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Межевая карта деревни<small>деревня 256 × 256 м и стартовый участок на юге · 1 клетка = 1 м · вода на отметке 0 м</small></h1>
+    <div class="seg" role="group" aria-label="Вид">
+      <button id="vw-both" aria-pressed="true">Оба</button><button id="vw-2d" aria-pressed="false">Сверху</button><button id="vw-3d" aria-pressed="false">3D</button>
+    </div>
+    <div class="layers" role="group" aria-label="Слои">
+      <span class="lbl">Слои</span>
+      <label><input type="checkbox" id="ly-height" checked> Высоты</label>
+      <label><input type="checkbox" id="ly-zones" checked> Зоны</label>
+      <label><input type="checkbox" id="ly-contours" checked> Изолинии</label>
+      <label><input type="checkbox" id="ly-grid" checked> Сетка</label>
+      <label><input type="checkbox" id="ly-sectors" checked> Сектора</label>
+      <label><input type="checkbox" id="ly-marks" checked> Ориентиры</label>
+      <label><input type="checkbox" id="ly-outer" checked> Окрестности</label>
+    </div>
+    <div class="layers">
+      <label><span class="lbl">Шаг сетки</span>
+        <select id="grid-step"><option value="1" selected>1 м</option><option value="2">2 м</option><option value="4">4 м</option><option value="8">8 м</option></select></label>
+      <label><span class="lbl">Сектор</span>
+        <select id="sector-size"><option value="8">8 м</option><option value="16" selected>16 м</option><option value="32">32 м</option><option value="64">64 м</option></select></label>
+    </div>
+  </header>
+  <main>
+    <div class="views" id="views" data-view="both">
+      <div class="view" id="v2"><canvas id="c2" tabindex="0" aria-label="Карта сверху"></canvas><span class="tag">СВЕРХУ · север вверху</span><span class="hint" id="hint2">колесо: масштаб · тянуть: сдвиг · 2×клик: вся карта</span></div>
+      <div class="view" id="v3"><canvas id="c3" aria-label="3D-вид"></canvas><span class="tag">3D</span>
+        <div class="seg cams" role="group" aria-label="Камера"><button data-cam="wide">Обзор</button><button data-cam="ridge">С гряды</button><button data-cam="top">Сверху</button><button data-cam="far">Дали</button></div>
+        <span class="hint" id="hint3">ЛКМ: вращать · ПКМ: сдвиг · колесо: масштаб</span></div>
+    </div>
+    <aside>
+      <section class="card" aria-live="polite">
+        <h2>Клетка под курсором</h2>
+        <dl class="cell">
+          <dt>Клетка X, Z</dt><dd id="i-cell">—</dd>
+          <dt>Сектор</dt><dd id="i-sector">—</dd>
+          <dt>Мир x, z</dt><dd id="i-world">—</dd>
+          <dt>Высота</dt><dd id="i-h">—</dd>
+          <dt>Уклон</dt><dd id="i-slope">—</dd>
+          <dt>Зона</dt><dd id="i-zone">—</dd>
+          <dt>Проходимо</dt><dd id="i-walk">—</dd>
+        </dl>
+      </section>
+      <section class="card">
+        <h2>Правка</h2>
+        <div class="tools" role="group" aria-label="Инструмент">
+          <button data-tool="look" aria-pressed="true">Смотреть</button>
+          <button data-tool="zone" aria-pressed="false">Зона</button>
+          <button data-tool="raise" aria-pressed="false">Поднять</button>
+          <button data-tool="lower" aria-pressed="false">Опустить</button>
+          <button data-tool="flatten" aria-pressed="false">Ровнять</button>
+          <button data-tool="smooth" aria-pressed="false">Сгладить</button>
+        </div>
+        <div class="row"><label for="brush" class="lbl">Кисть</label><input type="range" id="brush" min="0" max="12" step="1" value="2"><span id="brush-v" style="font-family:var(--mono)">5×5 м</span></div>
+        <p class="note" id="tool-note">Выберите инструмент. Зону для кисти выбирают в легенде ниже. Ctrl+Z отменяет.</p>
+        <div class="btns"><button class="btn" id="undo">Отменить</button><button class="btn" id="reset">Вернуть исходную</button></div>
+      </section>
+      <section class="card">
+        <h2>Зоны</h2>
+        <div class="legend" id="legend"></div>
+        <h2>Высоты, м</h2>
+        <div class="ramp" id="ramp"></div>
+        <div class="ramp-l"><span>−4.5</span><span>0</span><span>5</span><span>10</span><span>15</span><span>20</span></div>
+      </section>
+      <section class="card">
+        <h2>Экспорт</h2>
+        <div class="btns">
+          <button class="btn" id="ex-json">Данные JSON</button>
+          <button class="btn" id="ex-hmap">Карта высот PNG</button>
+          <button class="btn" id="ex-zones">Карта зон PNG</button>
+          <button class="btn" id="ex-copy">Копировать JSON</button>
+        </div>
+        <p class="status" id="ex-status"></p>
+        <textarea id="jsonout" hidden readonly aria-label="JSON карты"></textarea>
+        <p class="note">JSON читает модуль <code>src/mapgrid.js</code>: высота, зона и проходимость любой точки мира.</p>
+      </section>
+    </aside>
+  </main>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { MapGrid, OuterTerrain } from './src/mapgrid.js';
+
+const DATA_URL = './data/village-map.json';
+const OUTER_URL = './data/village-outer.json';
+const DRAFT_KEY = 'map-grid-draft-v2';
+const OLD_DRAFT_KEY = 'map-grid-draft-v1';   // карта 256×256 до стартового участка
+const $ = id => document.getElementById(id);
+
+const [original, outerJson] = await Promise.all([fetch(DATA_URL).then(r => r.json()), fetch(OUTER_URL).then(r => r.json())]);
+const outer = new OuterTerrain(outerJson);
+let map = new MapGrid(original);
+let draftNote = '';
+try {
+  const d = localStorage.getItem(DRAFT_KEY);
+  const j = d && JSON.parse(d);
+  if (j && j.width === map.width && j.height === map.height) { map = new MapGrid(j); draftNote = 'Загружены ваши сохранённые правки.'; }
+  else {
+    // перенос правок из прежней карты деревни (без стартового участка)
+    const o = localStorage.getItem(OLD_DRAFT_KEY), old = o && new MapGrid(JSON.parse(o));
+    if (old && old.width === map.width && old.height <= map.height) {
+      const base0 = new MapGrid(original);
+      for (let z = 0; z < old.height; z++) for (let x = 0; x < old.width; x++) {
+        const i = z * old.width + x;
+        map.heights[i] = old.heights[i];
+        if (!(old.zone[i] === 0 && base0.zone[i] !== 0)) map.zone[i] = old.zone[i];   // открытый проход на юг не закрываем
+      }
+      draftNote = 'Ваши прежние правки деревни перенесены на расширенную карту.';
+    }
+  }
+} catch (e) { /* без черновика */ }
+const W = map.width, H = map.height;
+
+const S = {
+  layers: { height: true, zones: true, contours: true, grid: true, sectors: true, marks: true, outer: true },
+  gridStep: 1, sector: 16, view: 'both',
+  tool: 'look', zoneId: 4, brush: 2, hover: null,
+};
+const undoStack = [];
+
+// ---------- цвета ----------
+const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const zoneRGB = {}; map.zones.forEach(z => zoneRGB[z.id] = hex(z.color));
+const RAMP = [[-4.5, [29, 79, 120]], [0, [156, 201, 224]], [0.01, [196, 204, 150]], [3, [140, 170, 100]], [8, [104, 136, 78]], [14, [160, 140, 95]], [20, [222, 212, 192]]];
+function rampColor(h) {
+  if (h <= RAMP[0][0]) return RAMP[0][1];
+  for (let i = 1; i < RAMP.length; i++) if (h <= RAMP[i][0]) {
+    const [h0, c0] = RAMP[i - 1], [h1, c1] = RAMP[i], t = (h - h0) / (h1 - h0);
+    return [c0[0] + (c1[0] - c0[0]) * t, c0[1] + (c1[1] - c0[1]) * t, c0[2] + (c1[2] - c0[2]) * t];
+  }
+  return RAMP[RAMP.length - 1][1];
+}
+$('ramp').style.background = 'linear-gradient(90deg,' + RAMP.map(([h, c]) => `rgb(${c}) ${((h + 4.5) / 24.5 * 100).toFixed(1)}%`).join(',') + ')';
+
+function cellColor(i, out, soft = false) {
+  const h = map.heights[i], zid = map.zone[i];
+  let c;
+  if (soft && zid === 0) {   // в 3D граница не тёмная плита, а земля с лёгкой тенью, чтобы сливалась с окрестностями
+    const r = outerRGB(h); out[0] = r[0] * .8; out[1] = r[1] * .8; out[2] = r[2] * .82; return;
+  }
+  if (S.layers.zones && S.layers.height) {
+    const z = zoneRGB[zid], r = rampColor(h);
+    c = [z[0] * .62 + r[0] * .38, z[1] * .62 + r[1] * .38, z[2] * .62 + r[2] * .38];
+  } else if (S.layers.zones) c = zoneRGB[zid];
+  else if (S.layers.height) c = rampColor(h);
+  else c = [170, 176, 170];
+  out[0] = c[0]; out[1] = c[1]; out[2] = c[2];
+}
+function slopeAt(cx, cz) {
+  const gx = (map.heightAtCell(cx + 1, cz) - map.heightAtCell(cx - 1, cz)) / 2;
+  const gz = (map.heightAtCell(cx, cz + 1) - map.heightAtCell(cx, cz - 1)) / 2;
+  return Math.hypot(gx, gz);
+}
+
+// ---------- 2D ----------
+const c2 = $('c2'), g2 = c2.getContext('2d');
+const base = document.createElement('canvas'); base.width = W; base.height = H;
+const bctx = base.getContext('2d'); const img = bctx.createImageData(W, H);
+const view2 = { s: 2, ox: 0, oy: 0, fitted: false };
+
+// окрестности: по картинке на уровень, цвет по высоте, отмывка рельефа, дымка тем сильнее, чем дальше уровень
+function outerRGB(h) {
+  if (h < 0) return [74, 120, 150];
+  const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const r = h < 8 ? lerp([132, 160, 96], [112, 142, 82], h / 8) : lerp([112, 142, 82], [92, 118, 78], Math.min(1, (h - 8) / 52));
+  if (h <= 60) return r;
+  const rock = [128, 124, 116], snow = [232, 236, 238];
+  const t = Math.min(1, (h - 60) / 240);
+  let c = [r[0] + (rock[0] - r[0]) * t, r[1] + (rock[1] - r[1]) * t, r[2] + (rock[2] - r[2]) * t];
+  if (h > 560) { const u = Math.min(1, (h - 560) / 200); c = [c[0] + (snow[0] - c[0]) * u, c[1] + (snow[1] - c[1]) * u, c[2] + (snow[2] - c[2]) * u]; }
+  return c;
+}
+const FOG_RGB = [138, 154, 156];
+const outerImgs = outer.levels.map((L, li) => {
+  const cv = document.createElement('canvas'); cv.width = L.nx; cv.height = L.nz;
+  const cx = cv.getContext('2d'), im = cx.createImageData(L.nx, L.nz), hz = L.heights;
+  const at = (i, j) => hz[Math.min(L.nz - 1, Math.max(0, j)) * L.nx + Math.min(L.nx - 1, Math.max(0, i))];
+  const haze = [.25, .45, .62][li] ?? .7;
+  for (let j = 0; j < L.nz; j++) for (let i = 0; i < L.nx; i++) {
+    const h = at(i, j), c = outerRGB(h);
+    const sh = Math.min(1.5, Math.max(.45, 1 + ((at(i - 1, j) - at(i + 1, j)) + (at(i, j - 1) - at(i, j + 1))) / L.cellSize * .9));
+    const o = (j * L.nx + i) * 4;
+    for (let k = 0; k < 3; k++) im.data[o + k] = c[k] * sh * (1 - haze) + FOG_RGB[k] * haze;
+    im.data[o + 3] = 255;
+  }
+  cx.putImageData(im, 0, 0);
+  return { L, cv };
+});
+
+function rebuildBase() {
+  const col = [0, 0, 0], d = img.data;
+  for (let z = 0; z < H; z++) for (let x = 0; x < W; x++) {
+    const i = z * W + x; cellColor(i, col);
+    const h = map.heights[i];
+    const sh = Math.min(1.35, Math.max(.6, 1 + (map.heightAtCell(x - 1, z) - map.heightAtCell(x + 1, z)) * .22 + (map.heightAtCell(x, z - 1) - map.heightAtCell(x, z + 1)) * .22));
+    let k = sh;
+    if (S.layers.contours) {
+      const b = Math.floor(h), br = Math.floor(map.heightAtCell(x + 1, z)), bd = Math.floor(map.heightAtCell(x, z + 1));
+      if (b !== br || b !== bd) {
+        const top = Math.max(b, br, bd);
+        k *= (top % 5 === 0) ? .55 : .78;
+      }
+    }
+    d[i * 4] = col[0] * k; d[i * 4 + 1] = col[1] * k; d[i * 4 + 2] = col[2] * k; d[i * 4 + 3] = 255;
+  }
+  bctx.putImageData(img, 0, 0);
+}
+
+function size2() {
+  const r = c2.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  c2.width = Math.max(1, r.width * dpr); c2.height = Math.max(1, r.height * dpr);
+  if (!view2.user) fit2();
+}
+function fit2() {
+  const r = c2.getBoundingClientRect(); if (!r.width) return;
+  view2.s = Math.min(r.width / (W + 16), r.height / (H + 16));
+  view2.ox = (r.width - W * view2.s) / 2; view2.oy = (r.height - H * view2.s) / 2; view2.fitted = true;
+}
+const sectorLabel = (i) => { let s = '', c = i; do { s = String.fromCharCode(65 + c % 26) + s; c = Math.floor(c / 26) - 1; } while (c >= 0); return s; };
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function draw2() {
+  const dpr = c2.width / (c2.getBoundingClientRect().width || 1);
+  g2.setTransform(1, 0, 0, 1, 0, 0);
+  g2.fillStyle = css('--field'); g2.fillRect(0, 0, c2.width, c2.height);
+  g2.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const { s, ox, oy } = view2;
+  g2.imageSmoothingEnabled = false;
+  if (S.layers.outer) {
+    const wx = X => ox + (X - map.origin.x) * s, wz = Z => oy + (Z - map.origin.z) * s;
+    g2.imageSmoothingEnabled = true;
+    for (let k = outerImgs.length - 1; k >= 0; k--) {
+      const { L, cv } = outerImgs[k];
+      g2.drawImage(cv, wx(L.x0), wz(L.z0), (L.x1 - L.x0) * s, (L.z1 - L.z0) * s);
+    }
+    g2.imageSmoothingEnabled = false;
+    // туманная кайма: ближе к краю карты прозрачно, дальше гуще
+    const cxm = ox + W * s / 2, czm = oy + H * s / 2, r0 = Math.max(W, H) * s * .6;
+    const fog = g2.createRadialGradient(cxm, czm, r0, cxm, czm, r0 + 2200 * s);
+    fog.addColorStop(0, 'rgba(138,154,156,0)'); fog.addColorStop(1, 'rgba(138,154,156,.92)');
+    g2.fillStyle = fog; g2.fillRect(0, 0, c2.width, c2.height);
+  }
+  g2.drawImage(base, ox, oy, W * s, H * s);
+  // сетка
+  const line = (pos, vertical) => { g2.beginPath(); if (vertical) { g2.moveTo(ox + pos * s, oy); g2.lineTo(ox + pos * s, oy + H * s); } else { g2.moveTo(ox, oy + pos * s); g2.lineTo(ox + W * s, oy + pos * s); } g2.stroke(); };
+  if (S.layers.grid && S.gridStep * s >= 5) {
+    g2.strokeStyle = 'rgba(15,22,24,.28)'; g2.lineWidth = 1 / dpr;
+    for (let p = 0; p <= W; p += S.gridStep) line(p, true);
+    for (let p = 0; p <= H; p += S.gridStep) line(p, false);
+  }
+  if (S.layers.sectors) {
+    g2.strokeStyle = 'rgba(15,22,24,.6)'; g2.lineWidth = 1.2;
+    for (let p = 0; p <= W; p += S.sector) line(p, true);
+    for (let p = 0; p <= H; p += S.sector) line(p, false);
+    const sp = S.sector * s;
+    if (sp >= 34) {
+      g2.font = `${Math.min(12, sp / 3.6)}px "PT Mono", monospace`; g2.textBaseline = 'top';
+      for (let r = 0; r < H / S.sector; r++) for (let c = 0; c < W / S.sector; c++) {
+        const x = ox + c * sp + 3, y = oy + r * sp + 2;
+        g2.fillStyle = 'rgba(15,22,24,.55)'; g2.fillText(sectorLabel(c) + (r + 1), x + .7, y + .7);
+        g2.fillStyle = 'rgba(244,246,242,.9)'; g2.fillText(sectorLabel(c) + (r + 1), x, y);
+      }
+    }
+  }
+  // граница карты (рамка проходимой области)
+  g2.strokeStyle = css('--ember'); g2.lineWidth = 1.5; g2.setLineDash([6, 4]);
+  g2.beginPath(); map.playable.forEach(([x, z], k) => g2[k ? 'lineTo' : 'moveTo'](ox + x * s, oy + z * s)); g2.closePath();
+  g2.stroke(); g2.setLineDash([]);
+  // ориентиры
+  if (S.layers.marks) {
+    g2.font = '600 12px "PT Sans", sans-serif'; g2.textBaseline = 'middle';
+    for (const m of map.landmarks) {
+      const x = ox + (m.x + .5) * s, y = oy + (m.z + .5) * s;
+      g2.fillStyle = css('--ember'); g2.beginPath(); g2.arc(x, y, 4, 0, 7); g2.fill();
+      const tw = g2.measureText(m.name).width, lx = x + 8 + tw > ox + W * s ? x - 8 - tw : x + 8;
+      g2.lineWidth = 3; g2.strokeStyle = 'rgba(15,22,24,.75)'; g2.strokeText(m.name, lx, y);
+      g2.fillStyle = '#fff'; g2.fillText(m.name, lx, y);
+    }
+  }
+  // курсор и кисть
+  if (S.hover) {
+    const { cx, cz } = S.hover;
+    g2.strokeStyle = css('--ember'); g2.lineWidth = 2;
+    if (S.tool !== 'look') {
+      const r = S.brush; g2.strokeRect(ox + (cx - r) * s, oy + (cz - r) * s, (2 * r + 1) * s, (2 * r + 1) * s);
+    } else g2.strokeRect(ox + cx * s, oy + cz * s, s, s);
+  }
+}
+
+// ---------- 3D ----------
+const c3 = $('c3');
+const renderer = new THREE.WebGLRenderer({ canvas: c3, antialias: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
+const scene = new THREE.Scene();
+const FOG = { color: new THREE.Color('#6f8486'), density: 0.00032 };
+scene.background = FOG.color.clone();
+const camera = new THREE.PerspectiveCamera(50, 1, 2, 40000);
+const controls = new OrbitControls(camera, c3); controls.maxPolarAngle = Math.PI * .48; controls.minDistance = 8; controls.maxDistance = 7000; controls.enableDamping = true;
+
+const ridgeY = map.heightAt(18, 176);
+const CAMS = {
+  wide: [[30, 95, 390], [0, 6, -120]],
+  ridge: [[18, ridgeY + 6, 182], [-4, 6, 30]],
+  top: [[0, 560, 49], [0, 0, 48]],
+  far: [[1700, 1500, 3000], [0, 0, -300]],
+};
+function setCam(k) { const [p, t] = CAMS[k]; camera.position.set(...p); controls.target.set(...t); controls.update(); }
+setCam('wide');
+document.querySelectorAll('[data-cam]').forEach(b => b.onclick = () => setCam(b.dataset.cam));
+
+// туман: по расстоянию от камеры (вершины гор пробиваются) + дымка, густеющая от края карты
+const MAP_RECT = new THREE.Vector4(map.origin.x, map.origin.z, map.origin.x + W, map.origin.z + H);
+const fogUniforms = { uFogCol: { value: FOG.color }, uFogDen: { value: FOG.density }, uRect: { value: MAP_RECT } };
+const FOG_GLSL = `
+  uniform vec3 uFogCol; uniform float uFogDen; uniform vec4 uRect;
+  vec3 fogit(vec3 c, vec3 w){
+    float d = distance(w, cameraPosition);
+    float hf = exp(-max(w.y, 0.) / 320.);
+    float f = 1. - exp(-pow(d * uFogDen, 2.) * (.25 + .75 * hf));
+    vec2 o = max(max(uRect.xy - w.xz, w.xz - uRect.zw), 0.);
+    float edge = smoothstep(0., 1100., length(o)) * (.35 + .4 * hf);
+    float rim = smoothstep(4800., 6900., length(w.xz - (uRect.xy + uRect.zw) * .5));   // край мира тонет в тумане
+    return mix(c, uFogCol, clamp(max(max(f, edge), rim), 0., 1.));
+  }`;
+
+const geo = new THREE.PlaneGeometry(W - 1, H - 1, W - 1, H - 1);
+geo.rotateX(-Math.PI / 2);
+geo.translate(map.origin.x + W / 2, 0, map.origin.z + H / 2);
+const colAttr = new THREE.BufferAttribute(new Float32Array(W * H * 3), 3);
+geo.setAttribute('color', colAttr);
+const terrainMat = new THREE.ShaderMaterial({
+  uniforms: {
+    uStep: { value: 1 }, uGrid: { value: 1 }, uSector: { value: 16 }, uSectorOn: { value: 1 }, uContour: { value: 1 },
+    uHover: { value: new THREE.Vector2(-99, -99) }, uBrush: { value: 0 }, uOrigin: { value: new THREE.Vector2(map.origin.x, map.origin.z) },
+    uEmber: { value: new THREE.Color('#e88a3e') }, ...fogUniforms,
+  },
+  vertexShader: `
+    varying vec3 vColor; varying vec3 vN; varying vec3 vW; varying float vH;
+    void main(){ vColor = color; vN = normalize(mat3(modelMatrix) * normal); vH = position.y;
+      vec4 w = modelMatrix * vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+  fragmentShader: `
+    varying vec3 vColor; varying vec3 vN; varying vec3 vW; varying float vH;
+    uniform float uStep, uGrid, uSector, uSectorOn, uContour, uBrush; uniform vec2 uHover, uOrigin; uniform vec3 uEmber;
+    ${FOG_GLSL}
+    float lines(vec2 p){ vec2 f = fwidth(p); vec2 g = abs(fract(p - .5) - .5) / max(f, 1e-4); float l = 1. - min(min(g.x, g.y), 1.);
+      return l * (1. - smoothstep(.25, .6, max(f.x, f.y))); }
+    void main(){
+      vec3 n = normalize(vN);
+      float d = max(dot(n, normalize(vec3(-.45, .85, -.35))), 0.);
+      vec3 c = vColor / 255. * (.42 + .7 * d);
+      vec2 cell = vW.xz - uOrigin;
+      c = mix(c, vec3(.06,.09,.1), lines(cell / uStep) * .35 * uGrid);
+      c = mix(c, vec3(.06,.09,.1), lines(cell / uSector) * .7 * uSectorOn);
+      if (uContour > .5) { float fh = fwidth(vH); float g = abs(fract(vH - .5) - .5) / max(fh, 1e-4);
+        float g5 = abs(fract(vH / 5. - .5) - .5) / max(fh / 5., 1e-4);
+        c *= 1. - (1. - min(g, 1.)) * .22 - (1. - min(g5, 1.)) * .25; }
+      vec2 hc = floor(cell);
+      if (uHover.x > -50.) {
+        vec2 dd = abs(hc - uHover);
+        if (max(dd.x, dd.y) <= uBrush) c = mix(c, uEmber, .45);
+      }
+      gl_FragColor = vec4(fogit(c, vW), 1.);
+    }`,
+  vertexColors: true,
+});
+const terrain = new THREE.Mesh(geo, terrainMat);
+scene.add(terrain);
+
+// окрестности: по сетке на уровень, клетка крупнее с каждым уровнем; внутри более подробного уровня дыра
+const outerMeshes = outer.levels.map((L, k) => {
+  const g = new THREE.PlaneGeometry((L.nx - 1) * L.cellSize, (L.nz - 1) * L.cellSize, L.nx - 1, L.nz - 1);
+  g.rotateX(-Math.PI / 2); g.translate(L.x0 + L.nx * L.cellSize / 2, 0, L.z0 + L.nz * L.cellSize / 2);
+  const pos = g.attributes.position.array, col = new Float32Array(L.nx * L.nz * 3);
+  for (let i = 0; i < L.nx * L.nz; i++) { pos[i * 3 + 1] = L.heights[i]; const c = outerRGB(L.heights[i]); col.set([c[0], c[1], c[2]], i * 3); }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.computeVertexNormals();
+  const inner = k === 0 ? MAP_RECT : new THREE.Vector4(outer.levels[k - 1].x0, outer.levels[k - 1].z0, outer.levels[k - 1].x1, outer.levels[k - 1].z1);
+  const inset = (k === 0 ? 1 : outer.levels[k - 1].cellSize) * 1.5;
+  const m = new THREE.ShaderMaterial({
+    uniforms: { uHole: { value: new THREE.Vector4(inner.x + inset, inner.y + inset, inner.z - inset, inner.w - inset) }, ...fogUniforms },
+    vertexShader: `varying vec3 vColor; varying vec3 vN; varying vec3 vW;
+      void main(){ vColor = color; vN = normal; vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+    fragmentShader: `varying vec3 vColor; varying vec3 vN; varying vec3 vW; uniform vec4 uHole; ${FOG_GLSL}
+      void main(){
+        if (vW.x > uHole.x && vW.z > uHole.y && vW.x < uHole.z && vW.z < uHole.w) discard;
+        float d = max(dot(normalize(vN), normalize(vec3(-.45, .85, -.35))), 0.);
+        gl_FragColor = vec4(fogit(vColor / 255. * (.38 + .72 * d), vW), 1.);
+      }`,
+    vertexColors: true,
+  });
+  const mesh = new THREE.Mesh(g, m); scene.add(mesh); return mesh;
+});
+
+const water = new THREE.Mesh(new THREE.PlaneGeometry(40000, 40000).rotateX(-Math.PI / 2), new THREE.ShaderMaterial({
+  uniforms: { ...fogUniforms },
+  vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+  fragmentShader: `varying vec3 vW; ${FOG_GLSL} void main(){ gl_FragColor = vec4(fogit(vec3(.23, .52, .72), vW), .55); }`,
+  transparent: true, depthWrite: false,
+}));
+water.position.y = map.waterLevel + 0.02; scene.add(water);
+
+// граница проходимой области: линия по земле
+const edgeMat = new THREE.LineBasicMaterial({ color: 0xe88a3e });
+const edge = new THREE.Line(new THREE.BufferGeometry(), edgeMat); scene.add(edge);
+function rebuildEdge() {
+  const pts = [], P = map.playable;
+  for (let k = 0; k < P.length; k++) {
+    const [ax, az] = P[k], [bx, bz] = P[(k + 1) % P.length], n = Math.max(1, Math.round(Math.hypot(bx - ax, bz - az)));
+    for (let t = 0; t < n; t++) {
+      const x = map.origin.x + ax + (bx - ax) * t / n, z = map.origin.z + az + (bz - az) * t / n;
+      pts.push(new THREE.Vector3(x, Math.max(map.heightAt(x, z), map.waterLevel) + .35, z));
+    }
+  }
+  pts.push(pts[0].clone());
+  edge.geometry.dispose(); edge.geometry = new THREE.BufferGeometry().setFromPoints(pts);
+}
+
+function rebuildGeo(colorsOnly = false) {
+  const pos = geo.attributes.position.array, col = colAttr.array, c = [0, 0, 0];
+  for (let i = 0; i < W * H; i++) {
+    if (!colorsOnly) pos[i * 3 + 1] = map.heights[i];
+    cellColor(i, c, true); col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];
+  }
+  if (!colorsOnly) { geo.attributes.position.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere(); rebuildEdge(); }
+  colAttr.needsUpdate = true;
+}
+function size3() {
+  const r = c3.getBoundingClientRect(); if (!r.width) return;
+  renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+}
+function syncUniforms() {
+  const u = terrainMat.uniforms;
+  u.uStep.value = S.gridStep; u.uGrid.value = S.layers.grid ? 1 : 0; u.uSector.value = S.sector;
+  u.uSectorOn.value = S.layers.sectors ? 1 : 0; u.uContour.value = S.layers.contours ? 1 : 0;
+  u.uEmber.value.set(css('--ember') || '#e88a3e');
+  if (S.hover) { u.uHover.value.set(S.hover.cx, S.hover.cz); u.uBrush.value = S.tool === 'look' ? 0 : S.brush; }
+  else u.uHover.value.set(-99, -99);
+}
+// пикинг в 3D: марш луча по карте высот (вода считается поверхностью)
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function pick3(ev) {
+  const r = c3.getBoundingClientRect();
+  ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const o = ray.ray.origin, d = ray.ray.direction, R = MAP_RECT;
+  const surf = (x, z) => Math.max(map.heightAt(x, z), map.waterLevel);
+  let prev = 0;
+  for (let t = 0; t < 2400; t += 0.5) {
+    const x = o.x + d.x * t, z = o.z + d.z * t, y = o.y + d.y * t;
+    if (x < R.x || z < R.y || x > R.z || z > R.w) { prev = t; continue; }
+    if (y <= surf(x, z)) {
+      let a = prev, b = t;
+      for (let k = 0; k < 10; k++) { const m = (a + b) / 2; (o.y + d.y * m <= surf(o.x + d.x * m, o.z + d.z * m)) ? b = m : a = m; }
+      const c = map.worldToCell(o.x + d.x * b, o.z + d.z * b);
+      return map.inBounds(c.cx, c.cz) ? c : null;
+    }
+    prev = t;
+  }
+  return null;
+}
+
+// ---------- правка ----------
+const toolNotes = {
+  look: 'Выберите инструмент. Зону для кисти выбирают в легенде ниже. Ctrl+Z отменяет.',
+  zone: 'Красит клетки выбранной в легенде зоной. Сейчас: ',
+  raise: 'Поднимает землю под кистью на 0,2 м за мазок.',
+  lower: 'Опускает землю под кистью на 0,2 м за мазок.',
+  flatten: 'Выравнивает клетки под кистью до высоты в точке, где начат мазок.',
+  smooth: 'Сглаживает неровности под кистью.',
+};
+let stroke = null;
+function beginStroke(c) {
+  undoStack.push(map.snapshot()); if (undoStack.length > 40) undoStack.shift();
+  stroke = { flatH: map.heightAtCell(c.cx, c.cz), last: '' };
+  applyBrush(c);
+}
+function applyBrush(c) {
+  const key = c.cx + ',' + c.cz; if (stroke.last === key) return; stroke.last = key;
+  const r = S.brush, tmp = S.tool === 'smooth' ? map.heights.slice() : null;
+  for (let z = c.cz - r; z <= c.cz + r; z++) for (let x = c.cx - r; x <= c.cx + r; x++) {
+    if (!map.inBounds(x, z)) continue;
+    const i = map.index(x, z), fall = r ? 1 - Math.max(Math.abs(x - c.cx), Math.abs(z - c.cz)) / (r + 1) : 1;
+    if (S.tool === 'zone') map.zone[i] = S.zoneId;
+    else if (S.tool === 'raise') map.heights[i] += .2 * fall;
+    else if (S.tool === 'lower') map.heights[i] -= .2 * fall;
+    else if (S.tool === 'flatten') map.heights[i] += (stroke.flatH - map.heights[i]) * Math.min(1, fall * 1.5);
+    else if (S.tool === 'smooth') {
+      let sum = 0, n = 0;
+      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) { sum += tmp[map.index(Math.min(W - 1, Math.max(0, x + dx)), Math.min(H - 1, Math.max(0, z + dz)))]; n++; }
+      map.heights[i] += (sum / n - map.heights[i]) * fall;
+    }
+  }
+  dirty(S.tool === 'zone');
+}
+function endStroke() { if (stroke) { stroke = null; saveDraft(); refreshLegend(); } }
+let saveT = 0;
+function saveDraft() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(map.toJSON())); } catch (e) { /* без черновика */ } }, 400); }
+function undo() { const s = undoStack.pop(); if (!s) return; map.restore(s); dirty(false); saveDraft(); refreshLegend(); }
+
+// ---------- обновление ----------
+let need2 = true, needGeo = 0;
+function dirty(colorsOnly) { rebuildBase(); need2 = true; needGeo = Math.max(needGeo, colorsOnly ? 1 : 2); }
+function loop() {
+  requestAnimationFrame(loop);
+  if (needGeo) { rebuildGeo(needGeo === 1); needGeo = 0; }
+  if (need2 && S.view !== '3d') { draw2(); need2 = false; }
+  if (S.view !== '2d') { controls.update(); syncUniforms(); renderer.render(scene, camera); }
+}
+
+function setHover(c) {
+  S.hover = c; need2 = true;
+  const f = (v, d = 1) => v.toFixed(d).replace('.', ',');
+  if (!c) { for (const k of ['cell', 'sector', 'world', 'h', 'slope', 'zone', 'walk']) $('i-' + k).textContent = '—'; return; }
+  const h = map.heightAtCell(c.cx, c.cz), z = map.zoneAtCell(c.cx, c.cz), w = map.cellToWorld(c.cx, c.cz);
+  $('i-cell').textContent = `${c.cx}, ${c.cz}`;
+  $('i-sector').textContent = map.sectorName(c.cx, c.cz, S.sector);
+  $('i-world').textContent = `${f(w.x)}, ${f(w.z)} м`;
+  $('i-h').textContent = h < map.waterLevel ? `${f(h)} м (глуб. ${f(map.waterLevel - h)})` : `${f(h)} м`;
+  $('i-slope').textContent = `${Math.round(Math.atan(slopeAt(c.cx, c.cz)) * 180 / Math.PI)}°`;
+  $('i-zone').innerHTML = ''; const chip = document.createElement('span'); chip.className = 'zonechip';
+  const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = z.color; chip.append(sw, z.name); $('i-zone').append(chip);
+  $('i-walk').textContent = z.walk ? 'да' : 'нет'; $('i-walk').className = z.walk ? 'walk-yes' : 'walk-no';
+}
+
+// ---------- ввод 2D ----------
+const pointers = new Map(); let pan = null, pinch = null;
+function cellFrom2(ev) {
+  const r = c2.getBoundingClientRect();
+  const cx = Math.floor((ev.clientX - r.left - view2.ox) / view2.s), cz = Math.floor((ev.clientY - r.top - view2.oy) / view2.s);
+  return map.inBounds(cx, cz) ? { cx, cz } : null;
+}
+function showOuter(ev) {
+  const r = c2.getBoundingClientRect();
+  const x = map.origin.x + (ev.clientX - r.left - view2.ox) / view2.s, z = map.origin.z + (ev.clientY - r.top - view2.oy) / view2.s;
+  const L = outer.levelAt(x, z); if (!L) return;
+  const h = outer.heightAt(x, z), f = v => v.toFixed(0);
+  $('i-cell').textContent = `за картой, клетка ${L.cellSize} м`; $('i-sector').textContent = '—';
+  $('i-world').textContent = `${f(x)}, ${f(z)} м`;
+  $('i-h').textContent = h < outer.waterLevel ? 'вода' : `≈ ${f(h)} м`; $('i-slope').textContent = '—';
+  $('i-zone').textContent = 'Окрестности (туман)'; $('i-walk').textContent = 'нет'; $('i-walk').className = 'walk-no';
+}
+c2.addEventListener('pointerdown', ev => {
+  c2.setPointerCapture(ev.pointerId); pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+  if (pointers.size === 2) { endStroke(); pan = null; const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: view2.s }; return; }
+  const paint = S.tool !== 'look' && ev.button === 0 && !ev.shiftKey;
+  const c = cellFrom2(ev);
+  if (paint && c) beginStroke(c);
+  else pan = { x: ev.clientX, y: ev.clientY, ox: view2.ox, oy: view2.oy };
+});
+c2.addEventListener('pointermove', ev => {
+  if (pointers.has(ev.pointerId)) pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+  if (pinch && pointers.size === 2) {
+    const [a, b] = [...pointers.values()], r = c2.getBoundingClientRect();
+    zoomAt((a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top, pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d / view2.s); return;
+  }
+  const c = cellFrom2(ev); setHover(c);
+  if (!c && S.layers.outer) showOuter(ev);
+  if (stroke && c) applyBrush(c);
+  else if (pan) { view2.user = true; view2.ox = pan.ox + ev.clientX - pan.x; view2.oy = pan.oy + ev.clientY - pan.y; need2 = true; }
+});
+const up2 = ev => { pointers.delete(ev.pointerId); if (pointers.size < 2) pinch = null; pan = null; endStroke(); };
+c2.addEventListener('pointerup', up2); c2.addEventListener('pointercancel', up2);
+c2.addEventListener('pointerleave', () => { if (!stroke) setHover(null); });
+c2.addEventListener('contextmenu', e => e.preventDefault());
+function zoomAt(mx, my, k) {
+  const s2 = Math.min(60, Math.max(.1, view2.s * k)); k = s2 / view2.s;
+  view2.user = true; view2.ox = mx - (mx - view2.ox) * k; view2.oy = my - (my - view2.oy) * k; view2.s = s2; need2 = true;
+}
+c2.addEventListener('wheel', ev => { ev.preventDefault(); const r = c2.getBoundingClientRect(); zoomAt(ev.clientX - r.left, ev.clientY - r.top, Math.exp(-ev.deltaY * .0015)); }, { passive: false });
+c2.addEventListener('dblclick', () => { view2.user = false; fit2(); need2 = true; });
+
+// ---------- ввод 3D ----------
+let stroke3 = false;
+c3.parentElement.addEventListener('pointerdown', ev => {
+  if (S.tool === 'look' || ev.button !== 0 || ev.shiftKey) return;
+  const c = pick3(ev); if (!c) return;
+  ev.stopPropagation(); controls.enabled = false; stroke3 = true; c3.setPointerCapture(ev.pointerId); beginStroke(c);
+}, true);
+c3.addEventListener('pointermove', ev => { const c = pick3(ev); setHover(c); if (stroke3 && stroke && c) applyBrush(c); });
+const up3 = () => { if (stroke3) { stroke3 = false; controls.enabled = true; endStroke(); } };
+c3.addEventListener('pointerup', up3); c3.addEventListener('pointercancel', up3);
+c3.addEventListener('pointerleave', () => { if (!stroke3) setHover(null); });
+
+// ---------- панель ----------
+for (const v of ['both', '2d', '3d']) $('vw-' + v).onclick = () => {
+  S.view = v; $('views').dataset.view = v;
+  for (const w of ['both', '2d', '3d']) $('vw-' + w).setAttribute('aria-pressed', w === v);
+  requestAnimationFrame(() => { size2(); size3(); need2 = true; });
+};
+for (const k of Object.keys(S.layers)) $('ly-' + k).onchange = e => {
+  S.layers[k] = e.target.checked;
+  if (k === 'height' || k === 'zones' || k === 'contours') dirty(true); else need2 = true;
+  if (k === 'outer') outerMeshes.forEach(m => m.visible = S.layers.outer);
+};
+$('grid-step').onchange = e => { S.gridStep = +e.target.value; need2 = true; };
+$('sector-size').onchange = e => { S.sector = +e.target.value; need2 = true; if (S.hover) setHover(S.hover); };
+document.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => {
+  S.tool = b.dataset.tool;
+  document.querySelectorAll('[data-tool]').forEach(o => o.setAttribute('aria-pressed', o === b));
+  updateToolNote(); need2 = true;
+  $('hint2').textContent = S.tool === 'look' ? 'колесо: масштаб · тянуть: сдвиг · 2×клик: вся карта' : 'ЛКМ: рисовать · Shift+тянуть: сдвиг';
+  $('hint3').textContent = S.tool === 'look' ? 'ЛКМ: вращать · ПКМ: сдвиг · колесо: масштаб' : 'ЛКМ по земле: рисовать · ПКМ/Shift: камера';
+});
+function updateToolNote() { $('tool-note').textContent = toolNotes[S.tool] + (S.tool === 'zone' ? map.zoneById[S.zoneId].name + '.' : ''); }
+$('brush').oninput = e => { S.brush = +e.target.value; $('brush-v').textContent = `${2 * S.brush + 1}×${2 * S.brush + 1} м`; need2 = true; };
+$('undo').onclick = undo;
+addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); } });
+let resetArmed = 0;
+$('reset').onclick = () => {
+  if (!resetArmed) { $('reset').textContent = 'Точно? Нажмите ещё раз'; resetArmed = setTimeout(() => { resetArmed = 0; $('reset').textContent = 'Вернуть исходную'; }, 3000); return; }
+  clearTimeout(resetArmed); resetArmed = 0; $('reset').textContent = 'Вернуть исходную';
+  undoStack.push(map.snapshot()); map.restore(new MapGrid(original).snapshot());
+  try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  dirty(false); refreshLegend(); status('Карта возвращена к исходной. Отменить можно кнопкой «Отменить».');
+};
+
+function refreshLegend() {
+  const counts = new Map(); for (const z of map.zone) counts.set(z, (counts.get(z) || 0) + 1);
+  const el = $('legend'); el.innerHTML = '';
+  for (const z of map.zones) {
+    const b = document.createElement('button'); b.setAttribute('aria-pressed', z.id === S.zoneId && S.tool === 'zone');
+    b.title = z.walk ? 'проходимо' : 'непроходимо';
+    const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = z.color;
+    const nm = document.createElement('span'); nm.textContent = z.name + (z.walk ? '' : ' ⛌');
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = (counts.get(z.id) || 0).toLocaleString('ru') + ' м²';
+    b.append(sw, nm, n);
+    b.onclick = () => { S.zoneId = z.id; document.querySelector('[data-tool="zone"]').click(); refreshLegend(); };
+    el.append(b);
+  }
+}
+
+// ---------- экспорт ----------
+let downloads = null;
+window.claude?.use?.('downloads').then(d => downloads = d).catch(() => {});
+function status(t) { $('ex-status').textContent = t; }
+async function offer(filename, blob) {
+  if (downloads) {
+    try { await downloads.save({ filename, data: blob }); status('Сохранено: ' + filename); }
+    catch (e) { status(e?.code === 'declined' ? 'Сохранение отменено.' : 'Не получилось сохранить: ' + (e?.message || e?.code)); }
+    return;
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000); status('Файл отдан браузеру: ' + filename);
+}
+const pngOf = cv => new Promise(r => cv.toBlob(r, 'image/png'));
+$('ex-json').onclick = () => offer('village-map.json', new Blob([JSON.stringify(map.toJSON())], { type: 'application/json' }));
+$('ex-hmap').onclick = async () => {
+  let lo = Infinity, hi = -Infinity; for (const h of map.heights) { lo = Math.min(lo, h); hi = Math.max(hi, h); }
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const cx = cv.getContext('2d'), im = cx.createImageData(W, H);
+  map.heights.forEach((h, i) => { const v = Math.round((h - lo) / (hi - lo) * 255); im.data.set([v, v, v, 255], i * 4); });
+  cx.putImageData(im, 0, 0);
+  offer(`heightmap_${lo.toFixed(1)}m_${hi.toFixed(1)}m.png`, await pngOf(cv));
+};
+$('ex-zones').onclick = async () => {
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const cx = cv.getContext('2d'), im = cx.createImageData(W, H);
+  map.zone.forEach((z, i) => { const c = zoneRGB[z]; im.data.set([c[0], c[1], c[2], 255], i * 4); });
+  cx.putImageData(im, 0, 0); offer('zones.png', await pngOf(cv));
+};
+$('ex-copy').onclick = () => {
+  const text = JSON.stringify(map.toJSON());
+  navigator.clipboard.writeText(text).then(() => status('JSON скопирован (' + Math.round(text.length / 1024) + ' КБ).'), () => {
+    const ta = $('jsonout'); ta.hidden = false; ta.value = text; ta.focus(); ta.select(); status('Скопируйте выделенный текст вручную.');
+  });
+};
+
+// ---------- старт ----------
+new ResizeObserver(() => { size2(); size3(); need2 = true; }).observe($('views'));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => need2 = true);
+size2(); size3(); rebuildBase(); rebuildGeo(); refreshLegend(); updateToolNote();
+if (draftNote) status(draftNote);
+setHover({ cx: 127, cz: 240 });
+loop();
+window.__map = { map, S, pick3, camera, controls };
+</script>
+
+</body></html>

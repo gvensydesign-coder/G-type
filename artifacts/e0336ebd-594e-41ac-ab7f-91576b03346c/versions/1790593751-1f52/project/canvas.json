@@ -1,0 +1,150 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Bestiary.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "8 · Бестиарий",
+      "w": 1280,
+      "x": 4080,
+      "y": 1140
+    },
+    "Death.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "11 · Гибель",
+      "w": 1280,
+      "x": 2720,
+      "y": 2280
+    },
+    "Game.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "5 · Игровой экран",
+      "w": 1280,
+      "x": 0,
+      "y": 1140
+    },
+    "Hero.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "6 · Герой",
+      "w": 1280,
+      "x": 1360,
+      "y": 1140
+    },
+    "Main.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "1 · Загрузка",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Novel.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "4 · Новелльные сцены",
+      "w": 1280,
+      "x": 4080,
+      "y": 0
+    },
+    "Prologue.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "3 · Пролог (аниматика)",
+      "w": 1280,
+      "x": 2720,
+      "y": 0
+    },
+    "Saves.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "9 · Летопись (сохранения)",
+      "w": 1280,
+      "x": 0,
+      "y": 2280
+    },
+    "Settings.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "10 · Настройки",
+      "w": 1280,
+      "x": 1360,
+      "y": 2280
+    },
+    "Start.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "2 · Главное меню",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    },
+    "Villagers.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "7 · Жители",
+      "w": 1280,
+      "x": 2720,
+      "y": 1140
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-28T09:45:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "flow": {
+      "fill": "gray",
+      "text": "Поток: Загрузка → Меню → «Новая игра» → Пролог → сцены (выбор ответа, журнал, авто) → Игровой экран.\n\nИз игры: аватар или «Г» → Герой, «Ж» → Жители, «Б» → Бестиарий, «С» → Летопись. Кнопка «Ночь» запускает ночное событие; при нуле жизней — экран гибели.\n\nНажмите Play на любом экране.",
+      "w": 360,
+      "x": 5440,
+      "y": 0
+    },
+    "head": {
+      "kind": "title1",
+      "maxW": 5360,
+      "text": "Русская хтонь — вход в игру",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "row2": {
+      "kind": "title1",
+      "maxW": 5360,
+      "text": "Деревня — игровой экран и его разделы",
+      "w": 240,
+      "x": 0,
+      "y": 840
+    },
+    "row3": {
+      "kind": "title1",
+      "maxW": 4000,
+      "text": "Служебные экраны",
+      "w": 240,
+      "x": 0,
+      "y": 1980
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Start.dc.html",
+    "Prologue.dc.html",
+    "Novel.dc.html",
+    "Game.dc.html",
+    "Hero.dc.html",
+    "Villagers.dc.html",
+    "Bestiary.dc.html",
+    "Saves.dc.html",
+    "Settings.dc.html",
+    "Death.dc.html"
+  ],
+  "pages": [],
+  "title": "Русская хтонь — прототип UI"
+}

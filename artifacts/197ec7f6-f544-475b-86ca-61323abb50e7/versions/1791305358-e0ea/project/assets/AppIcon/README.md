@@ -1,0 +1,1 @@
+Мастер `app-icon.svg` 1024 × 1024, слои Android `app-icon-adaptive-fg.svg` и `app-icon-adaptive-bg.svg`, монохромная `app-icon-mono.svg` (чёрный силуэт, в коде красится фильтром) и 30 PNG: `ios-*`, `android-*`, `notification-small-*`, `favicon-*`, `pwa-maskable-512`. Таблица размеров и правила: раздел «Виджеты, уведомления и иконка приложения».

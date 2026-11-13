@@ -1,0 +1,585 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Взрывы и дым</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Тот же язык, что у прототипа ауры: 3D-окно на всю высоту и плотная панель справа (на телефоне под окном). Тёмная тема намеренно. */
+:root {
+  --bg: #17171b;
+  --panel: #101318;
+  --panel-2: #171c24;
+  --line: #262f3c;
+  --fg: #dde4ea;
+  --muted: #8592a3;
+  --accent: #ff7ad9;
+  --f-display: "Ruslan Display", Georgia, serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 13px/1.45 var(--f-body); overflow: hidden; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: 100%; }
+.view { position: relative; min-width: 0; overflow: hidden; }
+#c { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+
+.topbar { position: absolute; left: 16px; right: 16px; top: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; pointer-events: none; }
+.topbar > * { pointer-events: auto; }
+.brand { font-family: var(--f-display); font-size: 22px; letter-spacing: .04em; line-height: 1; text-shadow: 0 2px 12px #000; margin-right: auto; padding-top: 4px; }
+.brand small { display: block; font: 500 10px/1.4 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.stats { font: 11px/1.5 var(--f-mono); color: var(--muted); text-align: right; text-shadow: 0 1px 6px #000; font-variant-numeric: tabular-nums; }
+
+.bottombar { position: absolute; left: 16px; right: 16px; bottom: 14px; display: grid; gap: 8px; pointer-events: none; }
+.bottombar > * { pointer-events: auto; }
+.tl { background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px 6px; }
+.tl-head { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.tl-head b { color: var(--fg); font-weight: 600; }
+.tl-head .tempo { margin-left: auto; font: 11px var(--f-mono); }
+.phases { position: relative; height: 18px; margin-bottom: 2px; }
+.phase { position: absolute; top: 0; height: 16px; border-radius: 3px; font: 10px/16px var(--f-mono); padding: 0 5px; white-space: nowrap; overflow: hidden; color: #0b0d11; }
+.tl input[type=range] { width: 100%; margin: 0; accent-color: var(--accent); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { border: 1px solid var(--line); background: var(--panel-2); padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: #0b0a10; border-color: transparent; font-weight: 600; }
+.btn[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--panel-2); }
+.seg button { border: 0; background: transparent; padding: 8px 11px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 24%, transparent); }
+.hint { margin-left: auto; color: var(--muted); font-size: 11px; text-shadow: 0 1px 6px #000; }
+
+.panel { background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.panel-head { padding: 14px 16px 12px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+.fxlist { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.fxbtn { text-align: left; border: 1px solid var(--line); background: var(--panel-2); border-radius: 6px; padding: 7px 9px; cursor: pointer; display: grid; grid-template-columns: 12px 1fr; gap: 2px 8px; align-items: center; }
+.fxbtn i { width: 12px; height: 12px; border-radius: 50%; grid-row: span 2; }
+.fxbtn span { font-size: 12.5px; line-height: 1.2; }
+.fxbtn small { color: var(--muted); font-size: 10.5px; line-height: 1.2; }
+.fxbtn[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.scroll { overflow-y: auto; padding: 4px 16px 24px; flex: 1; min-height: 0; }
+details { border-bottom: 1px solid var(--line); }
+summary { cursor: pointer; padding: 12px 0; font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+summary::after { content: "+"; color: var(--muted); font-family: var(--f-mono); }
+details[open] summary::after { content: "−"; }
+.ctl { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding-bottom: 10px; }
+.ctl span { color: var(--muted); font-size: 12px; }
+.ctl output { font: 11px var(--f-mono); font-variant-numeric: tabular-nums; }
+.ctl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); margin: 2px 0 0; }
+.colors { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-bottom: 12px; }
+.colors label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+.colors input[type=color] { width: 30px; height: 24px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: none; cursor: pointer; flex: none; }
+.check { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 12px; padding-bottom: 10px; }
+.foot { padding: 12px 16px; border-top: 1px solid var(--line); display: flex; gap: 8px; flex-wrap: wrap; }
+.foot .btn { flex: 1; }
+.toast { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--line); padding: 6px 12px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+.doc { position: fixed; inset: 0; background: var(--bg); overflow-y: auto; z-index: 10; padding: 32px 16px 64px; }
+.doc article { max-width: 780px; margin: 0 auto; font-size: 15px; line-height: 1.6; }
+.doc h1 { font-family: var(--f-display); font-weight: 400; font-size: 32px; line-height: 1.1; margin: 0 0 6px; text-wrap: balance; }
+.doc h2 { font-size: 18px; margin: 32px 0 8px; }
+.doc p, .doc li { max-width: 70ch; color: #c9d2db; }
+.doc .lede { color: var(--muted); }
+.doc code { font-family: var(--f-mono); font-size: 12.5px; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; margin: 12px 0; }
+.tbl table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13px; }
+.tbl th, .tbl td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.tbl th { color: var(--muted); font-weight: 500; font-size: 12px; background: var(--panel); }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl tr.pick td { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.m { font-family: var(--f-mono); font-size: 12px; white-space: nowrap; }
+.sharp { color: #ff8a7a; } .soft { color: #8fd6ff; } .mix { color: #e8c76a; }
+.close { position: sticky; top: 0; float: right; }
+
+@media (max-width: 820px) {
+  body { overflow: auto; }
+  .app { grid-template-columns: 1fr; grid-template-rows: auto auto; height: auto; }
+  .view { overflow: visible; }
+  #c { height: 58vh; }
+  .bottombar { position: static; padding: 10px 16px 14px; }
+  .panel { border-left: 0; border-top: 1px solid var(--line); }
+  .scroll { overflow: visible; }
+  .hint, .stats { display: none; }
+  .brand { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+} }
+</script>
+<div class="app">
+  <div class="view">
+    <canvas id="c" aria-label="3D-сцена с эффектами"></canvas>
+    <div class="topbar">
+      <div class="brand">Взрывы и дым<small>2D-стиль в 3D · окно демонстрации</small></div>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div class="bottombar">
+      <div class="tl">
+        <div class="tl-head"><b id="tlName">—</b><span id="tlTime">0.00 с</span><span class="tempo" id="tlTempo"></span></div>
+        <div class="phases" id="phases"></div>
+        <input type="range" id="scrub" min="0" max="2" step="0.005" value="0" aria-label="Перемотка эффекта">
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="fire">Запустить</button>
+        <button class="btn" id="pause" aria-pressed="false">Пауза</button>
+        <button class="btn" id="loop" aria-pressed="true">Повтор</button>
+        <div class="seg" role="group" aria-label="Скорость времени" id="speed">
+          <button data-v="0.1">×0.1</button><button data-v="0.25">×0.25</button><button data-v="0.5">×0.5</button><button data-v="1" aria-pressed="true">×1</button>
+        </div>
+        <button class="btn" id="all">Все сразу</button>
+        <button class="btn" id="shake" aria-pressed="true">Тряска</button>
+        <button class="btn" id="props">Вернуть предметы</button>
+        <button class="btn" id="docBtn">Анализ</button>
+        <span class="hint">Клик по земле: эффект в точку · тянуть: камера · колесо: зум · Space, 1–8</span>
+      </div>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <aside class="panel" aria-label="Настройки эффекта">
+    <div class="panel-head">
+      <div class="fxlist" id="fxlist"></div>
+    </div>
+    <div class="scroll" id="groups"></div>
+    <div class="foot">
+      <div class="seg" role="group" aria-label="Ракурс" id="views">
+        <button data-v="side">Сбоку</button><button data-v="iso" aria-pressed="true">3/4</button><button data-v="top">Сверху</button><button data-v="low">Снизу</button>
+      </div>
+      <button class="btn" id="orbit" aria-pressed="false">Облёт</button>
+      <button class="btn" id="reset">Сброс пресета</button>
+      <button class="btn" id="copy">Копировать JSON</button>
+    </div>
+  </aside>
+</div>
+
+<div class="doc" id="doc" hidden>
+  <article>
+    <button class="btn close" id="docClose">Закрыть</button>
+    <h1>Взрывы и дым: разбор</h1>
+    <p class="lede">Как собраны эффекты, почему так, и какие из них резкие, а какие мягкие.</p>
+
+    <h2>Что на референсах</h2>
+    <ul>
+      <li>Облака из круглых «пузырей» с плоской заливкой в 2–3 тона: светлый верх, тёмная тень снизу, без контура. Внутри бывает тёплое ядро (жёлтое в голубом облаке, розовое в фиолетовом).</li>
+      <li>Острые шипы-лучи у взрыва, белая рваная вспышка с розовой каймой, блики-звёздочки поверх облака.</li>
+      <li>Гриб с кольцом вокруг ножки и стелющийся дым с дырами, волна на земле.</li>
+      <li>Белые силуэты дыма: завитки, вихрь, шлейфы скорости, пылевые клубы.</li>
+    </ul>
+
+    <h2>Как собрать в 3D: варианты</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Подход</th><th>Похоже на 2D</th><th>Ракурсы 3D</th><th>Цвет и тайминг</th><th>Цена</th></tr></thead>
+      <tbody>
+        <tr><td>Нарисованные flipbook-спрайты</td><td class="m">отлично</td><td class="m sharp">плоские, сверху ломаются</td><td class="m sharp">перерисовка</td><td class="m">низкая, но атласы</td></tr>
+        <tr><td>Billboard-слои с шумом и масками (как Аура)</td><td class="m">хорошо</td><td class="m mix">плоские</td><td class="m">да</td><td class="m">низкая</td></tr>
+        <tr><td>Объёмный раймарчинг</td><td class="m mix">выглядит как 3D-туман</td><td class="m">да</td><td class="m">да</td><td class="m sharp">высокая</td></tr>
+        <tr class="pick"><td><b>Выбрано:</b> инстансинг сфер с toon-светом, анимация целиком в вершинном шейдере, маска растворения шумом, плюс 3D-шипы, плоские кольца в мире, ленты по 3D-кривым и billboard только для света</td><td class="m">отлично</td><td class="m">да, честный объём</td><td class="m">все параметры</td><td class="m">1 вызов отрисовки на слой</td></tr>
+      </tbody>
+    </table></div>
+    <p>Полупрозрачность при появлении и исчезновении сделана через предпроход глубины: облако становится прозрачным одним силуэтом, как слой в 2D, без просвечивающих внутренних пузырей. Исчезновение идёт тремя слоями сразу: альфа, сжатие пузыря и дыры по шуму с тёмной каймой.</p>
+
+    <h2>Резкие и мягкие</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Эффект</th><th>Характер</th><th>Рост пузыря</th><th>Перелёт</th><th>Жизнь</th><th>Импульс</th><th>Почему</th></tr></thead>
+      <tbody id="tempoRows"></tbody>
+    </table></div>
+    <h2>Импульс и частицы</h2>
+    <p>У каждого эффекта своя сила импульса (параметр «Сила импульса»). Импульс виден как расходящаяся сфера-контур, толкает предметы на сцене, качает манекен и трясёт камеру. Порядок по силе: стелющийся дым 1.6 (волна по земле), огненный 1.3, со вспышкой 1.1, вихрь 1.0 (воронка тянет по кругу и вверх всё время вращения), взрыв 0.8, рывок 0.5 (толкает вперёд), яд 0.35, лёгкий дым 0.</p>
+    <p>Частицы: осколки и камни летят по баллистике, вращаются и ложатся на землю; искры-штрихи вытягиваются по скорости и гаснут в воздухе; кометы оставляют шлейф мелких клубов, которые тают. Мини-эффекты: поздние хлопки по краю облака с колечком или звёздочкой, клочки, срывающиеся с дыма, пылинки и угольки, пузыри газа, лопающиеся колечком.</p>
+    <p>Правило: чем больше энергии в событии, тем короче нарастание и длиннее хвост. Резкий эффект набирает форму за 2–4 кадра при 60 к/с с перелётом размера (easeOutBack), держится долю секунды и рассеивается в 5–10 раз дольше. Мягкий растёт столько же, сколько живёт, без перелёта, и почти весь виден полупрозрачным.</p>
+  </article>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { SmokeFX, PRESETS, PARAM_DEFS, COLOR_DEFS, deriveShadow } from './smokefx.js';
+
+const $ = id => document.getElementById(id);
+const canvas = $('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#1b1b20');
+scene.fog = new THREE.Fog('#1b1b20', 16, 34);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 80);
+
+// --- сцена-стенд: тон-материалы, чтобы окружение тоже было «рисованным»
+const grad = new THREE.DataTexture(new Uint8Array([70, 70, 70, 255, 150, 150, 150, 255, 255, 255, 255, 255]), 3, 1);
+grad.minFilter = grad.magFilter = THREE.NearestFilter; grad.needsUpdate = true;
+const toon = c => new THREE.MeshToonMaterial({ color: c, gradientMap: grad });
+scene.add(new THREE.HemisphereLight('#b8c4dd', '#2a2630', 1.2));
+const sun = new THREE.DirectionalLight('#fff3e0', 1.6); sun.position.set(5, 9, 4); scene.add(sun);
+
+const ground = new THREE.Mesh(new THREE.CircleGeometry(16, 64), toon('#34363f'));
+ground.rotation.x = -Math.PI / 2; scene.add(ground);
+const tiles = new THREE.Mesh(new THREE.RingGeometry(5.6, 6, 64), toon('#3d404a'));
+tiles.rotation.x = -Math.PI / 2; tiles.position.y = 0.005; scene.add(tiles);
+for (let i = 0; i < 6; i++) {
+  const a = i / 6 * Math.PI * 2 + 0.3;
+  const h = 1.6 + (i % 3) * 0.7;
+  const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.42, h, 8), toon('#5b5d6b'));
+  pillar.position.set(Math.cos(a) * 6.8, h / 2, Math.sin(a) * 6.8); scene.add(pillar);
+}
+// подвижные предметы: их толкает импульс эффектов (простая физика: скорость, гравитация, отскок, трение)
+const bodies = [];
+function addBody(mesh, half, mass, home) {
+  mesh.position.copy(home); scene.add(mesh);
+  bodies.push({ mesh, half, mass, home: home.clone(), homeRot: mesh.rotation.clone(), vel: new THREE.Vector3(), spin: new THREE.Vector3() });
+}
+const crateGeo = new THREE.BoxGeometry(0.7, 0.7, 0.7), smallGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+const barrelGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.75, 10), rockGeo = new THREE.DodecahedronGeometry(0.22, 0);
+addBody(new THREE.Mesh(crateGeo, toon('#7a5a3d')), 0.35, 2, new THREE.Vector3(1.9, 0.35, -1.3));
+addBody(new THREE.Mesh(smallGeo, toon('#8a6745')), 0.2, 1, new THREE.Vector3(2.3, 0.2, -0.4));
+addBody(new THREE.Mesh(barrelGeo, toon('#6c4f6e')), 0.375, 1.6, new THREE.Vector3(-1.2, 0.375, -1.9));
+addBody(new THREE.Mesh(barrelGeo, toon('#6c4f6e')), 0.375, 1.6, new THREE.Vector3(0.9, 0.375, 2.1));
+for (const [x, z] of [[-2.3, -0.5], [0.3, -2.3], [2.4, 1.2], [-0.8, 2.4], [-2.6, 1.5]])
+  addBody(new THREE.Mesh(rockGeo, toon('#6e7280')), 0.18, 0.6, new THREE.Vector3(x, 0.18, z));
+// манекен 1.8 м для масштаба: качается от импульса на пружине
+const dummy = new THREE.Group();
+const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.9, 4, 10), toon('#8a8fa3')); body.position.y = 0.95;
+const head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 12), toon('#8a8fa3')); head.position.y = 1.65;
+dummy.add(body, head); dummy.position.set(-2.2, 0, 1.3); scene.add(dummy);
+const sway = { x: 0, z: 0, vx: 0, vz: 0 };
+
+const fx = new SmokeFX();
+scene.add(fx.group);
+
+// импульс: толкает предметы, качает манекен, трясёт камеру (сила из пресета)
+let shakeOn = true, shake = 0;
+const kick = new THREE.Vector3();
+fx.addEventListener('impulse', ({ impulse: e }) => {
+  for (const b of bodies) {
+    SmokeFX.impulseAt(e, b.mesh.position, kick);
+    if (kick.lengthSq() < 1e-4) continue;
+    b.vel.addScaledVector(kick, 1 / Math.sqrt(b.mass));
+    b.spin.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(kick.length() * 3 / b.mass);
+  }
+  SmokeFX.impulseAt(e, dummy.position.clone().setY(1), kick);
+  sway.vx += kick.x * 0.5; sway.vz += kick.z * 0.5;
+  if (shakeOn && e.kind !== 'vortex') {
+    const d = camera.position.distanceTo(e.position);
+    shake = Math.max(shake, e.force * 0.22 * THREE.MathUtils.clamp(1.6 - d / (e.radius * 4), 0, 1));
+  }
+});
+const acc = new THREE.Vector3();
+function stepBodies(dt) {
+  for (const b of bodies) {
+    fx.forceAt(b.mesh.position, acc);
+    b.vel.addScaledVector(acc, dt / b.mass);
+    b.vel.y -= 9.8 * dt;
+    b.mesh.position.addScaledVector(b.vel, dt);
+    b.mesh.rotation.x += b.spin.x * dt; b.mesh.rotation.y += b.spin.y * dt; b.mesh.rotation.z += b.spin.z * dt;
+    if (b.mesh.position.y < b.half) {
+      b.mesh.position.y = b.half;
+      if (b.vel.y < -1) b.vel.y *= -0.3; else b.vel.y = 0;
+      b.vel.x *= Math.pow(0.04, dt); b.vel.z *= Math.pow(0.04, dt); b.spin.multiplyScalar(Math.pow(0.02, dt));
+    }
+    const r = Math.hypot(b.mesh.position.x, b.mesh.position.z);
+    if (r > 15) b.mesh.position.multiplyScalar(15 / r);
+  }
+  const k = 40, damp = 4;
+  sway.vx += (-k * sway.x - damp * sway.vx) * dt; sway.vz += (-k * sway.z - damp * sway.vz) * dt;
+  sway.x += sway.vx * dt; sway.z += sway.vz * dt;
+  dummy.rotation.z = THREE.MathUtils.clamp(-sway.x * 0.12, -0.9, 0.9); dummy.rotation.x = THREE.MathUtils.clamp(sway.z * 0.12, -0.9, 0.9);
+}
+function resetBodies() {
+  for (const b of bodies) { b.mesh.position.copy(b.home); b.mesh.rotation.copy(b.homeRot); b.vel.set(0, 0, 0); b.spin.set(0, 0, 0); }
+  Object.assign(sway, { x: 0, z: 0, vx: 0, vz: 0 });
+}
+
+// --- состояние
+const keys = Object.keys(PRESETS);
+let cur = 'magic';
+const params = {}; for (const k of keys) params[k] = structuredClone(PRESETS[k].params);
+const autoShadow = {}; for (const k of keys) autoShadow[k] = false;
+let last = null, lastKey = cur, lastPos = new THREE.Vector3();
+let timeScale = 1, paused = false, looping = true, orbiting = false;
+
+function originFor(key, at) {
+  const p = params[key];
+  const o = at ? at.clone() : new THREE.Vector3();
+  if (PRESETS[key].recipe === 'blast') o.y += 1.2 * p.scale;
+  return o;
+}
+function fire(key = cur, at = null, yaw = 0) {
+  const p = params[key];
+  const h = fx.spawn(PRESETS[key].recipe, originFor(key, at), p, { yaw });
+  if (!at || key === cur) { last = h; lastKey = key; lastPos.copy(at || new THREE.Vector3()); drawTimeline(); }
+  return h;
+}
+
+// --- камера: свой простой орбит
+const orbit = { theta: 0.75, phi: 1.05, dist: 9.5, target: new THREE.Vector3(0, 1.3, 0) };
+const VIEWS = { side: [0, 1.5, 9.5], iso: [0.75, 1.05, 9.5], top: [0.4, 0.12, 11], low: [1.2, 1.82, 7.5] };
+function setView(v) {
+  const [t, ph, d] = VIEWS[v]; Object.assign(orbit, { theta: t, phi: ph, dist: d });
+  for (const b of $('views').children) b.setAttribute('aria-pressed', String(b.dataset.v === v));
+}
+function updateCamera(dt) {
+  if (orbiting) orbit.theta += dt * 0.35;
+  const { theta, phi, dist, target } = orbit;
+  camera.position.set(target.x + dist * Math.sin(phi) * Math.sin(theta), target.y + dist * Math.cos(phi), target.z + dist * Math.sin(phi) * Math.cos(theta));
+  camera.lookAt(target);
+  if (shake > 0.001) {
+    const t = performance.now() * 0.001;
+    camera.position.x += Math.sin(t * 61) * shake * 0.5; camera.position.y += Math.sin(t * 47 + 1) * shake * 0.4;
+    camera.rotation.z += Math.sin(t * 53 + 2) * shake * 0.03;
+    shake *= Math.pow(0.004, dt);
+  }
+}
+const pointers = new Map(); let dragDist = 0, pinch0 = 0;
+canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); dragDist = 0; if (pointers.size === 2) pinch0 = pinchDist(); });
+canvas.addEventListener('pointermove', e => {
+  const p = pointers.get(e.pointerId); if (!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+  dragDist += Math.abs(dx) + Math.abs(dy);
+  if (pointers.size === 1) { orbit.theta -= dx * 0.006; orbit.phi = THREE.MathUtils.clamp(orbit.phi - dy * 0.006, 0.08, 2.0); clearViewMark(); }
+  else if (pointers.size === 2) { const d = pinchDist(); zoom(pinch0 / d); pinch0 = d; }
+});
+canvas.addEventListener('pointerup', e => {
+  pointers.delete(e.pointerId);
+  if (dragDist < 6 && pointers.size === 0) fireAtScreen(e);
+});
+canvas.addEventListener('pointercancel', e => pointers.delete(e.pointerId));
+canvas.addEventListener('wheel', e => { e.preventDefault(); zoom(Math.exp(e.deltaY * 0.001)); }, { passive: false });
+function pinchDist() { const [a, b] = [...pointers.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; }
+function zoom(k) { orbit.dist = THREE.MathUtils.clamp(orbit.dist * k, 3, 24); }
+function clearViewMark() { for (const b of $('views').children) b.setAttribute('aria-pressed', 'false'); }
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+function fireAtScreen(e) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hit = new THREE.Vector3();
+  if (ray.ray.intersectPlane(plane, hit) && hit.length() < 15) {
+    const yaw = Math.atan2(-(hit.z - camera.position.z), hit.x - camera.position.x) - Math.PI / 2;
+    fire(cur, hit, PRESETS[cur].recipe === 'dash' ? yaw : 0);
+  }
+}
+
+// --- панель
+function buildFxList() {
+  const box = $('fxlist'); box.innerHTML = '';
+  keys.forEach((k, i) => {
+    const b = document.createElement('button');
+    b.className = 'fxbtn'; b.dataset.key = k; b.title = `Клавиша ${i + 1}`;
+    b.innerHTML = `<i></i><span></span><small></small>`;
+    b.querySelector('span').textContent = PRESETS[k].name;
+    b.querySelector('small').textContent = PRESETS[k].tempo;
+    b.onclick = () => select(k, true);
+    box.appendChild(b);
+  });
+  markFx();
+}
+function markFx() {
+  for (const b of $('fxlist').children) {
+    b.setAttribute('aria-pressed', String(b.dataset.key === cur));
+    const p = params[b.dataset.key];
+    b.querySelector('i').style.background = `linear-gradient(135deg, ${p.color} 50%, ${p.shadow || deriveShadow(p.color)} 50%)`;
+  }
+  document.documentElement.style.setProperty('--accent', brighten(params[cur].cFlash === '#ffffff' ? params[cur].color : params[cur].cFlash));
+}
+function brighten(hex) { const c = new THREE.Color(hex); const h = {}; c.getHSL(h, THREE.SRGBColorSpace); c.setHSL(h.h, Math.min(1, h.s * 1.1), Math.max(0.68, h.l), THREE.SRGBColorSpace); return '#' + c.getHexString(); }
+
+const GROUPS = [
+  ['Цвет', null],
+  ['Размер и время', ['scale', 'duration', 'intensity', 'snap']],
+  ['Появление и исчезновение', ['opacity', 'edgeAlpha', 'dissolve', 'stepFps']],
+  ['Импульс и частицы', ['impulse', 'debris', 'minis', 'embers', 'bubbles']],
+  ['Форма и свет', ['lobes', 'innerGlow', 'cool', 'rim', 'wobble']],
+  ['Детали', ['flash', 'spikes', 'sparkles', 'light']],
+  ['Освещение (общее)', 'style'],
+];
+const STYLE_DEFS = {
+  realism: { label: 'Реализм освещения', min: 0, max: 1, step: 0.01 },
+  ao: { label: 'Тень в щелях', min: 0, max: 1.5, step: 0.01 },
+  lightFollow: { label: 'Свет от камеры', min: 0, max: 1, step: 0.01 },
+  shadowCut: { label: 'Граница тени', min: 0.25, max: 0.75, step: 0.01 },
+  highlight: { label: 'Блик сверху', min: 0, max: 0.6, step: 0.01 },
+};
+const inputs = {};
+function buildGroups() {
+  const root = $('groups'); root.innerHTML = '';
+  for (const [title, list] of GROUPS) {
+    const d = document.createElement('details'); d.open = title !== 'Освещение (общее)';
+    d.innerHTML = `<summary>${title}</summary>`;
+    const body = document.createElement('div');
+    if (list === null) {
+      body.className = 'colors';
+      for (const [k, label] of Object.entries(COLOR_DEFS)) {
+        const l = document.createElement('label');
+        l.innerHTML = `<input type="color"><span>${label}</span>`;
+        const inp = l.querySelector('input'); inputs[k] = inp;
+        inp.oninput = () => { setParam(k, inp.value); };
+        body.appendChild(l);
+      }
+      const c = document.createElement('label'); c.className = 'check'; c.style.gridColumn = '1 / -1';
+      c.innerHTML = `<input type="checkbox" id="autoShadow"> Тень подбирать от основного цвета`;
+      body.appendChild(c);
+      c.querySelector('input').onchange = e => { autoShadow[cur] = e.target.checked; if (e.target.checked) setParam('shadow', deriveShadow(params[cur].color)); };
+    } else {
+      const defs = list === 'style' ? STYLE_DEFS : PARAM_DEFS;
+      for (const k of (list === 'style' ? Object.keys(STYLE_DEFS) : list)) {
+        const def = defs[k];
+        const row = document.createElement('label'); row.className = 'ctl';
+        row.innerHTML = `<span></span><output></output><input type="range">`;
+        row.querySelector('span').textContent = def.label;
+        if (def.hint) row.title = def.hint;
+        const r = row.querySelector('input'); Object.assign(r, { min: def.min, max: def.max, step: def.step });
+        const out = row.querySelector('output');
+        inputs[k] = { r, out, style: list === 'style' };
+        r.oninput = () => { const v = +r.value; out.value = fmt(v); if (list === 'style') fx.style[k] = v; else setParam(k, v, true); };
+        body.appendChild(row);
+      }
+    }
+    d.appendChild(body); root.appendChild(d);
+  }
+}
+const fmt = v => (Math.abs(v) >= 10 || Number.isInteger(v)) ? String(v) : v.toFixed(2);
+function setParam(k, v, quiet) {
+  params[cur][k] = v;
+  if (k === 'color' && autoShadow[cur]) { params[cur].shadow = deriveShadow(v); inputs.shadow.value = params[cur].shadow; }
+  if (k === 'shadow') { inputs.shadow.value = v; }
+  markFx();
+  clearTimeout(setParam.t); setParam.t = setTimeout(() => fire(), quiet ? 250 : 120);
+}
+function syncUI() {
+  const p = params[cur];
+  for (const k of Object.keys(COLOR_DEFS)) inputs[k].value = p[k] || deriveShadow(p.color);
+  $('autoShadow').checked = autoShadow[cur];
+  for (const k of Object.keys(PARAM_DEFS)) { inputs[k].r.value = p[k]; inputs[k].out.value = fmt(p[k]); }
+  for (const k of Object.keys(STYLE_DEFS)) { inputs[k].r.value = fx.style[k]; inputs[k].out.value = fmt(fx.style[k]); }
+}
+function select(k, doFire) { cur = k; markFx(); syncUI(); if (doFire) fire(); }
+
+// --- таймлайн
+const PHASE_COLORS = ['#ffd27a', '#ff8ab8', '#9ad7ff', '#b7a6ff', '#9be3b8'];
+function drawTimeline() {
+  if (!last) return;
+  $('tlName').textContent = PRESETS[lastKey].name;
+  $('tlTempo').textContent = PRESETS[lastKey].tempo;
+  const L = last.length;
+  $('scrub').max = (L + 0.2).toFixed(3);
+  const box = $('phases'); box.innerHTML = '';
+  last.phases.forEach((f, i) => {
+    const d = document.createElement('div'); d.className = 'phase';
+    d.style.left = (f.t0 / (L + 0.2) * 100) + '%'; d.style.width = Math.max(1.5, (f.t1 - f.t0) / (L + 0.2) * 100) + '%';
+    d.style.background = PHASE_COLORS[i % PHASE_COLORS.length];
+    d.style.top = (i % 2 ? 1 : 0) + 'px';
+    d.textContent = f.name; d.title = `${f.name}: ${f.t0.toFixed(2)}–${f.t1.toFixed(2)} с`;
+    box.appendChild(d);
+  });
+}
+$('scrub').addEventListener('input', e => {
+  if (!last) return;
+  setPaused(true);
+  fx.setTime(last.t0 + +e.target.value);
+});
+
+// --- кнопки
+function setPaused(v) { paused = v; $('pause').setAttribute('aria-pressed', String(v)); $('pause').textContent = v ? 'Продолжить' : 'Пауза'; }
+$('fire').onclick = () => { setPaused(false); fire(); };
+$('pause').onclick = () => setPaused(!paused);
+$('loop').onclick = () => { looping = !looping; $('loop').setAttribute('aria-pressed', String(looping)); };
+for (const b of $('speed').children) b.onclick = () => { timeScale = +b.dataset.v; for (const x of $('speed').children) x.setAttribute('aria-pressed', String(x === b)); };
+for (const b of $('views').children) b.onclick = () => setView(b.dataset.v);
+$('orbit').onclick = () => { orbiting = !orbiting; $('orbit').setAttribute('aria-pressed', String(orbiting)); };
+$('reset').onclick = () => { params[cur] = structuredClone(PRESETS[cur].params); autoShadow[cur] = false; syncUI(); markFx(); fire(); };
+$('all').onclick = fireAll;
+$('shake').onclick = () => { shakeOn = !shakeOn; if (!shakeOn) shake = 0; $('shake').setAttribute('aria-pressed', String(shakeOn)); };
+$('props').onclick = resetBodies;
+function fireAll() {
+  setPaused(false);
+  keys.forEach((k, i) => {
+    const a = i / keys.length * Math.PI * 2;
+    const at = new THREE.Vector3(Math.cos(a) * 3.6, 0, Math.sin(a) * 3.6);
+    setTimeout(() => fire(k, at, a + Math.PI / 2), i * 140);
+  });
+  orbit.dist = Math.max(orbit.dist, 14);
+}
+$('copy').onclick = () => {
+  const txt = JSON.stringify({ recipe: PRESETS[cur].recipe, params: params[cur] }, null, 2);
+  navigator.clipboard?.writeText(txt).then(() => toast('Настройки скопированы'), () => toast('Не удалось скопировать'));
+};
+$('docBtn').onclick = () => { $('doc').hidden = false; };
+$('docClose').onclick = () => { $('doc').hidden = true; };
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
+  if (e.code === 'Space') { e.preventDefault(); setPaused(false); fire(); }
+  const n = +e.key; if (n >= 1 && n <= keys.length) select(keys[n - 1], true);
+  if (e.key === 'Escape') $('doc').hidden = true;
+});
+let toastT; function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1400); }
+
+// таблица темпа в разборе (из реальных пресетов)
+const WHY = {
+  blast: 'Удар: энергия выходит мгновенно, потом облако медленно остывает.',
+  magic: 'Магия и вспышка: шипы живут 0.4 с, вспышка 0.3 с, иначе свет «висит».',
+  toxic: 'Газ тяжелее воздуха: старт резкий, но клубы вязкие и тянутся дольше.',
+  fire: 'Огонь: яркое ядро гаснет в первой трети жизни, остаётся серый дым.',
+  smoke: 'Нет события, есть поток: без перелёта, рост на всю жизнь, мягкая альфа.',
+  ground: 'Два темпа: волна и гриб за 0.1–0.3 с, оседание пыли 2–3 с.',
+  whirl: 'Постоянное движение по кругу: темп задаёт вращение, а не рост.',
+  dash: 'Рывок мгновенный (0.18 с), пыль за ним гаснет мягко.',
+};
+const IMP = { blast: 'шар', smoke: '', ground: 'волна по земле', whirl: 'воронка', dash: 'вперёд' };
+function tempoRows() {
+  const tb = $('tempoRows'); tb.innerHTML = '';
+  for (const k of keys) {
+    const p = PRESETS[k].params;
+    const growMul = Math.pow(2, (0.5 - p.snap) * 2.2);
+    const base = { blast: 0.14, smoke: 0.8, ground: 0.22, whirl: 0.25, dash: 0.18 }[PRESETS[k].recipe];
+    const over0 = { blast: 1.3, smoke: 0, ground: 0.8, whirl: 0.4, dash: 0.5 }[PRESETS[k].recipe];
+    const life = { blast: '1.3–1.9', smoke: '2.2–3.0', ground: '2.3–3.4', whirl: '1.2–1.8', dash: '0.9–1.4' }[PRESETS[k].recipe];
+    const cls = p.snap >= 0.7 ? 'sharp' : p.snap <= 0.35 ? 'soft' : 'mix';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${PRESETS[k].name}</td><td class="m ${cls}">${PRESETS[k].tempo}</td><td class="m">${(base * growMul * p.duration).toFixed(2)} с</td><td class="m">${Math.max(0, over0 + (p.snap - 0.5) * 1.4).toFixed(2)}</td><td class="m">${life} с × ${p.duration}</td><td class="m">${p.impulse ? p.impulse.toFixed(1) + ' · ' + IMP[PRESETS[k].recipe] : 'нет'}</td><td>${WHY[k]}</td>`;
+    tb.appendChild(tr);
+  }
+}
+
+// --- цикл
+function resize() {
+  const r = canvas.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false);
+  camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+let prev = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
+  fpsAcc += dt; fpsN++; if (fpsAcc > 0.5) { fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; }
+  updateCamera(dt);
+  fx.update(paused ? 0 : dt * timeScale, camera);
+  stepBodies(paused ? 0 : dt * timeScale);
+  if (last) {
+    const t = fx.time - last.t0;
+    if (document.activeElement !== $('scrub')) $('scrub').value = t;
+    $('tlTime').textContent = Math.max(0, t).toFixed(2) + ' с';
+    if (looping && !paused && t > last.length + 0.6) fire(lastKey, lastPos.lengthSq() ? lastPos : null);
+  }
+  renderer.render(scene, camera);
+  const s = fx.stats;
+  $('stats').innerHTML = `${fps.toFixed(0)} к/с · вызовов ${renderer.info.render.calls}<br>пузыри ${s.puffs} · осколки ${s.shards} · спрайты ${s.sprites}<br>ленты ${s.ribbons} · шипы ${s.spikes} · волны ${s.rings + s.shells}`;
+  requestAnimationFrame(frame);
+}
+
+buildFxList(); buildGroups(); syncUI(); tempoRows(); setView('iso'); resize();
+fire();
+requestAnimationFrame(frame);
+
+// хук для автотестов
+window.__demo = { fx, bodies, resetBodies, fire, select, setView, setPaused, orbit, PRESETS, params, render: () => { updateCamera(0); fx.update(0, camera); renderer.render(scene, camera); }, get last() { return last; } };
+</script>
+
+</body></html>

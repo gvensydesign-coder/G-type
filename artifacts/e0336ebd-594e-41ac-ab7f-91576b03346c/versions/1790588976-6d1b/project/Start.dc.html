@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Главное меню</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0E100D;font-family:'Alegreya Sans',sans-serif;color:#E4DFD2}
+a{color:#D9A15A}a:hover{color:#F0C07E}
+.mi{display:flex;align-items:center;gap:14px;height:48px;padding:0;background:none;border:0;cursor:pointer;font-family:'Alegreya Sans',sans-serif;font-size:24px;letter-spacing:1px;color:#CFCABB;text-decoration:none;text-align:left}
+.mi .mk{width:8px;height:8px;transform:rotate(45deg);border:1px solid #4A4F43;transition:all .2s}
+.mi:hover{color:#F3EDDD}
+.mi:hover .mk{background:#8E3B3B;border-color:#C25454;box-shadow:0 0 10px #C25454}
+.mi:focus-visible{outline:1px solid #C27E32;outline-offset:4px}
+.moon{filter:drop-shadow(0 0 30px #8E3B3B)}
+input[type=range]{accent-color:#C27E32;width:100%}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: linear-gradient(180deg, #121A16 0%, #0E100D 70%); font-family: 'Alegreya Sans', sans-serif; color: #E4DFD2">
+<svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<circle class="moon" cx="980" cy="170" r="54" fill="#5E2A2A"></circle>
+<path d="M0 720 L0 520 L30 470 L48 505 L80 420 L112 500 L140 455 L170 510 L205 400 L240 505 L270 470 L300 520 L340 440 L372 515 L410 480 L450 530 L520 540 L600 530 L680 545 L760 520 L800 470 L830 505 L870 410 L905 500 L940 450 L975 515 L1010 380 L1048 500 L1080 455 L1110 505 L1150 420 L1185 500 L1220 460 L1250 510 L1280 470 L1280 720 Z" fill="#17211B"></path>
+<path d="M0 720 L0 600 L50 560 L70 590 L110 520 L150 595 L200 575 L260 610 L400 620 L560 600 L700 615 L860 600 L960 610 L1030 560 L1060 590 L1100 510 L1140 590 L1190 560 L1230 600 L1280 580 L1280 720 Z" fill="#0F1511"></path>
+<rect x="0" y="560" width="1280" height="160" fill="#7F9681" opacity="0.06"></rect>
+</svg>
+<div style="position: absolute; left: 120px; top: 120px; display: flex; flex-direction: column; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h1 style="margin: 0; font-family: 'Ruslan Display', serif; font-weight: 400; font-size: 84px; line-height: 1; letter-spacing: 3px; color: #E4DFD2">Русская<br>хтонь</h1>
+<div style="font-size: 20px; font-style: italic; color: #9A9C8C">Деревня на краю леса. Лес — на краю света.</div>
+</div>
+<nav style="display: flex; flex-direction: column; gap: 4px" aria-label="Главное меню">
+<a class="mi" href="Prologue.dc.html"><span class="mk"></span>Новая игра</a>
+<a class="mi" href="Game.dc.html"><span class="mk"></span>Продолжить</a>
+<button class="mi" onClick="{{toggleSettings}}"><span class="mk"></span>Настройки</button>
+<button class="mi"><span class="mk"></span>Выход</button>
+</nav>
+</div>
+<sc-if value="{{showSettings}}" hint-placeholder-val="{{ false }}">
+<section style="position: absolute; right: 120px; top: 260px; width: 360px; box-sizing: border-box; padding: 28px; background: rgba(14,16,13,0.92); border: 1px solid #3A3F35; display: flex; flex-direction: column; gap: 20px" aria-label="Настройки">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<h2 style="margin: 0; font-family: 'Ruslan Display', serif; font-weight: 400; font-size: 24px; color: #D9A15A">Настройки</h2>
+<button onClick="{{toggleSettings}}" aria-label="Закрыть" style="width: 44px; height: 44px; background: none; border: 0; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#CFCABB" stroke-width="1.6"><path d="M5 5l14 14M19 5L5 19"></path></svg>
+</button>
+</div>
+<label style="display: flex; flex-direction: column; gap: 8px; font-size: 16px; color: #CFCABB">Музыка<input type="range" min="0" max="100" value="70"></label>
+<label style="display: flex; flex-direction: column; gap: 8px; font-size: 16px; color: #CFCABB">Звуки<input type="range" min="0" max="100" value="80"></label>
+<label style="display: flex; align-items: center; gap: 10px; font-size: 16px; color: #CFCABB"><input type="checkbox" checked style="accent-color: #C27E32; width: 18px; height: 18px">Субтитры</label>
+</section>
+</sc-if>
+<div style="position: absolute; right: 32px; bottom: 24px; font-size: 14px; color: #7C7F72">v0.1 · черновой прототип</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const open = !!(this.state && this.state.settings);
+    return {
+      showSettings: open,
+      toggleSettings: () => this.setState({ settings: !open })
+    };
+  }
+}
+</script>
+</body>
+</html>

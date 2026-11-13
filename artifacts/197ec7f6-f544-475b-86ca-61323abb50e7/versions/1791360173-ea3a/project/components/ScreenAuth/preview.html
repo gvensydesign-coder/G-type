@@ -1,0 +1,20 @@
+<!-- @dsCard group="Screens" height=900 width=900 subtitle="Вход: три маскота-будильника, крупные кнопки Apple и Google, юридический текст." -->
+<style>
+  .auth-trio { display: flex; justify-content: center; align-items: flex-end; margin: 0 -12px; }
+  .auth-trio > :nth-child(2) { margin: 0 -18px; position: relative; z-index: 1; }
+  .auth-legal { margin: 16px 12px 0; text-align: center; font: 500 12px/18px var(--font-sans); color: var(--text-muted); }
+  .auth-legal b { color: var(--text-primary); font-weight: 700; }
+</style>
+<div id="root"></div>
+<script>
+  var B = window.Buddy;
+  function screen() {
+    var trio = '<div class="auth-trio">' + B.mascot('zuzu-sleepy', { size: 124, cls: 'bd-anim-float' }) + B.mascot('dawn-awake', { size: 148, cls: 'bd-anim-float', style: 'animation-delay:-1s' }) + B.mascot('nox-snooze', { size: 124, cls: 'bd-anim-float', style: 'animation-delay:-2s' }) + '</div>';
+    var inner = '<div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:0 20px 32px">' + trio +
+      '<div style="text-align:center;margin:20px 0 28px"><h1 class="title-lg" style="margin:0;font-size:28px;line-height:34px">Get started</h1><p class="body-lg" style="margin:6px 0 0;color:var(--text-muted)">Never miss your wakeup time again</p></div>' +
+      '<div class="bd-stack">' + B.Button({ label: 'Continue with Apple', variant: 'dark', size: 'lg', block: true, logo: 'A' }) + B.Button({ label: 'Continue with Google', variant: 'secondary', size: 'lg', block: true, logo: 'G' }) + '</div>' +
+      '<p class="auth-legal">By signing up you agree to <b>Terms of Service</b> and <b>Privacy Policy</b>.</p></div>';
+    return B.Phone(inner, { wash: true });
+  }
+  document.getElementById('root').innerHTML = B.Stage(screen);
+</script>

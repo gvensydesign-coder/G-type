@@ -1,0 +1,108 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Сказанье о Тени</title>
+<style>
+:root { color-scheme: dark; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #0d0f12; font-family: Georgia, "Times New Roman", serif; color: #e8dcc2; user-select: none; }
+#c { display: block; width: 100vw; height: 100vh; }
+.hidden { display: none !important; }
+
+#hud { position: fixed; inset: 0; pointer-events: none; }
+#player-bars { position: absolute; left: 28px; top: 24px; width: 300px; }
+.bar { position: relative; height: 14px; margin-bottom: 7px; background: rgba(0,0,0,.55); border: 1px solid #6b5a3c; box-shadow: 0 0 6px rgba(0,0,0,.6); overflow: hidden; }
+.bar .fill, .bar .ghost { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; }
+.bar .ghost { background: #d8c9a0; opacity: .55; transition: width .6s ease .25s; }
+.hp .fill { background: linear-gradient(#c43a2c, #7d1610); z-index: 1; }
+.st .fill { background: linear-gradient(#e8d27a, #a48a2a); height: 100%; }
+.st { height: 8px; width: 78%; }
+#boss { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%); width: min(560px, 80vw); text-align: center; }
+#boss-name { font-size: 18px; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 6px #000; margin-bottom: 4px; }
+.boss-hp .fill { background: linear-gradient(#b32a22, #5e0f0b); z-index: 1; }
+.boss-hp { height: 12px; }
+#lock-icon { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 2px solid #f0c060; transform: rotate(45deg); box-shadow: 0 0 8px #f0c060; }
+#toast { position: absolute; left: 50%; top: 38%; transform: translateX(-50%); font-size: 30px; letter-spacing: 4px; color: #f2d48a; text-shadow: 0 0 12px #000, 0 0 4px #000; opacity: 0; transition: opacity .25s; }
+#toast.show { opacity: 1; }
+#hint { position: absolute; bottom: 14px; width: 100%; text-align: center; font-size: 13px; color: rgba(232,220,194,.6); text-shadow: 0 0 4px #000; }
+
+#overlay, #end { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(10,12,16,.55), rgba(5,6,8,.92)); }
+.panel { max-width: 560px; padding: 26px 34px; border: 1px solid #6b5a3c; background: rgba(14,13,11,.88); box-shadow: 0 0 40px #000; text-align: center; }
+h1 { margin: 0 0 6px; font-size: 34px; letter-spacing: 4px; color: #e9c87e; font-weight: normal; }
+.sub { margin: 0 0 16px; color: #b8aa8c; }
+.keys { width: 100%; border-collapse: collapse; font-size: 15px; text-align: left; }
+.keys td { padding: 3px 6px; border-bottom: 1px solid rgba(107,90,60,.35); }
+.keys td:first-child { color: #f2d48a; white-space: nowrap; width: 34%; font-family: Consolas, monospace; }
+.warn { color: #f0a050; font-size: 14px; }
+#start { margin-top: 8px; padding: 10px 26px; font: inherit; font-size: 17px; color: #1a1408; background: #d9b36a; border: 0; cursor: pointer; }
+#start:disabled { opacity: .4; cursor: wait; }
+#loading { font-size: 13px; color: #8f846c; }
+
+/* v2 */
+.st { overflow: visible; }
+.st .notch { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 2px; background: #f6e7b0; box-shadow: 0 0 4px #f6e7b0; z-index: 2; }
+.st.aura .fill { background: linear-gradient(#fff0a8, #d9a83a); box-shadow: 0 0 10px #ffd36b; }
+.st.exhausted .fill { background: linear-gradient(#8a7a5a, #4a3e26); }
+#player-name { font-size: 14px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; color: #e9c87e; text-shadow: 0 0 6px #000; }
+#aura-label { font-size: 12px; color: #ffd36b; letter-spacing: 1px; height: 14px; text-shadow: 0 0 6px #000; }
+#boss-phase { font-size: 12px; letter-spacing: 2px; color: #b8e070; height: 15px; text-shadow: 0 0 6px #000; }
+#loadbar { width: 100%; height: 4px; background: rgba(255,255,255,.08); margin-top: 8px; }
+#loadbar div { height: 100%; width: 0; background: #d9b36a; transition: width .2s; }
+#p-hp-bar .notch { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: rgba(246,231,176,.7); z-index: 2; }
+#p-hp-bar.regen .fill { background: linear-gradient(#e0583a, #8d2414); animation: regen 1.2s ease-in-out infinite; }
+@keyframes regen { 50% { filter: brightness(1.35); } }
+@media (prefers-reduced-motion: reduce) { #p-hp-bar.regen .fill { animation: none; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three.module.js",
+  "three/addons/": "./vendor/addons/",
+  "fx/": "./fx/"
+} }
+</script>
+<canvas id="c"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="player-bars">
+    <div id="player-name">Богатырь</div>
+    <div class="bar hp" id="p-hp-bar"><div class="fill" id="p-hp"></div><div class="ghost" id="p-hp-ghost"></div><div class="notch"></div></div>
+    <div class="bar st" id="p-st-bar"><div class="fill" id="p-st"></div><div class="notch"></div></div>
+    <div id="aura-label"></div>
+  </div>
+  <div id="boss">
+    <div id="boss-name">Леший</div>
+    <div id="boss-phase"></div>
+    <div class="bar boss-hp"><div class="ghost" id="e-hp-ghost"></div><div class="fill" id="e-hp"></div></div>
+  </div>
+  <div id="lock-icon" class="hidden"></div>
+  <div id="toast"></div>
+  <div id="hint">ЛКМ — удар (держать — серия) · ПКМ — щит (держать — парирование) · F — сильный удар · Space — прыжок · C — перекат · Q — уклон · Tab — захват цели</div>
+</div>
+
+<div id="overlay">
+  <div class="panel">
+    <h1>Сказанье о Тени</h1>
+    <p class="sub">Лесная поляна. Богатырь против Лешего.</p>
+    <table class="keys">
+      <tr><td>W A S D</td><td>движение (тяжёлый разгон и торможение)</td></tr>
+      <tr><td>Камера</td><td>сама следит за боем; ← → слегка повернуть, ↑ ↓ наклон</td></tr>
+      <tr><td>Shift</td><td>бег (тратит выносливость); Shift+S — развернуться и бежать прочь</td></tr>
+      <tr><td>Space</td><td>прыжок</td></tr>
+      <tr><td>C</td><td>перекат (неуязвимость)</td></tr>
+      <tr><td>Q / Alt</td><td>уклон-отскок</td></tr>
+      <tr><td>ЛКМ / J</td><td>удар мечом; частые клики — быстрее; удерживать — серия</td></tr>
+      <tr><td>F / K</td><td>сильный удар с полного замаха</td></tr>
+      <tr><td>ПКМ / L</td><td>блок щитом; удерживать — стойка парирования</td></tr>
+      <tr><td>Tab / СКМ</td><td>держать камеру на Лешем на любом расстоянии</td></tr>
+      <tr><td>Esc</td><td>пауза · R — начать заново</td></tr>
+    </table>
+    <p class="warn">Красный круг на земле — туда летит снаряд Лешего: уходи из круга. Оранжевое свечение — удар не блокируется.</p>
+    <p class="sub" style="font-size:13px;margin:6px 0 0">Аура Богатыря горит, пока выносливости больше половины. Без новых ран здоровье понемногу восстанавливается до половины. Схватил Леший — жми ЛКМ или Space, чтобы вырваться.</p>
+    <button id="start">Нажмите, чтобы начать</button>
+    <p id="loading">Загрузка моделей…</p>
+    <div id="loadbar"><div></div></div>
+  </div>
+</div>
+
+<div id="end" class="hidden"><div class="panel"><h1 id="end-title"></h1><p>R — начать заново</p></div></div>
+
+<script type="module" src="src/main.js"></script>
+
+</body></html>

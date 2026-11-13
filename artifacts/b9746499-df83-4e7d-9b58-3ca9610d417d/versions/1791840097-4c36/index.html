@@ -1,0 +1,170 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Межевое</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Alegreya+Sans:wght@400;500;700&family=Alegreya+Sans+SC:wght@500;700&display=swap">
+<style>
+/* Слой интерфейса поверх рисованной сцены: тёмная еловая доска, берестяные карточки, жар углей как акцент. */
+:root {
+  --board: #171d1c;        /* фон панелей: ночная хвоя */
+  --board-2: #222a28;
+  --bark: #e3d6b8;         /* береста: карточки и текст */
+  --bark-dim: #a99d84;
+  --ink: #1b1412;
+  --ember: #e39242;        /* акцент: угли, выбор */
+  --moss: #8fb064;         /* можно */
+  --blood: #d0574a;        /* нельзя */
+  --amber: #d9b45a;        /* можно с основанием */
+  --line: rgba(227, 214, 184, .18);
+  --f-display: "Ruslan Display", "Georgia", serif;
+  --f-body: "Alegreya Sans", "Trebuchet MS", sans-serif;
+  --f-sc: "Alegreya Sans SC", "Alegreya Sans", sans-serif;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--board); color: var(--bark); font: 15px/1.35 var(--f-body); overflow: hidden; user-select: none; -webkit-user-select: none; }
+#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+.panel { background: color-mix(in srgb, var(--board) 88%, transparent); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 24px rgba(0,0,0,.35); backdrop-filter: blur(4px); }
+button { font: 500 14px var(--f-body); color: var(--bark); background: var(--board-2); border: 1px solid var(--line); border-radius: 4px; padding: 5px 10px; cursor: pointer; }
+button:hover { border-color: var(--ember); }
+button:focus-visible { outline: 2px solid var(--ember); outline-offset: 1px; }
+button.on { background: var(--ember); color: var(--ink); border-color: var(--ember); }
+button:disabled { opacity: .45; cursor: default; }
+.sc { font-family: var(--f-sc); letter-spacing: .04em; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* поселение и ресурсы */
+#hud { position: fixed; left: 12px; top: calc(12px + env(safe-area-inset-top, 0px)); padding: 10px 14px 10px; display: grid; gap: 8px; min-width: 0; max-width: calc(100vw - 24px); }
+#hud h1 { margin: 0; font: 400 26px/1 var(--f-display); letter-spacing: .03em; color: var(--bark); }
+#tierline { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: var(--bark-dim); flex-wrap: wrap; }
+#tierline b { color: var(--ember); font: 700 14px var(--f-sc); letter-spacing: .05em; }
+#res { display: flex; gap: 6px 14px; flex-wrap: wrap; }
+.res { display: grid; grid-template-columns: auto auto; column-gap: 6px; align-items: baseline; }
+.res .k { font: 500 12px var(--f-sc); color: var(--bark-dim); letter-spacing: .05em; grid-column: 1 / -1; }
+.res .v { font: 700 18px var(--f-body); }
+.res .d { font-size: 12px; color: var(--moss); }
+#chthon { height: 6px; border-radius: 3px; background: var(--board-2); overflow: hidden; }
+#chthon i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #6a2a2a, var(--blood)); transition: width .6s; }
+
+/* правый верхний блок */
+#opts { position: fixed; right: 12px; top: calc(12px + env(safe-area-inset-top, 0px)); padding: 8px; display: grid; gap: 6px; justify-items: end; }
+.row { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+.row label { font-size: 13px; color: var(--bark-dim); display: flex; gap: 5px; align-items: center; cursor: pointer; }
+.row .lbl { font: 500 12px var(--f-sc); color: var(--bark-dim); margin-right: 2px; letter-spacing: .05em; }
+
+/* нижняя панель */
+#bottom { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; justify-items: center; width: min(980px, calc(100vw - 24px)); pointer-events: none; }
+#bottom > * { pointer-events: auto; }
+#cats { display: flex; gap: 4px; padding: 6px; flex-wrap: wrap; justify-content: center; }
+#cats button { display: flex; gap: 6px; align-items: center; padding: 6px 11px; }
+#cats button .ic { font-size: 16px; line-height: 1; width: 1.1em; text-align: center; }
+#cats .sep { width: 1px; background: var(--line); margin: 2px 4px; }
+#shelf { display: flex; gap: 8px; padding: 8px; overflow-x: auto; max-width: 100%; scrollbar-width: thin; }
+.card { flex: 0 0 150px; background: var(--bark); color: var(--ink); border-radius: 4px; padding: 0 0 7px; cursor: pointer; position: relative; border: 2px solid transparent; display: grid; grid-template-rows: auto auto auto auto; gap: 2px; text-align: left; font: inherit; }
+.card:hover, .card.sel { border-color: var(--ember); }
+.card img { width: 100%; aspect-ratio: 6/5; display: block; border-radius: 2px 2px 0 0; background: #cfc2a2; }
+.card .nm { font: 700 14px/1.1 var(--f-body); padding: 0 8px; }
+.card .meta { font-size: 12px; padding: 0 8px; color: #4b3f33; display: flex; gap: 6px; flex-wrap: wrap; }
+.card .eff { font-size: 12px; padding: 0 8px; color: #355a2a; }
+.card.locked { filter: grayscale(.8); opacity: .65; }
+.card .badge { position: absolute; top: 6px; left: 6px; font: 700 11px var(--f-sc); padding: 1px 6px; border-radius: 3px; background: var(--ember); color: var(--ink); letter-spacing: .05em; }
+.card .badge.lock { background: #3a3430; color: var(--bark); }
+.cost.short { color: #a02a20; font-weight: 700; }
+
+#placebar { display: flex; gap: 10px; align-items: center; padding: 6px 10px; flex-wrap: wrap; justify-content: center; font-size: 13px; }
+#placebar .nm { font: 400 16px var(--f-display); }
+#placebar .hint { color: var(--bark-dim); }
+
+/* подсказка у курсора */
+#tip { position: fixed; pointer-events: none; padding: 7px 10px; min-width: 170px; max-width: 280px; font-size: 13px; transform: translate(16px, 16px); z-index: 5; }
+#tip .t { font: 700 15px var(--f-body); }
+#tip .bad { color: var(--blood); }
+#tip .ok { color: var(--moss); }
+#tip .warn { color: var(--amber); }
+#tip .dim { color: var(--bark-dim); }
+
+/* карточка выбранной постройки */
+#info { position: fixed; right: 12px; top: 50%; transform: translateY(-50%); width: 270px; max-width: calc(100vw - 24px); padding: 12px 14px; display: grid; gap: 8px; }
+#info h2 { margin: 0; font: 400 22px/1.1 var(--f-display); text-wrap: balance; }
+#info .state { font: 700 13px var(--f-sc); letter-spacing: .05em; }
+#info .desc { font-size: 13px; color: var(--bark-dim); }
+#info .bar { height: 7px; background: var(--board-2); border-radius: 4px; overflow: hidden; }
+#info .bar i { display: block; height: 100%; background: var(--ember); }
+#info .stages { display: flex; justify-content: space-between; font-size: 11px; color: var(--bark-dim); }
+#info .stages .cur { color: var(--ember); font-weight: 700; }
+#info .acts { display: flex; flex-wrap: wrap; gap: 5px; }
+
+#toasts { position: fixed; top: calc(14px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); display: grid; gap: 6px; justify-items: center; pointer-events: none; z-index: 6; }
+.toast { padding: 7px 14px; font-size: 14px; animation: tin .25s ease-out; }
+.toast.bad { border-color: var(--blood); }
+.toast.big { font: 400 20px var(--f-display); padding: 10px 18px; border-color: var(--ember); text-align: center; }
+.toast.big small { display: block; font: 400 13px var(--f-body); color: var(--bark-dim); margin-top: 4px; }
+@keyframes tin { from { opacity: 0; transform: translateY(-6px); } }
+.float { position: fixed; pointer-events: none; font: 700 16px var(--f-body); color: var(--ember); text-shadow: 0 1px 0 #000, 0 0 6px #000; transform: translate(-50%, -50%); white-space: nowrap; z-index: 4; }
+.float.gain { color: var(--moss); }
+
+#help { position: fixed; left: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding: 8px 12px; font-size: 12px; color: var(--bark-dim); max-width: 230px; line-height: 1.5; }
+#help b { color: var(--bark); font-weight: 500; }
+#exportBox { position: fixed; inset: 10% 12%; padding: 14px; display: grid; grid-template-rows: auto 1fr auto; gap: 8px; z-index: 8; }
+#exportBox textarea { width: 100%; height: 100%; box-sizing: border-box; background: var(--board-2); color: var(--bark); border: 1px solid var(--line); font: 12px ui-monospace, monospace; resize: none; }
+#loading { position: fixed; inset: 0; display: grid; place-items: center; background: var(--board); z-index: 10; font: 400 28px var(--f-display); }
+#loading small { display: block; font: 400 14px var(--f-body); color: var(--bark-dim); text-align: center; margin-top: 8px; }
+@media (max-width: 760px) {
+  #help { display: none; }
+  #hud { padding: 8px 10px; } #hud h1 { font-size: 20px; }
+  #opts { top: auto; bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
+  #info { top: auto; bottom: calc(150px + env(safe-area-inset-bottom, 0px)); transform: none; }
+  .card { flex-basis: 120px; }
+}
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+  .card .erase-ic { display:grid; place-items:center; aspect-ratio:6/5; font-size:40px; color:var(--ember, #d8a050); }
+</style>
+
+<canvas id="view"></canvas>
+<div id="loading"><div>Межевое<small id="loadmsg">Рубим срубы…</small></div></div>
+
+<div id="hud" class="panel">
+  <h1>Межевое</h1>
+  <div id="tierline"><b id="tierName">Хутор</b><span id="tierNext"></span></div>
+  <div id="res"></div>
+  <div><div class="sc" style="font-size:12px;color:var(--bark-dim);display:flex;justify-content:space-between"><span>Хтонь</span><span id="chthonTxt" class="num">0</span></div><div id="chthon"><i></i></div></div>
+</div>
+
+<div id="opts" class="panel">
+  <div class="row"><span class="lbl">Время</span><button data-speed="0" id="sp0">❚❚</button><button data-speed="1" class="on" id="sp1">×1</button><button data-speed="3" id="sp3">×3</button></div>
+  <div class="row"><span class="lbl">Свет</span><button data-tod="morning" class="on" id="todMorning">Утро</button><button data-tod="day" id="todDay">День</button><button data-tod="night" id="todNight">Ночь</button></div>
+  <div class="row"><span class="lbl">Камера</span><button id="btnOrbit">Облёт</button><button id="btnTop">Сверху</button><button id="btnLow">С земли</button></div>
+  <div class="row"><label><input type="checkbox" id="optFree"> Свободная стройка</label></div>
+  <div class="row"><label><input type="checkbox" id="optAb"> Ставить заброшенным</label></div>
+  <div class="row"><label><input type="checkbox" id="optInstant"> Сразу готово</label></div>
+  <div class="row"><button id="btnSave">Сохранить</button><button id="btnLoad">Загрузить</button><button id="btnExport">JSON</button><button id="btnReset">Заново</button></div>
+</div>
+
+<div id="help" class="panel">
+  <b>ПКМ-тянуть</b> крутить вокруг · <b>ЛКМ/колёсико-тянуть</b> двигать · <b>колесо</b> ближе/дальше<br>
+  <b>WASD</b> двигать · <b>Q E</b> вращать · <b>Z X</b> наклон<br>
+  <b>R</b> фасад · <b>[ ]</b> вариант · <b>ЛКМ</b> поставить · <b>ПКМ/Esc</b> закончить<br>
+  Частокол, мостки, огород, вырубка: <b>тянуть мышью</b>
+</div>
+
+<div id="bottom">
+  <div id="placebar" class="panel" hidden></div>
+  <div id="shelf" class="panel" hidden></div>
+  <div id="cats" class="panel"></div>
+</div>
+<div id="tip" class="panel" hidden></div>
+<div id="info" class="panel" hidden></div>
+<div id="toasts"></div>
+<div id="exportBox" class="panel" hidden>
+  <div class="row" style="justify-content:space-between"><b class="sc">Раскладка building-layout/1</b><button id="btnCloseExport">Закрыть</button></div>
+  <textarea id="exportText" readonly></textarea>
+  <div class="row" style="justify-content:flex-start"><button id="btnCopy">Скопировать</button><span id="copyMsg" class="dim" style="font-size:13px;color:var(--bark-dim)"></span></div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+</script>
+<script type="module" src="./src/main.js"></script>
+
+</body></html>

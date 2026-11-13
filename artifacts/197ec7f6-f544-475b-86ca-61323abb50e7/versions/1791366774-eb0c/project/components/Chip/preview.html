@@ -1,0 +1,10 @@
+<!-- @dsCard group="Inputs" height=170 subtitle="Подсказки с иконкой-плиткой и фильтры (активный инвертирован)." -->
+<style>.pv{display:flex;flex-direction:column;gap:14px;padding:20px;background:var(--bg-app)}.row{display:flex;flex-wrap:wrap;gap:8px}</style>
+<div class="pv" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    '<div class="row">' + B.Chip({ icon: 'bulb', tone: 'yellow', label: 'Habit Tips' }) + B.Chip({ icon: 'target', tone: 'pink', label: 'Set-up goals' }) + B.Chip({ icon: 'calendar', tone: 'green', label: 'Schedule' }) + '</div>' +
+    '<div class="row">' + ['All Agents', 'Sleep', 'Fitness', 'Nutrition', 'Focus'].map(function (l, i) { return B.Chip({ filter: true, label: l, pressed: i === 0 }); }).join('') + '</div>';
+  B.wire(document);
+</script>

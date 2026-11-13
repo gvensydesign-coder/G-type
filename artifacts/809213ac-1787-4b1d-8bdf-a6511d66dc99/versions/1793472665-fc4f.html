@@ -1,0 +1,481 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Живая медь: карта</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
+<style>
+/* Layout: full-bleed 3D scene, right sidebar (bottom sheet on phones) with filters, list and the selected object's card. */
+:root{
+  --bg:#FBF6EE; --panel:#FFFFFF; --ink:#2A2320; --soft:#6B5E55; --line:#E6DCCD;
+  --patina:#2F9E86; --patina-ink:#1F7A67; --copper:#BF6A45; --gold:#D9A441; --azur:#5B8DEF;
+  --map-bg:#FBF6EE; --ground:#F1E8DA; --chip:#F3ECE1; --pill-bg:rgba(255,255,255,.92);
+  --font-d:'Unbounded',system-ui,sans-serif; --font-b:'Onest',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1D1917; --panel:#2A2420; --ink:#F4ECE2; --soft:#BDAEA2; --line:#3E352F;
+  --patina:#4DBFA3; --patina-ink:#7FD9C0; --copper:#D58A6C; --gold:#E3B456; --azur:#8AAEF5;
+  --map-bg:#1D1917; --ground:#27211D; --chip:#352D28; --pill-bg:rgba(42,36,32,.92); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1D1917; --panel:#2A2420; --ink:#F4ECE2; --soft:#BDAEA2; --line:#3E352F;
+  --patina:#4DBFA3; --patina-ink:#7FD9C0; --copper:#D58A6C; --gold:#E3B456; --azur:#8AAEF5;
+  --map-bg:#1D1917; --ground:#27211D; --chip:#352D28; --pill-bg:rgba(42,36,32,.92); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:15px;line-height:1.45;overflow:hidden;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px}
+.app{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px}
+.stage{position:relative;min-width:0;min-height:0;border-radius:24px;overflow:hidden;background:var(--map-bg);border:1px solid var(--line)}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+canvas.drag{cursor:grabbing}
+canvas.hover{cursor:pointer}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);white-space:nowrap;pointer-events:auto;cursor:pointer;
+  font-size:12.5px;font-weight:500;padding:3px 9px;border-radius:999px;background:var(--pill-bg);color:var(--ink);border:1px solid var(--line);
+  will-change:transform}
+.lbl.sel{background:var(--copper);color:#fff;border-color:var(--copper)}
+.lbl.st{pointer-events:none;background:transparent;border:0;color:var(--soft);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.lbl.off{display:none}
+.top{position:absolute;left:14px;top:14px;right:14px;display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;pointer-events:none}
+.top>*{pointer-events:auto}
+.brand{display:flex;flex-direction:column;gap:2px;min-width:0}
+.brand b{font-family:var(--font-d);font-weight:600;font-size:17px;letter-spacing:-.01em}
+.brand span{font-size:12px;color:var(--soft)}
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{font:inherit;font-weight:500;font-size:13px;border:0;background:transparent;color:var(--soft);padding:7px 16px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--patina);color:#fff}
+.tools{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:6px}
+.tools button{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:18px;cursor:pointer;display:grid;place-items:center}
+.tools button[aria-pressed="true"]{background:var(--patina);color:#fff;border-color:var(--patina)}
+.hint{position:absolute;left:14px;bottom:14px;font-size:12px;color:var(--soft);background:var(--pill-bg);border:1px solid var(--line);padding:5px 11px;border-radius:999px;max-width:calc(100% - 80px)}
+.time{position:absolute;left:14px;right:70px;bottom:14px;background:var(--pill-bg);border:1px solid var(--line);border-radius:18px;padding:10px 14px 10px;display:flex;flex-direction:column;gap:6px}
+.time[hidden]{display:none}
+.trow{display:flex;align-items:center;gap:12px;min-width:0}
+.trow button{flex:none;width:34px;height:34px;border-radius:50%;border:0;background:var(--patina);color:#fff;font-size:14px;cursor:pointer}
+.yr{flex:none;font-family:var(--font-d);font-weight:600;font-size:22px;min-width:3.2ch;font-variant-numeric:tabular-nums}
+#yr-in{flex:1;min-width:0;accent-color:var(--copper)}
+.ticks{display:flex;flex-wrap:wrap;gap:4px}
+.ticks button{font:inherit;font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+.cap{font-size:13px;color:var(--ink);min-height:2.6em}
+.cap b{color:var(--copper)}
+.item.dim{opacity:.4;cursor:default}
+button:focus-visible{outline:2px solid var(--azur);outline-offset:2px}
+aside{min-width:0;min-height:0;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+.chip i{width:10px;height:10px;border-radius:50%;display:block}
+.chip[aria-pressed="false"]{opacity:.45}
+.list{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px}
+.item{font:inherit;text-align:left;border:0;background:transparent;color:var(--ink);padding:8px 10px;border-radius:12px;display:flex;gap:10px;align-items:center;cursor:pointer;min-width:0}
+.item:hover{background:var(--chip)}
+.item[aria-current="true"]{background:var(--chip);box-shadow:inset 3px 0 0 var(--copper)}
+.item i{flex:none;width:10px;height:10px;border-radius:50%}
+.item span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px 16px 14px;display:flex;flex-direction:column;gap:8px;max-height:46%;overflow:auto}
+.card .k{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);font-weight:600}
+.card h2{margin:0;font-family:var(--font-d);font-weight:500;font-size:18px;line-height:1.2;text-wrap:balance}
+.card p{margin:0;color:var(--ink)}
+.card .why{color:var(--soft);font-size:14px}
+.card a{color:var(--patina-ink);font-weight:500}
+.note{font-size:12px;color:var(--soft)}
+@media (max-width:820px){
+  body{overflow:auto}
+  .app{height:auto;grid-template-columns:minmax(0,1fr);grid-template-rows:72vh auto}
+  .list{max-height:220px;flex:none}
+  .card{max-height:none}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+
+<div class="app">
+  <div class="stage" id="stage">
+    <canvas id="cv" aria-label="Интерактивная 3D-карта"></canvas>
+    <div id="labels"></div>
+    <div class="top">
+      <div class="brand"><b>Живая медь</b><span id="sub">Средний Урал · схема</span></div>
+      <div class="seg" role="group" aria-label="Масштаб карты">
+        <button id="m-region" aria-pressed="true">Регион</button>
+        <button id="m-city" aria-pressed="false">Город</button>
+      </div>
+    </div>
+    <div class="hint" id="hint">Тяните, чтобы вращать · колесо или щипок — масштаб · правая кнопка — сдвиг</div>
+    <div class="time" id="time" hidden>
+      <div class="trow"><button id="t-play" aria-label="Запустить время">▶</button><span class="yr" id="yr">1854</span><input type="range" id="yr-in" min="1850" max="2026" step="1" value="2026" aria-label="Год"></div>
+      <div class="ticks" id="ticks"></div>
+      <div class="cap" id="cap"></div>
+    </div>
+    <div class="tools">
+      <button id="b-in" aria-label="Приблизить">+</button>
+      <button id="b-out" aria-label="Отдалить">−</button>
+      <button id="b-spin" aria-label="Автовращение" aria-pressed="false" title="Автовращение">↻</button>
+      <button id="b-reset" aria-label="Сбросить вид" title="Сбросить вид">⌂</button>
+    </div>
+  </div>
+  <aside>
+    <div class="filters" id="filters"></div>
+    <div class="list" id="list"></div>
+    <div class="card" id="card"></div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+const TH=THREE;
+const C={patina:0x4DBFA3,deep:0x2F9E86,emer:0x1F7A67,cu:0xBF6A45,rose:0xD58A6C,gold:0xD9A441,rowan:0xD8503F,azur:0x5B8DEF,ore:0x3A302B,light:0x8FDCC4,stone:0xE9DFD0};
+const CATS={cu:{n:'Медь и труд',c:C.cu,css:'#BF6A45'},faith:{n:'Вера',c:C.gold,css:'#D9A441'},nat:{n:'Природа',c:C.patina,css:'#4DBFA3'},cult:{n:'Культура и память',c:C.azur,css:'#5B8DEF'}};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- данные ---------- */
+const S={
+ hist:['Историко-краеведческий музей','https://history-vp.ru/ekspozitsii'],
+ cnk:['Центр народной культуры Среднего Урала','https://uraltradicia.ru/ethnomap/gorodskoy-okrug-verhnyaya-pyshma/'],
+ city:['Сайт музея: о городе','https://www.history-vp.ru/turizm/o-verkhnej-pyshme-page'],
+ stela:['EANews: стела','https://www.eanews.ru/ekaterinburg/20250717153041/stelu-v-chest-170-letiya-otkryli-v-verhney-pyshme'],
+ manin:['EANews: Манин парк','https://eanews.ru/ekaterinburg/20220902171247/otsenka-otlichno-sverdlovskiy-deputat-otsenil-rekonstruktsiyu-manina-parka-v-verhney-pyshme'],
+ flower:['EANews: «Медный цветок»','https://www.eanews.ru/ekaterinburg/20241023155214/mezhdunarodnyy-kinofestival-mednyy-tsvetok-startuet-v-verhney-pyshme'],
+ parad:['Профиль: «Парадный расчёт»','https://profile.ru/news/dk/ugmk/v-muzejnom-komplekse-ugmk-otkryto-novoe-zdanie-349051/'],
+ nash:['Наш Урал: «Более ста»','https://nashural.ru/article/istoriya-urala/bolee-sta-verhnyaya-pyshma/'],
+ arms:['Знание.Россия: герб','https://znanierussia.ru/articles/%D0%93%D0%B5%D1%80%D0%B1_%D0%92%D0%B5%D1%80%D1%85%D0%BD%D0%B5%D0%B9_%D0%9F%D1%8B%D1%88%D0%BC%D1%8B'],
+ nev:['Областная газета: Невьянская башня','https://oblgazeta.ru/culture-and-sports/tourism/2023/10/20046/'],
+ tag:['Центр народной культуры: Нижний Тагил','https://uraltradicia.ru/ethnomap/gorod-nizhniy-tagil/'],
+ baz:['Википедия: Хозяйка Медной горы','https://ru.wikipedia.org/wiki/%D0%A5%D0%BE%D0%B7%D1%8F%D0%B9%D0%BA%D0%B0_%D0%9C%D0%B5%D0%B4%D0%BD%D0%BE%D0%B9_%D0%B3%D0%BE%D1%80%D1%8B']
+};
+const CITY=[
+ {id:'museum',name:'Исторический музей',cat:'cult',shape:'museum',pos:[0,0],s:1,
+  text:'ул. Кривоусова, 47. 13 экспозиций: «Деревенька моя», «Битва за медь», «Город у медной реки», «Музей меди», «Чуланчик, или Назад в СССР» (2015), «Русская мебель».',
+  why:'Материал для тёплых бытовых деталей: резная мебель, КВН, патефон, хрущёвка.',src:S.hist},
+ {id:'stela',name:'Стела к 170-летию',cat:'cu',shape:'stela',pos:[0.8,-0.7],s:1,
+  text:'Улица Орджоникидзе. Открыта 17 июля 2025: атом меди с 29 электронами, кольцо расплавленной меди, синие фонари как кристаллы медного купороса, барельеф с конной откаткой руды.',
+  why:'Орбиты и кольца уже в нашем знаке. Синий — акцент азурита.',src:S.stela},
+ {id:'manin',name:'Манин парк и Манина гора',cat:'nat',shape:'hills',pos:[2.0,-1.5],s:1.1,
+  text:'Реконструкция завершена в 2022 году: смотровая, мост, амфитеатр, скульптуры животных. Происхождение названия связывают с гражданской войной и девушкой Маной. Подтверждения я не нашёл.',
+  why:'Рельеф и холм с трёхвершинным гербом: основа для 3D-ландшафта шейдера.',src:S.manin},
+ {id:'ugmkpark',name:'Парк УГМК',cat:'nat',shape:'park',pos:[-1.0,-1.1],s:1,
+  text:'Солнечные часы и музыкальные фонтаны.',why:'Геометрия, свет и вода: основа для светлых иллюстраций.',src:S.cnk},
+ {id:'mosque',name:'Медная мечеть',cat:'faith',shape:'mosque',pos:[-1.5,1.0],s:1,
+  text:'Мечеть имени имама Исмаила аль-Бухари, 2002. Медный купол, первая соборная мечеть Свердловской области.',
+  why:'Медь как архитектурный материал и зелёная патина купола.',src:S.cnk},
+ {id:'hram',name:'Храм Успения',cat:'faith',shape:'church',pos:[-0.5,0.5],s:1,
+  text:'Построен в 2000 году. В городе есть и другой храмовый слой: церковь Иоакима и Анны (2019) в русском стиле с кокошниками и изразцами.',
+  why:'Кокошник и изразец: один модуль орнамента.',src:S.cnk},
+ {id:'joakim',name:'Церковь Иоакима и Анны',cat:'faith',shape:'church',pos:[1.4,0.9],s:.8,
+  text:'2019 год. Русский стиль, кокошники, изразцы.',why:'Узорчатая кровля как источник ритма.',src:S.cnk},
+ {id:'dk',name:'ДК «Металлург»',cat:'cult',shape:'dk',pos:[0.3,0.8],s:1,
+  text:'Главная сцена города. Здесь вручают приз «Медного цветка» — молодёжного кинофестиваля.',
+  why:'Место встречи аудитории до 25 лет.',src:S.flower},
+ {id:'complex',name:'Музейный комплекс УГМК',cat:'cult',shape:'complex',pos:[2.8,0.8],s:1,
+  text:'«Боевая слава Урала» (2005), «Крылья Победы», «Парадный расчёт» (24 июня 2020, больше 3000 м², больше 50 образцов техники), «XX век авто» (2016), «Музей меди».',
+  why:'Масштаб и металл. Фасад «Парадного расчёта» собран из фотопанелей.',src:S.parad},
+ {id:'plant',name:'Медеэлектролитный завод',cat:'cu',shape:'plant',pos:[1.0,2.1],s:1,
+  text:'Стройка началась в 1929, первая катодная медь — в 1934. По данным музея, в войну из меди завода делали около 80% гильз и патронов.',
+  why:'Электролиз превращается в сюжет: кристаллы растут на катоде.',src:S.city},
+ {id:'rowan',name:'ГорСАД и «Рябиновые зори»',cat:'nat',shape:'rowan',pos:[-2.3,-0.3],s:1,
+  text:'Рябиновые аллеи на Успенском проспекте.',why:'Тёплый красный акцент вместо оранжевого.',src:S.cnk},
+ {id:'square',name:'Сквер Воинской Славы',cat:'cult',shape:'obelisk',pos:[0.2,-1.6],s:1,
+  text:'Памятное место города. Рядом памятник уральским рудокопам. Точное расположение здесь условное.',
+  why:'Сдержанный, без пафоса: каска, кирка, шахтный фонарь.',src:S.city}
+];
+CITY.push({id:'mine',name:'Первая шахта, 1854',cat:'cu',shape:'headframe',pos:[2.2,1.5],s:1,
+  text:'7 июля 1854 заложена первая шахта Иоанно-Богословская (Ивановская), в работе с 1856. Рудник дал посёлку имя Медный Рудник. Место на схеме условное.',
+  why:'Точка отсчёта: отсюда медь «растёт» в слои города.',src:S.city});
+const YEARS={mine:1854,plant:1929,museum:1989,hram:2000,mosque:2002,complex:2005,joakim:2019,stela:2025};
+CITY.forEach(i=>{i.year=YEARS[i.id]||0;});
+const EVENTS=[
+ [1850,'До рудника: деревни Пышма и Мостовское на Верхотурском тракте, золотой прииск в верховьях реки.'],
+ [1854,'Заложена первая медная шахта. Посёлок Медный Рудник.'],
+ [1934,'Первая катодная медь на электролитном заводе (стройка с 1929).'],
+ [1946,'Рабочий посёлок становится городом (дата в источниках расходится).'],
+ [1989,'Исторический музей (в части источников год основания — 1978).'],
+ [2000,'Храм Успения. Мечеть откроется в 2002.'],
+ [2002,'Медная мечеть имени имама Исмаила аль-Бухари.'],
+ [2005,'Музейный комплекс УГМК: «Боевая слава Урала». Статус городского округа.'],
+ [2019,'Церковь Иоакима и Анны.'],
+ [2022,'Реконструкция Манин парка. Трамвай «Львёнок» до Екатеринбурга.'],
+ [2025,'Стела к 170-летию города.']];
+const REGION=[
+ {id:'vp',name:'Верхняя ПышмА',cat:'cu',shape:'stela',pos:ll(60.57,56.97),s:2.2,
+  text:'«Медная столица Урала». Рудник с 1854, электролиз с 1934, статус города в 1946. Даты 1946 в источниках расходятся: 18 января, 22 февраля или 7 марта.',
+  why:'Центр системы. Из точки растут кольца знака.',src:S.city,go:'city'},
+ {id:'ekb',name:'Екатеринбург',cat:'cult',shape:'town',pos:ll(60.61,56.84),s:1,
+  text:'Соседний город-миллионник. Между ним и Верхней Пышмой ходит трамвай «Львёнок» (маршрут №333, 2022).',
+  why:'Контекст: сюда едет молодая аудитория.',src:S.city},
+ {id:'nev',name:'Невьянская башня',cat:'cult',shape:'tower',pos:ll(60.21,57.49),s:1,
+  text:'1722–1732, Демидовы. Верх отклонён на 2,2 м. Часы-куранты привезены из Англии в 1730-х. Архитектор неизвестен. Легенды: фальшивые рубли и подземелья.',
+  why:'Символ горнозаводской эпохи.',src:S.nev},
+ {id:'tag',name:'Нижний Тагил',cat:'cult',shape:'tray',pos:ll(59.97,57.92),s:1,
+  text:'Родина росписи по металлу: первые подносы упомянуты в 1746, слава с 1770-х. Сторожевая башня на Лисьей горе, 1818.',
+  why:'Цветы на тёмном фоне: идея для подарочной линейки без копирования подносов.',src:S.tag},
+ {id:'pol',name:'Полевской, Гумёшки',cat:'cu',shape:'gumesh',pos:ll(60.19,56.43),s:1,
+  text:'Гумёшевский рудник открыт в 1702. Он стал прообразом «Медной горы» у Бажова.',
+  why:'Малахит региона и его сказочный слой.',src:S.baz},
+ {id:'ganina',name:'Ганина Яма',cat:'faith',shape:'wood',pos:ll(60.43,57.06),s:1,
+  text:'Монастырь с 2000 года на месте уничтожения останков семьи Романовых. Положение приблизительное. Тема тяжёлая, в айдентике её использовать не стоит.',
+  why:'Отмечено как место региона, не как мотив.',src:S.hist},
+ {id:'lakes',name:'Озёра с писаницами',cat:'nat',shape:'lake',pos:[-0.9,2.7],s:1,
+  text:'У озёр Мелкое, Шитовское и других найдены неолитические писаницы: утки на воде и ромбы. Рядом медные птицеобразные идолы 1860-х у Палкино.',
+  why:'Птица-идол — самый древний знак места. Положение условное.',src:S.nash}
+];
+const ROADS_REGION=[
+ [ll(60.61,56.84),ll(60.57,56.97),ll(60.38,57.25),ll(60.21,57.49),ll(60.05,57.72),ll(59.97,57.92)],
+ [ll(60.61,56.84),ll(60.40,56.62),ll(60.19,56.43)]
+];
+const ROADS_CITY=[
+ {name:'Успенский проспект',pts:[[-3.2,1.6],[-1.6,0.4],[0,-0.1],[1.6,-0.8],[3.3,-1.7]],lab:[-1.6,0.4]},
+ {name:'ул. Кривоусова',pts:[[-0.6,-1.5],[-0.2,-0.6],[0,0],[0.3,0.9],[0.8,1.8]],lab:[0.3,0.9]},
+ {name:'ул. Орджоникидзе',pts:[[-0.4,-1.8],[0.8,-0.7],[1.9,0.3],[3.0,1.2]],lab:[1.9,0.3]}
+];
+function ll(lon,lat){return [((lon-60.45)*60.5)/10,((57.2-lat)*111)/10];}
+
+/* ---------- сцена ---------- */
+const cv=document.getElementById('cv'),stage=document.getElementById('stage'),labelsEl=document.getElementById('labels');
+const renderer=new TH.WebGLRenderer({canvas:cv,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new TH.Scene();
+const camera=new TH.PerspectiveCamera(38,1,.1,200);
+scene.add(new TH.HemisphereLight(0xFFF6EA,0xA9C9BD,.95));
+const sun=new TH.DirectionalLight(0xFFEBD2,.9);sun.position.set(6,10,4);scene.add(sun);
+
+const matCache={};
+function mat(c,o){const k=c+JSON.stringify(o||{});return matCache[k]||(matCache[k]=new TH.MeshStandardMaterial(Object.assign({color:c,roughness:.78,metalness:.04,flatShading:true},o||{})));}
+function mesh(g,c,x,y,z){const m=new TH.Mesh(g,mat(c));m.position.set(x||0,y||0,z||0);return m;}
+const B=(w,h,d)=>new TH.BoxGeometry(w,h,d), CY=(a,b,h,n)=>new TH.CylinderGeometry(a,b,h,n||10), CO=(r,h,n)=>new TH.ConeGeometry(r,h,n||8);
+function pad(g,c){g.add(mesh(CY(.42,.46,.05,20),c||0xD9CDBB,0,.025,0));}
+
+const SHAPES={
+ stela(){const g=new TH.Group();pad(g);g.add(mesh(CY(.1,.16,.3,6),C.ore,0,.2,0));
+  for(let i=0;i<3;i++){const t=mesh(new TH.TorusGeometry(.25,.022,6,26),C.cu,0,.68,0);t.rotation.set(i*1.05,i*.72+.3,0);g.add(t);}
+  g.add(mesh(new TH.IcosahedronGeometry(.07,0),C.azur,0,.68,0));return g;},
+ museum(){const g=new TH.Group();pad(g);g.add(mesh(B(.5,.22,.32),C.stone,0,.16,0));
+  const r=mesh(CO(.34,.2,4),C.cu,0,.37,0);r.rotation.y=Math.PI/4;r.scale.set(1.15,1,.75);g.add(r);return g;},
+ hills(){const g=new TH.Group();pad(g,0xBFE4D6);g.add(mesh(CO(.2,.48,6),C.deep,-.18,.27,.02),mesh(CO(.26,.7,6),C.patina,.04,.38,-.04),mesh(CO(.18,.4,6),C.emer,.26,.23,.05));return g;},
+ park(){const g=new TH.Group();g.add(mesh(CY(.4,.4,.03,24),C.light,0,.02,0));g.add(mesh(CY(.02,.02,.3,6),C.cu,0,.17,0));
+  const t=mesh(new TH.TorusGeometry(.26,.012,6,28),C.gold,0,.05,0);t.rotation.x=Math.PI/2;g.add(t);return g;},
+ mosque(){const g=new TH.Group();pad(g);g.add(mesh(B(.36,.2,.36),C.stone,0,.15,0));
+  g.add(mesh(new TH.SphereGeometry(.22,14,8,0,Math.PI*2,0,Math.PI/2),C.deep,0,.25,0));
+  g.add(mesh(CY(.03,.04,.62,8),C.stone,.3,.34,.2),mesh(CO(.045,.12,8),C.gold,.3,.7,.2));return g;},
+ church(){const g=new TH.Group();pad(g);g.add(mesh(B(.3,.26,.3),C.stone,0,.18,0));
+  const d=mesh(new TH.SphereGeometry(.14,12,10),C.gold,0,.44,0);d.scale.y=1.45;g.add(d);g.add(mesh(CO(.03,.14,6),C.gold,0,.66,0));return g;},
+ dk(){const g=new TH.Group();pad(g);g.add(mesh(B(.62,.2,.3),0xCBD9F6,0,.15,0));g.add(mesh(B(.62,.04,.32),C.azur,0,.27,0));g.add(mesh(B(.16,.3,.16),C.stone,-.2,.2,.2));return g;},
+ complex(){const g=new TH.Group();pad(g);g.add(mesh(B(.8,.16,.3),C.stone,0,.13,0),mesh(B(.8,.03,.32),C.cu,0,.22,0),mesh(B(.2,.28,.2),C.stone,.28,.19,.26),mesh(CY(.05,.05,.3,10),C.ore,-.3,.2,.25));return g;},
+ plant(){const g=new TH.Group();pad(g);g.add(mesh(B(.5,.18,.24),C.stone,0,.14,0),mesh(B(.22,.3,.22),C.cu,-.18,.2,.2),mesh(CY(.04,.05,.6,8),C.ore,.2,.35,.18),mesh(CY(.04,.05,.5,8),C.ore,.32,.3,.18));return g;},
+ rowan(){const g=new TH.Group();g.add(mesh(CY(.03,.04,.3,6),C.ore,0,.17,0));
+  [[0,.42,0],[.1,.36,.05],[-.09,.38,.05],[.02,.34,-.1]].forEach((p,i)=>g.add(mesh(new TH.IcosahedronGeometry(.1,0),i?C.rowan:0xE06B58,p[0],p[1],p[2])));return g;},
+ obelisk(){const g=new TH.Group();pad(g);g.add(mesh(CY(.04,.08,.55,4),C.ore,0,.32,0),mesh(CO(.05,.09,4),C.gold,0,.64,0));return g;},
+ town(){const g=new TH.Group();[[0,.35,0],[.18,.22,.1],[-.16,.28,-.08],[.1,.18,-.16],[-.05,.14,.17]].forEach(p=>g.add(mesh(B(.15,p[1],.15),C.stone,p[0],p[1]/2+.02,p[2])));return g;},
+ tower(){const g=new TH.Group();pad(g);const t=new TH.Group();t.add(mesh(B(.3,.3,.3),C.stone,0,.2,0),mesh(B(.24,.28,.24),0xDDD0BD,0,.49,0),mesh(B(.18,.24,.18),C.stone,0,.75,0),mesh(CO(.15,.2,4),C.gold,0,.97,0));t.rotation.z=-.1;g.add(t);return g;},
+ tray(){const g=new TH.Group();g.add(mesh(CY(.38,.34,.05,28),C.ore,0,.04,0));
+  const r=mesh(new TH.TorusGeometry(.37,.02,6,30),C.cu,0,.065,0);r.rotation.x=Math.PI/2;g.add(r);
+  [[0,0,C.rowan],[.14,.06,C.gold],[-.12,.1,C.patina],[.05,-.14,C.azur],[-.1,-.1,C.rose]].forEach(p=>g.add(mesh(new TH.IcosahedronGeometry(.07,0),p[2],p[0],.1,p[1])));return g;},
+ headframe(){const g=new TH.Group();pad(g,0xD9CDBB);g.add(mesh(B(.3,.12,.22),C.stone,.1,.1,0));
+  [-1,1].forEach(s=>{const l=mesh(B(.035,.62,.035),C.ore,-.12+s*.09,.36,0);l.rotation.z=-s*.2;g.add(l);});
+  g.add(mesh(new TH.TorusGeometry(.07,.014,6,16),C.cu,-.12,.68,0));return g;},
+ gumesh(){const g=new TH.Group();g.add(mesh(CO(.4,.5,7),C.deep,0,.25,0),mesh(CO(.2,.3,6),C.patina,.18,.42,.05));
+  [-1,1].forEach(s=>{const l=mesh(B(.03,.4,.03),C.ore,-.28+s*.05,.4,.18);l.rotation.z=-s*.28;g.add(l);});
+  const w=mesh(new TH.TorusGeometry(.06,.012,6,14),C.cu,-.28,.6,.18);g.add(w);return g;},
+ wood(){const g=new TH.Group();g.add(mesh(B(.14,.14,.14),0xB98C5A,-.12,.09,0),mesh(CO(.12,.12,4),C.gold,-.12,.22,0),mesh(B(.1,.1,.1),0xB98C5A,.12,.07,.08),mesh(CO(.09,.1,4),C.gold,.12,.17,.08));return g;},
+ lake(){const g=new TH.Group();g.add(mesh(CY(.4,.4,.025,26),C.light,0,.015,0));
+  g.add(mesh(new TH.SphereGeometry(.07,8,6),C.ore,0,.1,0),mesh(new TH.SphereGeometry(.045,8,6),C.ore,.07,.17,0),mesh(CO(.02,.06,6),C.cu,.13,.17,0).rotateZ(-Math.PI/2));return g;}
+};
+
+/* ---------- миры ---------- */
+function blobRing(r1,r2,k,color,y){
+  const N=72,pt=(r,a)=>{const w=1+.045*Math.sin(3*a+k)+.03*Math.sin(5*a+k*2.1);return new TH.Vector2(Math.cos(a)*r*w+.04*r*Math.cos(k),Math.sin(a)*r*w);};
+  const sh=new TH.Shape(),ho=new TH.Path();
+  for(let i=0;i<=N;i++){const p=pt(r2,i/N*Math.PI*2);i?sh.lineTo(p.x,p.y):sh.moveTo(p.x,p.y);}
+  for(let i=0;i<=N;i++){const p=pt(r1,-i/N*Math.PI*2);i?ho.lineTo(p.x,p.y):ho.moveTo(p.x,p.y);}
+  sh.holes.push(ho);
+  const g=new TH.ShapeGeometry(sh);g.rotateX(-Math.PI/2);
+  const m=new TH.Mesh(g,new TH.MeshBasicMaterial({color:color}));m.position.y=y;return m;
+}
+const worlds={},groundMats=[];
+function makeWorld(key,cfg){
+  const w=new TH.Group();w.visible=false;scene.add(w);
+  const gm=new TH.MeshBasicMaterial({color:0xF1E8DA});groundMats.push(gm);
+  const gr=new TH.Mesh(new TH.CircleGeometry(cfg.R,96),gm);gr.rotation.x=-Math.PI/2;gr.position.set(cfg.gc[0],0,cfg.gc[1]);w.add(gr);
+  const cols=[C.light,C.patina,C.light,C.deep,C.light,C.patina];
+  cfg.rings.forEach((r,i)=>{const m=blobRing(r,r+cfg.rw,i*1.7+1,cols[i%6],.01+i*.002);m.position.x=cfg.rc[0];m.position.z=cfg.rc[1];w.add(m);});
+  const rim=blobRing(cfg.rings[cfg.rings.length-1]+cfg.rw+cfg.gap,cfg.rings[cfg.rings.length-1]+cfg.rw+cfg.gap+cfg.rw*.45,9.3,C.cu,.03);rim.position.x=cfg.rc[0];rim.position.z=cfg.rc[1];w.add(rim);
+  const objs=[],labs=[];
+  cfg.items.forEach(it=>{
+    const g=SHAPES[it.shape]();g.scale.setScalar(it.s*cfg.os);g.position.set(it.pos[0],0.03,it.pos[1]);g.rotation.y=(it.id.length*.7)%6;
+    g.userData.id=it.id;g.traverse(o=>{o.userData.id=it.id;});w.add(g);
+    let ring=null;
+    if(cfg.beacon){const cc=CATS[it.cat].c;
+      const bm=new TH.Mesh(CY(.012,.012,2.4,6),new TH.MeshBasicMaterial({color:cc,transparent:true,opacity:.55}));bm.position.y=1.2;g.add(bm);
+      ring=new TH.Mesh(new TH.TorusGeometry(.5,.025,6,36),new TH.MeshBasicMaterial({color:cc,transparent:true,opacity:.7}));ring.rotation.x=Math.PI/2;ring.position.y=.03;ring.userData.ring=true;g.add(ring);}
+    const el=document.createElement('div');el.className='lbl off';el.textContent=it.name;el.dataset.id=it.id;labelsEl.appendChild(el);
+    el.addEventListener('click',()=>select(it.id));
+    objs.push({it,g,el,ring,alive:true,ph:Math.random(),top:(.9)*it.s*cfg.os});
+  });
+  (cfg.roads||[]).forEach(p=>{const pts=(p.pts||p).map(q=>new TH.Vector3(q[0],.06,q[1]));
+    const t=new TH.Mesh(new TH.TubeGeometry(new TH.CatmullRomCurve3(pts),80,cfg.tube,6),mat(C.rose));w.add(t);
+    if(p.name){const el=document.createElement('div');el.className='lbl st off';el.textContent=p.name;labelsEl.appendChild(el);labs.push({el,pos:new TH.Vector3(p.lab[0],.1,p.lab[1])});}});
+  worlds[key]={g:w,objs,labs,cfg};
+}
+makeWorld('region',{R:12.5,gc:[0,.3],rc:ll(60.57,56.97),rings:[1.5,2.9,4.3,5.7,7.1,8.5],rw:.55,gap:.2,os:1,items:REGION,roads:ROADS_REGION,tube:.05,
+  view:{tx:-.3,tz:.4,r:19,th:.5,ph:.95}});
+makeWorld('city',{R:6.4,gc:[0,0],rc:[0.3,0.1],rings:[.7,1.4,2.1,2.8,3.5,4.2],rw:.3,gap:.12,os:.62,beacon:true,items:CITY,roads:ROADS_CITY,tube:.022,
+  view:{tx:.3,tz:.1,r:9.5,th:.4,ph:.9}});
+
+/* ---------- город: периметр и здания (схема) ---------- */
+const CX=.3,CZ=.1;
+const perR=a=>3.7*(1+.1*Math.sin(2*a+1)+.06*Math.sin(3*a+4));
+(function(){
+  const W=worlds.city,w=W.g;
+  const pts=[],N=120;for(let i=0;i<N;i++){const a=i/N*Math.PI*2,r=perR(a);pts.push(new TH.Vector3(CX+Math.cos(a)*r,.07,CZ+Math.sin(a)*r));}
+  w.add(new TH.Mesh(new TH.TubeGeometry(new TH.CatmullRomCurve3(pts,true),240,.04,6,true),mat(C.cu)));
+  const pos=[],idx=[];pts.forEach((p,i)=>{pos.push(p.x,.0,p.z,p.x,.16,p.z);const j=(i+1)%N;idx.push(i*2,j*2,i*2+1,j*2,j*2+1,i*2+1);});
+  const wg=new TH.BufferGeometry();wg.setAttribute('position',new TH.Float32BufferAttribute(pos,3));wg.setIndex(idx);
+  w.add(new TH.Mesh(wg,new TH.MeshBasicMaterial({color:C.cu,transparent:true,opacity:.2,side:TH.DoubleSide,depthWrite:false})));
+  const lp=pts[Math.floor(N*.62)];
+  const el=document.createElement('div');el.className='lbl st off';el.textContent='Периметр · схема';labelsEl.appendChild(el);
+  W.labs.push({el,pos:new TH.Vector3(lp.x,.2,lp.z)});
+  let s=7;const rnd=()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+  const road=[];ROADS_CITY.forEach(p=>new TH.CatmullRomCurve3(p.pts.map(q=>new TH.Vector3(q[0],0,q[1]))).getPoints(70).forEach(v=>road.push(v)));
+  const cand=[];let guard=0;
+  while(cand.length<430&&guard++<20000){
+    const a=rnd()*Math.PI*2,r=Math.sqrt(rnd())*perR(a)*.94,x=CX+Math.cos(a)*r,z=CZ+Math.sin(a)*r;
+    if(CITY.some(c=>Math.hypot(c.pos[0]-x,c.pos[1]-z)<.34))continue;
+    if(road.some(v=>Math.hypot(v.x-x,v.z-z)<.12))continue;
+    cand.push({x,z,k:Math.hypot(x-CX,z-CZ)+rnd()*.9});}
+  cand.sort((p,q)=>p.k-q.k);
+  const bg=B(1,1,1);bg.translate(0,.5,0);
+  W.bld=cand.map((c,i)=>{
+    const col=i<70?0xE6C8B4:i<150?0xEADFCF:i<270?0xEFE7DA:(rnd()<.14?0xCFE9E0:0xF6F1E8);
+    const h=(i<150?.05+rnd()*.05:i<270?.07+rnd()*.07:.09+rnd()*.15);
+    const m=new TH.Mesh(bg,new TH.MeshStandardMaterial({color:col,roughness:.85,flatShading:true}));
+    const bw=.09+rnd()*.09,bd=.09+rnd()*.12;m.position.set(c.x,.03,c.z);m.rotation.y=.47+(rnd()-.5)*.28;
+    m.scale.set(bw,.001,bd);m.visible=false;w.add(m);return {m,h,t:0,s:0};});
+})();
+const NB=[[1850,0],[1854,12],[1934,70],[1946,150],[2000,270],[2025,430]];
+function buildCount(y){for(let i=1;i<NB.length;i++){if(y<=NB[i][0]){const a=NB[i-1],b=NB[i];return a[1]+(b[1]-a[1])*(y-a[0])/(b[0]-a[0]);}}return NB[NB.length-1][1];}
+
+/* ---------- тема ---------- */
+const bgFog=new TH.Color();
+function applyTheme(){const cs=getComputedStyle(document.documentElement);
+  const bg=cs.getPropertyValue('--map-bg').trim()||'#FBF6EE',gr=cs.getPropertyValue('--ground').trim()||'#F1E8DA';
+  scene.background=new TH.Color(bg);bgFog.set(bg);scene.fog=new TH.Fog(bgFog,30,70);groundMats.forEach(m=>m.color.set(gr));}
+applyTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+/* ---------- камера ---------- */
+let mode='region',world=worlds.region;
+const cur={tx:0,tz:0,r:19,th:.5,ph:.95},goal=Object.assign({},cur);
+let spin=false,selected=null;
+function setView(v,snap){Object.assign(goal,v);if(snap)Object.assign(cur,v);}
+function placeCam(){const sp=Math.sin(cur.ph);camera.position.set(cur.tx+cur.r*sp*Math.sin(cur.th),cur.r*Math.cos(cur.ph),cur.tz+cur.r*sp*Math.cos(cur.th));camera.lookAt(cur.tx,0,cur.tz);}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+new ResizeObserver(resize).observe(stage);resize();
+
+/* ввод */
+const ptrs=new Map();let moved=0,lastPinch=0,downAt=null;
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,b:e.button});moved=0;downAt={x:e.clientX,y:e.clientY};cv.classList.add('drag');lastPinch=0;});
+cv.addEventListener('pointermove',e=>{
+  const p=ptrs.get(e.pointerId);
+  if(!p){hover(e);return;}
+  const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
+  if(ptrs.size===2){const a=[...ptrs.values()],d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(lastPinch)zoom(lastPinch/d);lastPinch=d;return;}
+  if(p.b===2||e.shiftKey){const k=cur.r*.0016;goal.tx-=(dx*Math.cos(cur.th)+dy*Math.sin(cur.th)*Math.cos(cur.ph))*k;goal.tz+=(dx*Math.sin(cur.th)-dy*Math.cos(cur.th)*Math.cos(cur.ph))*k;}
+  else{goal.th-=dx*.006;goal.ph=Math.min(1.4,Math.max(.25,goal.ph-dy*.006));}
+});
+function up(e){ptrs.delete(e.pointerId);cv.classList.remove('drag');lastPinch=0;
+  if(e.type==='pointerup'&&moved<6&&downAt){const id=pick(e.clientX,e.clientY);if(id)select(id);}}
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{e.preventDefault();zoom(Math.exp(e.deltaY*.0012));},{passive:false});
+function zoom(f){const lim=mode==='region'?[5,30]:[3,15];goal.r=Math.min(lim[1],Math.max(lim[0],goal.r*f));}
+const ray=new TH.Raycaster(),v2=new TH.Vector2();
+function pick(cx,cy){const r=cv.getBoundingClientRect();v2.set((cx-r.left)/r.width*2-1,-((cy-r.top)/r.height)*2+1);ray.setFromCamera(v2,camera);
+  const hits=ray.intersectObjects(world.objs.map(o=>o.g),true);for(const h of hits){if(h.object.userData.id)return h.object.userData.id;}return null;}
+let hoverT=0;function hover(e){const n=performance.now();if(n-hoverT<60)return;hoverT=n;cv.classList.toggle('hover',!!pick(e.clientX,e.clientY));}
+
+/* ---------- интерфейс ---------- */
+const filt={cu:true,faith:true,nat:true,cult:true};
+const fEl=document.getElementById('filters'),lEl=document.getElementById('list'),cEl=document.getElementById('card');
+Object.keys(CATS).forEach(k=>{const b=document.createElement('button');b.className='chip';b.setAttribute('aria-pressed','true');
+  b.innerHTML='<i style="background:'+CATS[k].css+'"></i>'+CATS[k].n;
+  b.onclick=()=>{filt[k]=!filt[k];b.setAttribute('aria-pressed',String(filt[k]));refresh();};fEl.appendChild(b);});
+function refresh(){
+  Object.keys(worlds).forEach(k=>worlds[k].g.visible=(k===mode));
+  Object.keys(worlds).forEach(k=>worlds[k].objs.forEach(o=>{o.g.visible=filt[o.it.cat]&&o.alive;}));
+  lEl.innerHTML='';
+  world.objs.forEach(o=>{if(!filt[o.it.cat])return;const b=document.createElement('button');b.className='item'+(o.alive?'':' dim');if(!o.alive)b.disabled=true;
+    b.innerHTML='<i style="background:'+CATS[o.it.cat].css+'"></i><span></span>';b.querySelector('span').textContent=o.it.name;
+    b.onclick=()=>select(o.it.id);if(selected===o.it.id)b.setAttribute('aria-current','true');lEl.appendChild(b);});
+}
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x)e.textContent=x;return e;}
+function renderCard(it){
+  cEl.innerHTML='';
+  if(!it){cEl.append(el('div','k','Как читать карту'),el('p','',mode==='region'?'Города стоят там, где они на самом деле: по широте и долготе. Кольца расходятся от Верхней Пышмы, как слои малахита в знаке.':'Схема города в четырёх измерениях: объём плюс время. Тяните ползунок или нажмите ▶. Периметр, здания и положение объектов условные; места, улицы и даты настоящие.'),el('p','note','Нажмите на объект или строку в списке.'));return;}
+  const k=el('div','k',CATS[it.cat].n),h=el('h2','',it.name),p=el('p','',it.text),w=el('p','why','Для визуала: '+it.why);
+  const a=el('a','',it.src[0]+' ↗');a.href=it.src[1];a.target='_blank';a.rel='noopener noreferrer';
+  cEl.append(k,h,p,w,a);
+  if(it.go){const b=el('button','chip','Открыть город →');b.style.alignSelf='flex-start';b.onclick=()=>setMode(it.go);cEl.appendChild(b);}
+}
+function select(id){const o=world.objs.find(x=>x.it.id===id);if(!o||!o.alive)return;selected=id;
+  world.objs.forEach(x=>x.el.classList.toggle('sel',x.it.id===id));
+  setView({tx:o.g.position.x,tz:o.g.position.z});renderCard(o.it);refresh();
+  const cur2=lEl.querySelector('[aria-current="true"]');if(cur2)cur2.scrollIntoView({block:'nearest'});}
+function setMode(m){mode=m;world=worlds[m];selected=null;world.objs.forEach(x=>x.el.classList.remove('sel'));
+  Object.keys(worlds).forEach(k=>{worlds[k].objs.forEach(o=>o.el.classList.add('off'));worlds[k].labs.forEach(l=>l.el.classList.add('off'));});
+  document.getElementById('m-region').setAttribute('aria-pressed',String(m==='region'));
+  document.getElementById('m-city').setAttribute('aria-pressed',String(m==='city'));
+  document.getElementById('sub').textContent=m==='region'?'Средний Урал · схема':'Верхняя ПышмА · периметр во времени';
+  document.getElementById('time').hidden=(m!=='city');document.getElementById('hint').hidden=(m==='city');
+  if(m!=='city')playing=false;
+  setView(world.cfg.view,false);cur.tx=world.cfg.view.tx;cur.tz=world.cfg.view.tz;cur.r=world.cfg.view.r*1.15;
+  renderCard(null);refresh();}
+document.getElementById('m-region').onclick=()=>setMode('region');
+document.getElementById('m-city').onclick=()=>setMode('city');
+document.getElementById('b-in').onclick=()=>zoom(.78);
+document.getElementById('b-out').onclick=()=>zoom(1.28);
+document.getElementById('b-reset').onclick=()=>{selected=null;world.objs.forEach(x=>x.el.classList.remove('sel'));setView(world.cfg.view);renderCard(null);refresh();};
+/* ---------- время (четвёртое измерение) ---------- */
+let year=2026,playing=false;
+const yIn=document.getElementById('yr-in'),yEl=document.getElementById('yr'),capEl=document.getElementById('cap'),tPlay=document.getElementById('t-play');
+const tk=document.getElementById('ticks');
+[1854,1934,1946,2000,2025].forEach(y=>{const b=document.createElement('button');b.textContent=y;b.onclick=()=>{playing=false;tPlay.textContent='▶';setYear(y);};tk.appendChild(b);});
+function setYear(y){year=Math.round(y);yIn.value=year;yEl.textContent=year;
+  const n=buildCount(year);worlds.city.bld.forEach((b,i)=>{b.t=i<n?1:0;});
+  let ev=EVENTS[0];EVENTS.forEach(e=>{if(e[0]<=year)ev=e;});
+  capEl.innerHTML='<b>'+ev[0]+'</b> · '+ev[1];
+  let changed=false;worlds.city.objs.forEach(o=>{const a=year>=o.it.year;if(a!==o.alive){o.alive=a;changed=true;}});
+  if(changed){if(mode==='city'&&selected){const so=world.objs.find(x=>x.it.id===selected);if(so&&!so.alive){selected=null;renderCard(null);}}if(mode==='city')refresh();}}
+yIn.addEventListener('input',()=>{playing=false;tPlay.textContent='▶';setYear(+yIn.value);});
+tPlay.onclick=()=>{playing=!playing;tPlay.textContent=playing?'❚❚':'▶';if(playing&&year>=2026)setYear(1850);};
+const bs=document.getElementById('b-spin');bs.onclick=()=>{spin=!spin;bs.setAttribute('aria-pressed',String(spin));};
+
+/* ---------- цикл ---------- */
+const pv=new TH.Vector3();
+let t0=performance.now(),playAcc=0;
+function frame(now){
+  const dt=Math.min(.05,(now-t0)/1000);t0=now;
+  if(spin&&!reduce&&!ptrs.size)goal.th+=dt*.18;
+  const k=reduce?1:1-Math.pow(.0008,dt);
+  ['tx','tz','r','th','ph'].forEach(n=>cur[n]+=(goal[n]-cur[n])*k);
+  placeCam();
+  if(playing){playAcc+=dt*14;if(playAcc>=1){const st=Math.floor(playAcc);playAcc-=st;if(year>=2026){playing=false;tPlay.textContent='▶';}else setYear(Math.min(2026,year+st));}}
+  if(mode==='city')worlds.city.bld.forEach(b=>{b.s+=(b.t-b.s)*(reduce?1:Math.min(1,dt*7));const v=b.s>.03;b.m.visible=v;if(v)b.m.scale.y=b.h*b.s;});
+  world.objs.forEach(o=>{
+    if(o.ring&&!reduce){const f=(now*.0008+o.ph)%1;o.ring.scale.setScalar(.6+f*.9);o.ring.material.opacity=.7*(1-f);}
+    const sel=o.it.id===selected;
+    if(!reduce)o.g.position.y=.03+(sel?Math.abs(Math.sin(now*.003))*.06*o.it.s:0);
+    pv.set(o.g.position.x,o.g.position.y+o.top+.12,o.g.position.z).project(camera);
+    const vis=o.g.visible&&pv.z<1&&filt[o.it.cat];
+    o.el.classList.toggle('off',!vis);
+    if(vis)o.el.style.transform='translate('+((pv.x*.5+.5)*stage.clientWidth)+'px,'+((-pv.y*.5+.5)*stage.clientHeight)+'px) translate(-50%,-100%)';
+  });
+  world.labs.forEach(l=>{pv.copy(l.pos).project(camera);const vis=pv.z<1&&cur.r<(mode==='city'?14:0);l.el.classList.toggle('off',!vis);
+    if(vis)l.el.style.transform='translate('+((pv.x*.5+.5)*stage.clientWidth)+'px,'+((-pv.y*.5+.5)*stage.clientHeight)+'px) translate(-50%,-50%)';});
+  renderer.render(scene,camera);requestAnimationFrame(frame);
+}
+setYear(2026);
+setMode('city');
+setView(worlds.city.cfg.view,true);
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>

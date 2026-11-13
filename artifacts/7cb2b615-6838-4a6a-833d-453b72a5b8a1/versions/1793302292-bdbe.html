@@ -1,0 +1,824 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Глазомер</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@500&family=Caveat:wght@700&family=Ruslan+Display&display=swap">
+<style>
+/* Layout concept: одна центральная колонка 560px, всё выровнено по центру страницы. Белый, серый, чёрный и #FC473C только для действий и верных ответов. */
+:root{
+  --bg:#FFFFFF; --surface:#F4F3F3; --line:#E2E0E0; --fg:#151313; --muted:#6B6565;
+  --accent:#FC473C; --on-accent:#FFFFFF; --r:8px;
+  --f-display:'Unbounded','Arial Black',system-ui,sans-serif;
+  --f-body:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#121010;--surface:#1D1A1A;--line:#322E2E;--fg:#F6F3F3;--muted:#A39C9C;color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#121010;--surface:#1D1A1A;--line:#322E2E;--fg:#F6F3F3;--muted:#A39C9C;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 var(--f-body);text-align:center;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--fg);outline-offset:3px}
+h1,h2,h3,p{margin:0}
+.wrap{max-width:560px;margin:0 auto;padding-block:18px 56px}
+.top{display:grid;justify-items:center;gap:12px}
+.brand{background:none;border:0;padding:4px 8px;font:700 16px var(--f-display);letter-spacing:-.01em}
+.meter{display:grid;justify-items:center;gap:6px;width:100%;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:100%;max-width:280px;height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .6s var(--ease)}
+.stage{margin-top:28px}
+
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes out{to{opacity:0;transform:translateY(-8px)}}
+@keyframes pop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+@keyframes pulse{0%{transform:scale(1)}40%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes drain{from{width:100%}to{width:0}}
+.enter{animation:rise .5s var(--ease) both}
+.leaving{animation:out .19s ease forwards}
+
+.muted{color:var(--muted)}
+.lead{font-size:18px;color:var(--muted);max-width:40ch;margin-inline:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:var(--accent);color:var(--on-accent);border:0;border-radius:var(--r);padding:16px 28px;font:700 18px/1.1 var(--f-body);transition:transform .2s var(--ease),filter .2s}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.05)}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 2px var(--line);font-size:16px}
+.btn.ghost:hover{box-shadow:inset 0 0 0 2px var(--fg);filter:none}
+
+/* home */
+.home{display:grid;gap:22px;justify-items:center}
+.home h1{font:700 clamp(38px,12vw,72px)/1 var(--f-display);letter-spacing:-.04em;margin-top:8px}
+.home .meta{font-size:14px;color:var(--muted)}
+.mosaic{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%;max-width:300px;margin-top:10px}
+.mosaic button{aspect-ratio:1;border:0;border-radius:6px;padding:0;animation:pop .5s var(--ease) both;transition:transform .2s var(--ease)}
+.mosaic button:hover{transform:scale(1.08)}
+.mosaic button.found{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--fg);animation:pulse .6s var(--ease)}
+.mosaic button.miss{animation:shake .4s}
+.mhint{font-size:14px;color:var(--muted);min-height:44px;max-width:30ch}
+
+/* intro + results */
+.intro,.result{display:grid;gap:18px;justify-items:center}
+.secs{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.secs i{width:18px;height:5px;border-radius:3px;background:var(--line)}
+.secs i.done{background:var(--muted)}
+.secs i.cur{background:var(--accent)}
+.intro h2,.result h2{font:700 clamp(26px,7vw,40px)/1.1 var(--f-display);letter-spacing:-.03em;text-wrap:balance}
+.big{font:700 clamp(80px,26vw,140px)/.9 var(--f-display);letter-spacing:-.05em;color:var(--accent);font-variant-numeric:tabular-nums}
+.big small{font-size:.4em;color:var(--muted);letter-spacing:-.02em}
+.rdots{display:flex;gap:8px}
+.rdots i{width:22px;height:22px;border-radius:5px;background:var(--line);animation:pop .4s var(--ease) both}
+.rdots i.ok{background:var(--accent)}
+
+/* round */
+.round{display:grid;justify-items:center}
+.dots{display:flex;gap:6px}
+.dots i{width:12px;height:12px;border-radius:4px;border:2px solid var(--line);transition:background .3s,border-color .3s}
+.dots i.cur{border-color:var(--fg)}
+.dots i.ok{background:var(--accent);border-color:var(--accent)}
+.dots i.bad{background:var(--muted);border-color:var(--muted)}
+.rname{font-size:14px;color:var(--muted);margin-top:10px}
+.task{font:500 clamp(19px,4.8vw,24px)/1.25 var(--f-display);letter-spacing:-.02em;margin:14px 0 22px;text-wrap:balance}
+.play{width:100%}
+.foot{margin-top:22px;display:grid;gap:16px;justify-items:center;width:100%}
+.fb{width:100%;padding:20px 18px;background:var(--surface);border-radius:var(--r);display:grid;gap:8px;justify-items:center;animation:rise .4s var(--ease) both}
+.fb h3{font:700 22px/1.1 var(--f-display);letter-spacing:-.02em}
+.fb.good h3{color:var(--accent)}
+.fb .quip{font-weight:700}
+.fb .detail{color:var(--muted);font-size:15px}
+.fb .why{font-size:15px;max-width:46ch;padding-top:10px;margin-top:4px;border-top:1px solid var(--line)}
+
+/* 1 tone */
+.grid{display:grid;gap:clamp(4px,1.4vw,8px);width:min(100%,440px);margin-inline:auto;aspect-ratio:1}
+.tile{border:0;border-radius:clamp(4px,1.4vw,8px);padding:0;animation:pop .45s var(--ease) both;transition:transform .2s var(--ease),opacity .3s}
+.tile:hover:not(:disabled){transform:scale(1.05)}
+.tile:disabled{cursor:default}
+.tile.found{box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--fg);animation:pulse .6s var(--ease)}
+.tile.wrong{animation:shake .4s}
+.reveal .tile:not(.found):not(.wrong){opacity:.3}
+
+/* type */
+.specimen{container-type:inline-size;background:var(--surface);border-radius:var(--r);padding:clamp(22px,6vw,36px) 14px;display:grid;gap:18px;justify-items:center;min-height:150px;align-content:center}
+.sp-word{white-space:nowrap;line-height:1.1}
+.kern{display:flex;justify-content:center;font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:min(150px,34vw);line-height:1;font-kerning:none;font-feature-settings:"kern" 0}
+.kern span{display:inline-block}
+.ideal{display:grid;gap:8px;justify-items:center;border-top:1px dashed var(--muted);padding-top:14px;width:100%;animation:rise .5s var(--ease) both}
+.ideal .cap{font-size:13px;color:var(--muted)}
+.ctl{display:grid;gap:6px;margin-top:20px;text-align:left}
+.ctl-row{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--muted)}
+.ctl-row output{color:var(--fg);font-weight:700;font-variant-numeric:tabular-nums}
+.ctl+.ctl{margin-top:8px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:32px;background:transparent;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-11px;border-radius:50%;background:var(--accent);border:4px solid var(--bg);box-shadow:0 0 0 2px var(--accent)}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--line)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);border:4px solid var(--bg);box-shadow:0 0 0 2px var(--accent)}
+input[type=range].hue::-webkit-slider-runnable-track{background:linear-gradient(90deg,hsl(0 80% 55%),hsl(60 80% 55%),hsl(120 80% 50%),hsl(180 80% 50%),hsl(240 80% 60%),hsl(300 80% 55%),hsl(360 80% 55%))}
+input[type=range].hue::-moz-range-track{background:linear-gradient(90deg,hsl(0 80% 55%),hsl(60 80% 55%),hsl(120 80% 50%),hsl(180 80% 50%),hsl(240 80% 60%),hsl(300 80% 55%),hsl(360 80% 55%))}
+input[type=range]:disabled{opacity:.45}
+
+/* optical */
+.opt{width:min(100%,360px);display:block;margin:0 auto}
+.o-circle{fill:var(--surface)}
+.o-cross{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 4;opacity:.6}
+.o-shape{fill:var(--fg)}
+.o-shape.slide{transition:transform .7s var(--ease)}
+.o-ghost{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-dasharray:5 4;stroke-linejoin:round;animation:rise .5s var(--ease) both}
+
+/* contrast */
+.cpair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ccard{border:0;border-radius:var(--r);padding:16px 12px;aspect-ratio:3/4;display:grid;align-content:space-between;justify-items:center;animation:pop .5s var(--ease) both;transition:transform .2s var(--ease)}
+.ccard:hover:not(:disabled){transform:translateY(-3px)}
+.ccard:disabled{cursor:default}
+.ccard.found{box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--fg)}
+.ccard.wrong{animation:shake .4s}
+.c-big{font:700 clamp(40px,12vw,64px)/1 var(--f-display)}
+.c-txt{font:500 clamp(14px,3.6vw,17px)/1.3 var(--f-body)}
+.c-ratio{background:rgba(0,0,0,.6);color:#fff;font:700 13px/1 var(--f-body);padding:6px 9px;border-radius:5px;font-variant-numeric:tabular-nums;animation:rise .4s var(--ease) both}
+
+/* genre */
+.sample{background:var(--surface);border-radius:var(--r);padding:28px 16px;display:grid;gap:10px}
+.opts{display:grid;gap:10px;margin-top:14px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.opt-btn{background:transparent;border:0;box-shadow:inset 0 0 0 2px var(--line);border-radius:var(--r);padding:14px 12px;font:700 16px var(--f-body);animation:rise .4s var(--ease) both;transition:box-shadow .2s,transform .2s var(--ease)}
+.opt-btn:hover:not(:disabled){box-shadow:inset 0 0 0 2px var(--fg);transform:translateY(-2px)}
+.opt-btn:disabled{cursor:default}
+.opt-btn.right{background:var(--accent);color:var(--on-accent);box-shadow:none}
+.opt-btn.wrong{box-shadow:inset 0 0 0 2px var(--muted);color:var(--muted);text-decoration:line-through;animation:shake .4s}
+
+/* memory color */
+.swatch{height:clamp(150px,44vw,210px);border-radius:var(--r);animation:pop .5s var(--ease) both}
+.timer{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:14px}
+.timer i{display:block;height:100%;width:100%;background:var(--fg)}
+.timer.run i{animation:drain linear forwards}
+.mopts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mopts button{aspect-ratio:1.2;border:0;border-radius:var(--r);padding:0;animation:pop .45s var(--ease) both;transition:transform .2s var(--ease),opacity .3s}
+.mopts button:hover:not(:disabled){transform:scale(1.04)}
+.mopts button:disabled{cursor:default}
+.mopts button.found{box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--fg)}
+.mopts button.wrong{animation:shake .4s}
+.mopts.reveal button:not(.found):not(.wrong){opacity:.3}
+
+/* sequence */
+.status{min-height:26px;margin-bottom:14px;color:var(--muted)}
+.seq{display:grid;gap:10px;width:min(100%,320px);margin-inline:auto}
+.stile{aspect-ratio:1;border:0;border-radius:var(--r);opacity:.4;transition:opacity .15s,transform .15s var(--ease)}
+.stile.lit{opacity:1;transform:scale(1.06)}
+.stile:disabled{cursor:default}
+.stile.found{opacity:1;box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--fg)}
+.stile.wrong{animation:shake .4s}
+.mini{display:inline-block;width:14px;height:14px;border-radius:3px;margin:0 2px;vertical-align:-2px}
+
+/* mix */
+.swpair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.swpair figure{margin:0;display:grid;gap:6px;font-size:14px;color:var(--muted)}
+.sw-box{height:clamp(100px,30vw,150px);border-radius:var(--r)}
+
+/* final */
+.final{display:grid;gap:22px;justify-items:center}
+.card{width:100%;background:var(--surface);border-radius:var(--r);padding:clamp(22px,6vw,34px) clamp(16px,5vw,30px);display:grid;gap:22px;justify-items:center}
+.card-top{font-size:14px;color:var(--muted)}
+.score{display:flex;align-items:baseline;justify-content:center;gap:8px;font-family:var(--f-display);font-weight:700;font-variant-numeric:tabular-nums}
+.score b{font-size:clamp(72px,24vw,128px);line-height:.9;letter-spacing:-.05em;color:var(--accent)}
+.score span{font-size:clamp(20px,6vw,30px);color:var(--muted)}
+.rank{font:700 clamp(20px,5.4vw,28px)/1.18 var(--f-display);letter-spacing:-.02em;text-wrap:balance}
+.joke{color:var(--muted);margin-top:10px;font-size:17px;max-width:38ch;margin-inline:auto}
+.rows{display:grid;width:100%;max-width:340px;border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);animation:rise .45s var(--ease) both}
+.row .t{text-align:right;font-weight:500}
+.sq{display:flex;gap:4px}
+.sq i{width:14px;height:14px;border-radius:3px;background:var(--line)}
+.sq i.ok{background:var(--accent)}
+.sw{display:grid;gap:8px;font-size:15px;max-width:38ch}
+.card-foot{font-size:13px;color:var(--muted)}
+.actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:var(--r);font-size:14px;font-weight:500;animation:rise .3s var(--ease) both;z-index:20}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <button class="brand" id="brand" type="button">Глазомер</button>
+    <div class="meter" id="meter" hidden><span id="mtxt"></span><div class="bar"><i id="mbar"></i></div></div>
+  </header>
+  <main class="stage" id="stage"></main>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s);
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const ri=n=>Math.floor(Math.random()*n);
+const pick=a=>a[ri(a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=ri(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;};
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const reduced=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sign=()=>Math.random()<.5?-1:1;
+const MINUS='−';
+
+const S={res:[]};
+const stage=$('#stage');
+let current=null,queue=Promise.resolve();
+
+function show(node){
+  queue=queue.then(async()=>{
+    if(current){current.classList.add('leaving');await sleep(190);current.remove();}
+    current=node;stage.appendChild(node);node.classList.add('enter');window.scrollTo(0,0);
+  });
+  return queue;
+}
+let TOTAL=0;
+function setMeter(done,label){
+  $('#meter').hidden=false;$('#mtxt').textContent=label;$('#mbar').style.width=(done/TOTAL*100)+'%';
+}
+function countUp(node,to,ms=900){
+  if(reduced()||to===0){node.textContent=to;return;}
+  const t0=performance.now();
+  (function f(t){const k=clamp((t-t0)/ms,0,1);node.textContent=Math.round(to*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f);})(t0);
+}
+function toast(msg){const t=el('div','toast',msg);document.body.appendChild(t);setTimeout(()=>t.remove(),1800);}
+
+/* ---------- color helpers ---------- */
+function hsl2rgb(h,s,l){h=((h%360)+360)%360;s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return[f(0)*255,f(8)*255,f(4)*255];}
+const lum=([r,g,b])=>{const c=[r,g,b].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);});return .2126*c[0]+.7152*c[1]+.0722*c[2];};
+const contrast=(a,b)=>{const x=lum(a),y=lum(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
+const rgbCss=([r,g,b])=>`rgb(${Math.round(r)} ${Math.round(g)} ${Math.round(b)})`;
+function rgb2lab([r,g,b]){
+  const f=v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4);};
+  const R=f(r),G=f(g),B=f(b);
+  const X=(R*.4124+G*.3576+B*.1805)/.95047,Y=R*.2126+G*.7152+B*.0722,Z=(R*.0193+G*.1192+B*.9505)/1.08883;
+  const t=v=>v>.008856?Math.cbrt(v):7.787*v+16/116;
+  const fx=t(X),fy=t(Y),fz=t(Z);
+  return[116*fy-16,500*(fx-fy),200*(fy-fz)];
+}
+const dE=(a,b)=>{const p=rgb2lab(a),q=rgb2lab(b);return Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2]);};
+
+/* ---------- SECTIONS ---------- */
+const SECTIONS=[
+{
+  key:'Цвет',title:'Найди отличие',
+  task:'Найди плитку, которая чуть-чуть другого оттенка',
+  intro:'Решётка одинаковых плиток, одна из них врёт. С каждым раундом врёт всё тоньше.',
+  ok:['Глаз как пипетка.','Колориметр по имени Ты.','Монитор откалиброван. Ты тоже.','Заметил. Страшно.'],
+  bad:['Это был другой оттенок. Честно.','Попробуй выкрутить яркость на максимум.','Почти. Но нет.','Плитки над тобой смеются.'],
+  tiers:['Все плитки одинаковые? Бывает. Проверь монитор.','Нормальный глаз. В отдел цвета тебя возьмут.','Pantone звонит и просит у тебя совета.'],
+  round:toneRound
+},
+{
+  key:'Память цвета',title:'Запомни цвет',
+  task:'Запомни этот цвет',
+  intro:'Цвет показывается пару секунд и исчезает. Потом найди его среди похожих. Время показа сокращается.',
+  ok:['Память как у скриншота.','Цвет не убежал.','Запомнил, не записывая.','Заказчик бы обрадовался.'],
+  bad:['Цвет сбежал, пока ты моргал.','Память подсунула соседний оттенок.','Почти тот же. Но почти.','Кто-то перекрасил его в голове.'],
+  tiers:['Цвет забывается быстрее, чем пароль.','Память держится, пока не отвлекут.','Ты носишь палитру в голове.'],
+  round:memColorRound
+},
+{
+  key:'Трекинг',title:'Сделай правильный трекинг',
+  task:'Подбери расстояние между буквами, чтобы смотрелось гармонично',
+  intro:'Слишком тесно, и буквы слипаются. Слишком широко, и слово рассыпается. Верный ответ лежит в коридоре допуска, он сужается от раунда к раунду.',
+  ok:['Буквы дышат ровно.','Принято без правок.','Арт-директор молчит. Это комплимент.','Чистая работа.'],
+  bad:['Социальная дистанция между буквами.','Буквы то слипаются, то разбегаются.','Заказчик одобрил бы. Мы нет.','Слово просит развести его по комнатам.'],
+  tiers:['Трекинг «на глаз» пока не твой. Поставь 0 и не трогай.','Буквы почти не ругаются друг с другом.','Шрифтовики шлют тебе открытки.'],
+  round:trackingRound
+},
+{
+  key:'Кернинг',title:'Кернинг-мастер',
+  task:'Сдвинь вторую букву так, как это задумал сам шрифт',
+  intro:'Пары вроде AV мечтают сблизиться. Помоги им, но без фанатизма.',
+  ok:['Пара довольна.','Дыра закрыта. Мир спасён.','Кернинг как у шрифтолога.'],
+  bad:['Между буквами можно припарковать самокат.','Слиплись, как пельмени.','Паре нужен семейный психолог.'],
+  tiers:['Между буквами пока можно проехать на самокате.','Нормально. До логотипа NASA ещё далеко.','Лого студии оставь нам. Серьёзно.'],
+  round:kerningRound
+},
+{
+  key:'Оптика',title:'Оптический центр',
+  task:'Поставь фигуру по центру круга',
+  intro:'Математический центр обманывает, глаз нет. Двигай, пока не отпустит.',
+  ok:['Центр найден. Математики в ярости.','Выглядит ровно, хотя числа врут.','Оптика победила.'],
+  bad:['Фигура уехала. Круг в шоке.','Линейка тебе не друг.','Глаз сказал «так», а оптика сказала «нет».'],
+  tiers:['Ты центрируешь по линейке. Знакомься: оптика.','Оптику чувствуешь, но не доверяешь.','Ты ставишь иконку Play даже во сне.'],
+  round:opticalRound
+},
+{
+  key:'Память',title:'Повтори порядок',
+  task:'Запомни порядок вспышек и повтори его',
+  intro:'Цветные плитки загораются по очереди. Повтори тот же порядок. Каждый раунд он длиннее.',
+  ok:['Порядок в голове.','Симон бы гордился.','Рабочая память в форме.','Повторил без подсказок.'],
+  bad:['Порядок перепутался на ходу.','Плитки сговорились.','Память взяла перерыв.','Почти дошёл до конца.'],
+  tiers:['Порядок ускользает. Пиши в заметки.','Держишь пять-шесть шагов. Нормально.','Тебе можно доверить порядок слоёв.'],
+  round:seqRound
+},
+{
+  key:'Контраст',title:'Читается?',
+  task:'На какой плашке текст читается лучше?',
+  intro:'Две плашки, один и тот же фон. Выбери ту, где текст виден отчётливее. Разница будет тонкой.',
+  ok:['Контраст оценён верно.','WCAG одобрительно кивает.','Читаемость твоё второе имя.'],
+  bad:['Эта надпись не прошла бы проверку AA.','Красота и читаемость редко совпадают.','Читаемость ушла курить.'],
+  tiers:['Светло-серый на белом твой любимый стиль.','Читаешь нормально. Уточни у пользователей.','Ни один тендер не пройдёт мимо тебя.'],
+  round:contrastRound
+},
+{
+  key:'Подбор цвета',title:'Поймай цвет',
+  task:'Подбери цвет, как у образца',
+  intro:'Образец и три ползунка: тон, насыщенность, яркость. Допуск меряется в единицах ΔE и сужается.',
+  ok:['Копия неотличима от образца.','Пипетка отдыхает.','Смешал как надо.','Глаз точнее инструмента.'],
+  bad:['Образец и копия не родственники.','Цвет ушёл гулять.','Ещё чуть-чуть, и было бы то.','Похоже, но заказчик заметит.'],
+  tiers:['Цвета пока смешиваются в кашу.','Рядом с образцом ты чувствуешь себя уверенно.','Тебе можно выдавать фирменные цвета.'],
+  round:mixRound
+},
+{
+  key:'Шрифты',title:'Угадай жанр шрифта',
+  task:'К какому семейству относится этот шрифт?',
+  intro:'Антиква, гротеск, рукописный и другие. С каждым раундом вариантов всё больше.',
+  ok:['Типограф по вызову.','Засечки чувствуешь кожей.','Тут даже Google Fonts не нужен.'],
+  bad:['Это не то, что ты подумал.','Шрифт обиделся.','Попробуй в другой жизни.'],
+  tiers:['Comic Sans это жанр или диагноз?','Антикву от гротеска отличишь. Уже неплохо.','Ты ходячий Google Fonts.'],
+  round:genreRound
+}
+];
+TOTAL=SECTIONS.length*5;
+
+/* ---------- 1. TONE ---------- */
+function toneRound(r,ui){
+  const n=[2,3,4,5,6][r],d=[18,10,6,3.5,2.2][r];
+  const h=rnd(0,360),sat=rnd(50,78),L=rnd(42,60),sg=sign(),odd=ri(n*n);
+  const base=`hsl(${h.toFixed(1)} ${sat.toFixed(1)}% ${L.toFixed(1)}%)`;
+  const diff=`hsl(${h.toFixed(1)} ${sat.toFixed(1)}% ${(L+sg*d).toFixed(1)}%)`;
+  const grid=el('div','grid');grid.style.gridTemplateColumns=`repeat(${n},1fr)`;
+  const tiles=[];
+  for(let i=0;i<n*n;i++){
+    const t=el('button','tile');t.type='button';t.setAttribute('aria-label','Плитка '+(i+1));
+    t.style.background=i===odd?diff:base;t.style.animationDelay=(i*18)+'ms';
+    t.onclick=()=>{
+      if(ui.done)return;
+      const ok=i===odd;
+      tiles.forEach(x=>x.disabled=true);
+      tiles[odd].classList.add('found');if(!ok)t.classList.add('wrong');
+      grid.classList.add('reveal');
+      const where=`${Math.floor(odd/n)+1}-й ряд, ${odd%n+1}-я колонка`;
+      ui.finish(ok,ok?100:0,
+        `Отличалась плитка: ${where}. Она была ${sg>0?'светлее':'темнее'} остальных на ${d}% яркости.`,
+        ok?'Взгляд цепляется за границы между плитками, а не за сами цвета. Сравнивать соседей быстрее, чем искать «не такой» цвет по всей сетке.'
+          :'Не ищи отличие в самом цвете. Смотри на границы между соседними плитками: там разница в яркости проявляется раньше, чем в центре плитки.');
+    };
+    tiles.push(t);grid.appendChild(t);
+  }
+  ui.play.appendChild(grid);
+}
+
+/* ---------- 2. COLOR MEMORY ---------- */
+function memColorRound(r,ui){
+  const secs=[4,3.2,2.6,2.2,1.8][r],delta=[30,18,12,8,5.5][r];
+  const h=rnd(0,360),s=rnd(55,80),l=rnd(42,60);
+  const a0=rnd(0,360);
+  const mk=(dh,dl)=>({dh,dl,css:`hsl(${(h+dh).toFixed(1)} ${s.toFixed(1)}% ${clamp(l+dl,18,82).toFixed(1)}%)`});
+  const opts=[{dh:0,dl:0,css:`hsl(${h.toFixed(1)} ${s.toFixed(1)}% ${l.toFixed(1)}%)`,right:true}];
+  for(let i=0;i<5;i++){const a=(a0+i*72)*Math.PI/180;const o=mk(Math.cos(a)*delta*.9,Math.sin(a)*delta*.6);opts.push(o);}
+  const panel=el('div','');
+  const sw=el('div','swatch');sw.style.background=opts[0].css;
+  const timer=el('div','timer','<i></i>');$('i',timer).style.animationDuration=secs+'s';
+  panel.append(sw,timer);
+  ui.play.appendChild(panel);
+  ui.start=async()=>{
+    timer.classList.add('run');
+    await sleep(secs*1000);
+    if(!panel.isConnected)return;
+    ui.task.textContent='Какой это был цвет?';
+    const grid=el('div','mopts');
+    const btns=shuffle(opts).map((o,i)=>{
+      const b=el('button','');b.type='button';b.style.background=o.css;b.style.animationDelay=(i*50)+'ms';b.setAttribute('aria-label','Вариант '+(i+1));
+      b.onclick=()=>{
+        if(ui.done)return;
+        btns.forEach(x=>x.disabled=true);grid.classList.add('reveal');
+        const ok=!!o.right;
+        btns.find(x=>x._o.right).classList.add('found');if(!ok)b.classList.add('wrong');
+        const dh=Math.abs(o.dh).toFixed(0),dl=Math.abs(o.dl).toFixed(0);
+        ui.finish(ok,ok?100:0,
+          ok?`Верный оттенок. Соседние варианты отличались на ${delta}° по тону или на ${(delta*.6).toFixed(0)}% по яркости.`
+            :`Ты выбрал соседний оттенок: он сдвинут на ${dh}° по тону и ${dl}% по яркости.`,
+          ok?'Цвет проще удержать, если назвать его словами: «тёплый приглушённый коралловый». Память на слова надёжнее памяти на оттенки.'
+            :'Память хуже всего хранит яркость и быстрее всего теряет её. Поэтому похожие варианты путают в первую очередь по светлоте. Закрепляй цвет словом.');
+      };
+      b._o=o;grid.appendChild(b);return b;
+    });
+    panel.replaceChildren(grid);
+  };
+}
+
+/* ---------- 3. TRACKING ---------- */
+const fmtPct=v=>{const p=v*100;return(p>0.04?'+':p<-0.04?MINUS:'')+Math.abs(p).toFixed(1)+'%';};
+function trackingRound(r,ui){
+  const C=[
+    {w:'Заголовок',f:"'Onest'",wt:700,sz:50,avg:.58,t:-0.025,tol:.02,why:'Крупный текст читают издалека, и зазоры между буквами при увеличении тоже растут. Чтобы заголовок собрался в одну форму, его трекают в минус.'},
+    {w:'ВНИМАНИЕ',f:"'Onest'",wt:500,sz:30,avg:.7,t:.10,tol:.015,why:'Заглавные буквы одной высоты и не образуют привычных просветов, как строчные. Поэтому капсу добавляют воздух, обычно от +5 до +10%.'},
+    {w:'Обычный текст',f:"'Onest'",wt:400,sz:26,avg:.55,t:0,tol:.01,why:'Текстовый шрифт уже нарисован с зазорами под чтение абзацев. Для основного текста трекинг оставляют около нуля.'},
+    {w:'ДИЗАЙН',f:"'Playfair Display'",wt:700,sz:50,avg:.78,t:.06,tol:.0075,why:'Засечки у заглавных соседних букв почти касаются друг друга. Небольшой воздух (около +6%) отделяет их и сохраняет изящество.'},
+    {w:'минимализм',f:"'Unbounded'",wt:500,sz:36,avg:.85,t:-0.02,tol:.005,why:'Unbounded уже очень широкий и просторный. Дополнительный воздух превратит слово в россыпь букв, а лёгкий минус его соберёт.'}
+  ][r];
+  const min=-0.1,max=0.25;
+  const start=clamp(C.t+sign()*rnd(.09,.14),min,max);
+  const spec=el('div','specimen');
+  const fs=`min(${C.sz}px,${(92/(C.w.length*(C.avg+.25))).toFixed(1)}cqw)`;
+  const word=el('div','sp-word',C.w);
+  const apply=(node,v)=>{node.style.letterSpacing=v+'em';node.style.marginRight=(-v)+'em';};
+  const style=n=>{n.style.fontFamily=C.f+',system-ui,sans-serif';n.style.fontWeight=C.wt;n.style.fontSize=fs;};
+  style(word);apply(word,start);spec.appendChild(word);
+  const ctl=el('div','ctl');
+  ctl.innerHTML=`<div class="ctl-row"><label for="trk">Трекинг</label><output></output></div><input id="trk" type="range" min="${min}" max="${max}" step="0.001" value="${start}">`;
+  ui.play.append(spec,ctl);
+  const input=$('input',ctl),out=$('output',ctl);
+  out.textContent=fmtPct(start);
+  input.oninput=()=>{const v=+input.value;apply(word,v);out.textContent=fmtPct(v);};
+  ui.confirm(()=>{
+    const v=+input.value,diff=Math.abs(v-C.t),ok=diff<=C.tol+1e-9;
+    input.disabled=true;
+    const pts=Math.round(clamp(1-diff/(C.tol*3),0,1)*100);
+    const ideal=el('div','ideal',`<span class="cap">Допустимо от ${fmtPct(C.t-C.tol)} до ${fmtPct(C.t+C.tol)}, идеал ${fmtPct(C.t)}</span>`);
+    const w2=el('div','sp-word',C.w);style(w2);apply(w2,C.t);ideal.appendChild(w2);spec.appendChild(ideal);
+    ui.finish(ok,pts,`У тебя ${fmtPct(v)}. Допуск в этом раунде ±${(C.tol*100).toFixed(2).replace(/\.?0+$/,'')}%.`,C.why);
+  });
+}
+
+/* ---------- 4. KERNING ---------- */
+function measureKern(pair){
+  try{
+    const c=document.createElement('canvas').getContext('2d');
+    c.font='700 200px "Playfair Display"';
+    c.fontKerning='normal';const a=c.measureText(pair).width;
+    c.fontKerning='none';const b=c.measureText(pair).width;
+    return(a-b)/200;
+  }catch(e){return 0;}
+}
+async function kerningRound(r,ui){
+  const K=[
+    {p:'AV',fb:-0.09,tol:.03,why:'Диагонали A и V расходятся в разные стороны и оставляют большие пустоты вверху и внизу. Буквы сближают так, чтобы визуальные промежутки выровнялись.'},
+    {p:'To',fb:-0.07,tol:.025,why:'Перекладина T нависает над o, под ней остаётся пустота. Букву o подвигают под перекладину.'},
+    {p:'LT',fb:-0.1,tol:.02,why:'У T длинная перекладина, у L пустое место справа вверху. Эти пустоты складываются в дыру, поэтому пару сближают.'},
+    {p:'Ту',fb:-0.06,tol:.015,why:'Широкая перекладина Т и наклонная ножка у образуют пустоту. Букву у заводят под перекладину.'},
+    {p:'Yo',fb:-0.09,tol:.01,why:'Усы Y уходят вверх и оставляют пустоту под собой, как у T. Буква o подъезжает ближе.'}
+  ][r];
+  try{await document.fonts.load('700 100px "Playfair Display"',K.p);}catch(e){}
+  let t=measureKern(K.p);if(!(t<-0.012))t=K.fb;
+  const min=-0.3,max=0.15;
+  const start=clamp(t+sign()*rnd(.07,.13),min,max);
+  const spec=el('div','specimen');
+  const mk=(k,scale)=>{
+    const w=el('div','kern',`<span>${K.p[0]}</span><span>${K.p[1]}</span>`);
+    w.children[1].style.marginLeft=k+'em';
+    if(scale)w.style.fontSize=`min(${150*scale}px,${34*scale}vw)`;
+    return w;
+  };
+  const live=mk(start);spec.appendChild(live);
+  const ctl=el('div','ctl');
+  ctl.innerHTML=`<div class="ctl-row"><label for="krn">Кернинг</label><output></output></div><input id="krn" type="range" min="${min}" max="${max}" step="0.001" value="${start}">`;
+  ui.play.append(spec,ctl);
+  const input=$('input',ctl),out=$('output',ctl);
+  out.textContent=fmtPct(start);
+  input.oninput=()=>{const v=+input.value;live.children[1].style.marginLeft=v+'em';out.textContent=fmtPct(v);};
+  ui.confirm(()=>{
+    const v=+input.value,diff=Math.abs(v-t),ok=diff<=K.tol+1e-9;
+    input.disabled=true;
+    const pts=Math.round(clamp(1-diff/(K.tol*3),0,1)*100);
+    const ideal=el('div','ideal',`<span class="cap">Как у шрифта: ${fmtPct(t)}, допуск ±${(K.tol*100).toFixed(1).replace('.0','')}%</span>`);
+    ideal.appendChild(mk(t,.5));spec.appendChild(ideal);
+    ui.finish(ok,pts,`У тебя ${fmtPct(v)}, у шрифта ${fmtPct(t)}.`,K.why);
+  });
+}
+
+/* ---------- 5. OPTICAL CENTER ---------- */
+function polyInfo(p){
+  let a=0,cx=0,cy=0;
+  for(let i=0;i<p.length;i++){const[x0,y0]=p[i],[x1,y1]=p[(i+1)%p.length],c=x0*y1-x1*y0;a+=c;cx+=(x0+x1)*c;cy+=(y0+y1)*c;}
+  a/=2;cx/=6*a;cy/=6*a;
+  const xs=p.map(q=>q[0]),ys=p.map(q=>q[1]);
+  return{cx,cy,bx:(Math.min(...xs)+Math.max(...xs))/2,by:(Math.min(...ys)+Math.max(...ys))/2,w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)};
+}
+function opticalRound(r,ui){
+  const O=[
+    {name:'Кнопка Play',axis:'x',size:92,target:15.5,tol:2.5,pts:[[0,0],[0,100],[87,50]],why:'Масса треугольника сосредоточена у широкого основания слева, а острие справа лёгкое. Если поставить его по габаритам, он кажется сдвинутым влево, поэтому его двигают вправо, примерно на 15 px.'},
+    {name:'Знак «Внимание»',axis:'y',size:96,target:-10,tol:2.5,pts:[[50,0],[100,87],[0,87]],why:'У треугольника, смотрящего вверх, основная масса внизу. По габаритам он кажется осевшим, поэтому его поднимают, примерно на 10 px.'},
+    {name:'Стрелка «вперёд»',axis:'x',size:100,tol:2,pts:[[0,30],[55,30],[55,0],[100,50],[55,100],[55,70],[0,70]],why:'Хвост стрелки плотный, а острие лёгкое. Центр масс сидит левее габаритного центра, поэтому стрелку смещают вправо.'},
+    {name:'Иконка «Дом»',axis:'y',size:92,tol:1.5,pts:[[50,0],[100,42],[100,100],[0,100],[0,42]],why:'Основная масса дома в прямоугольнике внизу, а крыша лёгкая. Габаритный центр кажется слишком низким, поэтому дом поднимают.'},
+    {name:'Раскрывашка',axis:'y',size:78,tol:1.5,pts:[[0,0],[100,0],[50,62]],why:'Вся масса раскрывашки в широкой верхней части, острие лёгкое. По габаритам она кажется висящей слишком высоко, поэтому её опускают.'}
+  ][r];
+  ui.task.textContent=`${O.name}: поставь по центру круга так, как видит глаз`;
+  const inf=polyInfo(O.pts),k=O.size/Math.max(inf.w,inf.h);
+  const pts=O.pts.map(([x,y])=>[120+(x-inf.bx)*k,120+(y-inf.by)*k]);
+  let target=O.target;
+  if(target==null)target=(O.axis==='x'?-(inf.cx-inf.bx)*k:-(inf.cy-inf.by)*k)*.9;
+  target=Math.round(target*2)/2;
+  const min=-40,max=40;
+  const start=clamp(target+sign()*rnd(18,28),min,max);
+  const str=pts.map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' ');
+  const svg=`<svg class="opt" viewBox="0 0 240 240" role="img" aria-label="${O.name} в круге"><circle class="o-circle" cx="120" cy="120" r="112"/><line class="o-cross" x1="120" y1="8" x2="120" y2="232"/><line class="o-cross" x1="8" y1="120" x2="232" y2="120"/><polygon class="o-shape" points="${str}"/></svg>`;
+  const box=el('div','',svg);
+  const ctl=el('div','ctl');
+  ctl.innerHTML=`<div class="ctl-row"><label for="opt">Сдвиг по ${O.axis==='x'?'горизонтали (вправо +)':'вертикали (вниз +)'}</label><output></output></div><input id="opt" type="range" min="${min}" max="${max}" step="0.5" value="${start}">`;
+  ui.play.append(box,ctl);
+  const shape=$('.o-shape',box),svgEl=$('svg',box),input=$('input',ctl),out=$('output',ctl);
+  const move=(node,v)=>{node.style.transform=O.axis==='x'?`translate(${v}px,0)`:`translate(0,${v}px)`;};
+  const fmt=v=>(v>0?'+':v<0?MINUS:'')+Math.abs(v).toFixed(1)+' px';
+  move(shape,start);out.textContent=fmt(start);
+  input.oninput=()=>{const v=+input.value;move(shape,v);out.textContent=fmt(v);};
+  ui.confirm(()=>{
+    const v=+input.value,diff=Math.abs(v-target),ok=diff<=O.tol+1e-9;
+    input.disabled=true;
+    const ghost=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    ghost.setAttribute('points',str);ghost.setAttribute('class','o-ghost');move(ghost,target);
+    svgEl.appendChild(ghost);
+    shape.classList.add('slide');
+    if(!ok)requestAnimationFrame(()=>move(shape,target));
+    const p=Math.round(clamp(1-diff/(O.tol*3),0,1)*100);
+    ui.finish(ok,p,`Правильно около ${fmt(target)} (допуск ±${O.tol} px). У тебя ${fmt(v)}.`,O.why);
+  });
+}
+
+/* ---------- 6. SEQUENCE ---------- */
+function seqRound(r,ui){
+  const C=[{c:2,rw:2,len:3,t:700},{c:2,rw:2,len:4,t:650},{c:3,rw:2,len:5,t:600},{c:3,rw:3,len:6,t:550},{c:3,rw:3,len:7,t:500}][r];
+  const n=C.c*C.rw,h0=rnd(0,360);
+  const col=i=>`hsl(${(h0+i*360/n).toFixed(0)} 72% 54%)`;
+  const seq=[];
+  for(let i=0;i<C.len;i++){let x=ri(n);if(i&&x===seq[i-1]&&Math.random()<.7)x=(x+1+ri(n-1))%n;seq.push(x);}
+  ui.task.textContent='Запомни порядок вспышек';
+  const status=el('p','status','Приготовься');
+  const grid=el('div','seq');grid.style.gridTemplateColumns=`repeat(${C.c},1fr)`;
+  let pos=0,accepting=false;
+  const tiles=Array.from({length:n},(_,i)=>{
+    const b=el('button','stile');b.type='button';b.disabled=true;b.style.background=col(i);b.setAttribute('aria-label','Плитка '+(i+1));
+    b.onclick=async()=>{
+      if(!accepting||ui.done)return;
+      b.classList.add('lit');setTimeout(()=>b.classList.remove('lit'),180);
+      const exp=seq[pos];
+      if(i===exp){
+        pos++;
+        if(pos===C.len){accepting=false;tiles.forEach(x=>x.disabled=true);
+          ui.finish(true,100,`Повторил все ${C.len} шагов. Порядок: ${seq.map(x=>`<i class="mini" style="background:${col(x)}"></i>`).join('')}`,
+            'Рабочая память держит примерно пять-семь элементов. Помогает группировка: разбей последовательность на пары или тройки и запоминай группы.');}
+      }else{
+        accepting=false;tiles.forEach(x=>x.disabled=true);
+        tiles[exp].classList.add('found');b.classList.add('wrong');
+        ui.finish(false,Math.round(pos/C.len*100),`Ошибка на шаге ${pos+1} из ${C.len}. Правильный порядок: ${seq.map(x=>`<i class="mini" style="background:${col(x)}"></i>`).join('')}`,
+          'Ошибки чаще всего случаются в середине последовательности: начало держит эффект первого, конец эффект последнего. Разбивай порядок на группы по два-три шага.');
+      }
+    };
+    grid.appendChild(b);return b;
+  });
+  ui.play.append(status,grid);
+  ui.start=async()=>{
+    await sleep(700);
+    for(const i of seq){
+      if(!grid.isConnected)return;
+      tiles[i].classList.add('lit');await sleep(C.t*.65);tiles[i].classList.remove('lit');await sleep(C.t*.35);
+    }
+    if(!grid.isConnected)return;
+    status.textContent='Теперь ты. Повтори порядок';
+    tiles.forEach(t=>t.disabled=false);accepting=true;
+  };
+}
+
+/* ---------- 7. CONTRAST ---------- */
+function contrastRound(r,ui){
+  const d=[.75,.4,.22,.12,.07][r];
+  const h=rnd(0,360),bgRgb=hsl2rgb(h,62,rnd(30,38)),bg=rgbCss(bgRgb);
+  const low=rnd(1.9,2.3),high=low*(1+d);
+  const solve=ratio=>{let lo=35,hi=100;for(let i=0;i<24;i++){const m=(lo+hi)/2;contrast(bgRgb,hsl2rgb(0,0,m))<ratio?lo=m:hi=m;}return hsl2rgb(0,0,(lo+hi)/2);};
+  const cards=shuffle([{ratio:low,win:false},{ratio:high,win:true}]);
+  const wrap=el('div','cpair');
+  const btns=cards.map((c,i)=>{
+    c.rgb=solve(c.ratio);c.real=contrast(bgRgb,c.rgb);
+    const b=el('button','ccard','<span class="c-big">Аа</span><span class="c-txt">Привет, дизайнер. Это читается?</span>');
+    b.type='button';b.style.background=bg;b.style.color=rgbCss(c.rgb);b.style.animationDelay=(i*90)+'ms';
+    b.setAttribute('aria-label','Плашка '+(i+1));
+    b.onclick=()=>{
+      if(ui.done)return;
+      btns.forEach((x,j)=>{x.disabled=true;x.insertBefore(el('span','c-ratio',cards[j].real.toFixed(2)+' : 1'),x.firstChild);});
+      const ok=c.win;
+      btns[cards.findIndex(x=>x.win)].classList.add('found');if(!ok)b.classList.add('wrong');
+      const hiR=Math.max(cards[0].real,cards[1].real).toFixed(2),loR=Math.min(cards[0].real,cards[1].real).toFixed(2);
+      ui.finish(ok,ok?100:0,`Контраст ${hiR} : 1 против ${loR} : 1.`,
+        `Контраст считают как отношение яркостей: (L1 + 0,05) / (L2 + 0,05). Чем дальше текст от фона по яркости, тем выше число. Для основного текста стандарт WCAG AA требует не меньше 4,5 : 1, так что обе плашки здесь ниже нормы, но одна читается заметно лучше.`);
+    };
+    return b;
+  });
+  btns.forEach(b=>wrap.appendChild(b));
+  ui.play.appendChild(wrap);
+}
+
+/* ---------- 8. COLOR MIX ---------- */
+function mixRound(r,ui){
+  const tol=[22,16,12,9,6.5][r];
+  const T={h:ri(360),s:rnd(40,85),l:rnd(35,70)};
+  const cur={h:(T.h+sign()*rnd(70,140)+360)%360,s:clamp(T.s+sign()*rnd(20,35),5,100),l:clamp(T.l+sign()*rnd(15,25),12,88)};
+  const css=c=>`hsl(${c.h.toFixed(1)} ${c.s.toFixed(1)}% ${c.l.toFixed(1)}%)`;
+  const pair=el('div','swpair','<figure><div class="sw-box t"></div><figcaption>Образец</figcaption></figure><figure><div class="sw-box u"></div><figcaption>Твой цвет</figcaption></figure>');
+  $('.t',pair).style.background=css(T);
+  const mine=$('.u',pair);mine.style.background=css(cur);
+  ui.play.appendChild(pair);
+  const defs=[{k:'h',name:'Тон',max:360,cls:'hue',unit:'°'},{k:'s',name:'Насыщенность',max:100,cls:'',unit:'%'},{k:'l',name:'Яркость',max:100,cls:'',unit:'%'}];
+  const inputs=defs.map(dn=>{
+    const c=el('div','ctl',`<div class="ctl-row"><label>${dn.name}</label><output>${Math.round(cur[dn.k])}${dn.unit}</output></div><input class="${dn.cls}" type="range" min="0" max="${dn.max}" step="0.5" value="${cur[dn.k]}">`);
+    const inp=$('input',c),out=$('output',c);
+    inp.oninput=()=>{cur[dn.k]=+inp.value;out.textContent=Math.round(cur[dn.k])+dn.unit;mine.style.background=css(cur);};
+    ui.play.appendChild(c);return inp;
+  });
+  ui.confirm(()=>{
+    inputs.forEach(i=>i.disabled=true);
+    const de=dE(hsl2rgb(cur.h,cur.s,cur.l),hsl2rgb(T.h,T.s,T.l)),ok=de<=tol;
+    const dh=Math.min(Math.abs(cur.h-T.h),360-Math.abs(cur.h-T.h)),ds=Math.abs(cur.s-T.s),dl=Math.abs(cur.l-T.l);
+    const worst=[[dh/15,'по тону','тон'],[ds/15,'по насыщенности','насыщенность'],[dl/10,'по яркости','яркость']].sort((a,b)=>b[0]-a[0])[0];
+    const dv=worst[2]==='тон'?dh:worst[2]==='яркость'?dl:ds;
+    ui.finish(ok,Math.round(clamp(1-de/(tol*3),0,1)*100),
+      `Разница ΔE ${de.toFixed(1)}, допуск ${tol}. Сильнее всего ты разошёлся ${worst[1]}: на ${dv.toFixed(0)}${worst[2]==='тон'?'°':'%'}.`,
+      'ΔE это расстояние между цветами в модели, близкой к зрению человека. Около 2 глаз почти не отличает, до 10 цвета «родственники». Подбирай в таком порядке: сначала яркость, потом тон, затем насыщенность.');
+  });
+}
+
+/* ---------- 9. GENRE ---------- */
+function genreRound(r,ui){
+  const G=[
+    {f:"'Playfair Display'",wt:700,ans:'Антиква',o:['Антиква','Гротеск','Рукописный'],why:'Есть засечки на концах штрихов и заметный контраст толстых и тонких линий. Это признаки антиквы.'},
+    {f:"'Caveat'",wt:700,ans:'Рукописный',o:['Моноширинный','Рукописный','Антиква'],why:'Буквы повторяют почерк: наклон, неровный ритм и живое движение пера. Так выглядят рукописные шрифты.'},
+    {f:"'JetBrains Mono'",wt:500,ans:'Моноширинный',o:['Гротеск','Моноширинный','Антиква','Акцидентный'],why:'Все буквы занимают одинаковую ширину: «и» тянется до размера «м». Это моноширинный шрифт, его любят в коде.'},
+    {f:"'Ruslan Display'",wt:400,ans:'Акцидентный',o:['Гротеск','Моноширинный','Антиква','Акцидентный'],why:'Резкие декоративные формы, которые работают в крупных заголовках и плохо читаются в абзаце. Это акцидентный шрифт.'},
+    {f:"'Onest'",wt:700,ans:'Гротеск',o:['Гротеск','Моноширинный','Антиква','Акцидентный','Рукописный'],why:'Нет засечек, толщина штрихов почти одинакова, формы строгие и нейтральные. Это гротеск.'}
+  ][r];
+  const sample=el('div','sample');
+  const a=el('div','','Дизайн'),b=el('div','','Сделайте логотип больше');
+  [a,b].forEach(n=>{n.style.fontFamily=G.f+',system-ui,sans-serif';n.style.fontWeight=G.wt;});
+  a.style.fontSize='min(64px,14vw)';a.style.lineHeight='1.1';b.style.fontSize='min(22px,5.4vw)';
+  sample.append(a,b);
+  const opts=el('div','opts');
+  const btns=shuffle(G.o).map((name,i)=>{
+    const x=el('button','opt-btn',name);x.type='button';x.style.animationDelay=(i*60)+'ms';
+    x.onclick=()=>{
+      if(ui.done)return;
+      btns.forEach(y=>y.disabled=true);
+      const ok=name===G.ans;
+      btns.find(y=>y.textContent===G.ans).classList.add('right');if(!ok)x.classList.add('wrong');
+      ui.finish(ok,ok?100:0,`Это ${G.ans.toLowerCase()} шрифт.`,G.why);
+    };
+    opts.appendChild(x);return x;
+  });
+  ui.play.append(sample,opts);
+}
+
+/* ---------- SCREENS ---------- */
+function home(){
+  S.res=SECTIONS.map(()=>[]);
+  $('#meter').hidden=true;
+  const n=el('section','home');
+  n.innerHTML=`<h1>Глазомер</h1>
+    <p class="lead">${SECTIONS.length} разделов, ${TOTAL} раундов и ни одного шанса свалить на монитор. Проверим, что ты видишь на самом деле.</p>
+    <button class="btn" id="go" type="button">Перейти <span aria-hidden="true">→</span></button>
+    <p class="meta">Около 8 минут. Без регистрации. Орать на кернинг можно.</p>
+    <div class="mosaic" id="mosaic"></div><p class="mhint" id="mhint">Разминка: найди плитку, которая чуть темнее остальных.</p>`;
+  const m=$('#mosaic',n),odd=ri(25);
+  for(let i=0;i<25;i++){
+    const b=el('button','');b.type='button';b.setAttribute('aria-label','Плитка '+(i+1));
+    b.style.background=i===odd?'hsl(3 97% 55%)':'hsl(3 97% 61%)';b.style.animationDelay=(i*28)+'ms';
+    b.onclick=()=>{
+      const hint=$('#mhint',n);
+      if(i===odd){b.classList.add('found');hint.textContent='Нашёл. Это была разминка, дальше тоньше.';}
+      else{b.classList.remove('miss');void b.offsetWidth;b.classList.add('miss');hint.textContent=pick(['Мимо. Но тут и так видно.','Не та. Ищи темнее.','Холодно. Ещё чуть-чуть.']);}
+    };
+    m.appendChild(b);
+  }
+  $('#go',n).onclick=()=>intro(0);
+  show(n);
+}
+
+function intro(s){
+  const sec=SECTIONS[s];
+  setMeter(s*5,`Раздел ${s+1} из ${SECTIONS.length}`);
+  const n=el('section','intro');
+  n.innerHTML=`<div class="secs">${SECTIONS.map((_,i)=>`<i class="${i<s?'done':i===s?'cur':''}"></i>`).join('')}</div>
+    <p class="muted">Раздел ${s+1} из ${SECTIONS.length}, 5 раундов</p>
+    <h2>${sec.title}</h2>
+    <p class="lead">${sec.intro}</p>
+    <button class="btn" type="button">Поехали <span aria-hidden="true">→</span></button>`;
+  $('.btn',n).onclick=()=>roundScreen(s,0);
+  show(n);
+}
+
+async function roundScreen(s,r){
+  const sec=SECTIONS[s];
+  const n=el('section','round');
+  n.innerHTML=`<div class="dots"><i></i><i></i><i></i><i></i><i></i></div><p class="rname">${sec.title}</p><h2 class="task"></h2><div class="play"></div><div class="foot"></div>`;
+  const ui={s,r,play:$('.play',n),foot:$('.foot',n),task:$('.task',n),done:false,start:null};
+  ui.task.textContent=sec.task;
+  const paint=()=>[...n.querySelectorAll('.dots i')].forEach((d,i)=>{const x=S.res[s][i];d.className=x?(x.ok?'ok':'bad'):(i===r?'cur':'');});
+  paint();
+  const label=`Раздел ${s+1} из ${SECTIONS.length}, раунд ${r+1} из 5`;
+  setMeter(s*5+r,label);
+  ui.finish=(ok,pts,detail,why)=>{
+    if(ui.done)return;ui.done=true;
+    S.res[s][r]={ok,pts};paint();
+    setMeter(s*5+r+1,label);
+    const last=r===4;
+    ui.foot.innerHTML=`<div class="fb ${ok?'good':'bad'}"><h3>${ok?'Верно':'Мимо'}</h3><p class="quip">${pick(ok?sec.ok:sec.bad)}</p>${detail?`<p class="detail">${detail}</p>`:''}${why?`<p class="why">${why}</p>`:''}</div><button class="btn next" type="button">${last?'Итоги раздела':'Дальше'} <span aria-hidden="true">→</span></button>`;
+    const nb=$('.next',ui.foot);nb.onclick=()=>last?sectionResult(s):roundScreen(s,r+1);
+    nb.focus({preventScroll:true});
+    nb.scrollIntoView({block:'nearest',behavior:reduced()?'auto':'smooth'});
+  };
+  ui.confirm=fn=>{
+    ui.foot.innerHTML='<button class="btn ok" type="button">Готово</button>';
+    $('.ok',ui.foot).onclick=()=>{if(!ui.done)fn();};
+  };
+  try{await Promise.race([Promise.resolve(sec.round(r,ui)),sleep(1500)]);}catch(e){console.error(e);}
+  show(n).then(()=>{if(ui.start)ui.start();});
+}
+
+function sectionResult(s){
+  const sec=SECTIONS[s],score=S.res[s].filter(x=>x.ok).length;
+  const tier=score<=1?0:score<=3?1:2;
+  setMeter((s+1)*5,`Раздел ${s+1} из ${SECTIONS.length}, готово`);
+  const n=el('section','result');
+  n.innerHTML=`<p class="muted">${sec.title}</p>
+    <div class="big"><span id="cnt">0</span><small>/5</small></div>
+    <div class="rdots">${S.res[s].map((x,i)=>`<i class="${x.ok?'ok':''}" style="animation-delay:${i*80}ms"></i>`).join('')}</div>
+    <h2>${sec.tiers[tier]}</h2>
+    <button class="btn" type="button">${s<SECTIONS.length-1?'Следующий раздел':'Узнать результат'} <span aria-hidden="true">→</span></button>`;
+  $('.btn',n).onclick=()=>s<SECTIONS.length-1?intro(s+1):finalCard();
+  show(n).then(()=>countUp($('#cnt',n),score,700));
+}
+
+const RANKS=[
+  {max:27,t:'Практикант с Comic Sans в сердце',j:'Кернинг существует. Рано или поздно ты с ним познакомишься.'},
+  {max:50,t:'Джун на испытательном',j:'Глаз ещё прогревается. Положи курсор на пробел и подыши.'},
+  {max:73,t:'Мидл с цепким взглядом',j:'Заказчик ещё не успеет сказать «сделайте логотип больше», а ты уже всё поправил.'},
+  {max:90,t:'Арт-директор от бога',j:'Сначала ты замечаешь ошибку, а уже потом сам макет.'},
+  {max:100,t:'Повелитель пикселей',j:'Figma спрашивает у тебя совета. Adobe хочет тебя нанять.'}
+];
+const WEAK={
+  'Цвет':'Цвет плывёт. Пора откалибровать монитор.',
+  'Память цвета':'Цвета забываются на лету. Называй их словами.',
+  'Трекинг':'С трекингом всё сложно. Буквы просят пощады.',
+  'Кернинг':'Кернинг пока «на глаз». Шрифтовики вздыхают.',
+  'Оптика':'Оптику чувствуешь слабо. Линейка пока твой друг.',
+  'Память':'Порядок ускользает. Нужны заметки.',
+  'Контраст':'Серый на сером тебе пока по душе.',
+  'Подбор цвета':'Смешивать цвета пока сложно. Начинай с яркости.',
+  'Шрифты':'Жанры шрифтов путаются. Время гуглить «что такое антиква».'
+};
+const STRONG={
+  'Цвет':'Цвет твоя сильная сторона.',
+  'Память цвета':'Цветовая память у тебя как у пипетки.',
+  'Трекинг':'В трекинге ты как дома.',
+  'Кернинг':'Кернинг твоя суперсила.',
+  'Оптика':'Оптику чувствуешь нутром.',
+  'Память':'Порядок держишь надёжно.',
+  'Контраст':'Контраст читаешь без очков.',
+  'Подбор цвета':'Цвета смешиваешь на глаз точнее инструмента.',
+  'Шрифты':'Шрифты узнаёшь с полуслова.'
+};
+
+function finalCard(){
+  const sc=S.res.map(a=>a.filter(x=>x.ok).length);
+  const total=sc.reduce((a,b)=>a+b,0),pct=Math.round(total/TOTAL*100);
+  const rank=RANKS.find(x=>pct<=x.max);
+  const wi=sc.indexOf(Math.min(...sc)),si=sc.indexOf(Math.max(...sc));
+  const num=String(ri(9000)+1000);
+  const date=new Date().toLocaleDateString('ru-RU');
+  setMeter(TOTAL,'Готово');
+  const n=el('section','final');
+  n.innerHTML=`<div class="card">
+    <p class="card-top">Результат № ${num}</p>
+    <div class="score"><b id="tot">0</b><span>/${TOTAL}, ${pct}%</span></div>
+    <div><h2 class="rank">${rank.t}</h2><p class="joke">${rank.j}</p></div>
+    <div class="rows">${SECTIONS.map((sec,i)=>`<div class="row" style="animation-delay:${300+i*60}ms"><span class="t">${sec.key}</span><span class="sq">${S.res[i].map(x=>`<i class="${x.ok?'ok':''}"></i>`).join('')}</span></div>`).join('')}</div>
+    <div class="sw"><p><b>Сильная сторона.</b> ${STRONG[SECTIONS[si].key]}</p><p><b>Слабое место.</b> ${sc[wi]===5?'Нет такого. Подозрительно.':WEAK[SECTIONS[wi].key]}</p></div>
+    <p class="card-foot">Глазомер, ${date}</p>
+  </div>
+  <div class="actions"><button class="btn" id="again" type="button">Ещё раз</button><button class="btn ghost" id="copy" type="button">Скопировать результат</button></div>`;
+  $('#again',n).onclick=home;
+  $('#copy',n).onclick=async()=>{
+    const text=`Глазомер: ${total}/${TOTAL} (${pct}%). ${rank.t}. ${rank.j}`;
+    try{await navigator.clipboard.writeText(text);toast('Скопировано');}
+    catch(e){
+      const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();
+      let ok=false;try{ok=document.execCommand('copy');}catch(_){}
+      ta.remove();toast(ok?'Скопировано':'Не удалось скопировать');
+    }
+  };
+  show(n).then(()=>countUp($('#tot',n),total,1100));
+}
+
+$('#brand').onclick=home;
+home();
+})();
+</script>
+
+</body></html>

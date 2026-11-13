@@ -1,0 +1,58 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Лаборатория стиля</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+:root { --board:#14191a; --bark:#e3d6b8; --dim:#a99d84; --ember:#e39242; --line:rgba(227,214,184,.2); color-scheme: dark; }
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--board);color:var(--bark);font:14px/1.35 "Alegreya Sans","Trebuchet MS",sans-serif;overflow:hidden;user-select:none}
+#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.panel{background:color-mix(in srgb,var(--board) 86%,transparent);border:1px solid var(--line);border-radius:6px;backdrop-filter:blur(4px)}
+button{font:500 13px "Alegreya Sans",sans-serif;color:var(--bark);background:#222a28;border:1px solid var(--line);border-radius:4px;padding:4px 9px;cursor:pointer}
+button:hover{border-color:var(--ember)} button.on{background:var(--ember);color:#1b1412;border-color:var(--ember)}
+#bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:8px 10px;display:flex;gap:6px 14px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 24px)}
+.grp{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.grp .l{font-size:12px;color:var(--dim);margin-right:2px;letter-spacing:.04em}
+#tagL,#tagR{position:fixed;top:10px;padding:5px 12px;font:400 20px "Ruslan Display",Georgia,serif;letter-spacing:.04em;pointer-events:none}
+#tagL{left:12px} #tagR{right:12px}
+#split{position:fixed;top:0;bottom:0;width:0;border-left:2px solid rgba(255,255,255,.55);pointer-events:none}
+#grab{position:fixed;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:rgba(20,25,26,.85);border:2px solid var(--bark);cursor:ew-resize;display:grid;place-items:center;font-size:16px;touch-action:none}
+#hint{position:fixed;left:12px;top:46px;padding:6px 10px;font-size:12px;color:var(--dim);max-width:min(340px,calc(100vw - 24px))}
+#info{position:fixed;right:12px;top:52px;width:min(380px,calc(100vw - 24px));padding:10px 14px;font-size:13px;line-height:1.4}
+#info ol{margin:6px 0 0;padding-left:18px;display:grid;gap:5px}
+#load{position:fixed;inset:0;display:grid;place-items:center;background:var(--board);font:400 26px "Ruslan Display",Georgia,serif}
+</style>
+<canvas id="view"></canvas>
+<div id="split"></div><div id="grab">⇄</div>
+<div id="tagL" class="panel">Нынешний стиль</div>
+<div id="tagR" class="panel">Новый стиль</div>
+<div id="hint" class="panel">ПКМ-тяга — вращать и наклонять, ЛКМ/СКМ-тяга — двигать, колесо — масштаб. Ползунок посередине двигается мышью.</div>
+<div id="bar" class="panel">
+  <div class="grp"><span class="l">Вид</span><button data-mode="split" class="on">Сравнение</button><button data-mode="old">Только нынешний</button><button data-mode="new">Только новый</button></div>
+  <div class="grp"><span class="l">Время</span><button data-tod="dusk" class="on">Сумерки</button><button data-tod="night">Ночь</button><button data-tod="day">День</button></div>
+  <div class="grp"><span class="l">Камера</span><button data-cam="street" class="on">С улицы</button><button data-cam="fire">У костра</button><button data-cam="sky">В небо</button><button data-cam="lake">Озеро</button><button data-cam="top">Сверху</button></div>
+  <div class="grp"><button id="btnInfo">Что изменено</button></div>
+  <div class="grp"><span class="l">Новый</span><button data-opt="sigils" class="on">Узоры</button><button data-opt="haze" class="on">Дымка</button><button data-opt="bloom" class="on">Свечение</button><button data-opt="dots">Точки</button><button data-opt="brush" class="on">Мазки</button></div>
+</div>
+<div id="info" class="panel" hidden>
+  <b>Что поменялось в новом стиле</b>
+  <ol>
+    <li><b>Свет и тень.</b> Резкая граница света и тени с рваным краем мазка, холодные бирюзовые тени, 4 плоских тона вместо растра. Растровые точки остались редкими пятнами.</li>
+    <li><b>Мох и трава.</b> Клочья из 3–6 лопастей в три тона и пучки острых листьев с тёмным контуром, без прорисовки каждого листочка.</li>
+    <li><b>Дымка.</b> Три слоя по глубине, гуще у земли, чёрное поднимается к цвету дымки: дальние слои светлее и мягче.</li>
+    <li><b>Концепт.</b> Мрачный холодный фон, живопись плоскими мазками, огонь из четырёх тонов, тёплые рваные пятна света на земле и стенах, лужи с отражением огня, свечение костров и окон.</li>
+    <li><b>Небо.</b> Рваные облака плоскими мазками, диагональная штриховка с шагом ~6 px, мозаика в свете, царапины кистью; узоры проступают, вращаются и дрейфуют.</li>
+    <li><b>Узоры в воздухе.</b> Не на земле: тонкие круги висят среди сцены за стволами, избой и холмом, в далёкой дымке и над кострами (и в их отражении в озере). Каждые 9–15 секунд гаснут и проступают в другом месте.</li>
+    <li><b>Вода.</b> Озеро с настоящим отражением сцены, порванным горизонтальными мазками; глубина тремя ступенями, штрихи ряби, пена мазком, тёплые штрихи огня на воде.</li>
+    <li><b>Земля.</b> Области травы разных цветов (жёлтая, сизая, тёмный мох), вытоптанные места, грязь у воды, травинки-мазки двух размеров.</li>
+    <li><b>Мазки вместо карт.</b> Нормали и отражения набраны клетками-мазками: штрихи на тёмном, точки на среднем тоне, холодные блики-мазки.</li>
+    <li><b>Огонь.</b> Несколько слоёв: широкий тёмный пласт, языки с внутренними штрихами и трещинами, угольки-крупинки; свечение с текстурой и пятно света на земле.</li>
+    <li><b>Раунд 3.</b> Убраны полосы на земле (границы владений), небо слоями мягких туч с луной и аурой, штриховка рукой и только пятнами, рябь изолиниями и пена с кружевом, трава и кусты по областям, узоры в воздухе вдвое реже, мазки не пестрят вдали и у огня.</li>
+    <li><b>Раунд 4.</b> Узоры: шесть разных форм (круг с лучами, звезда, спираль, ромб с квадратом, цветок из дуг, дробные кольца), только вдали и гаснут рядом с игроком, днём один и только на фоне леса. Лужи слоями с мягкими краями, разной глубины и цвета. Рябь воды деликатнее: мягкие пятна света и круги от капель. Трава мельче и разнообразнее.</li>
+  </ol>
+</div>
+<div id="load">Рисуем две деревни…</div>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }</script>
+<script type="module" src="./src/lab.js"></script>
+
+</body></html>

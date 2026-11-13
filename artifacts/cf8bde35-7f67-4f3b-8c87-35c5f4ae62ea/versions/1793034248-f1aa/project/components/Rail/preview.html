@@ -1,0 +1,28 @@
+<!-- @dsCard group="Навигация" height=470 -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Rail — превью</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;padding:16px;background:var(--bg);color:var(--ink);font:400 var(--fs-base)/var(--lh) var(--f-ui);-webkit-font-smoothing:antialiased}
+.row{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center}
+.row+.row,.cap+.row,.row+.cap{margin-top:var(--s3)}
+.cap{margin:0 0 var(--s2);font:var(--fw-sb) var(--fs-xs)/1.2 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.row+.cap,.stack+.cap{margin-top:var(--s5)}
+.stack{display:grid;gap:var(--s3);max-width:420px}
+.rstage{position:relative;height:420px;background:var(--bg)}
+.rail{position:absolute;left:0;top:0;bottom:0;height:auto;z-index:1}
+.rb[data-tip]::after{opacity:0}.rb.show::after{opacity:1;transform:translate(0,-50%)}
+.rpill.foot{margin-top:auto}
+.lbl{position:absolute;left:96px;top:0;max-width:420px;color:var(--text-2);font-size:var(--fs-md)}</style>
+</head>
+<body>
+<div class="rstage"><nav class="rail" aria-label="Разделы"><button class="logo" type="button" aria-label="G-type: на главную">G</button>
+<div class="rpill" role="group" aria-label="Навигация"><button class="rb on" type="button" data-tip="Главная" aria-label="Главная"><i class="ico i-home"></i></button><button class="rb" type="button" data-tip="Библиотека" aria-label="Библиотека"><i class="ico i-library"></i></button><button class="rb show" type="button" data-tip="Избранное" aria-label="Избранное"><i class="ico i-heart"></i></button></div>
+<div class="rpill" role="group" aria-label="Редактирование"><button class="rb" type="button" data-tip="Редактор" aria-label="Редактор"><i class="ico i-edit"></i></button></div>
+<div class="rpill foot"><button class="rb" type="button" data-tip="Тёмная тема" aria-label="Тёмная тема"><i class="ico i-moon"></i></button><button class="rb" type="button" data-tip="Подсказки" aria-label="Подсказки"><i class="ico i-help"></i></button></div></nav>
+<p class="lbl">Рейл: вертикальное иконочное меню слева. Тёмная таблетка в обеих темах, активная кнопка белая.</p></div>
+</body>
+</html>

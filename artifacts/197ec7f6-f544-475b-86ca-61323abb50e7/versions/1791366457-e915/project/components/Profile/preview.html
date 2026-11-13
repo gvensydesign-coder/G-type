@@ -1,0 +1,12 @@
+<!-- @dsCard group="Dialog" height=640 width=820 subtitle="Профиль: аватары, шапка уровня, статистика, группы настроек, подключённые аккаунты." -->
+<style>.pf { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; padding: 20px; align-items: start; background: var(--bg-app); color: var(--text-primary); } .pf__c { display: flex; flex-direction: column; gap: 16px; min-width: 0; }</style>
+<div class="pf bd-root" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    '<div class="pf__c"><div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">' + B.Avatar({ mascot: 'buddy-happy', size: 32 }) + B.Avatar({ mascot: 'sunny-happy', size: 48, tone: 'orange', status: 'online' }) + B.Avatar({ mascot: 'leafy-umbrella', size: 56, tone: 'green' }) + B.Avatar({ initials: 'LK', size: 48, tone: 'pink' }) + B.Avatar({ mascot: 'sunny-happy', size: 72, ring: true, level: 7 }) + '</div>' +
+    B.ProfileHeader({ name: 'Lukman', handle: '@lukman · joined March 2026', level: 7 }) + B.StatRow({}) + '</div>' +
+    '<div class="pf__c">' + B.SettingsGroup({ title: 'Preferences', rows: [{ icon: 'bell', tone: 'orange', title: 'Notifications', control: 'switch', checked: true }, { icon: 'palette', tone: 'pink', title: 'Appearance', value: 'System' }, { icon: 'shield-check', tone: 'green', title: 'Privacy' }] }) +
+    '<div><h3 class="bd-setgroup__t">Connected accounts</h3><div class="bd-setgroup__c">' + B.SocialAccount({ social: 'telegram', handle: '@lukman', connected: true }) + B.SocialAccount({ social: 'instagram' }) + '</div></div></div>';
+  B.wire(document);
+</script>

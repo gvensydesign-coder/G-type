@@ -1,0 +1,11 @@
+<!-- @dsCard group="Feedback" height=330 width=440 subtitle="Информация, успех, предупреждение, ошибка: цвет всегда вместе с иконкой и словами." -->
+<style>.pv{display:flex;flex-direction:column;gap:10px;padding:20px;background:var(--bg-surface)}</style>
+<div class="pv" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    B.Banner({ tone: 'info', title: 'Tip of the day', text: 'Small steps beat big promises.' }) +
+    B.Banner({ tone: 'success', title: 'Habit saved', text: 'Drink Water repeats every 30 minutes.' }) +
+    B.Banner({ tone: 'warning', title: 'Streak at risk', text: 'Finish one habit before midnight.' }) +
+    B.Banner({ tone: 'danger', title: 'Could not sync', text: 'Check your connection and try again.' });
+</script>

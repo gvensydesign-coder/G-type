@@ -1,0 +1,175 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Ритм боя</title>
+<style>
+:root{color-scheme:dark}
+html, body { margin: 0; height: 100%; overflow: hidden; background: #0d0f12; font-family: Georgia, "Times New Roman", serif; color: #e8dcc2; user-select: none; }
+#c { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+.hidden { display: none !important; }
+
+#hud { position: fixed; inset: 0; pointer-events: none; }
+#player-bars { position: absolute; left: 28px; top: 24px; width: 300px; }
+.bar { position: relative; height: 14px; margin-bottom: 7px; background: rgba(0,0,0,.55); border: 1px solid #6b5a3c; box-shadow: 0 0 6px rgba(0,0,0,.6); overflow: hidden; }
+.bar .fill, .bar .ghost { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; }
+.bar .ghost { background: #d8c9a0; opacity: .55; transition: width .6s ease .25s; }
+.hp .fill { background: linear-gradient(#c43a2c, #7d1610); z-index: 1; }
+.st .fill { background: linear-gradient(#e8d27a, #a48a2a); height: 100%; }
+.st { height: 8px; width: 78%; }
+#boss { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%); width: min(560px, 80vw); text-align: center; }
+#boss-name { font-size: 18px; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 6px #000; margin-bottom: 4px; }
+.boss-hp .fill { background: linear-gradient(#b32a22, #5e0f0b); z-index: 1; }
+.boss-hp { height: 12px; }
+#lock-icon { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 2px solid #f0c060; transform: rotate(45deg); box-shadow: 0 0 8px #f0c060; }
+#toast { position: absolute; left: 50%; top: 38%; transform: translateX(-50%); font-size: 30px; letter-spacing: 4px; color: #f2d48a; text-shadow: 0 0 12px #000, 0 0 4px #000; opacity: 0; transition: opacity .25s; }
+#toast.show { opacity: 1; }
+#hint { position: absolute; bottom: 14px; width: 100%; text-align: center; font-size: 13px; color: rgba(232,220,194,.6); text-shadow: 0 0 4px #000; }
+
+#overlay, #end { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(10,12,16,.55), rgba(5,6,8,.92)); }
+.panel { max-width: 560px; padding: 26px 34px; border: 1px solid #6b5a3c; background: rgba(14,13,11,.88); box-shadow: 0 0 40px #000; text-align: center; }
+h1 { margin: 0 0 6px; font-size: 34px; letter-spacing: 4px; color: #e9c87e; font-weight: normal; }
+.sub { margin: 0 0 16px; color: #b8aa8c; }
+.keys { width: 100%; border-collapse: collapse; font-size: 15px; text-align: left; }
+.keys td { padding: 3px 6px; border-bottom: 1px solid rgba(107,90,60,.35); }
+.keys td:first-child { color: #f2d48a; white-space: nowrap; width: 34%; font-family: Consolas, monospace; }
+.warn { color: #f0a050; font-size: 14px; }
+#start { margin-top: 8px; padding: 10px 26px; font: inherit; font-size: 17px; color: #1a1408; background: #d9b36a; border: 0; cursor: pointer; }
+#start:disabled { opacity: .4; cursor: wait; }
+#loading { font-size: 13px; color: #8f846c; }
+
+/* v2 */
+.st { overflow: visible; }
+.st .notch { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 2px; background: #f6e7b0; box-shadow: 0 0 4px #f6e7b0; z-index: 2; }
+.st.aura .fill { background: linear-gradient(#fff0a8, #d9a83a); box-shadow: 0 0 10px #ffd36b; }
+.st.exhausted .fill { background: linear-gradient(#8a7a5a, #4a3e26); }
+#player-name { font-size: 14px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; color: #e9c87e; text-shadow: 0 0 6px #000; }
+#aura-label { font-size: 12px; color: #ffd36b; letter-spacing: 1px; height: 14px; text-shadow: 0 0 6px #000; }
+#boss-phase { font-size: 12px; letter-spacing: 2px; color: #b8e070; height: 15px; text-shadow: 0 0 6px #000; }
+#loadbar { width: 100%; height: 4px; background: rgba(255,255,255,.08); margin-top: 8px; }
+#loadbar div { height: 100%; width: 0; background: #d9b36a; transition: width .2s; }
+#p-hp-bar .notch { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: rgba(246,231,176,.7); z-index: 2; }
+#p-hp-bar.regen .fill { background: linear-gradient(#e0583a, #8d2414); animation: regen 1.2s ease-in-out infinite; }
+@keyframes regen { 50% { filter: brightness(1.35); } }
+@media (prefers-reduced-motion: reduce) { #p-hp-bar.regen .fill { animation: none; } }
+
+/* grab cinematic: letterbox bars, the HUD steps back */
+body::before, body::after { content: ''; position: fixed; left: 0; right: 0; height: 0; background: #000; z-index: 5; pointer-events: none; transition: height .35s ease; }
+body::before { top: 0; } body::after { bottom: 0; }
+body.cine::before, body.cine::after { height: 11vh; }
+#player-bars, #boss, #hint { transition: opacity .3s; }
+body.cine #player-bars, body.cine #boss, body.cine #hint { opacity: .15; }
+body.cine #toast { z-index: 6; }
+@media (prefers-reduced-motion: reduce) { body::before, body::after { transition: none; } }
+body.cine #toast { top: auto; bottom: 14vh; font-size: 24px; }
+#fin-prompt { position: absolute; left: 50%; top: 62%; transform: translateX(-50%); padding: 6px 16px; font-size: 20px; letter-spacing: 2px; color: #f6e7b0; background: rgba(20,14,6,.7); border: 1px solid #d9b36a; box-shadow: 0 0 14px rgba(217,179,106,.5); animation: finp .7s ease-in-out infinite alternate; }
+#fin-prompt b { color: #ffd36b; font-family: Consolas, monospace; }
+@keyframes finp { to { box-shadow: 0 0 22px rgba(255,211,107,.85); } }
+@media (prefers-reduced-motion: reduce) { #fin-prompt { animation: none; } }
+body.cine #lock-icon { display: none; }
+
+/* ---- ритм боя */
+#poise { position: relative; height: 4px; margin: 3px auto 0; width: 70%; background: rgba(0,0,0,.5); border: 1px solid rgba(217,179,106,.4); }
+#poise-fill { height: 100%; width: 0; background: linear-gradient(90deg, #b8893a, #ffd36b); transition: width .12s; }
+#poise.locked { opacity: .35; }
+#poise.locked #poise-fill { background: #8f846c; }
+#stun { margin-top: 6px; opacity: 0; transition: opacity .15s; }
+#stun.show { opacity: 1; }
+#stun-bar { height: 6px; width: 70%; margin: 0 auto; background: rgba(0,0,0,.55); border: 1px solid #d9b36a; box-shadow: 0 0 10px rgba(255,200,90,.5); }
+#stun-fill { height: 100%; background: linear-gradient(#fff0a8, #e0a83a); }
+#stun-txt { font-size: 12px; letter-spacing: 1px; color: #ffd36b; text-shadow: 0 0 6px #000; margin-top: 2px; }
+#tele { position: absolute; transform: translate(-50%, -50%); display: none; }
+#tele.show { display: block; }
+#tele-ico { position: relative; width: 50px; height: 50px; margin: -25px 0 0 -25px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(14,10,8,.72); border: 2px solid #ff4a30; box-shadow: 0 0 12px rgba(255,60,30,.6); }
+#tele-key { font: 700 14px/1 Consolas, monospace; color: #fff; }
+#tele-txt { font-size: 10px; color: #f0d8c0; margin-top: 2px; letter-spacing: .5px; }
+#tele.dodge #tele-ico, #tele.run #tele-ico { border-color: #b060ff; box-shadow: 0 0 12px rgba(160,64,255,.7); }
+#tele.now #tele-ico { background: rgba(255,250,235,.92); }
+#tele.now #tele-key, #tele.now #tele-txt { color: #1a1206; }
+#tele-ring { position: absolute; left: 0; top: 0; width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(255,244,208,.9); transform: translate(-50%,-50%) scale(2.6); opacity: 0; pointer-events: none; }
+#tele.dodge #tele-ring { border-color: rgba(224,176,255,.95); }
+#open-tag { position: absolute; transform: translate(-50%, -50%); font-size: 15px; letter-spacing: 2px; color: #ffd36b; text-shadow: 0 0 8px #000, 0 0 3px #000; opacity: 0; transition: opacity .12s; }
+#open-tag.show { opacity: 1; }
+#fb { position: absolute; left: 50%; top: 44%; transform: translate(-50%, 0); font-size: 26px; letter-spacing: 3px; text-shadow: 0 0 10px #000, 0 0 3px #000; opacity: 0; }
+#fb.show { opacity: 1; animation: fbup .9s ease-out forwards; }
+#fb.perfect { color: #fff3c4; font-size: 32px; }
+#fb.ok { color: #e8dcc2; }
+#fb.warn { color: #f0b060; }
+#fb.bad { color: #ff7a60; font-size: 22px; }
+@keyframes fbup { 0% { transform: translate(-50%, 8px) scale(1.15); } 25% { transform: translate(-50%, 0) scale(1); } 100% { transform: translate(-50%, -26px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #fb.show { animation: none; } }
+#counter-prompt { position: absolute; left: 50%; top: 66%; transform: translateX(-50%); padding: 5px 14px; font-size: 18px; color: #f6e7b0; background: rgba(20,14,6,.7); border: 1px solid #d9b36a; }
+#counter-prompt b { color: #ffd36b; font-family: Consolas, monospace; }
+#train { position: absolute; right: 18px; top: 18px; width: 236px; padding: 10px 12px; font-size: 13px; line-height: 1.55; color: #cfc2a4; background: rgba(14,13,11,.78); border: 1px solid #6b5a3c; }
+#train b { color: #e9c87e; }
+#train i { font-style: normal; color: #f6e7b0; }
+#train kbd { font: 700 11px/1 Consolas, monospace; border: 1px solid #6b5a3c; border-bottom-width: 2px; padding: 1px 4px; color: #f6e7b0; }
+#train hr { border: 0; border-top: 1px solid rgba(107,90,60,.5); margin: 6px 0; }
+#train .ln { font-size: 12px; color: #a99c80; }
+body.cine #train, body.cine #tele { opacity: .15; }
+@media (max-width: 760px) { #train { display: none; } }
+#aim { position: absolute; left: 50%; top: 57%; transform: translateX(-50%); font-size: 15px; letter-spacing: 1px; color: #f6e7b0; text-shadow: 0 0 6px #000; opacity: 0; transition: opacity .1s; }
+#aim.show { opacity: .85; }
+
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three.module.js",
+  "three/addons/": "./vendor/addons/",
+  "fx/": "./fx/"
+} }
+</script>
+<canvas id="c"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="player-bars">
+    <div id="player-name">Богатырь</div>
+    <div class="bar hp" id="p-hp-bar"><div class="fill" id="p-hp"></div><div class="ghost" id="p-hp-ghost"></div><div class="notch"></div></div>
+    <div class="bar st" id="p-st-bar"><div class="fill" id="p-st"></div><div class="notch"></div></div>
+    <div id="aura-label"></div>
+  </div>
+  <div id="boss">
+    <div id="boss-name">Леший</div>
+    <div id="boss-phase"></div>
+    <div class="bar boss-hp"><div class="ghost" id="e-hp-ghost"></div><div class="fill" id="e-hp"></div></div>
+    <div id="poise" title="Стойкость: полная = оглушение"><div id="poise-fill"></div></div>
+    <div id="stun"><div id="stun-bar"><div id="stun-fill"></div></div><div id="stun-txt"></div></div>
+  </div>
+  <div id="tele"><div id="tele-ring"></div><div id="tele-ico"><span id="tele-key"></span><small id="tele-txt"></small></div></div>
+  <div id="open-tag"></div>
+  <div id="fb"></div>
+  <div id="counter-prompt" class="hidden"><b>ЛКМ</b> — контрудар</div>
+  <div id="train"></div>
+  <div id="lock-icon" class="hidden"></div>
+  <div id="toast"></div>
+  <div id="fin-prompt" class="hidden">держи <b>ЛКМ</b> — добить</div>
+  <div id="aim"></div>
+  <div id="hint">ЛКМ — удар (жест мышью: ↑ голова · ↓ ноги · ← → бок) · держать ЛКМ — тяжёлый · ПКМ — щит, к удару — парирование · ПКМ+ЛКМ — щитом · 2× W/A/S/D — уклон · C перекат · R аура</div>
+</div>
+
+<div id="overlay">
+  <div class="panel">
+    <h1>Ритм боя</h1>
+    <p class="sub">Полигон: точное парирование, точный уклон, окно оглушения и подсказки.</p>
+    <table class="keys">
+      <tr><td>W A S D</td><td>движение; двойное нажатие — уклон в эту сторону (уйти в последний миг — точный уклон, затем ЛКМ — контрудар)</td></tr>
+      <tr><td>ЛКМ</td><td>удар; клики подряд — серия. Жест мышью перед кликом выбирает проём: ↑ в голову (сильнее), ↓ по ногам (сбивает стойку), ← → сбоку (быстро)</td></tr>
+      <tr><td>Держать ЛКМ</td><td>тяжёлый удар; по оглушённому Лешему — добивание</td></tr>
+      <tr><td>ПКМ</td><td>щит; нажать к удару когтей — точное парирование; ПКМ + ЛКМ — удар щитом</td></tr>
+      <tr><td>Shift · Space · C</td><td>бег · прыжок · перекат</td></tr>
+      <tr><td>R</td><td>аура богатыря (горит, пока сил больше половины)</td></tr>
+      <tr><td>Камера</td><td>в бою сама держит Лешего в центре</td></tr>
+      <tr><td>1 2 3 4</td><td>полигон: кольца тайминга · замедление · приёмы Лешего · бессмертие</td></tr>
+      <tr><td>Esc</td><td>пауза · Backspace — начать заново</td></tr>
+    </table>
+    <p class="warn">Красное свечение и метка «ПКМ» — держи щит, лучше точно к блику на когтях. Фиолетовое и «2×» — не блокируется, уходи уклоном. Кольцо сходится к метке ровно в момент нажатия.</p>
+    <p class="sub" style="font-size:13px;margin:6px 0 0">Аура Богатыря горит, пока выносливости больше половины. Без новых ран здоровье понемногу восстанавливается до половины. Схватил Леший — жми ЛКМ или Space, чтобы вырваться. Три удара подряд в один проём Леший прикрывает: меняй направление.</p>
+    <button id="start">Нажмите, чтобы начать</button>
+    <p id="loading">Загрузка моделей…</p>
+    <div id="loadbar"><div></div></div>
+  </div>
+</div>
+
+<div id="end" class="hidden"><div class="panel"><h1 id="end-title"></h1><p>Enter — начать заново</p></div></div>
+
+<script type="module" src="src/main.js"></script>
+
+</body></html>

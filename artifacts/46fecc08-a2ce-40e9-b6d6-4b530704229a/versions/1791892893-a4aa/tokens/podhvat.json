@@ -1,0 +1,295 @@
+{
+  "name": "Подхват / LIME",
+  "version": "1.2.0",
+  "provenance": "Reconstructed from two supplied screenshots; all exact values are proposed, not extracted source tokens.",
+  "primitive": {
+    "color": {
+      "ink": "#17191B",
+      "paper": "#F3F4F2",
+      "white": "#FFFFFF",
+      "lime": "#DBF95B",
+      "limeStrong": "#CBEA39",
+      "air": "#658592",
+      "airDark": "#263D4A",
+      "airSurface": "#DBE5E9",
+      "mutedLight": "#556166",
+      "mutedDark": "#BAC4C7",
+      "lineLight": "#CDD3D3",
+      "lineDark": "#41484C",
+      "success": "#267349",
+      "warning": "#946300",
+      "danger": "#B33040",
+      "info": "#235EAD"
+    },
+    "space": [
+      0,
+      4,
+      8,
+      12,
+      16,
+      20,
+      24,
+      32,
+      40,
+      48,
+      64,
+      80
+    ],
+    "radius": {
+      "small": 12,
+      "control": 24,
+      "card": 32,
+      "sheet": 40,
+      "pill": 999
+    },
+    "font": {
+      "family": "Arial, Helvetica, sans-serif",
+      "display": {
+        "size": 40,
+        "lineHeight": 44,
+        "weight": 400,
+        "letterSpacing": -1.4
+      },
+      "heading": {
+        "size": 28,
+        "lineHeight": 32,
+        "weight": 400,
+        "letterSpacing": -0.7
+      },
+      "title": {
+        "size": 20,
+        "lineHeight": 26,
+        "weight": 500
+      },
+      "body": {
+        "size": 16,
+        "lineHeight": 24,
+        "weight": 400
+      },
+      "label": {
+        "size": 14,
+        "lineHeight": 20,
+        "weight": 500
+      },
+      "caption": {
+        "size": 12,
+        "lineHeight": 16,
+        "weight": 400
+      }
+    },
+    "motion": {
+      "fast": 120,
+      "normal": 200,
+      "slow": 320,
+      "easing": "cubic-bezier(.2,.8,.2,1)"
+    },
+    "shadow": {
+      "card": "0 12px 32px rgba(23,25,27,.12)",
+      "floating": "0 24px 64px rgba(23,25,27,.22)"
+    }
+  },
+  "semantic": {
+    "light": {
+      "background": "#F3F4F2",
+      "surface": "#FFFFFF",
+      "text": "#17191B",
+      "textSecondary": "#556166",
+      "border": "#CDD3D3",
+      "action": "#DBF95B",
+      "actionText": "#17191B",
+      "focus": "#235EAD"
+    },
+    "dark": {
+      "background": "#17191B",
+      "surface": "#24292C",
+      "text": "#FFFFFF",
+      "textSecondary": "#BAC4C7",
+      "border": "#41484C",
+      "action": "#DBF95B",
+      "actionText": "#17191B",
+      "focus": "#DBF95B"
+    },
+    "air": {
+      "background": "#658592",
+      "text": "#FFFFFF",
+      "opaqueSurface": "#FFFFFF",
+      "surfaceText": "#17191B"
+    }
+  },
+  "component": {
+    "button": {
+      "height": 52,
+      "minTarget": 44,
+      "paddingInline": 20,
+      "radius": 999
+    },
+    "iconButton": {
+      "size": 48,
+      "iconSize": 24
+    },
+    "input": {
+      "height": 56,
+      "paddingInline": 16,
+      "radius": 24
+    },
+    "card": {
+      "padding": 20,
+      "gap": 12,
+      "radius": 32
+    },
+    "screen": {
+      "referenceWidth": 390,
+      "referenceHeight": 844,
+      "gutter": 20,
+      "safeTop": 48,
+      "safeBottom": 34
+    },
+    "icon": {
+      "viewBox": "0 0 24 24",
+      "strokeWidth": 1.75,
+      "linecap": "round"
+    }
+  },
+  "platform": {
+    "primary": "iOS",
+    "nativeTypography": "System SF Pro / Dynamic Type semantic styles",
+    "nativeIcons": "SF Symbols",
+    "units": "pt",
+    "web": "CSS approximation",
+    "minimumTargetPt": 44
+  },
+  "motion": {
+    "press": {
+      "durationMs": 120,
+      "scale": 0.97
+    },
+    "release": {
+      "durationMs": 180,
+      "scale": 1
+    },
+    "appear": {
+      "durationMs": 220,
+      "translateY": 8,
+      "opacity": [
+        0,
+        1
+      ]
+    },
+    "screen": {
+      "durationMs": 280,
+      "kind": "push is native; web prototype fade/8px"
+    },
+    "sheet": {
+      "durationMs": 320,
+      "kind": "native detents and interactive dismissal"
+    },
+    "stagger": {
+      "stepMs": 35,
+      "maxItems": 5
+    },
+    "feedback": {
+      "durationMs": 200
+    },
+    "skeleton": {
+      "durationMs": 1200
+    },
+    "reduced": {
+      "transform": "none",
+      "durationMs": 0,
+      "loading": "static skeleton + text"
+    },
+    "scroll": {
+      "kind": "system native",
+      "restoreOffset": true,
+      "autoFollowChat": "only when near bottom",
+      "nearBottomPx": 64,
+      "refresh": "user initiated",
+      "nestedSameAxis": false
+    },
+    "glass": {
+      "regular": {
+        "webBlurPx": 24,
+        "webFill": "rgba(243,244,242,.82)"
+      },
+      "clear": {
+        "webBlurPx": 18,
+        "webFill": "rgba(23,25,27,.72)"
+      },
+      "fallback": {
+        "light": "#F3F4F2",
+        "dark": "#24292C"
+      },
+      "note": "CSS blur is an approximation, not native Liquid Glass; use native platform materials."
+    }
+  },
+  "referenceDetails": [
+    {
+      "id": "R01",
+      "height": 64,
+      "inset": 16,
+      "radius": 32,
+      "avatar": 44,
+      "search": 44,
+      "gap": 12,
+      "padding": 10,
+      "blur": 20,
+      "fill": "rgba(101,133,146,.78)"
+    },
+    {
+      "id": "R02",
+      "water": "#263D4A",
+      "land": "#658592",
+      "street": "#A6BCC5",
+      "streetWidth": 1,
+      "markerSize": 10,
+      "selectedHalo": 28,
+      "overlayBottomHeight": 120
+    },
+    {
+      "id": "R03",
+      "outerRadius": 32,
+      "innerRadius": 24,
+      "outerPadding": 12,
+      "headerHeight": 52,
+      "headerGap": 8,
+      "cardGap": 12,
+      "previewOverlap": 16,
+      "fadeHeight": 64
+    },
+    {
+      "id": "R04",
+      "width": 112,
+      "height": 128,
+      "radius": 24,
+      "padding": 14,
+      "visualAction": 28,
+      "hitAction": 44,
+      "numberSize": 32,
+      "gap": 8
+    },
+    {
+      "id": "R05",
+      "radius": 28,
+      "padding": 16,
+      "actionSize": 44,
+      "headerGap": 12,
+      "plotHeight": 100,
+      "barWidth": 8,
+      "barGap": 4,
+      "chartTopGap": 20
+    },
+    {
+      "id": "R06",
+      "diameter": 48,
+      "gap": 8,
+      "insetRight": 16,
+      "insetBottom": 16,
+      "ring": 2,
+      "backFill": "rgba(120,125,128,.38)",
+      "forwardFill": "#FFFFFF",
+      "shadow": "0 4px 12px rgba(23,25,27,.16)"
+    }
+  ],
+  "product": "podhvat",
+  "visualAuthority": "LIME 1.2; no external visual system"
+}

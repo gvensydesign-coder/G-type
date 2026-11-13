@@ -1,0 +1,545 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Кисть мха и зелени</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Golos+Text:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: full-screen 3D viewport, tool panel docked left (bottom sheet on phones).
+   Single dark look on purpose: cold teal night, ember accent, moss greens only inside the painted layers. */
+:root{
+  --night:#0c1315; --teal:#1d3a3d; --ember:#e8913a; --bark:#c9b79a; --ink:#e9e2d3; --muted:#8c9a96; --moss:#7fa23a;
+  --panel:rgba(11,18,20,.9); --line:rgba(201,183,154,.2);
+  --display:'Ruslan Display',Georgia,serif; --body:'Golos Text',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;background:var(--night);color:var(--ink);font-family:var(--body);overflow:hidden}
+#stage{position:fixed;inset:0;background:radial-gradient(120% 90% at 55% 20%,#27474a 0%,#142225 45%,#080d0e 100%)}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#panel{position:fixed;left:0;top:env(safe-area-inset-top,0px);bottom:0;width:292px;box-sizing:border-box;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;z-index:5;display:flex;flex-direction:column;gap:14px}
+h1{font:400 1.5rem/1.1 var(--display);margin:0;color:var(--bark);letter-spacing:.02em}
+h2{font:600 .68rem var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+button{font:600 .8rem var(--body);color:var(--ink);background:rgba(255,255,255,.04);border:1px solid var(--line);padding:8px 10px;border-radius:4px;cursor:pointer;text-align:left}
+button:hover{border-color:var(--bark)}
+button[aria-pressed=true]{background:var(--ember);color:#1a0e03;border-color:var(--ember)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--ember);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;margin-bottom:8px}
+.row label{font-size:.78rem;color:var(--ink)}
+.row output{font-size:.74rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.row input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--ember);margin:0}
+.colors{display:flex;gap:10px;flex-wrap:wrap}
+.colors label{font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+input[type=color]{width:32px;height:24px;padding:0;border:1px solid var(--line);background:none;border-radius:3px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stat{font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
+#hint{position:fixed;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));font-size:.74rem;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:6px 10px;z-index:3;pointer-events:none;max-width:46vw}
+#load{position:fixed;inset:0;display:grid;place-items:center;z-index:9;background:var(--night);font:400 1.2rem var(--display);color:var(--bark);text-align:center;padding:16px}
+#load small{display:block;font:400 .8rem var(--body);color:var(--muted);margin-top:8px}
+@media(max-width:760px){
+  #panel{top:auto;left:0;right:0;width:auto;max-height:44vh;border-right:0;border-top:1px solid var(--line)}
+  #hint{display:none}
+}
+</style>
+
+<div id="stage"></div>
+<aside id="panel">
+  <h1>Кисть мха</h1>
+  <section>
+    <h2>Что рисуем</h2>
+    <div class="tabs" id="tabs"></div>
+  </section>
+  <section>
+    <h2 id="ptitle">Параметры кисти</h2>
+    <div id="params"></div>
+  </section>
+  <section>
+    <h2>Цвета слоя</h2>
+    <div class="colors" id="colors"></div>
+  </section>
+  <section>
+    <h2>Сцена</h2>
+    <div id="globals"></div>
+  </section>
+  <section class="acts">
+    <button id="bMode" aria-pressed="true">Кисть</button>
+    <button id="bRot" aria-pressed="false">Вращать</button>
+    <button id="bUndo">Отменить</button>
+    <button id="bExample">Пример</button>
+    <button id="bClear">Очистить всё</button>
+  </section>
+  <div class="stat" id="stat"></div>
+</aside>
+<div id="hint">Левая кнопка: рисовать · правая: вращать · колесо: масштаб · пробел: орбита</div>
+<div id="load">Загрузка домика<small id="lp">геометрия…</small></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(async function(){
+const $=id=>document.getElementById(id);
+const rnd=Math.random;
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
+$('stage').appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(35,1,0.01,50);
+camera.position.set(0.9,0.55,1.35);
+const controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.target.set(0,0.33,0); controls.enableDamping=true; controls.dampingFactor=.08;
+controls.minDistance=0.12; controls.maxDistance=4; controls.maxPolarAngle=Math.PI*0.52; controls.autoRotateSpeed=1.2;
+controls.mouseButtons={LEFT:THREE.MOUSE.ROTATE,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.ROTATE};
+const SUN=new THREE.Vector3(-1.2,1.6,1.0).normalize();
+scene.add(new THREE.HemisphereLight(0x7fa3a8,0x1c130b,0.8));
+const sun=new THREE.DirectionalLight(0xffd9a8,1.7); sun.position.copy(SUN).multiplyScalar(3); scene.add(sun);
+const rim=new THREE.DirectionalLight(0x6ea0b0,0.9); rim.position.set(1.4,0.8,-1.2); scene.add(rim);
+const ground=new THREE.Mesh(new THREE.CircleGeometry(1.6,64),new THREE.MeshBasicMaterial({color:0x0b100e}));
+ground.rotation.x=-Math.PI/2; ground.position.y=-0.002; scene.add(ground);
+
+// ---------- geometry + textures ----------
+const lp=$('lp');
+async function loadGeo(g){
+  const meta=await (await fetch(g+'.json')).json();
+  const buf=await (await fetch(g+'.wasm')).arrayBuffer();
+  const o=meta.off,n=meta.n;
+  const pq=new Int16Array(buf,o[0],n*3), nq=new Int8Array(buf,o[1],n*4), uq=new Uint16Array(buf,o[2],n*2);
+  const ix=new Uint32Array(buf.slice(o[3],o[3]+meta.ni*4));
+  const pos=new Float32Array(n*3), nor=new Float32Array(n*3);
+  for(let i=0;i<n;i++) for(let k=0;k<3;k++){pos[i*3+k]=pq[i*3+k]/32767*meta.e[k]+meta.c[k]; nor[i*3+k]=nq[i*4+k]/127;}
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+  geo.setAttribute('uv',new THREE.BufferAttribute(uq,2,true));
+  geo.setIndex(new THREE.BufferAttribute(ix,1));
+  const aMoss=new THREE.BufferAttribute(new Float32Array(n*3),3); aMoss.setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute('aMoss',aMoss);
+  return {geo,pos,nor,ix,n,aMoss,moss:aMoss.array};
+}
+function loadTex(url,srgb){return new Promise((res,rej)=>new THREE.TextureLoader().load(url,t=>{t.flipY=false;t.anisotropy=renderer.capabilities.getMaxAnisotropy();if(srgb)t.encoding=THREE.sRGBEncoding;res(t);},undefined,rej));}
+const G=await Promise.all([loadGeo('g0'),loadGeo('g1')]);
+lp.textContent='текстуры…';
+const TX=await Promise.all([loadTex('g0_new.jpg',true),loadTex('g1_new.jpg',true),loadTex('g0_normal.jpg',false),loadTex('g1_normal.jpg',false)]);
+const baseMats=[0,1].map(i=>new THREE.MeshStandardMaterial({map:TX[i],normalMap:TX[2+i],roughness:.92,metalness:0,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:2}));
+G.forEach((g,i)=>{g.mesh=new THREE.Mesh(g.geo,baseMats[i]); scene.add(g.mesh);});
+
+// spatial grid of vertices + vertex->triangle
+const BMIN=[-0.36,-0.02,-0.5], CS=0.02, NX=37, NY=46, NZ=52;
+G.forEach(g=>{
+  const cnt=new Int32Array(NX*NY*NZ+1), cell=new Int32Array(g.n);
+  for(let i=0;i<g.n;i++){
+    const ix=Math.max(0,Math.min(NX-1,Math.floor((g.pos[i*3]-BMIN[0])/CS))),iy=Math.max(0,Math.min(NY-1,Math.floor((g.pos[i*3+1]-BMIN[1])/CS))),iz=Math.max(0,Math.min(NZ-1,Math.floor((g.pos[i*3+2]-BMIN[2])/CS)));
+    cell[i]=ix+NX*(iy+NY*iz); cnt[cell[i]+1]++;
+  }
+  for(let i=1;i<cnt.length;i++) cnt[i]+=cnt[i-1];
+  const fill=cnt.slice(0,-1), items=new Int32Array(g.n);
+  for(let i=0;i<g.n;i++) items[fill[cell[i]]++]=i;
+  g.cstart=cnt; g.citems=items;
+  g.vtri=new Int32Array(g.n).fill(-1);
+  for(let t=0;t<g.ix.length/3;t++) for(let k=0;k<3;k++) g.vtri[g.ix[t*3+k]]=t;
+});
+function query(g,P,r,out){ // vertex indices within r
+  out.length=0;
+  const x0=Math.max(0,Math.floor((P.x-r-BMIN[0])/CS)),x1=Math.min(NX-1,Math.floor((P.x+r-BMIN[0])/CS));
+  const y0=Math.max(0,Math.floor((P.y-r-BMIN[1])/CS)),y1=Math.min(NY-1,Math.floor((P.y+r-BMIN[1])/CS));
+  const z0=Math.max(0,Math.floor((P.z-r-BMIN[2])/CS)),z1=Math.min(NZ-1,Math.floor((P.z+r-BMIN[2])/CS));
+  const r2=r*r;
+  for(let z=z0;z<=z1;z++)for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+    const c=x+NX*(y+NY*z);
+    for(let k=g.cstart[c];k<g.cstart[c+1];k++){
+      const i=g.citems[k],dx=g.pos[i*3]-P.x,dy=g.pos[i*3+1]-P.y,dz=g.pos[i*3+2]-P.z,d2=dx*dx+dy*dy+dz*dz;
+      if(d2<r2) out.push(i,Math.sqrt(d2));
+    }
+  }
+  return out;
+}
+
+// ---------- GPU picking (position written to colour) ----------
+const BB={min:new THREE.Vector3(-0.35,0,-0.5),size:new THREE.Vector3(0.7,0.87,1.0)};
+const pickMat=new THREE.ShaderMaterial({uniforms:{bmin:{value:BB.min},bsize:{value:BB.size}},
+  vertexShader:'varying vec3 vP; void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:'uniform vec3 bmin; uniform vec3 bsize; varying vec3 vP; void main(){gl_FragColor=vec4((vP-bmin)/bsize,1.);}'});
+const pickScene=new THREE.Scene(); G.forEach(g=>pickScene.add(new THREE.Mesh(g.geo,pickMat)));
+const pickRT=new THREE.WebGLRenderTarget(1,1,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,format:THREE.RGBAFormat,type:THREE.UnsignedByteType});
+const pixel=new Uint8Array(4);
+function pick(cx,cy){
+  const W=innerWidth,H=innerHeight;
+  camera.setViewOffset(W,H,Math.floor(cx),Math.floor(cy),1,1);
+  const oc=new THREE.Color(); renderer.getClearColor(oc); const oa=renderer.getClearAlpha();
+  renderer.setRenderTarget(pickRT); renderer.setClearColor(0x000000,0); renderer.clear();
+  renderer.setScissorTest(false); renderer.render(pickScene,camera);
+  renderer.readRenderTargetPixels(pickRT,0,0,1,1,pixel);
+  renderer.setRenderTarget(null); renderer.setClearColor(oc,oa); camera.clearViewOffset();
+  if(pixel[3]<200) return null;
+  return new THREE.Vector3(BB.min.x+pixel[0]/255*BB.size.x,BB.min.y+pixel[1]/255*BB.size.y,BB.min.z+pixel[2]/255*BB.size.z);
+}
+
+// ---------- moss: shell shader ----------
+const U={uTime:{value:0},uWind:{value:0.5},uHeight:{value:0.018},uDroop:{value:0.35},uStrand:{value:260},uSun:{value:SUN},uTint:{value:new THREE.Color(1,1,1)}};
+const mossVS=`
+attribute vec3 aMoss; attribute float aShell;
+uniform float uTime,uWind,uHeight,uDroop;
+varying float vS,vW,vTone; varying vec3 vP,vN;
+void main(){
+  float s=aShell, w=aMoss.x; vS=s; vW=w; vTone=aMoss.z; vP=position; vN=normal;
+  float hgt=aMoss.y*uHeight;
+  vec3 p=position+normal*(s*hgt*smoothstep(0.02,0.6,w));
+  p.y-=s*s*uDroop*hgt*0.6;
+  p.xz+=vec2(sin(uTime*1.3+position.x*40.),cos(uTime*1.1+position.z*40.))*uWind*s*s*hgt*0.25;
+  gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);
+}`;
+const noiseGLSL=`
+float h3(vec3 p){p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}
+float vn(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+ return mix(mix(mix(h3(i),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),
+            mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z);}`;
+const mossFS=noiseGLSL+`
+uniform float uStrand; uniform vec3 uSun; uniform vec3 uTint;
+varying float vS,vW,vTone; varying vec3 vP,vN;
+vec3 pal(float t,float tone){
+  vec3 r0=vec3(.045,.10,.035),m0=vec3(.15,.29,.07),t0=vec3(.50,.62,.19);   // deep green
+  vec3 r1=vec3(.09,.09,.03),m1=vec3(.30,.30,.09),t1=vec3(.70,.63,.24);     // olive / ochre
+  vec3 r2=vec3(.06,.10,.09),m2=vec3(.25,.36,.30),t2=vec3(.64,.74,.62);     // pale lichen
+  float a=clamp(tone*2.,0.,1.), b=clamp(tone*2.-1.,0.,1.);
+  vec3 R=mix(mix(r0,r1,a),r2,b), M=mix(mix(m0,m1,a),m2,b), T=mix(mix(t0,t1,a),t2,b);
+  return t<.5?mix(R,M,t*2.):mix(M,T,(t-.5)*2.);
+}
+void main(){
+  vec3 q=vP*uStrand; vec3 c=floor(q); vec3 f=fract(q)-.5;
+  float r1=h3(c);
+  vec3 jit=(vec3(h3(c+7.1),h3(c+13.7),h3(c+3.3))-.5)*.5;
+  float d=length(f-jit);
+  float clump=vn(vP*uStrand*.12);
+  float Hh=clamp((.35+.65*clump)*(.55+.45*r1)*smoothstep(.02,.5,vW),0.,1.);
+  if(vS<.001){ if(vW<.3+.25*r1) discard; }
+  else {
+    if(vS>Hh) discard;
+    float rad=.58*(1.-pow(vS/max(Hh,.05),1.4));
+    if(d>rad) discard;
+  }
+  float sn=vS/max(Hh,.05);
+  vec3 col=pal(clamp(sn,0.,1.)*.9+.05+(clump-.5)*.25,vTone)*uTint;
+  vec3 N=normalize(vN);
+  float L=dot(N,normalize(uSun))*.5+.5;
+  float band=mix(L,floor(L*3.+.5)/3.,.55);                // hand-painted light bands
+  col*=mix(vec3(.38,.52,.62),vec3(1.2,1.04,.82),band);
+  col*=mix(.32,1.,pow(clamp(vS,0.,1.),.6));              // dark roots
+  col+=vec3(.12,.15,.05)*smoothstep(.75,1.,sn)*band;      // sun-caught tips
+  gl_FragColor=vec4(col,1.);
+}`;
+const mossMat=new THREE.ShaderMaterial({uniforms:U,vertexShader:mossVS,fragmentShader:mossFS});
+let shellN=14;
+const shellMeshes=G.map(g=>{
+  const ig=new THREE.InstancedBufferGeometry();
+  ig.setAttribute('position',g.geo.getAttribute('position')); ig.setAttribute('normal',g.geo.getAttribute('normal')); ig.setAttribute('aMoss',g.aMoss); ig.setIndex(g.geo.index);
+  const m=new THREE.Mesh(ig,mossMat); m.frustumCulled=false; scene.add(m); return m;
+});
+function setShells(n){
+  shellN=n;
+  shellMeshes.forEach(m=>{const a=new Float32Array(n);for(let i=0;i<n;i++)a[i]=i/(n-1);m.geometry.setAttribute('aShell',new THREE.InstancedBufferAttribute(a,1));m.geometry.instanceCount=n;});
+}
+setShells(14);
+
+// ---------- instanced plants ----------
+const PU=()=>({uTime:U.uTime,uWind:U.uWind,uSun:U.uSun,uC0:{value:new THREE.Color()},uC1:{value:new THREE.Color()},uC2:{value:new THREE.Color()},uSize:{value:1},uGlow:{value:0}});
+const plantVS=`
+attribute vec3 iPos; attribute vec4 iNrm; attribute vec4 iData; attribute float aT; attribute float aPart;
+uniform float uTime,uWind,uSize;
+varying float vT,vPart,vSeed; varying vec3 vNw,vWp;
+void main(){
+  vec3 u=normalize(iNrm.xyz);
+  vec3 r0=abs(u.y)<.99?vec3(0.,1.,0.):vec3(1.,0.,0.);
+  vec3 t1=normalize(cross(r0,u)); vec3 t2=cross(u,t1);
+  float a=iData.x; vec3 right=t1*cos(a)+t2*sin(a); vec3 fwd=cross(right,u);
+  vec3 L=position; L.x*=iData.z; L.z+=iNrm.w*aT*aT;
+  float ph=uTime*1.6+iPos.x*37.+iPos.z*29.+iData.w*6.28;
+  L.x+=(sin(ph)+.3*sin(ph*2.3))*uWind*aT*aT*.3;
+  L.z+=cos(ph*.8)*uWind*aT*aT*.15;
+  vec3 wp=iPos+(right*L.x+u*L.y+fwd*L.z)*iData.y*uSize;
+  vNw=normalize(right*normal.x+u*normal.y+fwd*normal.z);
+  vT=aT; vPart=aPart; vSeed=iData.w; vWp=wp;
+  gl_Position=projectionMatrix*viewMatrix*vec4(wp,1.);
+}`;
+const plantFS=`
+uniform vec3 uSun,uC0,uC1,uC2; uniform float uGlow;
+varying float vT,vPart,vSeed; varying vec3 vNw,vWp;
+void main(){
+  vec3 col=mix(uC0,uC1,pow(vT,.85));
+  if(vPart>.5) col=mix(uC2*.7,uC2*1.25,vT);
+  col*=vec3(.9+.2*vSeed,.92+.16*fract(vSeed*7.3),.9);
+  vec3 N=normalize(vNw); if(!gl_FrontFacing) N=-N;
+  float L=dot(N,normalize(uSun))*.5+.5; float band=mix(L,floor(L*3.+.5)/3.,.6);
+  col*=mix(vec3(.36,.5,.6),vec3(1.2,1.04,.82),band);
+  col*=mix(.4,1.,smoothstep(0.,.45,vT)+vPart);
+  vec3 V=normalize(cameraPosition-vWp); col+=vec3(.05,.1,.12)*pow(1.-abs(dot(N,V)),3.);
+  col+=uGlow*vec3(1.,.55,.18)*vPart*(.35+vT*.65);
+  gl_FragColor=vec4(col,1.);
+}`;
+function bladeGeo(){
+  const seg=6,pos=[],nor=[],T=[],P=[],idx=[];
+  for(let j=0;j<=seg;j++){const t=j/seg,w=(1-.92*Math.pow(t,1.3))*.5;
+    pos.push(-w,t,0,w,t,0);nor.push(0,0,1,0,0,1);T.push(t,t);P.push(0,0);
+    if(j<seg){const a=j*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}}
+  return {pos,nor,T,P,idx};
+}
+function fernGeo(){
+  const pos=[],nor=[],T=[],P=[],idx=[]; const fr=5;
+  for(let f=0;f<fr;f++){
+    const yaw=f/fr*Math.PI*2+rnd()*.4, sc=.75+rnd()*.35, tilt=.9+rnd()*.3;
+    const cy=Math.cos(yaw),sy=Math.sin(yaw);
+    const tf=(x,y,z)=>[x*cy+z*sy,y,-x*sy+z*cy];
+    const R=(t)=>[0,t*.85*tilt*sc,(t*t*.9+.04)*sc]; const n=13;
+    for(let i=0;i<n;i++){
+      const t=i/(n-1),t2=(i+1)/(n-1); const a=R(t),b=R(t2);
+      const L=(.24*Math.pow(Math.sin(Math.PI*Math.min(1,t*.95+.04)),.8)+.03)*sc;
+      for(const sg of[-1,1]){
+        const m=[a[0]+sg*L*.5,a[1]+(b[1]-a[1])*.4-.03,a[2]+(b[2]-a[2])*.4];
+        const tip=[a[0]+sg*L,a[1]+(b[1]-a[1])*.9-.05*L*4,a[2]+(b[2]-a[2])*.9+.02];
+        const q=[R(t2)[0]+sg*L*.18,R(t2)[1],R(t2)[2]];
+        const base=pos.length/3;
+        for(const v of[a,m,tip,q]){const w=tf(v[0],v[1],v[2]);pos.push(w[0],w[1],w[2]);const nn=tf(0,.5,1);nor.push(nn[0],nn[1],nn[2]);T.push(t);P.push(0);}
+        idx.push(base,base+1,base+3,base+1,base+2,base+3);
+      }
+    }
+  }
+  return {pos,nor,T,P,idx};
+}
+function mushGeo(){
+  const pos=[],nor=[],T=[],P=[],idx=[]; const rs=10;
+  const prof=[[.05,0,0],[.045,.18,0],[.04,.38,0],[.045,.46,0],[.2,.47,1],[.24,.55,1],[.2,.66,1],[.11,.74,1],[0,.78,1]];
+  for(let i=0;i<prof.length;i++)for(let k=0;k<=rs;k++){const a=k/rs*Math.PI*2;
+    pos.push(Math.cos(a)*prof[i][0],prof[i][1],Math.sin(a)*prof[i][0]);nor.push(Math.cos(a),.3,Math.sin(a));T.push(Math.min(1,prof[i][1]/.78));P.push(prof[i][2]);}
+  for(let i=0;i<prof.length-1;i++)for(let k=0;k<rs;k++){const a=i*(rs+1)+k,b=a+rs+1;idx.push(a,b,a+1,a+1,b,b+1);}
+  return {pos,nor,T,P,idx};
+}
+class Plant{
+  constructor(name,geoData,max,baseSize,cols,glow){
+    this.name=name;this.max=max;this.count=0;
+    this.iPos=new Float32Array(max*3);this.iNrm=new Float32Array(max*4);this.iData=new Float32Array(max*4);
+    const g=new THREE.InstancedBufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(geoData.pos,3));
+    g.setAttribute('normal',new THREE.Float32BufferAttribute(geoData.nor,3));
+    g.setAttribute('aT',new THREE.Float32BufferAttribute(geoData.T,1));
+    g.setAttribute('aPart',new THREE.Float32BufferAttribute(geoData.P,1));
+    g.setIndex(geoData.idx);
+    this.a=[new THREE.InstancedBufferAttribute(this.iPos,3),new THREE.InstancedBufferAttribute(this.iNrm,4),new THREE.InstancedBufferAttribute(this.iData,4)];
+    this.a.forEach(x=>x.setUsage(THREE.DynamicDrawUsage));
+    g.setAttribute('iPos',this.a[0]);g.setAttribute('iNrm',this.a[1]);g.setAttribute('iData',this.a[2]);
+    g.instanceCount=0;this.geo=g;
+    this.u=PU();this.u.uSize.value=baseSize;this.u.uGlow.value=glow||0;
+    this.setColors(cols);
+    this.mesh=new THREE.Mesh(g,new THREE.ShaderMaterial({uniforms:this.u,vertexShader:plantVS,fragmentShader:plantFS,side:THREE.DoubleSide}));
+    this.mesh.frustumCulled=false;scene.add(this.mesh);
+  }
+  setColors(c){this.cols=c;this.u.uC0.value.set(c[0]);this.u.uC1.value.set(c[1]);if(c[2])this.u.uC2.value.set(c[2]);}
+  add(p,n,rot,size,aspect,bend){
+    if(this.count>=this.max){this.count=0;} // ring: overwrite from start
+    const i=this.count++;
+    this.iPos.set([p.x,p.y,p.z],i*3);this.iNrm.set([n.x,n.y,n.z,bend],i*4);this.iData.set([rot,size,aspect,rnd()],i*4);
+    this.geo.instanceCount=Math.max(this.geo.instanceCount,this.count);this.dirty=true;
+  }
+  removeWithin(P,r){
+    let w=0,r2=r*r;const N=this.geo.instanceCount;
+    for(let i=0;i<N;i++){const dx=this.iPos[i*3]-P.x,dy=this.iPos[i*3+1]-P.y,dz=this.iPos[i*3+2]-P.z;
+      if(dx*dx+dy*dy+dz*dz<r2) continue;
+      if(w!==i){this.iPos.copyWithin(w*3,i*3,i*3+3);this.iNrm.copyWithin(w*4,i*4,i*4+4);this.iData.copyWithin(w*4,i*4,i*4+4);}
+      w++;}
+    this.count=w;this.geo.instanceCount=w;this.dirty=true;
+  }
+  clear(){this.count=0;this.geo.instanceCount=0;this.dirty=true;}
+  snap(){const n=this.geo.instanceCount;return {n,p:this.iPos.slice(0,n*3),r:this.iNrm.slice(0,n*4),d:this.iData.slice(0,n*4)};}
+  restore(s){this.iPos.set(s.p);this.iNrm.set(s.r);this.iData.set(s.d);this.count=s.n;this.geo.instanceCount=s.n;this.dirty=true;}
+  flush(){if(this.dirty){this.a.forEach(x=>x.needsUpdate=true);this.dirty=false;}}
+}
+const plants={
+  grass:new Plant('grass',bladeGeo(),50000,0.03,['#16260c','#8aa43a'],0),
+  fern:new Plant('fern',fernGeo(),6000,0.06,['#0f2410','#4f7d2a'],0),
+  mush:new Plant('mush',mushGeo(),5000,0.035,['#d8c9a6','#d8c9a6','#a5521e'],0.55)
+};
+
+// ---------- brushes / UI ----------
+const BR={
+  moss:{label:'Мох',params:[['radius','Радиус',0.01,0.12,0.005,0.04],['strength','Сила заполнения',0.1,1,0.05,0.8],['height','Высота ворса',0.2,3,0.05,1],['tone','Тон: зелёный → охра → лишайник',0,1,0.02,0.1]]},
+  grass:{label:'Трава',params:[['radius','Радиус',0.01,0.12,0.005,0.04],['density','Плотность',0.1,3,0.05,1],['size','Высота',0.2,3,0.05,1],['width','Ширина',0.3,3,0.05,1],['bend','Изгиб',0,1.2,0.05,0.35],['lean','Тянуться вверх',0,1,0.05,0.5],['jitter','Разброс размера',0,1,0.05,0.4]]},
+  fern:{label:'Папоротник',params:[['radius','Радиус',0.01,0.12,0.005,0.04],['density','Плотность',0.1,3,0.05,0.6],['size','Размер',0.3,3,0.05,1],['lean','Тянуться вверх',0,1,0.05,0.4],['jitter','Разброс размера',0,1,0.05,0.4]]},
+  mush:{label:'Грибы',params:[['radius','Радиус',0.01,0.12,0.005,0.04],['density','Плотность',0.1,3,0.05,0.5],['size','Размер',0.3,3,0.05,1],['lean','Тянуться вверх',0,1,0.05,0.7],['jitter','Разброс размера',0,1,0.05,0.5]]},
+  erase:{label:'Ластик',params:[['radius','Радиус',0.01,0.12,0.005,0.05]]}
+};
+const PV={}; for(const k in BR){PV[k]={};BR[k].params.forEach(p=>PV[k][p[0]]=p[5]);}
+let cur='moss';
+const colorDefs={
+  moss:[['Оттенок','#ffffff']],
+  grass:[['Корень','#16260c'],['Кончик','#8aa43a']],
+  fern:[['Основание','#0f2410'],['Листья','#4f7d2a']],
+  mush:[['Ножка','#d8c9a6'],['Шляпка','#a5521e']],
+  erase:[]
+};
+function buildTabs(){
+  const t=$('tabs');t.innerHTML='';
+  for(const k in BR){const b=document.createElement('button');b.textContent=BR[k].label;b.setAttribute('aria-pressed',String(k===cur));b.onclick=()=>{cur=k;buildTabs();buildParams();buildColors();};t.appendChild(b);}
+}
+function slider(parent,id,label,min,max,step,val,onInput){
+  const row=document.createElement('div');row.className='row';
+  row.innerHTML=`<label for="${id}">${label}</label><output id="${id}o"></output><input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${val}">`;
+  parent.appendChild(row);const inp=row.querySelector('input'),out=row.querySelector('output');
+  const f=()=>{out.textContent=(+inp.value).toFixed(step<0.01?3:2);onInput(+inp.value);};inp.oninput=f;f();return inp;
+}
+function buildParams(){
+  const p=$('params');p.innerHTML='';
+  BR[cur].params.forEach(([key,label,min,max,step])=>slider(p,'p_'+cur+'_'+key,label,min,max,step,PV[cur][key],v=>PV[cur][key]=v));
+}
+function buildColors(){
+  const c=$('colors');c.innerHTML='';
+  const defs=colorDefs[cur];
+  defs.forEach((d,i)=>{
+    const l=document.createElement('label');const id='c_'+cur+i;
+    const val=cur==='moss'?'#'+U.uTint.value.getHexString():(cur==='mush'?(i===0?plants.mush.cols[0]:plants.mush.cols[2]):plants[cur].cols[i]);
+    l.innerHTML=`<input type="color" id="${id}" value="${val}">${d[0]}`;c.appendChild(l);
+    l.querySelector('input').oninput=e=>{
+      const v=e.target.value;
+      if(cur==='moss') U.uTint.value.set(v);
+      else if(cur==='mush'){const pl=plants.mush;const cc=pl.cols.slice();if(i===0){cc[0]=v;cc[1]=v;}else cc[2]=v;pl.setColors(cc);}
+      else{const pl=plants[cur];const cc=pl.cols.slice();cc[i]=v;pl.setColors(cc);}
+    };
+  });
+  if(!defs.length) c.innerHTML='<span class="stat">Стирает мох и растения под кистью.</span>';
+}
+const gl=$('globals');
+slider(gl,'g_wind','Ветер',0,2,0.05,0.5,v=>U.uWind.value=v);
+slider(gl,'g_droop','Пушистость мха (провис)',0,1,0.05,0.35,v=>U.uDroop.value=v);
+slider(gl,'g_strand','Размер ворса мха',100,600,10,260,v=>U.uStrand.value=v);
+slider(gl,'g_shell','Слои мха (качество)',6,24,1,14,v=>{if(Math.round(v)!==shellN)setShells(Math.round(v));});
+buildTabs();buildParams();buildColors();
+
+// ---------- painting ----------
+const tmpV=new THREE.Vector3(),tmpN=new THREE.Vector3(),tmpQ=new THREE.Vector3();
+const lists=[[],[]];
+function surfNormal(P,r){
+  tmpN.set(0,0,0);let c=0;
+  G.forEach((g,gi)=>{const L=query(g,P,r*.7,lists[gi]);for(let k=0;k<L.length;k+=2){const i=L[k];tmpN.x+=g.nor[i*3];tmpN.y+=g.nor[i*3+1];tmpN.z+=g.nor[i*3+2];c++;}});
+  if(!c) return tmpN.set(0,1,0); return tmpN.normalize();
+}
+function dab(P,brush,P2){
+  const prm=PV[brush], r=prm.radius, N=surfNormal(P,r).clone();
+  G.forEach((g,gi)=>{query(g,P,r,lists[gi]);});
+  if(brush==='moss'||brush==='erase'){
+    G.forEach((g,gi)=>{
+      const L=lists[gi];let touched=false;
+      for(let k=0;k<L.length;k+=2){
+        const i=L[k],f=Math.pow(1-L[k+1]/r,0.7),m=g.moss;
+        if(brush==='moss'){
+          const w=m[i*3];m[i*3]=Math.min(1,Math.max(w,f*(0.5+prm.strength)));
+          m[i*3+1]=m[i*3+1]*(1-f)+prm.height*f; m[i*3+2]=m[i*3+2]*(1-f)+prm.tone*f;
+        }else{ m[i*3]=Math.max(0,m[i*3]-f*1.2); }
+        touched=true;
+      }
+      if(touched) g.aMoss.needsUpdate=true;
+    });
+  }
+  if(brush==='erase'){for(const k in plants)plants[k].removeWithin(P,r);return;}
+  if(brush==='moss') return;
+  const pl=plants[brush], area=Math.pow(r/0.03,2);
+  const per={grass:16,fern:0.9,mush:0.7}[brush];
+  let n=per*prm.density*area; n=Math.floor(n)+(rnd()<n%1?1:0);
+  const cand=[];G.forEach((g,gi)=>{const L=lists[gi];for(let k=0;k<L.length;k+=2)cand.push(gi,L[k]);});
+  if(!cand.length) return;
+  for(let s=0;s<n;s++){
+    const ci=Math.floor(rnd()*cand.length/2)*2, g=G[cand[ci]], v=cand[ci+1], t=g.vtri[v]; if(t<0) continue;
+    let b0=rnd(),b1=rnd(); if(b0+b1>1){b0=1-b0;b1=1-b1;} const b2=1-b0-b1;
+    const a=g.ix[t*3],b=g.ix[t*3+1],c=g.ix[t*3+2];
+    tmpQ.set(g.pos[a*3]*b0+g.pos[b*3]*b1+g.pos[c*3]*b2,g.pos[a*3+1]*b0+g.pos[b*3+1]*b1+g.pos[c*3+1]*b2,g.pos[a*3+2]*b0+g.pos[b*3+2]*b1+g.pos[c*3+2]*b2);
+    if(tmpQ.distanceTo(P)>r) continue;
+    const nn=new THREE.Vector3(g.nor[a*3]*b0+g.nor[b*3]*b1+g.nor[c*3]*b2,g.nor[a*3+1]*b0+g.nor[b*3+1]*b1+g.nor[c*3+1]*b2,g.nor[a*3+2]*b0+g.nor[b*3+2]*b1+g.nor[c*3+2]*b2).normalize();
+    const lean=prm.lean||0; nn.lerp(new THREE.Vector3(0,1,0),lean*0.85).normalize();
+    const j=prm.jitter||0, size=prm.size*(1+(rnd()-.5)*2*j*0.8);
+    pl.add(tmpQ,nn,rnd()*6.283,size*(brush==='grass'?(0.6+rnd()*0.8):1),(prm.width||1)*(0.8+rnd()*0.4),(prm.bend||0)*(0.3+rnd()*0.9));
+  }
+}
+// undo
+const undoStack=[];
+function snapshot(){
+  const s={moss:G.map(g=>g.moss.slice()),plants:{}};for(const k in plants)s.plants[k]=plants[k].snap();
+  undoStack.push(s);if(undoStack.length>8)undoStack.shift();
+}
+function undo(){
+  const s=undoStack.pop();if(!s)return;
+  G.forEach((g,i)=>{g.moss.set(s.moss[i]);g.aMoss.needsUpdate=true;});
+  for(const k in plants)plants[k].restore(s.plants[k]);
+}
+$('bUndo').onclick=undo;
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();}if(e.code==='Space'&&e.target===document.body){e.preventDefault();spaceDown=true;}});
+addEventListener('keyup',e=>{if(e.code==='Space')spaceDown=false;});
+let spaceDown=false;
+function clearAll(){snapshot();G.forEach(g=>{g.moss.fill(0);g.aMoss.needsUpdate=true;});for(const k in plants)plants[k].clear();}
+$('bClear').onclick=clearAll;
+
+// ring cursor
+const ring=new THREE.Mesh(new THREE.RingGeometry(.88,1,48),new THREE.MeshBasicMaterial({color:0xe8913a,transparent:true,opacity:.9,depthTest:false,side:THREE.DoubleSide}));
+ring.renderOrder=10;ring.visible=false;scene.add(ring);
+
+let paintMode=true,painting=false,last=null,mouse=null,moved=false;
+$('bMode').onclick=e=>{paintMode=!paintMode;e.currentTarget.setAttribute('aria-pressed',String(paintMode));e.currentTarget.textContent=paintMode?'Кисть':'Орбита';};
+$('bRot').onclick=e=>{controls.autoRotate=!controls.autoRotate;e.currentTarget.setAttribute('aria-pressed',String(controls.autoRotate));};
+const stage=$('stage');
+stage.addEventListener('pointerdown',e=>{
+  if(e.target!==renderer.domElement)return;
+  if(e.button===0&&paintMode&&!spaceDown){controls.enabled=false;painting=true;last=null;snapshot();mouse=[e.clientX,e.clientY];moved=true;renderer.domElement.setPointerCapture(e.pointerId);}
+},true);
+addEventListener('pointerup',()=>{if(painting){painting=false;controls.enabled=true;}});
+renderer.domElement.addEventListener('pointermove',e=>{mouse=[e.clientX,e.clientY];moved=true;});
+renderer.domElement.addEventListener('pointerleave',()=>{ring.visible=false;mouse=null;});
+renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
+
+function handlePointer(){
+  if(!mouse||!moved) return; moved=false;
+  if(!paintMode||spaceDown||(!painting&&controls.enabled===false)){ring.visible=false;return;}
+  const P=pick(mouse[0],mouse[1]);
+  if(!P){ring.visible=false;return;}
+  const r=PV[cur].radius, N=surfNormal(P,r);
+  ring.visible=true;ring.position.copy(P).addScaledVector(N,0.002);ring.scale.setScalar(r);
+  ring.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),N);
+  if(painting){
+    if(!last||last.distanceTo(P)>r*0.3){dab(P,cur);last=P.clone();}
+  }
+}
+// example scene
+function seedExample(){
+  snapshot();
+  G.forEach(g=>g.moss.fill(0));
+  for(const k in plants)plants[k].clear();
+  const save=Object.assign({},PV.moss),sg=Object.assign({},PV.grass),sf=Object.assign({},PV.fern),sm=Object.assign({},PV.mush);
+  const pickV=(f)=>{for(let t=0;t<400;t++){const g=G[rnd()<.55?1:0],i=Math.floor(rnd()*g.n);const y=g.pos[i*3+1],ny=g.nor[i*3+1];if(f(y,ny,g,i))return new THREE.Vector3(g.pos[i*3],y,g.pos[i*3+2]);}return null;};
+  Object.assign(PV.moss,{radius:0.035,strength:0.9,height:1.1,tone:0.1});
+  for(let i=0;i<340;i++){const P=pickV((y,ny)=>y>0.4&&ny>0.25);if(P)dab(P,'moss');}
+  Object.assign(PV.moss,{radius:0.025,height:0.7,tone:0.45});
+  for(let i=0;i<90;i++){const P=pickV((y,ny)=>y<0.3&&y>0.08&&ny<0.5);if(P)dab(P,'moss');}
+  Object.assign(PV.moss,{radius:0.03,height:1.3,tone:0.0});
+  for(let i=0;i<70;i++){const P=pickV((y)=>y<0.1);if(P)dab(P,'moss');}
+  Object.assign(PV.grass,{radius:0.03,density:1,size:1,width:1,bend:.4,lean:.5,jitter:.5});
+  for(let i=0;i<260;i++){const P=pickV((y)=>y<0.07);if(P)dab(P,'grass');}
+  Object.assign(PV.fern,{radius:0.04,density:.6,size:1.1,lean:.4,jitter:.4});
+  for(let i=0;i<34;i++){const P=pickV((y)=>y<0.06);if(P)dab(P,'fern');}
+  Object.assign(PV.mush,{radius:0.03,density:.5,size:1,lean:.7,jitter:.5});
+  for(let i=0;i<22;i++){const P=pickV((y)=>y<0.1);if(P)dab(P,'mush');}
+  Object.assign(PV.moss,save);Object.assign(PV.grass,sg);Object.assign(PV.fern,sf);Object.assign(PV.mush,sm);
+}
+$('bExample').onclick=seedExample;
+
+function layout(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}
+addEventListener('resize',layout);layout();
+seedExample();undoStack.length=0;
+$('load').remove();
+const clock=new THREE.Clock();
+function loop(){
+  requestAnimationFrame(loop);
+  U.uTime.value=clock.getElapsedTime();
+  handlePointer();
+  for(const k in plants)plants[k].flush();
+  $('stat').textContent='травинок '+plants.grass.geo.instanceCount+' · папоротников '+plants.fern.geo.instanceCount+' · грибов '+plants.mush.geo.instanceCount;
+  controls.update();renderer.render(scene,camera);
+}
+loop();
+})().catch(e=>{const l=document.getElementById('load'); if(l) l.innerHTML='Не удалось загрузить сцену<small>'+e.message+'</small>'; console.error(e);});
+</script>
+
+</body></html>

@@ -1,0 +1,9 @@
+<!-- @dsCard group="Feedback" height=150 subtitle="Счётчики и статусы. Статус всегда с иконкой или словом, не только цветом." -->
+<style>.pv{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:20px;background:var(--bg-surface)}</style>
+<div class="pv" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    B.Badge({ text: '3/8', tone: 'orange' }) + B.Badge({ text: '6/8', tone: 'green' }) + B.Badge({ text: '12', tone: 'violet' }) +
+    B.Badge({ text: 'Done', tone: 'success', icon: 'check-circle', size: 'sm' }) + B.Badge({ text: 'Poor', tone: 'warning', icon: 'warning', size: 'sm' }) + B.Badge({ text: 'Missed', tone: 'danger', icon: 'close', size: 'sm' }) + B.Badge({ text: 'New', tone: 'info', icon: 'sparkle', size: 'sm' });
+</script>

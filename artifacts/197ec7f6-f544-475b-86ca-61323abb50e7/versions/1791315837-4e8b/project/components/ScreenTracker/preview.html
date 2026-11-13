@@ -1,0 +1,15 @@
+<!-- @dsCard group="Screens" height=900 width=900 subtitle="Трекер: серия, сон, тренировки, метрики привычек." -->
+<div id="root"></div>
+<script>
+  var B = window.Buddy;
+  function screen() {
+    var header = B.AppHeader({ title: 'My Habits Tracker', inlineTitle: true, tools: 'share', html: '<div style="height:70px"></div>' });
+    var body = '<div style="position:relative;z-index:1;margin:-70px 20px 0;display:flex;flex-direction:column;gap:12px">' +
+      B.StreakCard({ today: 3 }) +
+      '<div class="bd-grid-2" style="gap:12px">' + B.SleepCard({}) + B.WorkoutCard({ percent: 62 }) + '</div>' +
+      B.MetricRow({ object: 'bottle', tone: 'sky', title: 'Drink Water', status: 'Poor', value: 3, total: 8, barTone: 'sky', badgeTone: 'orange' }) +
+      B.MetricRow({ object: 'dumbbell', tone: 'orange', title: 'Workout', status: 'Great', value: 6, total: 8, barTone: 'orange', badgeTone: 'green' }) + '</div>';
+    return B.Phone(header + body, { hero: true, wash: true, tabs: B.TabBar({ current: 'tracker' }) });
+  }
+  document.getElementById('root').innerHTML = B.Stage(screen);
+</script>

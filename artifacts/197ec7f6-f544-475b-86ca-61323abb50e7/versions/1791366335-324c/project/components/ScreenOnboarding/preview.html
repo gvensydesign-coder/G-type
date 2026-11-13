@@ -1,0 +1,18 @@
+<!-- @dsCard group="Launch" height=960 width=900 subtitle="Знакомство с приложением: 4 слайда, параллакс арта и текста, квадратики-пагинация, конфетти на последнем. Листается само и по нажатию." -->
+<style>.rp { padding: 16px 16px 0; display: flex; gap: 12px; align-items: center; background: var(--bg-app); color: var(--text-muted); font: 600 12px/16px var(--font-sans); }</style>
+<div class="rp"><button type="button" class="bd-btn bd-btn--soft" id="replay">Повторить</button><span>слайд 480 мс · арт отстаёт на 70 пикселей · текст появляется с задержкой 160 мс · нажмите «Next» или «Skip»</span></div>
+<div id="stage"></div>
+<script>
+  var B = window.Buddy, timer = null, auto = true;
+  document.getElementById('stage').addEventListener('click', function (e) { if (e.isTrusted) { auto = false; clearInterval(timer); } });
+  function run() {
+    clearInterval(timer);
+    document.getElementById('stage').innerHTML = B.Stage(function () { return B.Phone(B.Onboarding({ current: 0 }), { wash: true }); });
+    auto = true;
+    timer = setInterval(function () {
+      if (!auto) return;
+      Array.prototype.forEach.call(document.querySelectorAll('.bd-onb'), function (root) { if (+root.dataset.i < +root.dataset.n - 1) root.querySelector('.bd-onb__next').click(); });
+    }, 3200);
+  }
+  document.getElementById('replay').addEventListener('click', run); B.wire(document); run();
+</script>

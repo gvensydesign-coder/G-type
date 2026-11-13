@@ -1,0 +1,118 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Витрина Рисованного</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Полноэкранная сцена, снизу полоса управления на «черни» (тёмная доска, кость, уголь). Одна тёмная тема. */
+@font-face { font-family: 'Rub'; src: url('fonts/SkazanieRub.woff2') format('woff2'); font-display: swap; }
+:root {
+  --soot: #0b0807; --glass: rgba(18, 12, 10, .84); --line: rgba(234, 223, 198, .2);
+  --bone: #eadfc6; --boneDim: #a99b80; --ember: #ff8a3c; --ink: #120c0a;
+  --f-disp: 'Rub', Georgia, 'Times New Roman', serif; --f-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--soot); color: var(--bone); font: 13px/1.35 var(--f-body); overflow: hidden; }
+canvas#c { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; touch-action: none; }
+.title { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; max-width: min(560px, 70vw); }
+.title h1 { font: 28px/1 var(--f-disp); margin: 0; text-shadow: 0 2px 0 var(--ink); text-wrap: balance; }
+.title p { margin: 5px 0 0; color: var(--boneDim); font-size: 12px; text-shadow: 0 1px 0 var(--ink); }
+#say { position: fixed; top: calc(92px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); font: 15px var(--f-disp); color: var(--ember); text-shadow: 0 1px 0 var(--ink); pointer-events: none; }
+#hide { position: fixed; z-index: 2; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); }
+#bar { position: fixed; top: 0; right: 0; bottom: 0; width: 300px; background: var(--glass); border-left: 1px solid var(--line); backdrop-filter: blur(6px);
+  padding-block: calc(54px + env(safe-area-inset-top, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)); padding-left: 14px; padding-right: max(14px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+body.clean #bar, body.clean .title, body.clean #labels, body.clean #say { display: none; }
+.grp { display: grid; gap: 5px; min-width: 0; }
+.grp > b { font: 11px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--boneDim); font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; gap: 5px; }
+button { font: inherit; color: var(--bone); background: rgba(42, 31, 26, .9); border: 1px solid var(--line); padding: 6px 11px; cursor: pointer;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+button:hover { border-color: var(--boneDim); }
+button:focus-visible { outline: 2px solid var(--ember); outline-offset: 1px; }
+button.on { border-color: var(--ember); box-shadow: inset 0 0 0 1px var(--ember); color: #fff; }
+button.aura { font: 14px var(--f-disp); }
+label.ck { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--bone); cursor: pointer; }
+label.ck input { accent-color: var(--ember); margin: 0; }
+kbd { font: 11px ui-monospace, monospace; color: var(--boneDim); border: 1px solid var(--line); padding: 0 4px; border-radius: 3px; }
+#labels { position: fixed; inset: 0; pointer-events: none; }
+.lbl { position: absolute; left: 0; top: 0; font: 13px var(--f-disp); color: var(--bone); background: rgba(18, 12, 10, .7); padding: 2px 7px; white-space: nowrap; border: 1px solid var(--line); }
+body.drawing #bar, body.drawing .title, body.drawing #say, body.drawing #hide { display: none; }
+#hmPanel { position: fixed; top: 0; left: 0; bottom: 0; width: min(440px, 45vw); z-index: 3; background: var(--glass); border-right: 1px solid var(--line); backdrop-filter: blur(6px); overflow-y: auto;
+  padding-block: calc(12px + env(safe-area-inset-top, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)); padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: 14px; display: flex; flex-direction: column; gap: 10px; }
+#hmPanel[hidden] { display: none; }
+.hm-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hm-head b { font: 22px/1 var(--f-disp); }
+.hm-mats, .hm-layers { display: flex; flex-wrap: wrap; gap: 5px; }
+.hm-hint { margin: 0; color: var(--boneDim); font-size: 12px; min-height: 1em; }
+.hm-vars { display: flex; gap: 6px; }
+.hm-thumb { width: 64px; height: 64px; border: 1px solid var(--line); background: #1d1411; cursor: pointer; }
+.hm-thumb.on { border-color: var(--ember); box-shadow: 0 0 0 1px var(--ember); }
+.hm-pad { position: relative; width: 100%; max-width: 412px; aspect-ratio: 1; }
+.hm-pad canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; border: 1px solid var(--line); background: #1d1411; }
+.hm-params { display: grid; gap: 4px; }
+.hm-sl { display: grid; grid-template-columns: 110px 1fr 38px; align-items: center; gap: 6px; font-size: 12px; }
+.hm-tools .hm-sl { grid-template-columns: auto 90px; }
+.hm-pens { display: flex; flex-wrap: wrap; gap: 4px; width: 100%; }
+.hm-pens button { padding: 4px 8px; font-size: 12px; }
+.hm-tools .hm-hint { width: 100%; }
+.hm-sl input[type=range] { accent-color: var(--ember); width: 100%; }
+.hm-color input[type=color] { width: 40px; height: 26px; border: 1px solid var(--line); background: none; padding: 0; }
+#hmOpen { width: 100%; }
+#hmPanel.mode-obj .hm-layers, #hmPanel.mode-obj #hmHint, #hmPanel.mode-obj .hm-vars, #hmPanel.mode-obj .hm-pad, #hmPanel.mode-obj .hm-tools, #hmPanel.mode-obj .hm-params, #hmPanel.mode-obj .hm-color, #hmPanel.mode-obj .hm-save, #hmPanel.mode-obj #hmSaved { display: none; }
+#hmPanel:not(.mode-obj) #onPanel { display: none; }
+#hmPanel > * { flex-shrink: 0; }
+#hmPanel [hidden] { display: none !important; }
+.on-mask, .on-notes { display: flex; flex-direction: column; gap: 10px; }
+.on-tool { padding-bottom: 4px; }
+.hm-mode { padding-top: 6px; border-top: 1px solid var(--line); }
+.on-panel { display: flex; flex-direction: column; gap: 10px; }
+.on-sw { display: inline-flex; gap: 5px; }
+.on-c { width: 26px; height: 26px; padding: 0; clip-path: none; border-radius: 50%; border: 2px solid var(--line); }
+.on-c.on { border-color: #fff; box-shadow: 0 0 0 2px var(--ember); }
+.on-pen { align-items: center; gap: 12px; }
+.on-pen .hm-sl { grid-template-columns: auto 110px; }
+#hmPanel textarea { font: inherit; color: var(--bone); background: rgba(42, 31, 26, .9); border: 1px solid var(--line); padding: 6px 8px; resize: vertical; width: 100%; }
+#hmPanel textarea:focus-visible { outline: 2px solid var(--ember); }
+.on-list { display: grid; gap: 4px; }
+.on-item { display: grid; grid-template-columns: 10px 1fr auto; gap: 8px; align-items: start; padding: 5px 6px; border: 1px solid var(--line); cursor: pointer; font-size: 12px; }
+.on-item.on { border-color: var(--ember); }
+.on-item i { color: var(--boneDim); font-style: normal; }
+.on-item button { padding: 0 8px; }
+.on-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 3px; }
+body.drawing.obj-draw canvas#c { cursor: crosshair; }
+@media (max-width: 760px) { #hmPanel { top: auto; width: auto; right: 0; max-height: 52vh; border-right: 0; border-top: 1px solid var(--line); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .hm-pad { max-width: min(330px, 100%); } }
+#loading { position: fixed; inset: 0; display: grid; place-items: center; background: var(--soot); z-index: 5; font: 22px var(--f-disp); }
+#err { position: fixed; left: max(16px, env(safe-area-inset-left, 0px)); top: 110px; color: #ff9a8a; max-width: 60vw; white-space: pre-wrap; font-size: 12px; }
+@media (max-width: 760px) { #bar { top: auto; left: 0; width: auto; max-height: 44vh; border-left: 0; border-top: 1px solid var(--line); padding-block: 10px calc(10px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); gap: 12px; } .title h1 { font-size: 21px; } .title p { display: none; } #say { top: calc(44px + env(safe-area-inset-top, 0px)); font-size: 13px; } .lbl { font-size: 11px; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+<div class="title"><h1>Витрина «Рисованного»</h1><p>У каждого материала свой блик, тень, фактура и мазок. Мир добавляет отсвет земли и неба, дымку и дым у огня, мох и сырость у земли. Свет и небо из палитр игры.</p></div>
+<div id="say"></div>
+<button id="hide">Скрыть панель</button>
+<div id="bar">
+  <div class="grp"><b>Свои каракули</b><button class="aura" id="hmOpen">Рисовать по предметам и свои каракули</button></div>
+  <div class="grp"><b>Ракурс</b><div class="row" id="views"></div></div>
+  <div class="grp"><b>Время суток <kbd>1–4</kbd></b><div class="row" id="tod"></div>
+    <label class="ck"><input type="checkbox" id="autoTod"> Сутки идут сами</label></div>
+  <div class="grp"><b>Палитра <kbd>P</kbd></b><div class="row" id="pal"></div>
+    <label class="ck"><input type="checkbox" id="react" checked> Герои реагируют на смену суток</label></div>
+  <div class="grp"><b>Аура</b><div class="row"><button class="aura" id="auB">Аура Богатыря <kbd>R</kbd></button><button class="aura" id="auL">Аура Лешего <kbd>G</kbd></button></div></div>
+  <div class="grp"><b>Богатырь</b><div class="row" id="act_bogatyr"></div></div>
+  <div class="grp"><b>Леший</b><div class="row" id="act_leshy"></div>
+    <label class="ck"><input type="checkbox" id="autoMove" checked> Двигаются сами</label></div>
+</div>
+<div id="hmPanel" hidden></div>
+<div id="loading">Готовим краски…</div>
+<div id="err"></div>
+<script type="module" src="show.js"></script>
+
+</body></html>

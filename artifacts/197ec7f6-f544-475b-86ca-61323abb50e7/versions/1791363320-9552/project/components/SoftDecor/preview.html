@@ -1,0 +1,19 @@
+<!-- @dsCard group="Foundations" height=440 width=900 subtitle="Мягкие 3D-элементы: облака трёх размеров, шар, сердце. Медленный дрейф, свет сверху слева." -->
+<style>
+  .sd { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 20px; background: var(--bg-app); }
+  .sd__panel { position: relative; height: 400px; border-radius: var(--radius-3xl); overflow: hidden; background: var(--bd-grad-wash); border: 1px solid var(--bd-edge); color: var(--text-primary); }
+  .sd__tag { position: absolute; z-index: 2; font: 700 12px/16px var(--font-sans); color: var(--text-secondary); }
+  .sd__item { position: absolute; display: block; }
+</style>
+<div class="sd" id="root"></div>
+<script>
+  var B = window.Buddy;
+  function panel(theme) {
+    return '<div data-theme="' + theme + '"><div class="sd__panel bd-root">' +
+      B.cloud('lg', { style: 'right:-60px;top:24px', delay: '-2s' }) + B.cloud('md', { style: 'left:30px;top:150px', delay: '-5s' }) + B.cloud('sm', { style: 'left:250px;top:230px', delay: '-7s' }) + B.cloud('lg', { style: 'left:-70px;bottom:-36px', delay: '-4s' }) +
+      B.decor('heart-3d', { size: 64, cls: 'sd__item bd-anim-float', style: 'right:70px;bottom:70px' }) + B.decor('orb-3d', { size: 34, cls: 'sd__item bd-anim-float', style: 'left:210px;top:120px;animation-delay:-1s' }) + B.decor('orb-3d', { size: 20, cls: 'sd__item bd-anim-float', style: 'left:238px;top:96px;animation-delay:-2s' }) +
+      B.mascot('buddy-happy', { size: 120, cls: 'sd__item bd-anim-float', style: 'left:50%;top:50%;margin:-70px 0 0 -60px' }) +
+      '<span class="sd__tag" style="left:20px;top:16px">cloud-3d lg · md · sm</span></div></div>';
+  }
+  document.getElementById('root').innerHTML = panel('light') + panel('dark');
+</script>

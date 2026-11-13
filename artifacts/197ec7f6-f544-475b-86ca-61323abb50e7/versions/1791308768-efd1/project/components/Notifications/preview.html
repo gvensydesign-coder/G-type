@@ -1,0 +1,15 @@
+<!-- @dsCard group="Dialog" height=640 width=780 subtitle="Уведомления: строка центра, push iOS (стекло) и Android, тосты." -->
+<style>
+  .nt { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 20px; background: var(--bd-grad-wash); color: var(--text-primary); }
+  .nt__c { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .nt h4 { margin: 0; font: 800 11px/14px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+</style>
+<div class="nt bd-root" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    '<div class="nt__c"><h4>Центр уведомлений</h4>' + B.NotificationItem({ type: 'streak', mascot: 'buddy-streak', title: '4 days streak!', text: 'One more habit keeps the fire going.', time: '9:41', unread: true }) + B.NotificationItem({ type: 'reminder', title: 'Drink Water', text: 'Time for a glass.', time: '9:30', unread: true, actions: ['Done', 'Snooze'] }) + B.NotificationItem({ type: 'badge', title: 'New badge: Water hero', text: 'Three days of eight glasses.', time: '8:15' }) + B.NotificationItem({ type: 'friend', title: 'Mira sent a cheer', text: 'You are on a roll!', time: 'Yesterday' }) + '</div>' +
+    '<div class="nt__c"><h4>Push iOS · Android · тосты</h4>' + B.Push({ title: 'Drink Water', text: 'Time for a glass. It takes 10 seconds.', time: 'now' }) + B.Push({ platform: 'android', title: 'Drink Water', text: 'Time for a glass. It takes 10 seconds.', time: 'now' }) +
+    B.Toast({ tone: 'success', icon: 'check-circle', title: 'Habit saved', text: 'Drink Water repeats every 30 minutes' }) + B.Toast({ tone: 'warning', icon: 'warning', title: 'Streak at risk', text: 'Finish one habit before midnight' }) + B.MedalToast({ medals: [{ shape: 'shield', tone: 'orange', text: '7' }, { shape: 'round', tone: 'sky', emblem: 'droplet' }], title: 'You earned 2 badges!', sub: 'open Achievements' }) + '</div>';
+  B.wire(document);
+</script>

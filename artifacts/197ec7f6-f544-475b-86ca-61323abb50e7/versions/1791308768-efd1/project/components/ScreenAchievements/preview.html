@@ -1,0 +1,15 @@
+<!-- @dsCard group="Screens" height=900 width=900 subtitle="Награды: тост «получено 3 значка», секции, открытые, закрытые и в процессе, лимитированная серия." -->
+<div id="root"></div>
+<script>
+  var B = window.Buddy;
+  function screen() {
+    var head = B.AppHeader({ title: 'Achievements', sub: '12 of 40 earned', round: true });
+    var toast = '<div style="position:absolute;z-index:6;left:0;right:0;top:56px;display:flex;justify-content:center;padding:0 16px">' + B.MedalToast({ medals: [{ shape: 'shield', tone: 'orange', text: '7' }, { shape: 'round', tone: 'sky', emblem: 'droplet' }, { shape: 'hex', tone: 'violet', emblem: 'moon' }], title: 'You earned 3 badges!', sub: 'scroll down to see them' }) + '</div>';
+    var body = '<div style="padding:22px 20px 0"><h2 class="bd-section-t">Habit Milestones</h2><div class="bd-medals">' +
+      B.Medal({ shape: 'shield', tone: 'orange', text: '7', label: 'Week streak', count: 7, shine: true, pop: true }) + B.Medal({ shape: 'round', tone: 'sky', emblem: 'droplet', label: 'Water hero', count: 24 }) + B.Medal({ shape: 'hex', tone: 'violet', emblem: 'moon', label: 'Sleep ritual' }) +
+      B.Medal({ shape: 'round', tone: 'green', emblem: 'bike', label: 'Move 100', locked: true, progress: 34 }) + B.Medal({ shape: 'round', tone: 'pink', emblem: 'heart', label: 'Cheers sent', count: 2 }) + B.Medal({ shape: 'hex', tone: 'gold', emblem: 'star', label: 'Perfect week', locked: true }) + '</div>' +
+      '<h2 class="bd-section-t" style="margin-top:26px">Limited Edition</h2><div class="bd-medals">' + B.Medal({ shape: 'shield', tone: 'gold', emblem: 'rocket', label: 'Week 1 All-Star', shine: true }) + '</div></div>';
+    return B.Phone(head + toast + body, { hero: true, tabs: B.TabBar({ current: 'tracker' }) });
+  }
+  document.getElementById('root').innerHTML = B.Stage(screen);
+</script>

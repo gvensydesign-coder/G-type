@@ -1,0 +1,8 @@
+<!-- @dsCard group="Feedback" height=170 subtitle="Реплика маскота: появляется с пружинным масштабом, хвост из двух точек." -->
+<style>.pv{display:flex;gap:28px;align-items:flex-end;padding:20px 24px 40px;background:var(--bd-grad-hero)}</style>
+<div class="pv" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    B.SpeechBubble({ text: "Let's start small!" }) + B.SpeechBubble({ text: 'Great job today' }) + B.mascot('leafy-umbrella', { size: 80 });
+</script>

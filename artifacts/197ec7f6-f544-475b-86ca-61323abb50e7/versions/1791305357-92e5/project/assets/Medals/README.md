@@ -1,0 +1,1 @@
+База ачивок: `medal-<shield|hex|round>-<violet|orange|green|pink|sky|gold>.svg` (18) и `medal-<форма>-locked.svg` (3). Только фон медали с тенью, блеском и кромкой; эмблему (иконка или цифра) накладывает `Buddy.Medal`. Размеры 120 × 136 (shield) и 120 × 124 (hex, round). Раздел «Ачивки».

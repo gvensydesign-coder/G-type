@@ -1,0 +1,21 @@
+<!-- @dsCard group="Platform" height=980 width=900 subtitle="Система виджетов: малые 158×158, средние 338×158, большой 338×354 и виджеты экрана блокировки." -->
+<style>
+  .wg { padding: 20px; display: flex; flex-direction: column; gap: 20px; background: var(--bg-app); color: var(--text-primary); }
+  .wg h4 { margin: 0 0 10px; font: 800 11px/14px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+  .wg__panel { display: flex; flex-wrap: wrap; gap: 22px; padding: 28px 24px; border-radius: var(--radius-3xl); background: linear-gradient(170deg, #CFC6FF 0%, #F1E3FF 50%, #FFD9C2 100%); }
+  [data-theme="dark"] .wg__panel { background: linear-gradient(170deg, #2B2266 0%, #1B1546 55%, #3A2038 100%); }
+  .wg__panel--lock { background: linear-gradient(165deg, #5B4FC4 0%, #2B2266 55%, #1A1342 100%) !important; align-items: center; }
+  .wg__cap { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; font: 600 12px/16px var(--font-sans); color: var(--text-secondary); }
+  .wg table { width: 100%; border-collapse: collapse; font: 500 13px/18px var(--font-sans); } .wg th, .wg td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border-subtle); } .wg th { font: 800 11px/14px var(--font-sans); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+</style>
+<div class="wg bd-root" id="root"></div>
+<script>
+  var B = window.Buddy;
+  function cap(label, html) { return '<div class="wg__cap">' + html + '<span>' + label + '</span></div>'; }
+  document.getElementById('root').innerHTML =
+    '<div><h4>Малые 2×2 (158 × 158)</h4><div class="wg__panel">' + cap('Streak', B.Widget({ kind: 'streak' })) + cap('Water', B.Widget({ kind: 'water' })) + cap('Mascot', B.Widget({ kind: 'mascot' })) + '</div></div>' +
+    '<div><h4>Средние 4×2 (338 × 158) и большой 4×4 (338 × 354)</h4><div class="wg__panel">' + cap('Progress (выход за границу)', '<div style="padding-top:22px">' + B.Widget({ kind: 'progress' }) + '</div>') + cap('Sleep', B.Widget({ kind: 'sleep' })) + cap('Quick add', B.Widget({ kind: 'quick' })) + cap('Habits', B.Widget({ kind: 'habits' })) + '</div></div>' +
+    '<div><h4>Экран блокировки</h4><div class="wg__panel wg__panel--lock">' + cap('Circular 72', B.LockWidget({ type: 'circle', pct: 60, icon: 'flame' })).replace('var(--text-secondary)', '#fff') + cap('Rectangular 160 × 72', B.LockWidget({ type: 'rect' })) + cap('Inline', B.LockWidget({ type: 'inline' })) + '</div></div>' +
+    '<table><thead><tr><th>Размер</th><th>iPhone (pt)</th><th>Android (dp, ячейки)</th><th>Назначение</th></tr></thead><tbody>' +
+    '<tr><td>Small</td><td>158 × 158</td><td>2×2 (110 × 110)</td><td>Одна метрика: серия, вода, маскот</td></tr><tr><td>Medium</td><td>338 × 158</td><td>4×2 (250 × 110)</td><td>Прогресс дня, сон, быстрое добавление</td></tr><tr><td>Large</td><td>338 × 354</td><td>4×4 (250 × 250)</td><td>Список привычек с отметками</td></tr><tr><td>Lock circular / rectangular / inline</td><td>72 / 160 × 72 / одна строка</td><td>Нет (уведомление)</td><td>Кольцо, полоса, одна фраза</td></tr></tbody></table>';
+</script>

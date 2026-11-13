@@ -1,0 +1,28 @@
+<!-- @dsCard group="Foundations" height=760 width=900 subtitle="Семья маскотов Buddy: роли, настроения, где применять." -->
+<style>
+  .mg { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; padding: 20px; background: var(--bg-app); color: var(--text-primary); }
+  .mc { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 16px 10px 14px; border-radius: var(--radius-xl); background: var(--bg-surface); border: 1px solid var(--bd-edge); box-shadow: var(--shadow-sm); }
+  .mc b { font: 800 16px/20px var(--font-display); }
+  .mc span { font: 500 12px/16px var(--font-sans); color: var(--text-muted); }
+</style>
+<div class="mg" id="root"></div>
+<script>
+  var B = window.Buddy;
+  var items = [
+    ['buddy-happy', 'Buddy', 'Главный проводник. Радость, поддержка, прогресс дня'],
+    ['buddy-streak', 'Buddy · Streak', 'Серии и достижения. Пламя за спиной'],
+    ['buddy-sleepy', 'Buddy · Sleepy', 'Сон, вечерний режим, тихие состояния'],
+    ['sunny-happy', 'Sunny', 'Приветствие, онбординг, пустой чат'],
+    ['sunny-sleepy', 'Sunny · Sleepy', 'Метрика сна на плитке'],
+    ['leafy-umbrella', 'Leafy', 'Маленькие шаги, реплики-подсказки в шапке'],
+    ['zuzu-sleepy', 'Zuzu', 'Будильник. Сонный (фиолетовый)'],
+    ['dawn-awake', 'Dawn', 'Будильник. Бодрый (оранжевый)'],
+    ['nox-snooze', 'Nox', 'Будильник. Дремлет (голубой)'],
+    ['paws-heart', 'Paws', 'Декор: благодарность, финал онбординга'],
+    ['misty-happy', 'Misty', 'Кошка. Подхват: помощь, пустые состояния, радость находки'],
+    ['scout-happy', 'Scout', 'Пёс. Подхват: поддержка в чате, приветствие, поиск']
+  ];
+  document.getElementById('root').innerHTML = items.map(function (m, i) {
+    return '<div class="mc bd-anim-rise" style="animation-delay:' + i * 40 + 'ms">' + B.mascot(m[0], { size: 112, cls: 'bd-anim-float', style: 'animation-delay:-' + (i % 4) + 's' }) + '<b>' + m[1] + '</b><span>' + m[2] + '</span></div>';
+  }).join('');
+</script>

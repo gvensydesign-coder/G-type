@@ -1,0 +1,17 @@
+<!-- @dsCard group="Navigation" height=360 width=760 subtitle="Тонкий стеклянный таб-бар 60px: полупрозрачность 78% + blur 28px + saturate, контент просвечивает. Нажмите на вкладку." -->
+<style>
+  .tb { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 20px; background: var(--bg-app); }
+  .tb__s { position: relative; height: 300px; overflow: hidden; border-radius: var(--radius-3xl); background: var(--bg-surface); border: 1px solid var(--bd-edge); }
+  .tb__rows { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
+  .tb__bar { position: absolute; left: 12px; right: 12px; bottom: 12px; }
+</style>
+<div class="tb" id="root"></div>
+<script>
+  var B = window.Buddy;
+  function panel(t) {
+    return '<div data-theme="' + t + '"><div class="tb__s bd-root"><div class="tb__rows">' + B.HabitRow({ object: 'bottle', tone: 'sky', title: 'Drink Water', meta: 'Every 30 minutes', checked: true }) + B.HabitRow({ object: 'dumbbell', tone: 'orange', title: 'Workout', meta: 'For 30 minutes' }) +
+      B.HabitRow({ object: 'book', tone: 'pink', title: 'Write Journal', meta: 'End of the day' }) + B.HabitRow({ object: 'moon', tone: 'yellow', title: 'Sleep before 11', meta: 'Wind down at 10:30' }) + '</div><div class="tb__bar">' + B.TabBar({ current: 'tracker' }) + '</div></div></div>';
+  }
+  document.getElementById('root').innerHTML = panel('light') + panel('dark');
+  B.wire(document);
+</script>

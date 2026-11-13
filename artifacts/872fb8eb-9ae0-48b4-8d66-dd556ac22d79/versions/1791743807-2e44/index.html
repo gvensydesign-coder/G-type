@@ -1,0 +1,547 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Угловатая подсветка</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-height 3D viewport with an instrument panel on the right (stacks under the viewport on phones). Single dark look by choice, matches the other fx-library previews. */
+:root {
+  --bg: #070a10;
+  --panel: #10151d;
+  --panel-2: #161d28;
+  --line: #243142;
+  --fg: #d9e3ec;
+  --muted: #8193a6;
+  --accent: #4fa8ff;
+  --f-display: "Ruslan Display", "Georgia", serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 13px/1.45 var(--f-body); overflow: hidden; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: 100%; }
+.view { position: relative; min-width: 0; overflow: hidden; }
+#c { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#c.over { cursor: move; }
+
+.topbar { position: absolute; left: 16px; right: 16px; top: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; pointer-events: none; }
+.topbar > * { pointer-events: auto; }
+.brand { font-family: var(--f-display); font-size: 22px; letter-spacing: .04em; line-height: 1; text-shadow: 0 2px 12px #000; margin-right: auto; padding-top: 4px; }
+.brand small { display: block; font: 500 10px/1.4 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 85%, transparent); padding: 6px 11px 6px 9px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.chip i { width: 12px; height: 12px; transform: rotate(45deg); border-radius: 2px; flex: none; }
+.chip:hover { border-color: var(--muted); }
+.chip[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+.bottombar { position: absolute; left: 16px; right: 16px; bottom: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: none; }
+.bottombar > * { pointer-events: auto; }
+.btn { border: 1px solid var(--line); background: var(--panel-2); padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.btn[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.btn.primary { background: var(--accent); color: #05080c; border-color: transparent; font-weight: 600; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--panel-2); }
+.seg button { border: 0; background: transparent; padding: 8px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+select.btn { padding: 7px 10px; }
+.hint { margin-left: auto; color: var(--muted); font-size: 11px; text-shadow: 0 1px 6px #000; }
+
+.panel { background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.panel-head { padding: 14px 16px 12px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+.panel-head h2 { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.lights { display: flex; gap: 6px; }
+.lights button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.lights i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.lights button.off i { opacity: .25; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: var(--muted); font-size: 12px; }
+.row label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.row input[type=color] { width: 30px; height: 24px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: none; cursor: pointer; }
+.scroll { overflow-y: auto; padding: 4px 16px 24px; flex: 1; min-height: 0; }
+details { border-bottom: 1px solid var(--line); }
+summary { cursor: pointer; padding: 12px 0; font-weight: 600; letter-spacing: .02em; list-style: none; display: flex; justify-content: space-between; }
+summary::after { content: "+"; color: var(--muted); font-family: var(--f-mono); }
+details[open] summary::after { content: "−"; }
+.ctl { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding-bottom: 10px; }
+.ctl span { color: var(--muted); font-size: 12px; }
+.ctl output { font: 11px var(--f-mono); font-variant-numeric: tabular-nums; }
+.ctl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); margin: 2px 0 0; }
+.colors { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; padding-bottom: 12px; }
+.colors label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+.colors input { width: 30px; height: 24px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: none; cursor: pointer; flex: none; }
+.foot { padding: 12px 16px; border-top: 1px solid var(--line); display: flex; gap: 8px; flex-wrap: wrap; }
+.foot .btn { flex: 1; }
+.toast { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--line); padding: 6px 12px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+.jsonbox { position: absolute; inset: 60px 16px auto; max-width: 520px; margin: 0 auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 8px; z-index: 5; }
+.jsonbox p { margin: 0; color: var(--muted); font-size: 12px; }
+.jsonbox textarea { width: 100%; height: 240px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; color: var(--fg); font: 11px/1.4 var(--f-mono); padding: 8px; resize: vertical; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font: 12px var(--f-mono); letter-spacing: .1em; pointer-events: none; }
+
+@media (max-width: 820px) {
+  body { overflow: auto; }
+  .app { grid-template-columns: 1fr; grid-template-rows: 64vh auto; height: auto; }
+  .panel { border-left: 0; border-top: 1px solid var(--line); }
+  .scroll { overflow: visible; }
+  .hint { display: none; }
+  .brand { font-size: 18px; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+
+<div class="app">
+  <div class="view">
+    <canvas id="c" aria-label="3D-сцена: Леший с угловатой подсветкой. Тяните светящийся шар, чтобы двигать источник света; тяните по пустому месту, чтобы вращать камеру; колесо приближает."></canvas>
+    <div class="loading" id="loading">ЗАГРУЗКА ЛЕШЕГО…</div>
+    <div class="topbar">
+      <div class="brand">Угловатая подсветка<small>rim light · кромка со стороны света</small></div>
+      <div class="chips" id="presets" role="group" aria-label="Пресеты"></div>
+    </div>
+    <div class="bottombar">
+      <button class="btn primary" id="compare">Удерживать: без эффекта</button>
+      <button class="btn" id="orbit" aria-pressed="true">Свет кружит</button>
+      <select class="btn" id="anim" aria-label="Анимация Лешего"></select>
+      <div class="seg" role="group" aria-label="Ракурс">
+        <button data-view="0" aria-pressed="true">Спереди</button>
+        <button data-view="1" aria-pressed="false">Сбоку</button>
+        <button data-view="2" aria-pressed="false">Сзади</button>
+      </div>
+      <span class="hint">Тяните шар света · тяните фон — камера · колесо — зум</span>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="jsonbox" id="jsonBox" hidden>
+      <p>Копирование заблокировано. Текст выделен: скопируйте его вручную.</p>
+      <textarea id="jsonText" readonly aria-label="Настройки в JSON"></textarea>
+      <button class="btn" id="jsonClose">Закрыть</button>
+    </div>
+  </div>
+
+  <aside class="panel" aria-label="Настройки подсветки">
+    <div class="panel-head">
+      <h2>Источники света</h2>
+      <div class="lights" id="lightTabs" role="group" aria-label="Выбор источника"></div>
+      <div class="row">
+        <label><input type="checkbox" id="lOn"> включён</label>
+        <label>цвет <input type="color" id="lColor"></label>
+      </div>
+      <div class="ctl" style="padding:0"><span>Сторона (азимут)</span><output id="lAzO"></output><input type="range" id="lAz" min="-180" max="180" step="1"></div>
+      <div class="ctl" style="padding:0"><span>Высота</span><output id="lElO"></output><input type="range" id="lEl" min="-20" max="80" step="1"></div>
+      <div class="ctl" style="padding:0"><span>Расстояние, м</span><output id="lDiO"></output><input type="range" id="lDi" min="1" max="8" step="0.1"></div>
+      <div class="ctl" style="padding:0"><span>Сила для кромки</span><output id="lWO"></output><input type="range" id="lW" min="0" max="2" step="0.01"></div>
+    </div>
+    <div class="scroll" id="groups"></div>
+    <div class="foot">
+      <button class="btn" id="copy">Копировать настройки (JSON)</button>
+      <button class="btn" id="reset">Сбросить пресет</button>
+    </div>
+  </aside>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { AngularRim, PRESETS, PARAM_DEFS, PARAM_GROUPS, COLOR_DEFS } from './rimlight.js';
+
+const $ = (id) => document.getElementById(id);
+const canvas = $('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a1424, 0.045);
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
+const TARGET = new THREE.Vector3(0, 1.25, 0);
+
+// ---------- painted backdrop: night sky, moon disc with halftone, pine silhouettes
+function backdrop() {
+  const W = 1024, H = 640, cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  const sky = g.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#05080f'); sky.addColorStop(0.55, '#0d1c33'); sky.addColorStop(1, '#0a1220');
+  g.fillStyle = sky; g.fillRect(0, 0, W, H);
+  const mx = W * 0.5, my = H * 0.38, mr = H * 0.3;
+  const moon = g.createRadialGradient(mx, my, mr * 0.2, mx, my, mr);
+  moon.addColorStop(0, '#2b4a6e'); moon.addColorStop(1, '#183252');
+  g.fillStyle = moon; g.beginPath(); g.arc(mx, my, mr, 0, Math.PI * 2); g.fill();
+  // halftone ring around the moon
+  for (let y = 0; y < H; y += 9) for (let x = 0; x < W; x += 9) {
+    const d = Math.hypot(x - mx, y - my) / mr;
+    const k = Math.max(0, 1 - Math.abs(d - 1.15) / 0.35);
+    if (k <= 0.02) continue;
+    g.fillStyle = 'rgba(70,120,170,0.55)';
+    g.beginPath(); g.arc(x, y, 2.6 * k, 0, Math.PI * 2); g.fill();
+  }
+  // pines
+  const pine = (x, base, h, w) => {
+    g.beginPath(); g.moveTo(x, base - h);
+    for (let i = 1; i <= 6; i++) { const t = i / 6; g.lineTo(x + w * t, base - h + h * t * 0.95); g.lineTo(x + w * t * 0.45, base - h + h * t * 0.95); }
+    g.lineTo(x, base);
+    for (let i = 6; i >= 1; i--) { const t = i / 6; g.lineTo(x - w * t * 0.45, base - h + h * t * 0.95); g.lineTo(x - w * t, base - h + h * t * 0.95); }
+    g.closePath(); g.fill();
+  };
+  g.fillStyle = '#0b1726';
+  for (let i = 0; i < 9; i++) pine(40 + i * 125 + (i % 2) * 40, H * 0.86, 180 + (i * 53) % 90, 60);
+  g.fillStyle = '#050a12';
+  pine(70, H, 520, 120); pine(W - 80, H, 560, 130); pine(W - 210, H, 360, 90);
+  // shards
+  g.fillStyle = 'rgba(80,170,255,0.6)';
+  for (let i = 0; i < 26; i++) {
+    const x = (i * 397) % W, y = (i * 211) % (H * 0.8), s = 3 + (i % 4) * 2;
+    g.save(); g.translate(x, y); g.rotate(i); g.beginPath(); g.moveTo(0, -s * 1.6); g.lineTo(s, 0); g.lineTo(0, s * 1.6); g.lineTo(-s, 0); g.closePath(); g.fill(); g.restore();
+  }
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+scene.background = backdrop();
+
+scene.add(new THREE.HemisphereLight(0x4a74a8, 0x0a0f18, 0.9));
+const fill = new THREE.DirectionalLight(0x6a8cc0, 0.35);
+fill.position.set(-3, 5, 4);
+scene.add(fill);
+
+const ground = new THREE.Mesh(new THREE.CircleGeometry(30, 64), new THREE.MeshStandardMaterial({ color: 0x0c1522, roughness: 1 }));
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+// stones around, they catch the moving light too
+const stoneMat = new THREE.MeshStandardMaterial({ color: 0x2a3442, roughness: 0.9, flatShading: true });
+for (let i = 0; i < 7; i++) {
+  const s = new THREE.Mesh(new THREE.DodecahedronGeometry(0.25 + (i % 3) * 0.12, 0), stoneMat);
+  const a = i * 0.9 + 0.4, r = 2.4 + (i % 2) * 0.9;
+  s.position.set(Math.cos(a) * r, 0.1, Math.sin(a) * r);
+  s.rotation.set(i, i * 2, i * 3);
+  s.castShadow = s.receiveShadow = true;
+  scene.add(s);
+}
+
+// ---------- light rigs (up to 3 in the preview, the module takes 4)
+function glowTex() {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const g = cv.getContext('2d');
+  const r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.2, 'rgba(255,255,255,0.65)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(cv);
+}
+const GLOW = glowTex();
+const rigs = [
+  { az: 125, el: 35, dist: 2.6, color: '#5fb4ff', on: true, w: 1.02, phase: 0 },
+  { az: -140, el: 20, dist: 3, color: '#3ee6ff', on: true, w: 0.6, phase: 2.1 },
+  { az: 170, el: 45, dist: 3.4, color: '#7d7bff', on: false, w: 0.7, phase: 4.2 },
+];
+const pickables = [];
+for (const r of rigs) {
+  r.light = new THREE.PointLight(r.color, 9, 12, 1.6);
+  r.light.castShadow = r === rigs[0];
+  r.light.shadow.mapSize.set(1024, 1024);
+  r.light.shadow.bias = -0.002;
+  r.orb = new THREE.Group();
+  r.core = new THREE.Mesh(new THREE.OctahedronGeometry(0.07, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  r.halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: r.color, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+  r.halo.scale.setScalar(0.7);
+  r.hit = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 8), new THREE.MeshBasicMaterial({ visible: false }));
+  r.hit.userData.rig = r;
+  pickables.push(r.hit);
+  r.orb.add(r.core, r.halo, r.hit, r.light);
+  scene.add(r.orb);
+}
+function placeRig(r) {
+  const a = THREE.MathUtils.degToRad(r.az), e = THREE.MathUtils.degToRad(r.el);
+  r.orb.position.set(Math.sin(a) * Math.cos(e) * r.dist, TARGET.y + Math.sin(e) * r.dist, Math.cos(a) * Math.cos(e) * r.dist);
+  r.orb.visible = r.on;
+  r.light.color.set(r.color);
+  r.halo.material.color.set(r.color);
+  r.light.intensity = r.on ? 9 * Math.max(0.3, r.w) : 0;
+}
+
+// ---------- effect
+const rim = new AngularRim({ params: PRESETS.main.params });
+for (const r of rigs) rim.addLight(r.light, { weight: r.w });
+const weightOf = (r) => rim.lights.find((l) => l.light === r.light);
+
+// ---------- Leshy
+let mixer = null, actions = {}, current = null;
+function setupLeshy(gltf) {
+  const model = gltf.scene;
+  model.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(model, true);
+  const s = 2.5 / (box.max.y - box.min.y);
+  model.scale.setScalar(s);
+  model.position.y = -box.min.y * s;
+  model.traverse((o) => {
+    if (o.isMesh) {
+      o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false;
+      o.material = o.material.clone();
+    }
+  });
+  const holder = new THREE.Group();
+  holder.add(model);
+  scene.add(holder);
+  model.updateMatrixWorld(true);
+  rim.attach(model);
+  mixer = new THREE.AnimationMixer(model);
+  const NAMES = { Idle: 'Стоит', Talk: 'Говорит', Walk: 'Идёт', Run: 'Бежит', Attack: 'Атака', Point: 'Указывает', Wave: 'Машет', Crouch: 'Приседает', PickUp: 'Хватает', Jump: 'Прыжок', Hit: 'Удар по нему', Death: 'Падает' };
+  const sel = $('anim');
+  for (const c of gltf.animations) {
+    actions[c.name] = mixer.clipAction(c);
+    const o = document.createElement('option');
+    o.value = c.name; o.textContent = NAMES[c.name] || c.name;
+    sel.append(o);
+  }
+  sel.value = actions.Idle ? 'Idle' : gltf.animations[0]?.name;
+  playClip(sel.value);
+  sel.onchange = () => playClip(sel.value);
+}
+function playClip(name) {
+  const a = actions[name];
+  if (!a) return;
+  a.reset().setLoop(THREE.LoopRepeat).fadeIn(0.25).play();
+  if (current && current !== a) current.fadeOut(0.25);
+  current = a;
+}
+// fallback stand-in if the model can not load
+function setupFallback() {
+  const m = new THREE.Mesh(new THREE.CapsuleGeometry(0.4, 0.9, 8, 32), new THREE.MeshStandardMaterial({ color: 0x4d6f8f, roughness: 0.8 }));
+  m.position.y = 0.9;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 32, 24), m.material);
+  head.position.y = 0.8;
+  m.add(head);
+  scene.add(m);
+  rim.attach(m);
+}
+
+// ---------- UI
+const PKEYS = Object.keys(PRESETS);
+let presetKey = 'main';
+const inputs = {};
+function buildUI() {
+  const chips = $('presets');
+  for (const k of PKEYS) {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.dataset.k = k;
+    b.innerHTML = `<i style="background:${PRESETS[k].swatch}"></i>${PRESETS[k].name}`;
+    b.onclick = () => applyPreset(k);
+    chips.append(b);
+  }
+  const groups = $('groups');
+  const fmt = (v, step) => (step >= 1 ? String(Math.round(v)) : v.toFixed(step < 0.1 ? 2 : 1));
+  const box = {};
+  for (const [g, title] of Object.entries(PARAM_GROUPS)) {
+    const d = document.createElement('details');
+    d.open = g !== 'anim';
+    d.innerHTML = `<summary>${title}</summary>`;
+    groups.append(d);
+    box[g] = d;
+  }
+  for (const [key, label, min, max, step, g] of PARAM_DEFS) {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctl';
+    const id = 'p_' + key;
+    wrap.innerHTML = `<span id="${id}_l">${label}</span><output for="${id}"></output><input type="range" id="${id}" aria-labelledby="${id}_l" min="${min}" max="${max}" step="${step}">`;
+    const inp = wrap.querySelector('input'), out = wrap.querySelector('output');
+    inp.oninput = () => { rim.setParams({ [key]: +inp.value }); out.textContent = fmt(+inp.value, step); };
+    inputs[key] = { inp, out, step, fmt };
+    box[g].append(wrap);
+  }
+  const cd = document.createElement('details');
+  cd.open = true;
+  cd.innerHTML = '<summary>Цвета</summary><div class="colors"></div>';
+  const cbox = cd.querySelector('.colors');
+  for (const [key, label] of COLOR_DEFS) {
+    const l = document.createElement('label');
+    l.innerHTML = `<input type="color"> ${label}`;
+    const inp = l.querySelector('input');
+    inp.oninput = () => rim.setParams({ [key]: inp.value });
+    inputs[key] = { inp };
+    cbox.append(l);
+  }
+  groups.insertBefore(cd, box.anim);
+
+  // light controls
+  const tabs = $('lightTabs');
+  rigs.forEach((r, i) => {
+    const b = document.createElement('button');
+    b.className = 'btn';
+    b.innerHTML = `<i></i>Свет ${i + 1}`;
+    b.onclick = () => selectRig(i);
+    r.tab = b;
+    tabs.append(b);
+  });
+  const bindL = (id, key, unit, f = (v) => v) => {
+    const inp = $(id), out = $(id + 'O');
+    inp.oninput = () => { const r = rigs[sel]; r[key] = +inp.value; out.textContent = f(+inp.value) + unit; if (key === 'w') weightOf(r).weight = r.w; placeRig(r); };
+  };
+  bindL('lAz', 'az', '°'); bindL('lEl', 'el', '°'); bindL('lDi', 'dist', ' м', (v) => v.toFixed(1)); bindL('lW', 'w', '', (v) => v.toFixed(2));
+  $('lOn').onchange = () => { rigs[sel].on = $('lOn').checked; refreshTabs(); placeRig(rigs[sel]); };
+  $('lColor').oninput = () => { rigs[sel].color = $('lColor').value; refreshTabs(); placeRig(rigs[sel]); };
+}
+let sel = 0;
+function refreshTabs() {
+  rigs.forEach((r, i) => {
+    r.tab.setAttribute('aria-pressed', String(i === sel));
+    r.tab.classList.toggle('off', !r.on);
+    r.tab.querySelector('i').style.background = r.color;
+    r.light.visible = r.on;
+  });
+}
+function syncLightUI() {
+  const r = rigs[sel];
+  $('lOn').checked = r.on; $('lColor').value = r.color;
+  const set = (id, v, txt) => { $(id).value = v; $(id + 'O').textContent = txt; };
+  set('lAz', r.az, Math.round(r.az) + '°'); set('lEl', r.el, Math.round(r.el) + '°');
+  set('lDi', r.dist, r.dist.toFixed(1) + ' м'); set('lW', r.w, r.w.toFixed(2));
+}
+function selectRig(i) { sel = i; refreshTabs(); syncLightUI(); }
+function syncUI() {
+  for (const [k, c] of Object.entries(inputs)) {
+    c.inp.value = rim.params[k];
+    if (c.out) c.out.textContent = c.fmt(+rim.params[k], c.step);
+  }
+  for (const b of $('presets').children) b.setAttribute('aria-pressed', String(b.dataset.k === presetKey));
+}
+function applyPreset(k) { presetKey = k; rim.setParams({ ...PRESETS[k].params }); syncUI(); }
+
+const toast = (t) => { const el = $('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('show'), 1400); };
+$('copy').onclick = async () => {
+  const lights = rigs.filter((r) => r.on).map((r) => ({ color: r.color, weight: r.w }));
+  const txt = JSON.stringify({ preset: presetKey, params: rim.params, lights }, null, 2);
+  try { await navigator.clipboard.writeText(txt); toast('Настройки скопированы'); }
+  catch {
+    // clipboard refused (app views): show the text selected so it can be copied by hand
+    const box = $('jsonBox'), ta = $('jsonText');
+    ta.value = txt; box.hidden = false; ta.focus(); ta.select();
+  }
+};
+$('jsonClose').onclick = () => { $('jsonBox').hidden = true; };
+$('reset').onclick = () => applyPreset(presetKey);
+const cmp = $('compare');
+const off = () => rim.setEnabled(false), on = () => rim.setEnabled(true);
+cmp.addEventListener('pointerdown', off); cmp.addEventListener('pointerup', on); cmp.addEventListener('pointerleave', on);
+cmp.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') off(); });
+cmp.addEventListener('keyup', on);
+let orbit = true;
+$('orbit').onclick = () => { orbit = !orbit; $('orbit').setAttribute('aria-pressed', String(orbit)); };
+
+// ---------- camera + dragging the light orbs
+const cam = { yaw: 0.25, pitch: 0.12, dist: 6.4, tYaw: 0.25 };
+const VIEWS = [0.25, Math.PI / 2, Math.PI + 0.2];
+for (const b of document.querySelectorAll('[data-view]')) b.onclick = () => {
+  cam.tYaw = VIEWS[+b.dataset.view];
+  for (const x of document.querySelectorAll('[data-view]')) x.setAttribute('aria-pressed', String(x === b));
+};
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+let drag = null;
+function pick(e) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  return ray.intersectObjects(pickables.filter((p) => p.userData.rig.on), false)[0];
+}
+canvas.addEventListener('pointerdown', (e) => {
+  canvas.setPointerCapture(e.pointerId);
+  const hit = pick(e);
+  if (hit) {
+    const r = hit.object.userData.rig;
+    const n = camera.getWorldDirection(new THREE.Vector3()).negate();
+    drag = { rig: r, plane: new THREE.Plane().setFromNormalAndCoplanarPoint(n, r.orb.position.clone()) };
+    selectRig(rigs.indexOf(r));
+    if (orbit) { orbit = false; $('orbit').setAttribute('aria-pressed', 'false'); }
+  } else drag = { cam: true, x: e.clientX, y: e.clientY };
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!drag) { canvas.classList.toggle('over', !!pick(e)); return; }
+  if (drag.cam) {
+    cam.tYaw -= (e.clientX - drag.x) * 0.008; cam.yaw = cam.tYaw;
+    cam.pitch = THREE.MathUtils.clamp(cam.pitch + (e.clientY - drag.y) * 0.005, -0.15, 0.9);
+    drag.x = e.clientX; drag.y = e.clientY;
+    return;
+  }
+  pick(e);
+  const p = new THREE.Vector3();
+  if (!ray.ray.intersectPlane(drag.plane, p)) return;
+  const d = p.sub(TARGET);
+  const r = drag.rig;
+  r.dist = THREE.MathUtils.clamp(d.length(), 1, 8);
+  r.el = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(Math.asin(THREE.MathUtils.clamp(d.y / d.length(), -1, 1))), -20, 80);
+  r.az = THREE.MathUtils.radToDeg(Math.atan2(d.x, d.z));
+  placeRig(r); syncLightUI();
+});
+const endDrag = () => { drag = null; };
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+canvas.addEventListener('wheel', (e) => { e.preventDefault(); cam.dist = THREE.MathUtils.clamp(cam.dist * Math.exp(e.deltaY * 0.001), 2.5, 14); }, { passive: false });
+
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== Math.floor(w * renderer.getPixelRatio()) || canvas.height !== Math.floor(h * renderer.getPixelRatio())) {
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+}
+
+const clock = new THREE.Clock();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  resize();
+  if (mixer) mixer.update(dt);
+  if (orbit) for (const r of rigs) if (r.on) {
+    r.az += dt * (reduce ? 6 : 22) * (r === rigs[1] ? -1 : 1);
+    if (r.az > 180) r.az -= 360; if (r.az < -180) r.az += 360;
+    r.el += Math.sin(clock.elapsedTime * 0.5 + r.phase) * dt * 8;
+    r.el = THREE.MathUtils.clamp(r.el, -10, 70);
+    placeRig(r);
+    if (r === rigs[sel]) syncLightUI.throttle = (syncLightUI.throttle || 0) + 1;
+  }
+  if (syncLightUI.throttle > 6) { syncLightUI(); syncLightUI.throttle = 0; }
+  for (const r of rigs) { r.core.rotation.y += dt * 2; r.core.rotation.x += dt * 1.3; }
+  cam.yaw += (cam.tYaw - cam.yaw) * Math.min(1, dt * 5);
+  camera.position.set(
+    TARGET.x + Math.sin(cam.yaw) * Math.cos(cam.pitch) * cam.dist,
+    TARGET.y + Math.sin(cam.pitch) * cam.dist,
+    TARGET.z + Math.cos(cam.yaw) * Math.cos(cam.pitch) * cam.dist);
+  camera.lookAt(TARGET);
+  camera.updateMatrixWorld();
+  rim.update(dt, camera, renderer, scene);
+  renderer.render(scene, camera);
+  if (!window.__manual) requestAnimationFrame(frame);
+}
+window.__preview = { rim, rigs, cam, placeRig, applyPreset, frame, playClip, setOrbit: (v) => { orbit = v; } };
+
+buildUI();
+rigs.forEach(placeRig);
+refreshTabs(); syncLightUI();
+applyPreset('main');
+
+const loader = new GLTFLoader();
+const parse = (buf) => new Promise((res, rej) => loader.parse(buf, '', res, rej));
+(location.search.includes('stand') ? Promise.reject(new Error('stand-in requested')) : fetch('models/leshy.glb'))
+  .then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+  .catch((e) => location.search.includes('stand') ? Promise.reject(e) : fetch('models/leshy.b64.txt').then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then((b64) => Uint8Array.from(atob(b64.trim()), (ch) => ch.charCodeAt(0)).buffer))
+  .then(parse)
+  .then(setupLeshy)
+  .catch((err) => { console.warn('model failed, using stand-in', err); setupFallback(); })
+  .finally(() => { $('loading').hidden = true; requestAnimationFrame(frame); });
+</script>
+
+</body></html>

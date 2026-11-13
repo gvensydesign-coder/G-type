@@ -1,0 +1,106 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>G-type: правки D5</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600&display=swap"><style>
+:root{--bg:#efeff1;--card:#fff;--ink:#0b0b0c;--mut:#5b5b63;--line:#d9d9de}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f0f11;--card:#18181b;--ink:#f2f2f4;--mut:#a3a3ae;--line:#32323a;color-scheme:dark}}:root[data-theme="dark"]{--bg:#0f0f11;--card:#18181b;--ink:#f2f2f4;--mut:#a3a3ae;--line:#32323a;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Onest,system-ui,sans-serif;padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1500px;margin:0 auto}h1{font-size:32px;margin:0 0 8px;letter-spacing:-.02em}.lead{color:var(--mut);margin:0 0 32px;max-width:70ch}
+section{background:var(--card);border-radius:22px;padding:24px;margin:0 0 24px;box-shadow:0 0 0 1px var(--line)}section h2{margin:0 0 8px;font-size:24px;letter-spacing:-.02em}section>p{margin:0 0 20px;color:var(--mut);max-width:80ch}
+figure{margin:0 0 20px}figcaption{font-size:13px;color:var(--mut);margin:0 0 8px}img{display:block;max-width:100%;height:auto;border-radius:12px;box-shadow:0 0 0 1px var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}.row figure{flex:1 1 320px;min-width:0}.row figure.phone{flex:0 1 auto}
+</style><main><h1>G-type: сравнение дизайна (v77 → D5)</h1><p class="lead">Слева «Было» (снимок v77), справа «Стало». Экраны 1440×900 и 400×800, светлая тема везде, тёмная — для рейла, верха редактора, красного и мелкого текста. Живая версия не менялась.</p>
+<section id="i01"><h2>1. Верхняя панель «Отрисовать»</h2><p>Шесть вкладок наборов и счётчик заменены одной таблеткой «Набор · N из M» с выпадающим списком (в списке у каждого набора свой прогресс). «Проверить шрифт», «Сохранить шрифт» и «Поделиться» не висят серыми: их нет, пока ими нельзя пользоваться, и они коротко выезжают, когда появился первый нарисованный знак.</p>
+<figure><figcaption>draw-top-filled · 1440 · light</figcaption><img loading="lazy" src="01_draw-top-filled_1440_light.png" alt="Верхняя панель «Отрисовать»: draw-top-filled · 1440 · light"></figure>
+<figure><figcaption>draw-top · 1440 · light</figcaption><img loading="lazy" src="01_draw-top_1440_light.png" alt="Верхняя панель «Отрисовать»: draw-top · 1440 · light"></figure>
+<div class="row">
+<figure class="phone"><figcaption>draw-top-filled · 400 · light</figcaption><img loading="lazy" src="01_draw-top-filled_400_light.png" alt="Верхняя панель «Отрисовать»: draw-top-filled · 400 · light" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>draw-top · 400 · light</figcaption><img loading="lazy" src="01_draw-top_400_light.png" alt="Верхняя панель «Отрисовать»: draw-top · 400 · light" style="max-width:min(100%,830px)"></figure>
+</div>
+</section>
+<section id="i02"><h2>2. Одна панель инструментов в «Отрисовать»</h2><p>Историю (отменить, повторить, журнал), инструменты и действия со знаком (отразить, взять из другого знака, очистить) собрали в одну плашку через разделители. Под иконками всегда подписан активный инструмент и его настройки; подсказки при наведении остались. Холст теперь вписывается в высоту над панелью, и она не закрывает сетку. На телефоне история и действия делят первую строку, инструменты занимают вторую.</p>
+<figure><figcaption>draw-toolbar · 1440 · light</figcaption><img loading="lazy" src="02_draw-toolbar_1440_light.png" alt="Одна панель инструментов в «Отрисовать»: draw-toolbar · 1440 · light"></figure>
+<div class="row">
+<figure class="phone"><figcaption>draw-toolbar · 400 · light</figcaption><img loading="lazy" src="02_draw-toolbar_400_light.png" alt="Одна панель инструментов в «Отрисовать»: draw-toolbar · 400 · light" style="max-width:min(100%,830px)"></figure>
+</div>
+</section>
+<section id="i03"><h2>3. Левый рейл: одна структура везде</h2><p>Верх всегда один: Главная · Библиотека · Избранное, затем разделитель и инструменты текущего экрана, внизу «?» и профиль. На широком экране при наведении (или с клавиатуры) рейл раскрывается с подписями поверх контента, иконки при этом не двигаются. Нижняя панель на телефоне без изменений.</p>
+<figure><figcaption>rail-draw · 1440 · dark</figcaption><img loading="lazy" src="03_rail-draw_1440_dark.png" alt="Левый рейл: одна структура везде: rail-draw · 1440 · dark"></figure>
+<figure><figcaption>rail-draw · 1440 · light</figcaption><img loading="lazy" src="03_rail-draw_1440_light.png" alt="Левый рейл: одна структура везде: rail-draw · 1440 · light"></figure>
+<figure><figcaption>rail-editor · 1440 · dark</figcaption><img loading="lazy" src="03_rail-editor_1440_dark.png" alt="Левый рейл: одна структура везде: rail-editor · 1440 · dark"></figure>
+<figure><figcaption>rail-editor · 1440 · light</figcaption><img loading="lazy" src="03_rail-editor_1440_light.png" alt="Левый рейл: одна структура везде: rail-editor · 1440 · light"></figure>
+<figure><figcaption>rail-home · 1440 · dark</figcaption><img loading="lazy" src="03_rail-home_1440_dark.png" alt="Левый рейл: одна структура везде: rail-home · 1440 · dark"></figure>
+<figure><figcaption>rail-home · 1440 · light</figcaption><img loading="lazy" src="03_rail-home_1440_light.png" alt="Левый рейл: одна структура везде: rail-home · 1440 · light"></figure>
+<figure><figcaption>rail-hover-home · 1440 · light</figcaption><img loading="lazy" src="03_rail-hover-home_1440_light.png" alt="Левый рейл: одна структура везде: rail-hover-home · 1440 · light"></figure>
+<figure><figcaption>rail-hover · 1440 · dark</figcaption><img loading="lazy" src="03_rail-hover_1440_dark.png" alt="Левый рейл: одна структура везде: rail-hover · 1440 · dark"></figure>
+<figure><figcaption>rail-hover · 1440 · light</figcaption><img loading="lazy" src="03_rail-hover_1440_light.png" alt="Левый рейл: одна структура везде: rail-hover · 1440 · light"></figure>
+<div class="row">
+<figure class="phone"><figcaption>rail-draw · 400 · dark</figcaption><img loading="lazy" src="03_rail-draw_400_dark.png" alt="Левый рейл: одна структура везде: rail-draw · 400 · dark" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>rail-draw · 400 · light</figcaption><img loading="lazy" src="03_rail-draw_400_light.png" alt="Левый рейл: одна структура везде: rail-draw · 400 · light" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>rail-editor · 400 · dark</figcaption><img loading="lazy" src="03_rail-editor_400_dark.png" alt="Левый рейл: одна структура везде: rail-editor · 400 · dark" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>rail-editor · 400 · light</figcaption><img loading="lazy" src="03_rail-editor_400_light.png" alt="Левый рейл: одна структура везде: rail-editor · 400 · light" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>rail-home · 400 · dark</figcaption><img loading="lazy" src="03_rail-home_400_dark.png" alt="Левый рейл: одна структура везде: rail-home · 400 · dark" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>rail-home · 400 · light</figcaption><img loading="lazy" src="03_rail-home_400_light.png" alt="Левый рейл: одна структура везде: rail-home · 400 · light" style="max-width:min(100%,830px)"></figure>
+</div>
+</section>
+<section id="i04"><h2>4. Верх редактора: один тулбар</h2><p>Три капсулы и плашка статуса стали одной панелью с понятным порядком: начертание → режим → история → Проект → статус → «Скачать». Переключатели начертания и режима выглядят одинаково, статус — спокойный текст с точкой, «Скачать» остаётся единственной красной кнопкой.</p>
+<figure><figcaption>editor-top · 1440 · dark</figcaption><img loading="lazy" src="04_editor-top_1440_dark.png" alt="Верх редактора: один тулбар: editor-top · 1440 · dark"></figure>
+<figure><figcaption>editor-top · 1440 · light</figcaption><img loading="lazy" src="04_editor-top_1440_light.png" alt="Верх редактора: один тулбар: editor-top · 1440 · light"></figure>
+<div class="row">
+<figure class="phone"><figcaption>editor-top · 400 · dark</figcaption><img loading="lazy" src="04_editor-top_400_dark.png" alt="Верх редактора: один тулбар: editor-top · 400 · dark" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>editor-top · 400 · light</figcaption><img loading="lazy" src="04_editor-top_400_light.png" alt="Верх редактора: один тулбар: editor-top · 400 · light" style="max-width:min(100%,830px)"></figure>
+</div>
+</section>
+<section id="i05"><h2>5. Профиль: пустое состояние</h2><p>«Ваше имя» теперь обычный тёмный текст с карандашом, а не серая «неактивная» подпись; аватар — пунктирное кольцо с плюсом, приглашающее добавить фото. Пустой градиент сверху стал ниже, кнопки «Поделиться» и «Редактировать профиль» стоят на одной линии с именем, у «Закреплённых» и «Подборок» разные иллюстрации.</p>
+<figure><figcaption>profile · 1440 · light</figcaption><img loading="lazy" src="05_profile_1440_light.png" alt="Профиль: пустое состояние: profile · 1440 · light"></figure>
+<div class="row">
+<figure class="phone"><figcaption>profile · 400 · light</figcaption><img loading="lazy" src="05_profile_400_light.png" alt="Профиль: пустое состояние: profile · 400 · light" style="max-width:min(100%,830px)"></figure>
+</div>
+</section>
+<section id="i06"><h2>6. Красный только для действий и ошибок</h2><p>Выделение, заливка и узлы в редакторе, обводка выбранного знака и выделение на холсте «Отрисовать», базовая линия и чип ссылки профиля стали нейтральными (чернильный / серый). Красный #FC473C остался у главных кнопок и настоящих ошибок.</p>
+<figure><figcaption>red-draw · 1440 · dark</figcaption><img loading="lazy" src="06_red-draw_1440_dark.png" alt="Красный только для действий и ошибок: red-draw · 1440 · dark"></figure>
+<figure><figcaption>red-draw · 1440 · light</figcaption><img loading="lazy" src="06_red-draw_1440_light.png" alt="Красный только для действий и ошибок: red-draw · 1440 · light"></figure>
+<figure><figcaption>red-editor · 1440 · dark</figcaption><img loading="lazy" src="06_red-editor_1440_dark.png" alt="Красный только для действий и ошибок: red-editor · 1440 · dark"></figure>
+<figure><figcaption>red-editor · 1440 · light</figcaption><img loading="lazy" src="06_red-editor_1440_light.png" alt="Красный только для действий и ошибок: red-editor · 1440 · light"></figure>
+<figure><figcaption>red-profile · 1440 · dark</figcaption><img loading="lazy" src="06_red-profile_1440_dark.png" alt="Красный только для действий и ошибок: red-profile · 1440 · dark"></figure>
+<figure><figcaption>red-profile · 1440 · light</figcaption><img loading="lazy" src="06_red-profile_1440_light.png" alt="Красный только для действий и ошибок: red-profile · 1440 · light"></figure>
+<div class="row">
+<figure class="phone"><figcaption>red-draw · 400 · dark</figcaption><img loading="lazy" src="06_red-draw_400_dark.png" alt="Красный только для действий и ошибок: red-draw · 400 · dark" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>red-draw · 400 · light</figcaption><img loading="lazy" src="06_red-draw_400_light.png" alt="Красный только для действий и ошибок: red-draw · 400 · light" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>red-editor · 400 · dark</figcaption><img loading="lazy" src="06_red-editor_400_dark.png" alt="Красный только для действий и ошибок: red-editor · 400 · dark" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>red-editor · 400 · light</figcaption><img loading="lazy" src="06_red-editor_400_light.png" alt="Красный только для действий и ошибок: red-editor · 400 · light" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>red-profile · 400 · dark</figcaption><img loading="lazy" src="06_red-profile_400_dark.png" alt="Красный только для действий и ошибок: red-profile · 400 · dark" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>red-profile · 400 · light</figcaption><img loading="lazy" src="06_red-profile_400_light.png" alt="Красный только для действий и ошибок: red-profile · 400 · light" style="max-width:min(100%,830px)"></figure>
+</div>
+</section>
+<section id="i07"><h2>7. Библиотека: ряд категорий</h2><p>У ряда категорий появился отступ справа (и затухание у края, когда он прокручивается), поэтому последняя карточка не упирается в край экрана. Шапка библиотеки не менялась.</p>
+<figure><figcaption>library-1100 · 1440 · light</figcaption><img loading="lazy" src="07_library-1100_1440_light.png" alt="Библиотека: ряд категорий: library-1100 · 1440 · light"></figure>
+<figure><figcaption>library · 1440 · light</figcaption><img loading="lazy" src="07_library_1440_light.png" alt="Библиотека: ряд категорий: library · 1440 · light"></figure>
+<div class="row">
+<figure class="phone"><figcaption>library · 400 · light</figcaption><img loading="lazy" src="07_library_400_light.png" alt="Библиотека: ряд категорий: library · 400 · light" style="max-width:min(100%,830px)"></figure>
+</div>
+</section>
+<section id="i08"><h2>8. Мелкий серый текст</h2><p>Подписи линий («выносные», «прописные», «строчные», «база», «нижние»), заголовки разделов («Латиница · прописные») и счётчики теперь не меньше 12 px, контраст не ниже 4,5:1 в обеих темах.</p>
+<figure><figcaption>small-text-draw · 1440 · dark</figcaption><img loading="lazy" src="08_small-text-draw_1440_dark.png" alt="Мелкий серый текст: small-text-draw · 1440 · dark"></figure>
+<figure><figcaption>small-text-draw · 1440 · light</figcaption><img loading="lazy" src="08_small-text-draw_1440_light.png" alt="Мелкий серый текст: small-text-draw · 1440 · light"></figure>
+<figure><figcaption>small-text-editor · 1440 · dark</figcaption><img loading="lazy" src="08_small-text-editor_1440_dark.png" alt="Мелкий серый текст: small-text-editor · 1440 · dark"></figure>
+<figure><figcaption>small-text-editor · 1440 · light</figcaption><img loading="lazy" src="08_small-text-editor_1440_light.png" alt="Мелкий серый текст: small-text-editor · 1440 · light"></figure>
+<figure><figcaption>zoom-glyph-labels · 1440 · dark</figcaption><img loading="lazy" src="08_zoom-glyph-labels_1440_dark.png" alt="Мелкий серый текст: zoom-glyph-labels · 1440 · dark"></figure>
+<figure><figcaption>zoom-glyph-labels · 1440 · light</figcaption><img loading="lazy" src="08_zoom-glyph-labels_1440_light.png" alt="Мелкий серый текст: zoom-glyph-labels · 1440 · light"></figure>
+<figure><figcaption>zoom-rulers · 1440 · dark</figcaption><img loading="lazy" src="08_zoom-rulers_1440_dark.png" alt="Мелкий серый текст: zoom-rulers · 1440 · dark"></figure>
+<figure><figcaption>zoom-rulers · 1440 · light</figcaption><img loading="lazy" src="08_zoom-rulers_1440_light.png" alt="Мелкий серый текст: zoom-rulers · 1440 · light"></figure>
+<div class="row">
+<figure class="phone"><figcaption>small-text-draw · 400 · dark</figcaption><img loading="lazy" src="08_small-text-draw_400_dark.png" alt="Мелкий серый текст: small-text-draw · 400 · dark" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>small-text-draw · 400 · light</figcaption><img loading="lazy" src="08_small-text-draw_400_light.png" alt="Мелкий серый текст: small-text-draw · 400 · light" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>small-text-editor · 400 · dark</figcaption><img loading="lazy" src="08_small-text-editor_400_dark.png" alt="Мелкий серый текст: small-text-editor · 400 · dark" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>small-text-editor · 400 · light</figcaption><img loading="lazy" src="08_small-text-editor_400_light.png" alt="Мелкий серый текст: small-text-editor · 400 · light" style="max-width:min(100%,830px)"></figure>
+</div>
+</section>
+<section id="i09"><h2>9. Холст «Отрисовать» на широком экране</h2><p>Сетка подгоняется под доступную высоту, а свободные стороны заполняют соседние буквы: нарисованные — приглушённой заливкой, ещё не нарисованные — едва заметным образцом. Они не кликаются и никогда не обрезаются краем холста.</p>
+<figure><figcaption>draw-canvas-empty · 1440 · light</figcaption><img loading="lazy" src="09_draw-canvas-empty_1440_light.png" alt="Холст «Отрисовать» на широком экране: draw-canvas-empty · 1440 · light"></figure>
+<figure><figcaption>draw-canvas · 1440 · light</figcaption><img loading="lazy" src="09_draw-canvas_1440_light.png" alt="Холст «Отрисовать» на широком экране: draw-canvas · 1440 · light"></figure>
+<div class="row">
+<figure class="phone"><figcaption>draw-canvas-empty · 400 · light</figcaption><img loading="lazy" src="09_draw-canvas-empty_400_light.png" alt="Холст «Отрисовать» на широком экране: draw-canvas-empty · 400 · light" style="max-width:min(100%,830px)"></figure>
+<figure class="phone"><figcaption>draw-canvas · 400 · light</figcaption><img loading="lazy" src="09_draw-canvas_400_light.png" alt="Холст «Отрисовать» на широком экране: draw-canvas · 400 · light" style="max-width:min(100%,830px)"></figure>
+</div>
+</section>
+</main>
+</body></html>

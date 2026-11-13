@@ -1,0 +1,22 @@
+<!-- @dsCard group="Content" height=560 width=900 subtitle="Баннеры, где иллюстрация выходит за границу блока. Включите направляющие: видно зону вылета." -->
+<style>
+  .pb { display: flex; flex-direction: column; gap: 8px; padding: 20px; background: var(--bg-app); color: var(--text-primary); }
+  .pb__bar { display: flex; gap: 8px; }
+  .pb__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; row-gap: 0; }
+  .pb.is-guides .bd-pop { outline: 1.5px dashed var(--accent-pink-ink); outline-offset: 0; }
+  .pb.is-guides .bd-pop::before { content: ""; position: absolute; left: 0; right: 0; top: calc(var(--pop-over) * -1); height: var(--pop-over); background: repeating-linear-gradient(135deg, rgba(242, 74, 116, .25) 0 4px, transparent 4px 8px); }
+  .pb.is-guides .bd-pop::after { content: "margin-top = space-3 + вылет"; position: absolute; left: 8px; top: calc(var(--pop-over) * -1 - 16px); font: 700 11px/14px var(--font-sans); color: var(--accent-pink-ink); }
+</style>
+<div class="pb bd-root" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    '<div class="pb__bar" id="bar">' + B.Chip({ filter: true, label: 'Без направляющих', pressed: true }) + B.Chip({ filter: true, label: 'Направляющие', pressed: false }) + '</div>' +
+    '<div class="pb__grid">' +
+    B.PopBanner({ tone: 'hero', title: 'Invite a friend', text: 'Habits stick better together', cta: 'Invite' }) +
+    B.PopBanner({ tone: 'sunny', title: 'Sleep challenge', text: 'Seven nights, one cozy streak', cta: 'Join' }) +
+    B.PopBanner({ tone: 'leafy', title: 'Start small', text: 'One minute a day is enough', cta: 'Try it', over: 'lg' }) +
+    B.PopBanner({ tone: 'soft', side: 'left', title: 'Weekly recap', text: 'See how your week went', cta: 'Open' }) + '</div>';
+  document.getElementById('bar').addEventListener('click', function (e) { var b = e.target.closest('.bd-chip--filter'); if (b) document.getElementById('root').classList.toggle('is-guides', b.textContent.indexOf('Направляющие') === 0); });
+  B.wire(document);
+</script>

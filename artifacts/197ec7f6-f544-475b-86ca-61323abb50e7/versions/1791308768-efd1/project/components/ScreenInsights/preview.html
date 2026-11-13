@@ -1,0 +1,16 @@
+<!-- @dsCard group="Screens" height=900 width=900 subtitle="Инсайты и информационные карточки: метрики с динамикой, советы, статьи, цитата с выходом за границу, шаги." -->
+<div id="root"></div>
+<script>
+  var B = window.Buddy;
+  function screen() {
+    var top = '<div style="padding:58px 20px 10px"><h1 class="title-xl" style="margin:0">Insights</h1><p class="body" style="margin:2px 0 0;color:var(--text-muted)">Your week at a glance</p></div>';
+    var body = '<div class="bd-stack" style="padding:0 20px;gap:12px">' +
+      '<div class="bd-grid-2">' + B.InsightCard({ label: 'Water', value: '6.4', unit: 'glasses', tone: 'sky', trend: { dir: 'up', text: '+12%' }, spark: [3, 4, 4, 5, 6, 5, 7] }) + B.InsightCard({ label: 'Sleep', value: '7.8', unit: 'hours', tone: 'orange', trend: { dir: 'down', text: '-0.4h' }, spark: [8, 7, 8, 6, 7, 6, 7] }) + '</div>' +
+      B.InfoCard({ tone: 'yellow', icon: 'bulb', eyebrow: 'Tip of the day', meta: '1 min', title: 'Pair a new habit with an old one', text: 'After brushing your teeth, drink a glass of water.', cta: 'Try it today' }) +
+      '<div class="bd-grid-2">' + B.ArticleCard({ cover: 'candy', mascot: 'buddy-sleepy', tag: 'Sleep', title: 'Wind down in 10 minutes', minutes: '4 min read' }) + B.ArticleCard({ cover: 'lagoon', mascot: 'leafy-umbrella', tag: 'Water', title: 'Why tiny sips work', minutes: '3 min read' }) + '</div>' +
+      B.QuoteCard({ text: 'Small steps beat big promises.', by: 'Leafy, your coach' }) +
+      B.StepsCard({ title: 'Your first week', steps: [{ t: 'Add your first habit', done: true }, { t: 'Complete it three days', done: true }, { t: 'Invite a friend' }] }) + '</div>';
+    return B.Phone(top + body, { tabs: B.TabBar({ current: 'tracker' }) });
+  }
+  document.getElementById('root').innerHTML = B.Stage(screen);
+</script>

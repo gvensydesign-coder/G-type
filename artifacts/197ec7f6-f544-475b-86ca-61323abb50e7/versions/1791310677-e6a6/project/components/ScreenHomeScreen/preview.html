@@ -1,0 +1,28 @@
+<!-- @dsCard group="Platform" height=900 width=900 subtitle="Домашний экран смартфона: виджеты 2×2 и 4×2 в сетке iOS, иконка приложения, стеклянный док, баннер-уведомление." -->
+<style>
+  .wp .bd-phone { background: linear-gradient(170deg, #CFC6FF 0%, #F1E3FF 45%, #FFD9C2 100%); }
+  .wp [data-theme="dark"] .bd-phone { background: linear-gradient(170deg, #2B2266 0%, #1B1546 52%, #3A2038 100%); }
+  .hs { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 22px; padding: 74px 26px 0; }
+  .hs__row { display: flex; gap: 22px; }
+  .hs__apps { display: grid; grid-template-columns: repeat(4, 60px); justify-content: space-between; row-gap: 18px; margin-top: 4px; }
+  .hs__app { display: flex; flex-direction: column; align-items: center; gap: 6px; font: 600 11px/14px var(--font-sans); color: var(--text-primary); }
+  .hs__dock { position: absolute; left: 14px; right: 14px; bottom: 14px; display: flex; justify-content: space-between; padding: 12px 16px; border-radius: 34px; }
+  .hs__push { position: absolute; z-index: 6; left: 12px; right: 12px; top: 54px; animation: hs-push 9s var(--ease-emphasized) 2s infinite both; }
+  @keyframes hs-push { 0% { opacity: 0; transform: translateY(-120%); } 7% { opacity: 1; transform: none; } 48% { opacity: 1; transform: none; } 56%, 100% { opacity: 0; transform: translateY(-120%); } }
+  .hs__dots { display: flex; gap: 6px; justify-content: center; margin-top: auto; padding-bottom: 112px; }
+  .hs__dots i { width: 7px; height: 7px; border-radius: 2px; background: var(--text-primary); opacity: .3; } .hs__dots i:first-child { opacity: .9; }
+</style>
+<div class="wp" id="root"></div>
+<script>
+  var B = window.Buddy;
+  function screen() {
+    var apps = [['telegram', 'Telegram'], ['whatsapp', 'WhatsApp'], ['instagram', 'Instagram'], ['youtube', 'YouTube'], ['spotify', 'Spotify'], ['discord', 'Discord'], ['github', 'GitHub'], ['max', 'Max']];
+    var inner = '<div class="hs"><div class="hs__row">' + B.Widget({ kind: 'streak' }) + B.Widget({ kind: 'water' }) + '</div>' +
+      '<div style="margin-top:14px">' + B.Widget({ kind: 'progress' }) + '</div>' +
+      '<div class="hs__apps">' + apps.map(function (a) { return '<span class="hs__app">' + B.social(a[0], { size: 60 }) + a[1] + '</span>'; }).join('') + '</div><div class="hs__dots"><i></i><i></i><i></i></div></div>' +
+      '<div class="hs__dock bd-glass">' + B.appIcon(58) + B.social('telegram', { size: 58 }) + B.social('whatsapp', { size: 58 }) + B.social('instagram', { size: 58 }) + '</div>' +
+      '<div class="hs__push">' + B.Push({ title: 'Drink Water', text: 'Time for a glass. It takes 10 seconds.', time: 'now' }) + '</div>';
+    return B.Phone(inner, {});
+  }
+  document.getElementById('root').innerHTML = B.Stage(screen);
+</script>

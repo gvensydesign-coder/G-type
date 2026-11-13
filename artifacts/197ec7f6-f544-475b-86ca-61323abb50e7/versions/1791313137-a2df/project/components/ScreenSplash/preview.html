@@ -1,0 +1,14 @@
+<!-- @dsCard group="Launch" height=960 width=900 subtitle="Заставка: облака влетают, Buddy падает с упругой посадкой, буквы поднимаются, квадратики грузятся, узор переходит в «успех»." -->
+<style>.rp { padding: 16px 16px 0; display: flex; gap: 12px; align-items: center; background: var(--bg-app); color: var(--text-muted); font: 600 12px/16px var(--font-sans); }</style>
+<div class="rp"><button type="button" class="bd-btn bd-btn--soft" id="replay">Повторить</button><span>0 мс облака · 350 мс падение · 1000 мс буквы · 1600 мс загрузка · 2400 мс → экран приветствия</span></div>
+<div id="stage"></div>
+<script>
+  var B = window.Buddy, ctrls = [], timers = [];
+  function run() {
+    ctrls.forEach(function (c) { c.destroy(); }); timers.forEach(clearTimeout); ctrls = []; timers = [];
+    document.getElementById('stage').innerHTML = B.Stage(function () { return B.Phone(B.Splash({}), { wash: true }); });
+    Array.prototype.forEach.call(document.querySelectorAll('.bd-splash__pat'), function (h) { ctrls.push(B.Pattern.mount(h, { state: 'thinking', focus: { x: 0.5, y: 0.42 } })); });
+    timers.push(setTimeout(function () { ctrls.forEach(function (c) { c.set('success'); }); }, 2400));
+  }
+  document.getElementById('replay').addEventListener('click', run); run();
+</script>

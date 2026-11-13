@@ -1,0 +1,29 @@
+<!-- @dsCard group="Platform" height=900 width=900 subtitle="Иконка приложения: iOS, Android (adaptive и монохромная), уведомления, web. Все размеры лежат в assets/AppIcon." -->
+<style>
+  .ai { display: flex; flex-direction: column; gap: 22px; padding: 20px; background: var(--bg-app); color: var(--text-primary); }
+  .ai h4 { margin: 0 0 10px; font: 800 11px/14px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+  .ai__row { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-end; }
+  .ai__cap { display: flex; flex-direction: column; align-items: center; gap: 8px; font: 600 12px/16px var(--font-sans); color: var(--text-secondary); text-align: center; }
+  .ai__ad { position: relative; width: 144px; height: 144px; border-radius: 50%; overflow: hidden; box-shadow: var(--shadow-sm); }
+  .ai__ad img { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0 !important; box-shadow: none; }
+  .ai__safe { position: absolute; inset: 0; margin: auto; width: 61%; height: 61%; border: 1.5px dashed rgba(255,255,255,.8); border-radius: 50%; }
+  .ai__sb { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 14px; background: #1D1A33; color: #fff; font: 700 12px/16px var(--font-sans); }
+  .ai__sb img { filter: invert(1); box-shadow: none; }
+  .ai table { width: 100%; border-collapse: collapse; font: 500 13px/18px var(--font-sans); } .ai th, .ai td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--border-subtle); } .ai th { font: 800 11px/14px var(--font-sans); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); } .ai code { font: 600 12px var(--font-mono); color: var(--text-brand); }
+</style>
+<div class="ai bd-root" id="root"></div>
+<script>
+  var B = window.Buddy;
+  function cap(l, h) { return '<div class="ai__cap">' + h + '<span>' + l + '</span></div>'; }
+  document.getElementById('root').innerHTML =
+    '<div><h4>iOS (полный квадрат без прозрачности, маску добавляет система)</h4><div class="ai__row">' + cap('1024 · App Store', B.appIcon(128)) + cap('180 · 60@3x', B.appIcon(90)) + cap('120 · 60@2x', B.appIcon(60)) + cap('87 · 29@3x', B.appIcon(44)) + cap('40 · 20@2x', B.appIcon(24)) + cap('Без маски', B.appIcon(96, { shape: 'none' })) + '</div></div>' +
+    '<div><h4>Android: adaptive 108dp (безопасная зона 66dp, пунктир)</h4><div class="ai__row">' + cap('background', '<div class="ai__ad">' + B.appIcon(144, { src: 'app-icon-adaptive-bg', shape: 'none' }) + '</div>') + cap('foreground', '<div class="ai__ad" style="background:var(--bg-surface-sunken)">' + B.appIcon(144, { src: 'app-icon-adaptive-fg', shape: 'none' }) + '</div>') + cap('circle + безопасная зона', '<div class="ai__ad">' + B.appIcon(144, { src: 'app-icon-adaptive-bg', shape: 'none' }) + B.appIcon(144, { src: 'app-icon-adaptive-fg', shape: 'none' }).replace('<img', '<img style="position:absolute;left:0;top:0"') + '<span class="ai__safe"></span></div>') + cap('squircle', B.appIcon(96, { shape: 'none' }).replace('border-radius:0', 'border-radius:34%')) + cap('themed (Android 13)', '<div class="ai__ad" style="background:var(--brand-soft);width:96px;height:96px">' + B.appIcon(96, { src: 'app-icon-mono', shape: 'none' }) + '</div>') + '</div></div>' +
+    '<div><h4>Уведомления и web</h4><div class="ai__row">' + cap('status bar 24', '<div class="ai__sb">' + B.appIcon(24, { src: 'app-icon-mono', shape: 'none' }) + 'Buddy · now</div>') + cap('favicon 32 / 16', '<div style="display:flex;gap:10px;align-items:center">' + B.appIcon(32, { shape: 'none' }).replace('border-radius:0', 'border-radius:6px') + B.appIcon(16, { shape: 'none' }).replace('border-radius:0', 'border-radius:3px') + '</div>') + cap('PWA maskable 512', B.appIcon(72, { shape: 'circle' })) + '</div></div>' +
+    '<table><thead><tr><th>Платформа</th><th>Файлы (assets/AppIcon)</th><th>Правила</th></tr></thead><tbody>' +
+    '<tr><td>iOS</td><td><code>ios-1024 · 180 · 167 · 152 · 120 · 87 · 80 · 76 · 60 · 58 · 40 · 29 · 20.png</code></td><td>Квадрат без альфа-канала и без скруглений, образ в центре 80%</td></tr>' +
+    '<tr><td>Android</td><td><code>android-512 · 192 · 144 · 96 · 72 · 48.png</code>, <code>android-adaptive-fg-432.png</code>, <code>android-adaptive-bg-432.png</code></td><td>Adaptive 108dp: арт внутри круга 66dp (61%). 512 для Google Play без маски</td></tr>' +
+    '<tr><td>Монохромная</td><td><code>app-icon-mono.svg</code></td><td>Themed icon Android 13+: один цвет, вырезанные глаза и нос</td></tr>' +
+    '<tr><td>Уведомления</td><td><code>notification-small-96 · 72 · 48 · 36 · 24.png</code></td><td>Белый силуэт на прозрачном фоне, без градиентов (24dp, mdpi 24 px)</td></tr>' +
+    '<tr><td>Web</td><td><code>favicon-48 · 32 · 16.png</code>, <code>pwa-maskable-512.png</code>, <code>android-192/512.png</code></td><td>Maskable: образ в безопасной зоне 80%</td></tr>' +
+    '<tr><td>Мастер</td><td><code>app-icon.svg</code> (1024 × 1024)</td><td>Источник всех размеров</td></tr></tbody></table>';
+</script>

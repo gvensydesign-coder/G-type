@@ -1,0 +1,21 @@
+{
+  "v": 4,
+  "createdOnFiles": { "v": 1, "at": "2026-10-06T11:10:00Z" },
+  "lists": "css",
+  "title": "Подхват — презентация",
+  "cover": "cover",
+  "order": ["cover", "problem", "route", "screens", "nearby", "scout", "guides", "trust", "partners", "papers", "awards", "design", "closing"],
+  "sections": {
+    "s1": { "description": "Какую проблему решает «Подхват» и как проходит помощь от находки до итога", "start": "cover" },
+    "s2": { "description": "Главные экраны приложения: лента рядом, Скаут и памятки", "start": "screens" },
+    "s3": { "description": "Доверие, партнёры, документы и награды", "start": "trust" },
+    "s4": { "description": "Дизайн-система и контакты", "start": "design" }
+  },
+  "faces": {
+    "nunito": { "family": "Nunito", "href": "https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" },
+    "manrope": { "family": "Manrope", "href": "https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" }
+  },
+  "designSystems": [
+    { "title": "Buddy", "namespace": "buddy", "artifact": "https://claude.ai/artifact/49bkTQC3o2o81pTT3SmFk2", "version": "1791240400-ddd2", "copiedAt": "2026-10-06T11:10:00Z" }
+  ]
+}

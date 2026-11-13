@@ -1,0 +1,9 @@
+<!-- @dsCard group="Navigation" height=560 width=420 subtitle="Шапка с градиентом: приветствие и маскот или заголовок экрана с действиями." -->
+<style>.pv{display:flex;flex-direction:column;gap:20px;background:var(--bg-app)}.pv .bd-hero{padding-top:24px;padding-bottom:28px}.pv .bd-header__mascot{top:48px}</style>
+<div class="pv" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    B.AppHeader({ leading: 'menu', tools: 'home', bubble: "Let's start small!", title: 'Hey, Lukman', sub: 'Ready for a good day?', large: true, mascot: 'leafy-umbrella', round: true }) +
+    B.AppHeader({ title: 'My Habits Tracker', inlineTitle: true, tools: 'share', round: true });
+</script>

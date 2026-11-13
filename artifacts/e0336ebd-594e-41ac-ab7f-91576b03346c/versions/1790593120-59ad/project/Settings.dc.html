@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Настройки</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Kurale&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0A08;font-family:'Kurale',serif;color:#E8DFC8}
+a{color:#E08A3C}a:hover{color:#F2B26A}
+.rus{font-family:'Ruslan Display',serif;font-weight:400}
+.plank{position:relative;background:linear-gradient(180deg,rgba(255,225,190,.05),rgba(0,0,0,.3)),repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,transparent 1px 7px),repeating-linear-gradient(180deg,rgba(255,215,170,.035) 0 1px,transparent 1px 13px),linear-gradient(90deg,#231A14,#2B2019 30%,#211813 60%,#2A1F18);border:1px solid #0A0806;box-shadow:inset 0 1px 0 rgba(255,220,180,.1),inset 0 0 0 2px #3B2C20,inset 0 0 0 3px #120D0A,0 12px 30px rgba(0,0,0,.7)}
+.nail{position:absolute;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#B0A898 0,#5B5650 35%,#1B1917 75%);box-shadow:0 1px 1px rgba(0,0,0,.8)}
+.inset{background:linear-gradient(180deg,#120E0B,#17120E);box-shadow:inset 0 2px 8px rgba(0,0,0,.85),inset 0 0 0 1px #0A0806}
+.back{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 18px;background:linear-gradient(180deg,#1C1612,#100D0B);border:1px solid #4A382A;box-shadow:inset 0 0 12px rgba(0,0,0,.8);font-family:'Ruslan Display',serif;font-size:14px;letter-spacing:2px;color:#CDBFA2;text-decoration:none;transition:transform .15s,border-color .2s,color .2s,box-shadow .2s}
+.back svg{transition:transform .2s}
+.back:hover{border-color:#C8702F;color:#F6D29A;box-shadow:inset 0 0 12px rgba(200,112,47,.2),0 0 14px rgba(224,138,60,.35)}
+.back:hover svg{transform:translateX(-4px)}
+.back:active{transform:scale(.95)}
+.side{position:relative;display:flex;align-items:center;gap:14px;width:100%;height:56px;padding:0 18px;box-sizing:border-box;background:none;border:0;cursor:pointer;font-family:'Ruslan Display',serif;font-size:17px;letter-spacing:1.5px;color:#A89A80;text-align:left;transition:color .2s,transform .25s,background .25s}
+.side .mk{width:9px;height:9px;transform:rotate(45deg);border:1px solid #6B5440;transition:transform .4s,background .2s,box-shadow .2s}
+.side:hover{color:#F6D29A;transform:translateX(6px)}
+.side:hover .mk{transform:rotate(225deg)}
+.side:active{transform:translateX(6px) scale(.97)}
+.side.on{color:#F3E6CC;background:linear-gradient(90deg,rgba(142,42,34,.55),transparent)}
+.side.on .mk{background:#C8412F;border-color:#E0604A;box-shadow:0 0 10px #E0604A}
+.row{display:flex;align-items:center;gap:20px;min-height:58px;padding:6px 18px;box-sizing:border-box;border-bottom:1px solid rgba(74,56,42,.6);transition:background .2s}
+.row:hover{background:rgba(142,42,34,.1)}
+.row .lbl{width:230px;flex-shrink:0;font-size:18px;color:#E8DFC8}
+.row .sub{font-size:13px;color:#8F8570}
+.sw{position:relative;width:60px;height:28px;flex-shrink:0;border:1px solid #5A4634;background:#140F0C;cursor:pointer;box-shadow:inset 0 2px 6px rgba(0,0,0,.8);transition:background .25s,border-color .25s}
+.sw::after{content:'';position:absolute;left:6px;top:6px;width:14px;height:14px;transform:rotate(45deg);background:#6B5E50;transition:left .3s cubic-bezier(.3,1.5,.5,1),background .25s,box-shadow .25s}
+.sw:hover{border-color:#C8702F}
+.sw:active::after{transform:rotate(45deg) scale(.8)}
+.sw.on{background:linear-gradient(180deg,#7E231C,#4A120E);border-color:#C8412F}
+.sw.on::after{left:38px;background:#F0CC8A;box-shadow:0 0 10px #E08A3C}
+.seg{display:flex;border:1px solid #5A4634;background:#120E0B}
+.sg{height:38px;padding:0 16px;border:0;border-right:1px solid #3B2C20;background:none;cursor:pointer;font-family:'Kurale',serif;font-size:15px;color:#A89A80;transition:background .2s,color .2s}
+.sg:last-child{border-right:0}
+.sg:hover{color:#F6D29A;background:rgba(200,112,47,.12)}
+.sg:active{background:rgba(200,112,47,.25)}
+.sg.on{background:linear-gradient(180deg,#9A2E24,#6A1C16);color:#F3E6CC}
+.key{min-width:92px;height:38px;padding:0 14px;border:1px solid #5A4634;background:linear-gradient(180deg,#1E1713,#0F0C0A);box-shadow:inset 0 -3px 0 #0A0806,0 2px 4px rgba(0,0,0,.6);cursor:pointer;font-family:'Ruslan Display',serif;font-size:15px;color:#E8DFC8;transition:transform .12s,border-color .2s,box-shadow .2s}
+.key:hover{border-color:#C8702F;box-shadow:inset 0 -3px 0 #0A0806,0 0 12px rgba(224,138,60,.35)}
+.key:active{transform:translateY(2px);box-shadow:inset 0 -1px 0 #0A0806}
+.key.wait{border-color:#E0604A;color:#E0604A;animation:waitk 1s ease-in-out infinite}
+@keyframes waitk{0%,100%{box-shadow:0 0 0 rgba(224,96,74,0)}50%{box-shadow:0 0 14px rgba(224,96,74,.6)}}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;background:linear-gradient(90deg,#8E2A22,#3B2C20);border:1px solid #0A0806}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-6px;background:#E8C98A;transform:rotate(45deg);border:1px solid #3A2A1E;box-shadow:0 0 8px rgba(224,138,60,.6);transition:transform .15s}
+input[type=range]:active::-webkit-slider-thumb{transform:rotate(45deg) scale(1.35)}
+input[type=range]::-moz-range-track{height:4px;background:#5A2A1E}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:0;background:#E8C98A;border:1px solid #3A2A1E}
+.btn{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:48px;padding:0 32px;border:0;background:linear-gradient(180deg,#7A5334,#2A1B12);clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%);cursor:pointer;font-family:'Ruslan Display',serif;font-size:14px;letter-spacing:2px;color:#E8DFC8;text-decoration:none;transition:transform .18s,filter .18s,color .2s,background .25s}
+.btn::before{content:'';position:absolute;inset:2px;z-index:-1;clip-path:inherit;background:linear-gradient(180deg,#2E2119,#150F0B)}
+.btn:hover{color:#F6D29A;transform:translateY(-2px);background:linear-gradient(180deg,#E08A3C,#6B2A15)}
+.btn:active{transform:scale(.96);filter:brightness(.8)}
+.btn.red{background:linear-gradient(180deg,#C8412F,#5E1914)}
+.btn.red::before{background:linear-gradient(180deg,#8E2A22,#4A120E)}
+.rise{animation:riseIn .35s cubic-bezier(.2,.8,.3,1)}
+@keyframes riseIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.toast{animation:toast 2.6s ease forwards}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-14px)}10%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 30% 30%, #1E1A14 0%, #0B0A08 70%); font-family: 'Kurale', serif; color: #E8DFC8">
+<svg width="0" height="0" style="position: absolute" aria-hidden="true"><defs>
+<pattern id="orn" width="28" height="14" patternUnits="userSpaceOnUse"><path d="M14 1.5 L21 7 L14 12.5 L7 7 Z" fill="none" stroke="#A8352A" stroke-width="1.3"></path><path d="M14 4.5 L17 7 L14 9.5 L11 7 Z" fill="#A8352A"></path><path d="M0 7 H5 M23 7 H28 M3 3 L5 7 L3 11 M25 3 L23 7 L25 11" stroke="#A8352A" stroke-width="1" fill="none"></path></pattern>
+<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+</defs></svg>
+
+<div style="position: absolute; left: 40px; top: 24px; right: 40px; height: 56px; display: flex; align-items: center; gap: 16px">
+<a class="back" href="Start.dc.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 4l-8 8 8 8"></path></svg>В МЕНЮ</a>
+<a class="back" href="Game.dc.html">В ДЕРЕВНЮ</a>
+<h1 class="rus" style="margin: 0 0 0 12px; font-size: 40px; letter-spacing: 2px; color: #E8DFC8; text-shadow: 0 3px 0 #000">Настройки</h1>
+</div>
+
+<nav class="plank" style="position: absolute; left: 40px; top: 100px; width: 280px; height: 500px; box-sizing: border-box; padding: 22px 12px; display: flex; flex-direction: column; gap: 4px" aria-label="Разделы настроек">
+<span class="nail" style="left: 8px; top: 8px"></span><span class="nail" style="right: 8px; top: 8px"></span><span class="nail" style="left: 8px; bottom: 8px"></span><span class="nail" style="right: 8px; bottom: 8px"></span>
+<sc-for list="{{sections}}" as="sc" hint-placeholder-count="4">
+<button class="{{sc.cls}}" onClick="{{sc.pick}}"><span class="mk"></span>{{sc.name}}</button>
+</sc-for>
+</nav>
+
+<div class="plank" style="position: absolute; left: 340px; top: 100px; right: 40px; height: 500px; box-sizing: border-box; padding: 26px 30px">
+<span class="nail" style="left: 8px; top: 8px"></span><span class="nail" style="right: 8px; top: 8px"></span>
+<h2 class="rus" style="margin: 0 0 6px; font-size: 26px; color: #E8DFC8">{{secTitle}}</h2>
+<svg width="100%" height="14" style="display: block; opacity: 0.45; margin-bottom: 10px" aria-hidden="true"><rect width="100%" height="14" fill="url(#orn)"></rect></svg>
+
+<sc-if value="{{isSound}}" hint-placeholder-val="{{ true }}">
+<div class="rise inset">
+<sc-for list="{{volumes}}" as="v" hint-placeholder-count="5">
+<div class="row">
+<div class="lbl">{{v.name}}<div class="sub">{{v.sub}}</div></div>
+<input type="range" min="0" max="100" value="{{v.val}}" onChange="{{v.set}}" aria-label="{{v.name}}">
+<span style="width: 44px; text-align: right; font-size: 17px; color: #E08A3C; font-variant-numeric: tabular-nums">{{v.val}}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{isVideo}}" hint-placeholder-val="{{ false }}">
+<div class="rise inset">
+<div class="row"><div class="lbl">Разрешение</div>
+<div class="seg"><sc-for list="{{resOpts}}" as="o" hint-placeholder-count="3"><button class="{{o.cls}}" onClick="{{o.pick}}">{{o.name}}</button></sc-for></div></div>
+<div class="row"><div class="lbl">Полный экран</div><button class="{{sw.full}}" onClick="{{tg.full}}" aria-label="Полный экран"></button></div>
+<div class="row"><div class="lbl">Туман<div class="sub">густота и дальность</div></div>
+<div class="seg"><sc-for list="{{fogOpts}}" as="o" hint-placeholder-count="3"><button class="{{o.cls}}" onClick="{{o.pick}}">{{o.name}}</button></sc-for></div></div>
+<div class="row"><div class="lbl">Зерно плёнки</div><button class="{{sw.grain}}" onClick="{{tg.grain}}" aria-label="Зерно плёнки"></button></div>
+<div class="row"><div class="lbl">Яркость<div class="sub">символ должен быть едва виден</div></div>
+<input type="range" min="0" max="100" value="{{bright}}" onChange="{{setBright}}" aria-label="Яркость" style="max-width: 260px">
+<div style="width: 64px; height: 40px; display: flex; align-items: center; justify-content: center; background: #050505; border: 1px solid #3B2C20">
+<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 2 L24 13 L13 24 L2 13 Z" fill="none" stroke="#8E2A22" stroke-width="2" style="{{brightStyle}}"></path></svg>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isGame}}" hint-placeholder-val="{{ false }}">
+<div class="rise inset">
+<div class="row"><div class="lbl">Сложность</div>
+<div class="seg"><sc-for list="{{diffOpts}}" as="o" hint-placeholder-count="3"><button class="{{o.cls}}" onClick="{{o.pick}}">{{o.name}}</button></sc-for></div>
+<span style="font-size: 14px; font-style: italic; color: #8F8570">{{diffNote}}</span></div>
+<div class="row"><div class="lbl">Язык</div>
+<div class="seg"><sc-for list="{{langOpts}}" as="o" hint-placeholder-count="2"><button class="{{o.cls}}" onClick="{{o.pick}}">{{o.name}}</button></sc-for></div></div>
+<div class="row"><div class="lbl">Скорость текста</div>
+<input type="range" min="1" max="5" value="{{textSpeed}}" onChange="{{setTextSpeed}}" aria-label="Скорость текста" style="max-width: 260px">
+<span style="font-size: 15px; color: #E08A3C">{{textSpeedName}}</span></div>
+<div class="row"><div class="lbl">Субтитры</div><button class="{{sw.subs}}" onClick="{{tg.subs}}" aria-label="Субтитры"></button></div>
+<div class="row"><div class="lbl">Подсказки</div><button class="{{sw.hints}}" onClick="{{tg.hints}}" aria-label="Подсказки"></button></div>
+<div class="row"><div class="lbl">Резкие испуги<div class="sub">внезапные звуки и вспышки</div></div><button class="{{sw.scares}}" onClick="{{tg.scares}}" aria-label="Резкие испуги"></button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{isKeys}}" hint-placeholder-val="{{ false }}">
+<div class="rise inset" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+<sc-for list="{{binds}}" as="b" hint-placeholder-count="8">
+<div class="row" style="justify-content: space-between">
+<span style="font-size: 17px; color: #E8DFC8">{{b.name}}</span>
+<button class="{{b.cls}}" onClick="{{b.pick}}">{{b.key}}</button>
+</div>
+</sc-for>
+</div>
+<div style="margin-top: 12px; font-size: 14px; font-style: italic; color: #8F8570">{{keysHint}}</div>
+</sc-if>
+</div>
+
+<div class="plank" style="position: absolute; left: 40px; right: 40px; bottom: 24px; height: 80px; box-sizing: border-box; padding: 0 28px; display: flex; align-items: center; gap: 16px">
+<span class="nail" style="left: 8px; top: 36px"></span><span class="nail" style="right: 8px; top: 36px"></span>
+<span style="font-size: 16px; font-style: italic; color: {{statusCol}}; flex-grow: 1">{{status}}</span>
+<button class="btn" onClick="{{reset}}">ПО УМОЛЧАНИЮ</button>
+<button class="btn red" onClick="{{apply}}">ПРИМЕНИТЬ</button>
+</div>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+<div class="toast plank" style="position: absolute; left: 50%; top: 32px; padding: 10px 22px; font-size: 15px; color: #F0E6CE">{{toast}}</div>
+</sc-if>
+<svg width="1280" height="720" style="position: absolute; left: 0; top: 0; pointer-events: none; opacity: {{grainOpacity}}; mix-blend-mode: overlay" aria-hidden="true"><rect width="1280" height="720" filter="url(#gr)"></rect></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  say(msg) {
+    clearTimeout(this.tt);
+    this.setState({ toast: null });
+    setTimeout(() => this.setState({ toast: msg }), 20);
+    this.tt = setTimeout(() => this.setState({ toast: null }), 2700);
+  }
+  componentWillUnmount() { clearTimeout(this.tt); }
+  renderVals() {
+    const s = this.state || {};
+    const DEF = { vol: { all: 80, music: 70, fx: 85, voice: 90, amb: 60 }, res: '1920', fog: 'mid', diff: 'skaz', lang: 'ru', speed: 3, bright: 50,
+      sw: { full: true, grain: true, subs: true, hints: true, scares: false },
+      keys: { diary: 'Д', map: 'К', hero: 'Г', people: 'Ж', beasts: 'Б', night: 'Пробел', menu: 'Esc', save: 'F5' } };
+    const c = s.cfg || DEF;
+    const set = patch => this.setState({ cfg: { ...c, ...patch }, dirty: true });
+    const sec = s.sec || 'sound';
+    const SEC = [['sound', 'Звук'], ['video', 'Изображение'], ['game', 'Игра'], ['keys', 'Управление']];
+    const seg = (opts, cur, key) => opts.map(([k, n]) => ({ name: n, cls: cur === k ? 'sg on' : 'sg', pick: () => set({ [key]: k }) }));
+    const swc = k => c.sw[k] ? 'sw on' : 'sw';
+    const tgl = k => () => set({ sw: { ...c.sw, [k]: !c.sw[k] } });
+    const V = [['all', 'Общая громкость', 'всё сразу'], ['music', 'Музыка', 'гусли, варган, хор'], ['fx', 'Эффекты', 'шаги, удары, скрипы'], ['voice', 'Голоса', 'речь персонажей'], ['amb', 'Окружение', 'лес, ветер, болото']];
+    const KN = [['diary', 'Дневник'], ['map', 'Карта'], ['hero', 'Герой'], ['people', 'Жители'], ['beasts', 'Бестиарий'], ['night', 'Завершить день'], ['menu', 'Меню'], ['save', 'Быстрое сохранение']];
+    const pool = ['Й', 'Ц', 'У', 'Х', 'Ъ', 'Ф', 'Ы', 'Я', 'Ч', 'Ю'];
+    const wait = s.wait || null;
+    const speeds = ['', 'медленно', 'неспешно', 'обычно', 'быстро', 'мгновенно'];
+    const diffNotes = { luch: 'нечисть щадит, ресурсов вдоволь', skaz: 'как задумано', byl: 'страх растёт быстрее, ночи длиннее' };
+    return {
+      sections: SEC.map(([k, n]) => ({ name: n, cls: sec === k ? 'side on' : 'side', pick: () => this.setState({ sec: k, wait: null }) })),
+      secTitle: SEC.find(x => x[0] === sec)[1],
+      isSound: sec === 'sound', isVideo: sec === 'video', isGame: sec === 'game', isKeys: sec === 'keys',
+      volumes: V.map(([k, n, sub]) => ({ name: n, sub: sub, val: c.vol[k], set: e => set({ vol: { ...c.vol, [k]: +e.target.value } }) })),
+      resOpts: seg([['1280', '1280×720'], ['1920', '1920×1080'], ['2560', '2560×1440']], c.res, 'res'),
+      fogOpts: seg([['low', 'Лёгкий'], ['mid', 'Густой'], ['high', 'Непроглядный']], c.fog, 'fog'),
+      diffOpts: seg([['luch', 'Лучина'], ['skaz', 'Сказ'], ['byl', 'Былина']], c.diff, 'diff'),
+      diffNote: diffNotes[c.diff],
+      langOpts: seg([['ru', 'Русский'], ['en', 'English']], c.lang, 'lang'),
+      textSpeed: c.speed, textSpeedName: speeds[c.speed], setTextSpeed: e => set({ speed: +e.target.value }),
+      bright: c.bright, setBright: e => set({ bright: +e.target.value }),
+      brightStyle: 'opacity: ' + (0.1 + c.bright / 110).toFixed(2),
+      sw: { full: swc('full'), grain: swc('grain'), subs: swc('subs'), hints: swc('hints'), scares: swc('scares') },
+      tg: { full: tgl('full'), grain: tgl('grain'), subs: tgl('subs'), hints: tgl('hints'), scares: tgl('scares') },
+      grainOpacity: c.sw.grain ? '0.09' : '0',
+      binds: KN.map(([k, n]) => ({ name: n, key: wait === k ? 'нажмите…' : c.keys[k], cls: wait === k ? 'key wait' : 'key',
+        pick: () => {
+          if (wait === k) { const used = Object.values(c.keys); const nk = pool.find(p => !used.includes(p)) || '—'; set({ keys: { ...c.keys, [k]: nk } }); this.setState({ wait: null }); }
+          else this.setState({ wait: k });
+        } })),
+      keysHint: wait ? 'Прототип: нажмите на клавишу ещё раз — назначится свободная буква.' : 'Нажмите на клавишу, чтобы переназначить действие.',
+      status: s.dirty ? 'Есть несохранённые изменения' : 'Все изменения сохранены',
+      statusCol: s.dirty ? '#E08A3C' : '#8F8570',
+      reset: () => { this.setState({ cfg: DEF, dirty: true, wait: null }); this.say('Возвращено как было'); },
+      apply: () => { this.setState({ dirty: false }); this.say('Настройки сохранены'); },
+      hasToast: !!s.toast, toast: s.toast || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

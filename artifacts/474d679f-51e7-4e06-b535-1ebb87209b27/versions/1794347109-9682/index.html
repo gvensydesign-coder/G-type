@@ -1,0 +1,121 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Логово: приёмы до и после</title>
+<style>
+@font-face { font-family: 'Rub'; src: url('fonts/SkazanieRub.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'Ustav'; src: url('fonts/SkazanieUstav.woff2') format('woff2'); font-display: swap; }
+:root {
+  --ink: #120c0a; --soot: #070505; --board: #2a1f1a; --boardSh: #1b1411; --bark: #3b2c23;
+  --bone: #eadfc6; --boneDim: #a99b80; --blood: #c4302b; --ember: #ff8a3c; --line: rgba(234,223,198,.18);
+  --glass: rgba(18,12,10,.82);
+}
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--soot); color: var(--bone); font: 13px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif; overflow: hidden; }
+canvas#c { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; touch-action: none; }
+.title { position: fixed; left: 18px; top: 14px; pointer-events: none; }
+.title h1 { font: 30px/1 'Rub', Georgia, serif; margin: 0; letter-spacing: .02em; text-shadow: 0 2px 0 var(--ink); }
+.title p { margin: 4px 0 0; color: var(--boneDim); font-size: 12px; }
+#scenes { position: fixed; left: 18px; top: 70px; display: flex; gap: 6px; flex-wrap: wrap; max-width: calc(100vw - 380px); }
+button, .chip { font: inherit; color: var(--bone); background: var(--glass); border: 1px solid var(--line); padding: 6px 11px; cursor: pointer; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+button:hover { border-color: var(--boneDim); }
+button.on { border-color: var(--ember); box-shadow: inset 0 0 0 1px var(--ember); color: #fff; }
+#panel { position: fixed; right: 0; top: 0; bottom: 0; width: 340px; background: var(--glass); border-left: 1px solid var(--line); overflow-y: auto; padding: 14px 14px 40px; backdrop-filter: blur(6px); transition: transform .25s; }
+#panel.hide { transform: translateX(100%); }
+#toggle { position: fixed; right: 348px; top: 14px; transition: right .25s; }
+#panel.hide + #toggle { right: 14px; }
+h2 { font: 17px/1.1 'Rub', Georgia, serif; margin: 16px 0 8px; color: var(--bone); }
+h2:first-child { margin-top: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 5px; }
+.layers label { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border: 1px solid var(--line); cursor: pointer; font-size: 12px; }
+.layers input { accent-color: var(--ember); margin: 0; }
+details { border-top: 1px solid var(--line); padding: 6px 0; }
+summary { cursor: pointer; font-weight: 600; color: var(--bone); padding: 2px 0; }
+.sl { display: grid; grid-template-columns: 1fr 92px 38px; gap: 6px; align-items: center; margin: 5px 0; font-size: 12px; color: var(--boneDim); }
+.sl input[type=range] { width: 100%; accent-color: var(--ember); }
+.sl output { text-align: right; color: var(--bone); font-variant-numeric: tabular-nums; }
+.cl { display: grid; grid-template-columns: 1fr 40px; gap: 6px; align-items: center; margin: 4px 0; font-size: 12px; color: var(--boneDim); }
+.cl input { width: 40px; height: 22px; border: 1px solid var(--line); background: none; padding: 0; }
+#step { width: 100%; accent-color: var(--blood); }
+#stepCap { min-height: 52px; color: var(--bone); font-size: 12px; margin-top: 4px; }
+#stepCap b { font: 15px 'Rub', Georgia, serif; color: var(--ember); display: block; margin-bottom: 2px; }
+#caption { position: fixed; left: 18px; bottom: 16px; max-width: min(560px, calc(100vw - 390px)); background: var(--glass); border: 1px solid var(--line); padding: 10px 12px; font-size: 12.5px; }
+#caption b { font: 15px 'Rub', Georgia, serif; color: var(--ember); }
+#split { position: fixed; top: 0; bottom: 0; width: 2px; background: var(--ember); display: none; cursor: ew-resize; }
+#split::after { content: 'без стиля  |  стиль'; position: absolute; top: 120px; left: 50%; transform: translateX(-50%); white-space: pre; background: var(--glass); border: 1px solid var(--ember); padding: 3px 8px; font-size: 11px; }
+#loading { position: fixed; inset: 0; display: grid; place-items: center; background: var(--soot); z-index: 5; font: 22px 'Rub', Georgia, serif; }
+#err { position: fixed; left: 18px; top: 110px; color: #ff9a8a; max-width: 50vw; white-space: pre-wrap; font-size: 12px; }
+.muted { color: var(--boneDim); font-size: 11.5px; }
+select { font: inherit; color: var(--bone); background: var(--boardSh); border: 1px solid var(--line); padding: 4px; width: 100%; }
+#zoneUi { position: fixed; right: 0; top: 0; bottom: 0; width: 340px; background: var(--glass); border-left: 1px solid var(--line); overflow-y: auto; padding: 14px 14px 40px; backdrop-filter: blur(6px); }
+#zoneUi[hidden] { display: none; }
+#zoneUi button { width: auto; }
+#zoneUi #zZones button { width: 100%; }
+#scribUi { position: fixed; inset: 0; z-index: 4; background: var(--soot); overflow: auto; padding: 14px 18px; }
+#scribUi[hidden] { display: none; }
+.sc-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+.sc-head h2 { margin: 0; font-size: 24px; }
+.sc-head #scExit { margin-left: auto; }
+.sc-body { display: grid; grid-template-columns: 200px minmax(0, 1.2fr) 250px minmax(0, 1fr); gap: 14px; align-items: start; }
+.sc-brush h2 { margin-top: 0; } .sc-brush .row button { margin: 0 4px 4px 0; } .sc-brush canvas { width: 100%; border-radius: 4px; margin: 6px 0; } .sc-brush .sl { grid-template-columns: 110px 1fr 34px; }
+#scCls { display: grid; gap: 5px; }
+#scCls button { text-align: left; }
+#scCls .sw { display: inline-block; width: 12px; height: 12px; margin-right: 8px; vertical-align: -1px; border: 1px solid var(--line); }
+#scCls .cnt { color: var(--boneDim); }
+#scHint { font-size: 12.5px; color: var(--bone); margin-bottom: 8px; min-height: 36px; }
+#scHint b { color: var(--ember); }
+#scSlots { margin-bottom: 8px; }
+#scSlots button.has::after { content: ' •'; color: var(--ember); }
+.sc-wrap { width: 100%; max-width: 640px; aspect-ratio: 1; }
+#scCanvas { width: 100%; height: 100%; display: block; cursor: crosshair; border: 1px solid var(--line); }
+#scPrev { width: 100%; max-width: 640px; aspect-ratio: 1; display: block; border: 1px solid var(--line); }
+.sc-tools { margin-top: 8px; align-items: center; }
+.sc-tools .sl { width: 240px; margin: 0 8px 0 0; grid-template-columns: 70px 1fr 34px; }
+.sc-prev h2 { margin-top: 0; }
+@media (max-width: 1250px) { .sc-body { grid-template-columns: 200px minmax(0, 1fr) 250px; } .sc-prev { grid-column: 2 / 4; } }
+@media (max-width: 1000px) { .sc-body { grid-template-columns: 1fr; } .sc-prev { grid-column: auto; } #scCls { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
+@media (max-width: 760px) {
+  #zoneUi { width: 100%; top: 52%; border-left: 0; border-top: 1px solid var(--line); }
+  #panel { width: 100%; top: 46%; border-left: 0; border-top: 1px solid var(--line); }
+  #toggle { right: 14px !important; top: auto; bottom: calc(54% + 8px); }
+  #panel.hide + #toggle { bottom: 14px; }
+  #scenes { max-width: calc(100vw - 32px); top: 64px; }
+  #caption { display: none; }
+  .title h1 { font-size: 22px; }
+}
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<canvas id="c"></canvas>
+<div class="title"><h1>Живопись поверх 3D</h1><p>Библиотека рисованного стиля: мазки, карандаш, цветные тени, неровный контур</p></div>
+<div id="scenes"></div>
+<div id="split"></div>
+<div id="caption"></div>
+<aside id="panel">
+  <h2>Разбор по слоям</h2>
+  <input id="step" type="range" min="0" max="16" step="1" value="16">
+  <div id="stepCap"></div>
+  <h2>Пресет стиля</h2>
+  <div class="row" id="presets"></div>
+  <h2>Слои</h2>
+  <div class="row layers" id="layers"></div>
+  <h2>Сравнение</h2>
+  <div class="row"><button id="cmp">Шторка «до / после»</button><button id="anim">Пауза анимации</button></div>
+  <h2>Эмоции</h2>
+  <div id="emo" style="display:grid;gap:6px"></div>
+  <div id="extra"></div>
+  <h2>Настройки</h2>
+  <div id="params"></div>
+  <h2>Экспорт</h2>
+  <div class="row"><button id="copy">Копировать пресет (JSON)</button></div>
+  <p class="muted">Камера в превью: ЛКМ вращать, колёсико приблизить, ПКМ сдвиг. Кнопка сцены возвращает ракурс. Это только в лаборатории, в игре камера своя.</p>
+</aside>
+<button id="toggle">Панель</button>
+<div id="loading">Готовим краски…</div>
+<div id="err"></div>
+<script type="module" src="demo.js"></script>
+
+</body></html>

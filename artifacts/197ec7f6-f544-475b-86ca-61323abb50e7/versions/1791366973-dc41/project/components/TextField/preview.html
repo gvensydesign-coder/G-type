@@ -1,0 +1,11 @@
+<!-- @dsCard group="Inputs" height=420 width=420 subtitle="Поле с подписью: обычное, с иконкой, с подсказкой, с ошибкой." -->
+<style>.pv{display:flex;flex-direction:column;gap:18px;padding:24px 20px;background:var(--bg-app)}</style>
+<div class="pv" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    B.TextField({ label: 'Habit name', placeholder: 'Drink water' }) +
+    B.TextField({ label: 'Search', icon: 'search', placeholder: 'Find a habit' }) +
+    B.TextField({ label: 'Reminder', value: 'Every 30 minutes', hint: 'You can change this later in Settings' }) +
+    B.TextField({ label: 'Daily goal', value: 'eight', error: 'Enter a number, for example 8' });
+</script>

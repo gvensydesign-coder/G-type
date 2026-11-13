@@ -1,0 +1,85 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Сказанье о Тени</title>
+<style>
+:root { color-scheme: dark; }
+html, body { color-scheme: dark; margin: 0; height: 100%; overflow: hidden; background: #0d0f12; font-family: Georgia, "Times New Roman", serif; color: #e8dcc2; user-select: none; }
+#c { display: block; width: 100vw; height: 100vh; }
+.hidden { display: none !important; }
+
+#hud { position: fixed; inset: 0; pointer-events: none; }
+#player-bars { position: absolute; left: 28px; top: 24px; width: 300px; }
+.bar { position: relative; height: 14px; margin-bottom: 7px; background: rgba(0,0,0,.55); border: 1px solid #6b5a3c; box-shadow: 0 0 6px rgba(0,0,0,.6); overflow: hidden; }
+.bar .fill, .bar .ghost { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; }
+.bar .ghost { background: #d8c9a0; opacity: .55; transition: width .6s ease .25s; }
+.hp .fill { background: linear-gradient(#c43a2c, #7d1610); z-index: 1; }
+.st .fill { background: linear-gradient(#e8d27a, #a48a2a); height: 100%; }
+.st { height: 8px; width: 78%; }
+#boss { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%); width: min(560px, 80vw); text-align: center; }
+#boss-name { font-size: 18px; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 6px #000; margin-bottom: 4px; }
+.boss-hp .fill { background: linear-gradient(#b32a22, #5e0f0b); z-index: 1; }
+.boss-hp { height: 12px; }
+#lock-icon { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 2px solid #f0c060; transform: rotate(45deg); box-shadow: 0 0 8px #f0c060; }
+#toast { position: absolute; left: 50%; top: 38%; transform: translateX(-50%); font-size: 30px; letter-spacing: 4px; color: #f2d48a; text-shadow: 0 0 12px #000, 0 0 4px #000; opacity: 0; transition: opacity .25s; }
+#toast.show { opacity: 1; }
+#hint { position: absolute; bottom: 14px; width: 100%; text-align: center; font-size: 13px; color: rgba(232,220,194,.6); text-shadow: 0 0 4px #000; }
+
+#overlay, #end { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(10,12,16,.55), rgba(5,6,8,.92)); }
+.panel { max-width: 560px; padding: 26px 34px; border: 1px solid #6b5a3c; background: rgba(14,13,11,.88); box-shadow: 0 0 40px #000; text-align: center; }
+h1 { margin: 0 0 6px; font-size: 34px; letter-spacing: 4px; color: #e9c87e; font-weight: normal; }
+.sub { margin: 0 0 16px; color: #b8aa8c; }
+.keys { width: 100%; border-collapse: collapse; font-size: 15px; text-align: left; }
+.keys td { padding: 3px 6px; border-bottom: 1px solid rgba(107,90,60,.35); }
+.keys td:first-child { color: #f2d48a; white-space: nowrap; width: 34%; font-family: Consolas, monospace; }
+.warn { color: #f0a050; font-size: 14px; }
+#start { margin-top: 8px; padding: 10px 26px; font: inherit; font-size: 17px; color: #1a1408; background: #d9b36a; border: 0; cursor: pointer; }
+#start:disabled { opacity: .4; cursor: wait; }
+#loading { font-size: 13px; color: #8f846c; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
+</script>
+
+<canvas id="c"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="player-bars">
+    <div class="bar hp"><div class="fill" id="p-hp"></div><div class="ghost" id="p-hp-ghost"></div></div>
+    <div class="bar st"><div class="fill" id="p-st"></div></div>
+  </div>
+  <div id="boss">
+    <div id="boss-name">Великан-манекен</div>
+    <div class="bar boss-hp"><div class="ghost" id="e-hp-ghost"></div><div class="fill" id="e-hp"></div></div>
+  </div>
+  <div id="lock-icon" class="hidden"></div>
+  <div id="toast"></div>
+  <div id="hint">ЛКМ — удар · ПКМ — блок · Space — прыжок · C — перекат · Q — уклон · F — бросок · Tab — захват цели</div>
+</div>
+
+<div id="overlay">
+  <div class="panel">
+    <h1>Сказанье о Тени</h1>
+    <p class="sub">Арена. Одолей Великана. Оружие — мяч.</p>
+    <table class="keys">
+      <tr><td>W A S D</td><td>движение</td></tr>
+      <tr><td>Мышь / ← →</td><td>поворот (камера поворачивается вместе с героем)</td></tr>
+      <tr><td>Shift</td><td>спринт</td></tr>
+      <tr><td>Space</td><td>прыжок</td></tr>
+      <tr><td>C</td><td>перекат (неуязвимость)</td></tr>
+      <tr><td>Q / Alt</td><td>быстрый уклон</td></tr>
+      <tr><td>ЛКМ / J</td><td>быстрый удар мячом (комбо ×3)</td></tr>
+      <tr><td>F / K</td><td>бросок мяча (возвращается в руку)</td></tr>
+      <tr><td>ПКМ / L</td><td>блок, нажать в момент удара — парирование</td></tr>
+      <tr><td>Tab / СКМ</td><td>захват цели</td></tr>
+      <tr><td>Esc</td><td>пауза · R — начать заново</td></tr>
+    </table>
+    <p class="warn">Оранжевое свечение врага — удар нельзя заблокировать, уклоняйся.</p>
+    <button id="start">Нажмите, чтобы начать</button>
+    <p id="loading">Загрузка моделей…</p>
+  </div>
+</div>
+
+<div id="end" class="hidden"><div class="panel"><h1 id="end-title"></h1><p>R — начать заново</p></div></div>
+
+<script type="module" src="src/main.js"></script>
+
+</body></html>

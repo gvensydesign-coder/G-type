@@ -1,0 +1,21 @@
+<!-- @dsCard group="Screens" height=900 width=900 subtitle="Главная: шапка, метрики, прогресс, привычки. Светлая и тёмная тема." -->
+<div id="root"></div>
+<script>
+  var B = window.Buddy;
+  function screen() {
+    var tiles = '<div class="bd-grid-3" style="margin-top:20px;position:relative;z-index:1">' +
+      B.StatTile({ object: 'water-glass', label: 'Water', value: '3', unit: 'Glass' }) +
+      B.StatTile({ mascot: 'sunny-sleepy', label: 'Sleep', value: '8.5', unit: 'Hours' }) +
+      B.StatTile({ object: 'bike', label: 'Exercise', value: 'Bike', unit: '18.6 Km' }) + '</div>';
+    var progress = '<div style="position:relative;z-index:1">' + B.ProgressCard({ done: 3, total: 5 }) + '</div>';
+    var header = B.AppHeader({ leading: 'menu', tools: 'home', bubble: "Let's start small!", title: 'Hey, Lukman', sub: 'Ready for a good day?', large: true, mascot: 'leafy-umbrella', html: tiles + progress });
+    var sheet = '<section class="bd-sheet"><div class="bd-section-head"><h2 class="bd-section-title">Today’s Habits</h2>' + B.IconButton({ icon: 'plus', label: 'Add habit', variant: 'send', size: 'sm' }) + '</div>' +
+      '<div class="bd-stack bd-stagger">' +
+      '<div style="--i:0">' + B.HabitRow({ object: 'bottle', tone: 'sky', title: 'Drink Water', meta: 'Every 30 minutes', checked: true }) + '</div>' +
+      '<div style="--i:1">' + B.HabitRow({ object: 'dumbbell', tone: 'orange', title: 'Workout', meta: 'For 30 minutes' }) + '</div>' +
+      '<div style="--i:2">' + B.HabitRow({ object: 'book', tone: 'pink', title: 'Write Journal', meta: 'End of the day' }) + '</div>' +
+      '<div style="--i:3">' + B.HabitRow({ object: 'moon', tone: 'yellow', title: 'Sleep before 11', meta: 'Wind down at 10:30' }) + '</div></div></section>';
+    return B.Phone(header + sheet, { hero: true, tabs: B.TabBar({ current: 'home' }) });
+  }
+  document.getElementById('root').innerHTML = B.Stage(screen);
+</script>

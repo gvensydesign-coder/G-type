@@ -1,0 +1,179 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta charset="utf-8">
+<title>Мастерская почеркушек</title>
+<meta name="description" content="Редактор и библиотека рисованных штрихов для «Сказанья о Тени»: кисти, слои по цветам, классы материалов, 3D-превью, смешение, замечания и обмен с Godot.">
+<style>
+@font-face { font-family: 'Rub'; src: url('data/SkazanieRub.woff2') format('woff2'); font-display: swap; }
+:root {
+  --soot: #0b0807; --panel: #15100e; --panel2: #1d1612; --line: rgba(234, 223, 198, .16); --line2: rgba(234, 223, 198, .3);
+  --bone: #eadfc6; --dim: #a99b80; --ember: #ff8a3c; --ink: #120c0a; --ok: #8fd17a; --info: #7ec8e8;
+  --f-disp: 'Rub', Georgia, 'Times New Roman', serif; --f-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--soot); color: var(--bone); font: 13px/1.4 var(--f-body); overflow: hidden; display: flex; flex-direction: column; }
+header { display: flex; align-items: center; gap: 14px; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+header h1 { font: 22px/1 var(--f-disp); margin: 0; white-space: nowrap; }
+nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+nav.tabs button { font-size: 13px; }
+.spacer { flex: 1; }
+#status { color: var(--dim); font-size: 12px; white-space: nowrap; }
+#status.err { color: var(--ember); }
+button, select, input[type=text], input:not([type]), textarea { font: inherit; color: var(--bone); background: var(--panel2); border: 1px solid var(--line); padding: 5px 10px; border-radius: 3px; }
+button { cursor: pointer; }
+button:hover { border-color: var(--line2); }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--ember); outline-offset: 1px; }
+button.on { border-color: var(--ember); box-shadow: inset 0 0 0 1px var(--ember); color: #fff; }
+button.primary { background: #4a2310; border-color: var(--ember); color: #fff; }
+button:disabled { opacity: .4; cursor: default; }
+main { flex: 1; min-height: 0; position: relative; }
+.pane { position: absolute; inset: 0; }
+.pane[hidden] { display: none; }
+h3 { font: 11px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); font-weight: 600; margin: 12px 0 6px; }
+.hint { color: var(--dim); font-size: 12px; margin: 4px 0; }
+.row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.row.end { justify-content: flex-end; }
+/* редактор */
+#ed { display: grid; grid-template-columns: 270px minmax(0, 1fr) 310px; height: 100%; }
+.ed-left, .ed-right { overflow-y: auto; padding: 4px 12px 20px; background: var(--panel); }
+.ed-left { border-right: 1px solid var(--line); } .ed-right { border-left: 1px solid var(--line); }
+.ed-center { display: flex; flex-direction: column; align-items: center; padding: 10px; min-width: 0; overflow: auto; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; font-size: 12px; }
+.chip i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 1px solid var(--line2); }
+.chip small, .role small { color: var(--dim); font-size: 10px; }
+.roles { display: grid; gap: 3px; }
+.role { display: flex; justify-content: space-between; text-align: left; }
+.sheets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 6px; }
+.sheet { position: relative; padding: 3px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sheet canvas { width: 100%; aspect-ratio: 1; display: block; }
+.sheet span { font-size: 10px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sheet.off { opacity: .45; }
+.sheet .use { position: absolute; top: 4px; right: 4px; }
+.sheet .use input { accent-color: var(--ember); margin: 0; }
+.params, .knobs { display: grid; gap: 3px; }
+.sl { display: grid; grid-template-columns: 112px minmax(0, 1fr) 36px; align-items: center; gap: 6px; font-size: 12px; }
+.sl input[type=range] { accent-color: var(--ember); width: 100%; min-width: 0; }
+.sl output { color: var(--dim); font-size: 11px; text-align: right; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; align-items: center; justify-content: center; max-width: 100%; }
+.toolbar .name { width: 180px; }
+.pad { position: relative; width: min(100%, calc(100vh - 190px)); aspect-ratio: 1; max-width: 768px; flex-shrink: 0; }
+.pad canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border: 1px solid var(--line); }
+.pad canvas.ov { touch-action: none; cursor: crosshair; border-color: transparent; }
+.pad.noting canvas.ov { cursor: copy; }
+.pins { position: absolute; inset: 0; pointer-events: none; }
+.pin { position: absolute; transform: translate(-50%, -100%); pointer-events: auto; background: var(--ember); color: #1a0c08; border: 2px solid #1a0c08; border-radius: 12px 12px 12px 0; min-width: 24px; padding: 1px 6px; font-weight: 700; font-size: 12px; }
+.pin.replied { background: var(--info); } .pin.done { background: #556; color: #ccc; }
+.brushes { display: grid; gap: 6px; }
+.bgroup small { color: var(--dim); font-size: 11px; display: block; margin-bottom: 3px; }
+.br { font-size: 12px; padding: 4px 8px; }
+canvas.sample { width: 100%; height: auto; border: 1px solid var(--line); margin: 6px 0; display: block; }
+.swatches { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-top: 6px; }
+.sw { aspect-ratio: 1; padding: 0; border: 1px solid var(--line2); border-radius: 3px; }
+input[type=color] { width: 44px; height: 28px; padding: 0; border: 1px solid var(--line); background: none; }
+.layers { display: grid; gap: 4px; }
+.layer { display: grid; grid-template-columns: 26px 14px minmax(0, 1fr) 26px 26px 26px 26px; gap: 4px; align-items: center; padding: 4px; border: 1px solid var(--line); border-radius: 3px; cursor: pointer; }
+.layer.on { border-color: var(--ember); }
+.layer input:not([type]) { padding: 2px 5px; min-width: 0; font-size: 12px; }
+.layer button { padding: 2px 0; font-size: 11px; }
+.layer small { color: var(--dim); font-size: 10px; text-align: center; }
+.layer .swc { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--line2); }
+.layer .lrow2 { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.layer .lrow2 select { font-size: 11px; padding: 2px; }
+.layer input[type=range] { accent-color: var(--ember); }
+/* 3D */
+.view { position: absolute; inset: 0; }
+.view canvas { width: 100%; height: 100%; display: block; }
+.view.noting canvas { cursor: copy; }
+.float { position: absolute; top: 12px; left: 12px; width: 270px; max-height: calc(100% - 24px); overflow-y: auto; background: rgba(21, 16, 14, .9); border: 1px solid var(--line); padding: 4px 12px 12px; backdrop-filter: blur(6px); border-radius: 4px; }
+.float.r { left: auto; right: 12px; }
+.pins3d { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.pins3d .pin { pointer-events: auto; }
+.legend { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(21, 16, 14, .85); border: 1px solid var(--line); padding: 6px 12px; color: var(--dim); font-size: 12px; border-radius: 4px; max-width: calc(100% - 24px); text-align: center; }
+/* обмен */
+#ex { overflow-y: auto; padding: 16px; }
+#ex .wrap { max-width: 900px; margin: 0 auto; display: grid; gap: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 6px 16px 14px; }
+.card h2 { font: 20px var(--f-disp); margin: 10px 0 6px; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; }
+td, th { border-bottom: 1px solid var(--line); padding: 5px 6px; text-align: left; vertical-align: top; }
+th { color: var(--dim); font-weight: 600; }
+code { font: 12px ui-monospace, monospace; color: #e8c890; }
+.stat { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.stat div { background: var(--panel2); padding: 6px 8px; border-radius: 3px; font-size: 12px; }
+.stat b { font: 18px var(--f-disp); display: block; }
+/* замечания */
+aside.notes { position: fixed; top: 0; right: 0; bottom: 0; width: min(380px, 100vw); z-index: 20; background: var(--panel); border-left: 1px solid var(--line2); padding: 10px 14px; overflow-y: auto; box-shadow: -10px 0 30px rgba(0, 0, 0, .5); }
+aside.notes[hidden] { display: none; }
+.nhead { display: flex; justify-content: space-between; align-items: center; }
+.nhead b { font: 22px var(--f-disp); }
+.nlist { display: grid; gap: 8px; margin-top: 10px; }
+.ncard { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; background: var(--panel2); }
+.ncard.focus { border-color: var(--ember); }
+.ncard.done { opacity: .6; }
+.ncard p { margin: 6px 0; white-space: pre-wrap; }
+.ncard .reply { border-left: 2px solid var(--info); padding-left: 8px; color: #cfe8f2; }
+.nmeta { color: var(--dim); font-size: 11px; }
+.nf { font-size: 12px; }
+dialog { background: var(--panel); color: var(--bone); border: 1px solid var(--line2); border-radius: 6px; width: min(460px, calc(100vw - 32px)); padding: 14px 16px; }
+dialog::backdrop { background: rgba(0, 0, 0, .55); }
+dialog b { font: 20px var(--f-disp); }
+dialog textarea { width: 100%; margin: 8px 0; resize: vertical; }
+#toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: #2a1c14; border: 1px solid var(--ember); padding: 8px 14px; border-radius: 4px; z-index: 30; display: none; max-width: calc(100vw - 32px); }
+@media (max-width: 1000px) {
+  body { overflow: auto; }
+  #ed { grid-template-columns: 1fr; height: auto; }
+  .pane#paneEd { position: static; }
+  .ed-left, .ed-right { border: 0; }
+  .pad { width: 100%; }
+  .float { width: auto; right: 12px; max-height: 45%; }
+  .float.r { top: auto; bottom: 12px; left: 12px; }
+}
+</style>
+
+<header>
+  <h1>Мастерская почеркушек</h1>
+  <nav class="tabs" aria-label="Разделы">
+    <button data-tab="Ed" class="on">Редактор</button>
+    <button data-tab="Pv">3D-превью</button>
+    <button data-tab="Bl">Смешение</button>
+    <button data-tab="Ex">Обмен с игрой</button>
+  </nav>
+  <span class="spacer"></span>
+  <span id="status">Загрузка…</span>
+  <button id="notesBtn">Замечания</button>
+  <button id="handBtn" class="primary">Передать Claude</button>
+</header>
+<main>
+  <section class="pane" id="paneEd"><div id="ed"></div></section>
+  <section class="pane" id="panePv" hidden>
+    <div class="view" id="pv"></div>
+    <div class="float" id="pvPanel"></div>
+    <div class="legend">Левая кнопка — вращать, колесо — ближе/дальше. Знаки в тени и на свету, аура, блик — из листов библиотеки. Линии «кипят» шагами 8 к/с.</div>
+  </section>
+  <section class="pane" id="paneBl" hidden>
+    <div class="view" id="bl"></div>
+    <div class="float" id="blPanel"></div>
+    <div class="legend">Левая кнопка — рисовать, правая — вращать, колесо — ближе/дальше.</div>
+  </section>
+  <section class="pane" id="paneEx" hidden><div id="ex"></div></section>
+</main>
+<dialog id="handDlg">
+  <b>Передать Claude</b>
+  <p class="hint">Библиотека и замечания уже сохраняются сами. Здесь — записка, что сделать дальше (например: «перенеси в игру классы камень и металл»). Я прочитаю её из этого окна.</p>
+  <textarea id="handText" rows="5" aria-label="Записка для Claude"></textarea>
+  <p class="hint" id="handSum"></p>
+  <div class="row end"><button onclick="this.closest('dialog').close()">Отмена</button><button class="primary" id="handGo">Передать</button></div>
+</dialog>
+<div id="toast" role="status"></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module" src="src/main.js"></script>
+
+</body></html>

@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Игровой экран</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0E100D;font-family:'Alegreya Sans',sans-serif;color:#E4DFD2}
+a{color:#D9A15A}a:hover{color:#F0C07E}
+.ib{width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:rgba(12,14,11,.8);border:1px solid #3A3F35;border-radius:4px;cursor:pointer;color:#D9D3C3}
+.ib:hover{border-color:#C27E32;color:#F0C07E}
+.card{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;background:#161914;border:1px solid #2F332B;border-radius:3px;cursor:pointer;font-family:'Alegreya Sans',sans-serif;color:#E4DFD2;text-align:center}
+.card:hover{border-color:#C27E32;background:#1C1F18}
+.tb{height:44px;padding:0 14px;background:none;border:0;cursor:pointer;font-family:'Alegreya Sans',sans-serif;font-size:16px;letter-spacing:1px}
+.tb:hover{color:#F3EDDD !important}
+.lnk{display:inline-flex;align-items:center;height:44px;padding:0 18px;border:1px solid #4A4F43;font-size:16px;text-decoration:none;color:#E4DFD2}
+.lnk:hover{border-color:#C27E32}
+input[type=range]{accent-color:#C27E32;width:100%}
+.fog{animation:drift 16s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateX(-40px)}to{transform:translateX(40px)}}
+.win{animation:flick 3s ease-in-out infinite}
+@keyframes flick{0%,100%{opacity:.85}50%{opacity:.55}}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #121814; font-family: 'Alegreya Sans', sans-serif; color: #E4DFD2">
+
+<svg width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<defs>
+<pattern id="iso" width="80" height="46" patternUnits="userSpaceOnUse"><path d="M40 0 L80 23 L40 46 L0 23 Z" fill="none" stroke="#7D855D" stroke-width="0.6" opacity="0.35"></path></pattern>
+<radialGradient id="vig" cx="50%" cy="48%" r="65%"><stop offset="55%" stop-color="#0E100D" stop-opacity="0"></stop><stop offset="100%" stop-color="#0E100D" stop-opacity="0.9"></stop></radialGradient>
+</defs>
+<rect width="1280" height="720" fill="#1E2A20"></rect>
+<rect width="1280" height="720" fill="url(#iso)"></rect>
+<path d="M560 330 L720 422 L640 468 L480 376 Z" fill="#2C2A24" opacity="0.8"></path>
+<g transform="translate(600 300)">
+<path d="M0 60 L50 88 L100 60 L100 20 L50 -8 L0 20 Z" fill="#3A322A"></path>
+<path d="M-8 22 L50 -30 L108 22 L50 -6 Z" fill="#2A2420"></path>
+<rect class="win" x="18" y="46" width="12" height="10" fill="#FFB257"></rect>
+</g>
+<g transform="translate(380 420)"><path d="M0 0 L20 -60 L40 0 Z" fill="#1F4032"></path><path d="M6 -20 L20 -80 L34 -20 Z" fill="#1F4032"></path></g>
+<g transform="translate(860 250)"><path d="M0 0 L22 -66 L44 0 Z" fill="#1F4032"></path><path d="M7 -22 L22 -88 L37 -22 Z" fill="#1F4032"></path></g>
+<g transform="translate(900 470)"><path d="M0 0 V-70" stroke="#2A2420" stroke-width="6"></path><path d="M-2 -60 L8 -40 L0 -38 Z" fill="#8E3B3B"></path></g>
+<g class="fog"><ellipse cx="640" cy="620" rx="760" ry="120" fill="#B7C4AF" opacity="0.07"></ellipse><ellipse cx="200" cy="200" rx="400" ry="80" fill="#B7C4AF" opacity="0.05"></ellipse></g>
+<rect width="1280" height="720" fill="url(#vig)"></rect>
+</svg>
+
+<div style="position: absolute; left: 24px; top: 20px; display: flex; align-items: center; gap: 16px; padding: 10px 18px 10px 10px; background: rgba(12,14,11,0.78); border: 1px solid #3A3F35; border-radius: 4px">
+<div style="position: relative; width: 72px; height: 72px">
+<div style="width: 72px; height: 72px; border-radius: 50%; border: 2px solid #C27E32; background: #2A1E1C; overflow: hidden; box-sizing: border-box; display: flex; align-items: flex-end; justify-content: center">
+<svg width="60" height="60" viewBox="0 0 60 60" aria-label="Аватар богатыря">
+<path d="M30 4 L38 20 C44 22 46 28 46 34 H14 C14 28 16 22 22 20 Z" fill="#646A61"></path>
+<rect x="20" y="34" width="20" height="12" fill="#9A704C"></rect>
+<path d="M6 60 C8 50 18 46 30 46 C42 46 52 50 54 60 Z" fill="#793838"></path>
+</svg>
+</div>
+<div style="position: absolute; right: -6px; bottom: -6px; width: 30px; height: 30px; border-radius: 50%; background: #8E3B3B; border: 2px solid #0E100D; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #F3EDDD" aria-label="Уровень">{{level}}</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: baseline; gap: 10px">
+<span style="font-family: 'Ruslan Display', serif; font-size: 20px; color: #E4DFD2">Богатырь</span>
+<span style="font-size: 14px; color: #9A9C8C">ур. {{level}}</span>
+</div>
+<div style="display: flex; gap: 4px" aria-label="Жизни">
+<sc-for list="{{hearts}}" as="h" hint-placeholder-count="5">
+<sc-if value="{{h.full}}" hint-placeholder-val="{{ true }}">
+<svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" fill="#B84A4A" stroke="#D86565" stroke-width="1"></path></svg>
+</sc-if>
+<sc-if value="{{h.empty}}" hint-placeholder-val="{{ false }}">
+<svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" fill="none" stroke="#5A4A44" stroke-width="1.4"></path></svg>
+</sc-if>
+</sc-for>
+</div>
+<div style="display: flex; align-items: center; gap: 8px">
+<div style="width: 140px; height: 4px; background: #2C312A"><div style="height: 4px; width: {{xpStr}}; background: #C27E32"></div></div>
+<span style="font-size: 12px; color: #9A9C8C">опыт</span>
+</div>
+</div>
+</div>
+
+<div style="position: absolute; left: 344px; right: 270px; top: 20px; display: flex; justify-content: center">
+<div style="display: flex; align-items: center; gap: 2px; height: 52px; padding: 0 8px; background: rgba(12,14,11,0.78); border: 1px solid #3A3F35; border-radius: 4px" aria-label="Ресурсы">
+<sc-for list="{{resources}}" as="r" hint-placeholder-count="7">
+<div title="{{r.name}}" aria-label="{{r.label}}" style="display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 9px">
+<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="{{r.d}}" fill="{{r.fill}}" fill-rule="evenodd"></path></svg>
+<span style="font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; color: #E4DFD2">{{r.n}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="position: absolute; right: 24px; top: 20px; display: flex; gap: 10px">
+<button class="ib" onClick="{{toggleSound}}" aria-label="Звук">
+<sc-if value="{{soundOn}}" hint-placeholder-val="{{ true }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h4l5-4v14l-5-4H4z"></path><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"></path></svg>
+</sc-if>
+<sc-if value="{{soundOff}}" hint-placeholder-val="{{ false }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h4l5-4v14l-5-4H4z"></path><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"></path></svg>
+</sc-if>
+</button>
+<button class="ib" onClick="{{openDiary}}" aria-label="Дневник">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h11M9 8h6"></path></svg>
+</button>
+<button class="ib" onClick="{{openMap}}" aria-label="Карта">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"></path><path d="M9 4v14M15 6v14"></path></svg>
+</button>
+<button class="ib" onClick="{{openSettings}}" aria-label="Настройки">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg>
+</button>
+</div>
+
+<div style="position: absolute; left: 200px; right: 200px; bottom: 0; background: rgba(12,14,11,0.92); border: 1px solid #3A3F35; border-bottom: 0; border-radius: 4px 4px 0 0">
+<div style="display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 12px; border-bottom: 1px solid #2A2E26">
+<button class="tb" onClick="{{togglePanel}}" aria-label="Свернуть или развернуть меню" style="display: flex; align-items: center; gap: 8px; color: #CFCABB">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="{{chevStyle}}"><path d="M5 15l7-7 7 7"></path></svg>
+</button>
+<button class="tb" onClick="{{tabBuild}}" style="{{buildTabStyle}}">Постройки</button>
+<button class="tb" onClick="{{tabMarket}}" style="{{marketTabStyle}}">Рынок</button>
+<div style="flex-grow: 1"></div>
+<div style="font-size: 14px; color: #8B8E80">{{hint}}</div>
+</div>
+<sc-if value="{{panelOpen}}" hint-placeholder-val="{{ true }}">
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; padding: 14px 16px 18px">
+<sc-for list="{{items}}" as="it" hint-placeholder-count="6">
+<button class="card" onClick="{{it.act}}" disabled="{{it.locked}}" style="{{it.cardStyle}}" aria-label="{{it.label}}">
+<sc-if value="{{it.hasCount}}" hint-placeholder-val="{{ false }}">
+<span style="position: absolute; top: 6px; right: 8px; font-size: 12px; color: #B7C4AF">×{{it.count}}</span>
+</sc-if>
+<svg width="52" height="40" viewBox="0 0 52 40" aria-hidden="true"><path d="M26 2 L50 20 L26 38 L2 20 Z" fill="#232820" stroke="#4A4F43"></path><path d="M26 10 L38 20 L26 30 L14 20 Z" fill="{{it.tint}}"></path></svg>
+<span style="font-size: 16px; font-weight: 500">{{it.name}}</span>
+<span style="font-size: 13px; color: #9A9C8C">{{it.note}}</span>
+<span style="font-size: 13px; color: #D9A15A">{{it.costStr}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+
+<sc-if value="{{modalOpen}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px; background: rgba(8,9,7,0.65); display: flex; align-items: center; justify-content: center">
+<section style="width: 600px; min-height: 420px; box-sizing: border-box; padding: 28px 32px; background: #12140F; border: 1px solid #3A3F35; display: flex; flex-direction: column; gap: 18px; position: relative">
+<div style="position: absolute; left: 32px; top: -1px; width: 64px; height: 2px; background: #8E3B3B"></div>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<h2 style="margin: 0; font-family: 'Ruslan Display', serif; font-weight: 400; font-size: 28px; color: #D9A15A">{{modalTitle}}</h2>
+<button onClick="{{closeModal}}" aria-label="Закрыть" style="width: 44px; height: 44px; background: none; border: 0; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#CFCABB" stroke-width="1.6"><path d="M5 5l14 14M19 5L5 19"></path></svg>
+</button>
+</div>
+
+<sc-if value="{{isDiary}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="font-size: 14px; letter-spacing: 2px; color: #9A9C8C">ЗАДАНИЯ</div>
+<sc-for list="{{quests}}" as="q" hint-placeholder-count="3">
+<div style="display: flex; align-items: center; gap: 12px; font-size: 18px">
+<span style="width: 10px; height: 10px; transform: rotate(45deg); border: 1px solid #C27E32; flex-shrink: 0"></span>
+<span>{{q}}</span>
+</div>
+</sc-for>
+<div style="font-size: 14px; letter-spacing: 2px; color: #9A9C8C; margin-top: 10px">ЗАПИСИ</div>
+<p style="margin: 0; font-size: 17px; line-height: 1.5; font-style: italic; color: #CFCABB">«Марфа говорит, туман приходит с болота за мельницей. Надо поставить вышку, пока ночи короткие.»</p>
+</div>
+</sc-if>
+
+<sc-if value="{{isMap}}" hint-placeholder-val="{{ false }}">
+<svg width="536" height="300" viewBox="0 0 536 300" aria-label="Карта окрестностей">
+<rect width="536" height="300" fill="#171C16"></rect>
+<path d="M40 40 L220 30 L250 140 L60 170 Z" fill="#1F4032" stroke="#3F684A"></path>
+<path d="M260 150 L420 130 L500 250 L300 270 Z" fill="#15302C" stroke="#3A5E57"></path>
+<path d="M240 40 L480 50 L460 120 L270 130 Z" fill="#232820" stroke="#4A4F43"></path>
+<path d="M50 190 L240 170 L260 270 L70 280 Z" fill="#2A2420" stroke="#433F39"></path>
+<text x="110" y="100" fill="#B7C4AF" font-size="15" font-family="Alegreya Sans">Бор</text>
+<text x="360" y="215" fill="#B7C4AF" font-size="15" font-family="Alegreya Sans">Болото</text>
+<text x="330" y="92" fill="#B7C4AF" font-size="15" font-family="Alegreya Sans">Выселки</text>
+<text x="120" y="235" fill="#B7C4AF" font-size="15" font-family="Alegreya Sans">Погост</text>
+<circle cx="310" cy="80" r="7" fill="#C27E32"></circle>
+<circle cx="310" cy="80" r="14" fill="none" stroke="#C27E32" opacity="0.5"></circle>
+</svg>
+<div style="font-size: 14px; color: #9A9C8C">Оранжевая метка — вы здесь. Неразведанные земли скрыты туманом.</div>
+</sc-if>
+
+<sc-if value="{{isSettings}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 18px">
+<label style="display: flex; flex-direction: column; gap: 8px; font-size: 16px; color: #CFCABB">Музыка<input type="range" min="0" max="100" value="70"></label>
+<label style="display: flex; flex-direction: column; gap: 8px; font-size: 16px; color: #CFCABB">Звуки<input type="range" min="0" max="100" value="80"></label>
+<label style="display: flex; align-items: center; gap: 10px; font-size: 16px; color: #CFCABB"><input type="checkbox" checked style="accent-color: #C27E32; width: 18px; height: 18px">Субтитры в сценах</label>
+<div style="display: flex; gap: 10px; margin-top: 8px">
+<a class="lnk" href="Start.dc.html">Выйти в главное меню</a>
+</div>
+</div>
+</sc-if>
+</section>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"level":{"editor":"int","default":3,"min":1,"max":99,"section":"Герой"},"hearts":{"editor":"int","default":3,"min":0,"max":5,"section":"Герой"},"xp":{"editor":"range","default":60,"min":0,"max":100,"unit":"%","section":"Герой"},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const open = s.open !== false;
+    const tab = s.tab || 'build';
+    const modal = s.modal || null;
+    const hp = this.props.hearts ?? 3;
+    const res = s.res || { wood: 48, stone: 22, grain: 35, salt: 6, candles: 12, cloth: 3, silver: 120 };
+    const built = s.built || {};
+    const R = [
+      { k: 'wood', name: 'Брёвна', fill: '#9A704C', d: 'M3 5h15a3.5 3.5 0 0 1 0 7H3zM3 13h15a3.5 3.5 0 0 1 0 7H3z' },
+      { k: 'stone', name: 'Камень', fill: '#8A8F84', d: 'M4 19l3-9 6-4 7 5-1 8z' },
+      { k: 'grain', name: 'Зерно', fill: '#C2A15A', d: 'M12 2c2.2 2.2 2.2 5 0 7.2-2.2-2.2-2.2-5 0-7.2zM12 9.5c2.2 2.2 2.2 5 0 7.2-2.2-2.2-2.2-5 0-7.2zM11.2 16h1.6v6h-1.6z' },
+      { k: 'salt', name: 'Соль', fill: '#D8D4C6', d: 'M12 3l7 8-7 10-7-10z' },
+      { k: 'candles', name: 'Свечи', fill: '#E8C98A', d: 'M9 10h6v11H9zM12 2.5c1.9 2 1.9 4 0 5.8-1.9-1.8-1.9-3.8 0-5.8z' },
+      { k: 'cloth', name: 'Красное сукно', fill: '#B04A4A', d: 'M5 3h2v18H5zM7 4h12l-3 4 3 4H7z' },
+      { k: 'silver', name: 'Серебро', fill: '#B7C4AF', d: 'M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zm0 4a5 5 0 1 0 0 10 5 5 0 0 0 0-10z' }
+    ];
+    const unit = { wood: 'брёв.', stone: 'камня', grain: 'зерна', salt: 'соли', candles: 'свеч', cloth: 'сукна', silver: 'сер.' };
+    const costStr = c => Object.keys(c).map(k => c[k] + ' ' + unit[k]).join(' · ');
+    const can = c => Object.keys(c).every(k => (res[k] || 0) >= c[k]);
+    const pay = c => { const n = { ...res }; Object.keys(c).forEach(k => { n[k] -= c[k]; }); return n; };
+    const dim = 'opacity: 0.4; cursor: not-allowed;';
+    const build = [
+      { name: 'Изба', note: 'жильё', tint: '#9A704C', cost: { wood: 20, stone: 5 } },
+      { name: 'Колодец', note: 'вода', tint: '#646A61', cost: { stone: 15, wood: 5 } },
+      { name: 'Печь', note: 'тепло и хлеб', tint: '#C27E32', cost: { stone: 12 } },
+      { name: 'Смотровая вышка', note: 'обзор', tint: '#7D855D', cost: { wood: 25 } },
+      { name: 'Ритуальный круг', note: 'обряды', tint: '#793838', cost: { stone: 10, candles: 6, cloth: 2 } },
+      { name: 'Костяной тотем', note: 'оберег', tint: '#B7C4AF', cost: { wood: 8, salt: 3, cloth: 1 } }
+    ].map(x => {
+      const ok = can(x.cost);
+      const c = built[x.name] || 0;
+      return { ...x, costStr: costStr(x.cost), locked: !ok, cardStyle: ok ? '' : dim,
+        hasCount: c > 0, count: c, label: 'Построить: ' + x.name,
+        act: () => { if (ok) this.setState({ res: pay(x.cost), built: { ...built, [x.name]: c + 1 } }); } };
+    });
+    const market = [
+      { name: 'Зерно', gives: 'grain', qty: 5, price: 10, tint: '#C2A15A' },
+      { name: 'Брёвна', gives: 'wood', qty: 5, price: 12, tint: '#9A704C' },
+      { name: 'Камень', gives: 'stone', qty: 5, price: 15, tint: '#646A61' },
+      { name: 'Свечи', gives: 'candles', qty: 3, price: 9, tint: '#FFB257' },
+      { name: 'Соль', gives: 'salt', qty: 1, price: 10, tint: '#D8D4C6' },
+      { name: 'Красное сукно', gives: 'cloth', qty: 1, price: 15, tint: '#793838' }
+    ].map(x => {
+      const cost = { silver: x.price };
+      const ok = can(cost);
+      return { ...x, note: '+' + x.qty + ' за покупку', costStr: costStr(cost), locked: !ok, cardStyle: ok ? '' : dim,
+        hasCount: false, count: 0, label: 'Купить: ' + x.name,
+        act: () => { if (ok) { const n = pay(cost); n[x.gives] += x.qty; this.setState({ res: n }); } } };
+    });
+    const active = 'color: #F0C07E; box-shadow: inset 0 -2px 0 #C27E32;';
+    const idle = 'color: #8B8E80;';
+    const titles = { diary: 'Дневник', map: 'Карта', settings: 'Настройки' };
+    return {
+      level: this.props.level ?? 3,
+      resources: R.map(r => ({ ...r, n: res[r.k], label: r.name + ': ' + res[r.k] })),
+      hint: tab === 'build' ? 'Нажмите на карточку, чтобы построить' : 'Нажмите на карточку, чтобы купить',
+      hearts: [0, 1, 2, 3, 4].map(i => ({ full: i < hp, empty: i >= hp })),
+      xpStr: (this.props.xp ?? 60) + '%',
+      soundOn: !s.muted,
+      soundOff: !!s.muted,
+      toggleSound: () => this.setState({ muted: !s.muted }),
+      panelOpen: open,
+      togglePanel: () => this.setState({ open: !open }),
+      chevStyle: open ? 'transform: rotate(180deg)' : '',
+      items: tab === 'build' ? build : market,
+      buildTabStyle: tab === 'build' ? active : idle,
+      marketTabStyle: tab === 'market' ? active : idle,
+      tabBuild: () => this.setState({ tab: 'build', open: true }),
+      tabMarket: () => this.setState({ tab: 'market', open: true }),
+      modalOpen: !!modal,
+      modalTitle: titles[modal] || '',
+      isDiary: modal === 'diary',
+      isMap: modal === 'map',
+      isSettings: modal === 'settings',
+      openDiary: () => this.setState({ modal: 'diary' }),
+      openMap: () => this.setState({ modal: 'map' }),
+      openSettings: () => this.setState({ modal: 'settings' }),
+      closeModal: () => this.setState({ modal: null }),
+      quests: ['Разведать болото за мельницей', 'Задобрить домового', 'Поставить смотровую вышку']
+    };
+  }
+}
+</script>
+</body>
+</html>

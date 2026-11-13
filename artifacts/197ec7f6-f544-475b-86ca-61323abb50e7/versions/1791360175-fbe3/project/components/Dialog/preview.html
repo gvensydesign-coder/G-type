@@ -1,0 +1,12 @@
+<!-- @dsCard group="Dialog" height=620 width=520 subtitle="Элементы диалога: сообщения, набор текста, поиск с источниками, карточка в чате, стеклянный композер." -->
+<style>.dl { display: flex; flex-direction: column; gap: 12px; padding: 20px; background: var(--bd-grad-wash); color: var(--text-primary); }</style>
+<div class="dl bd-root" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    B.Message({ role: 'user', text: 'I keep forgetting to drink water', time: '9:39' }) +
+    B.ToolCall({ state: 'search', title: 'Searching 3 sources', text: 'habit research, sleep studies', sources: ['telegram', 'youtube', 'reddit'] }) +
+    B.ToolCall({ state: 'done', title: 'Found 3 ideas', text: 'habit research, sleep studies' }) +
+    B.Message({ role: 'buddy', text: 'Try a glass after every call. Want me to add it?', extra: B.MessageCard({ object: 'bottle', tone: 'sky', title: 'Drink Water', meta: 'After every call', cta: 'Add' }), time: '9:40' }) +
+    B.Typing() + B.Composer({ placeholder: 'Message Buddy' });
+</script>

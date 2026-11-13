@@ -1,0 +1,12 @@
+<!-- @dsCard group="Dialog" height=760 width=820 subtitle="Информационные карточки: совет, инсайт с динамикой, статья, цитата с выходом за границу, шаги." -->
+<style>.ic { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 20px 20px 24px; align-items: start; background: var(--bg-app); color: var(--text-primary); } .ic__c { display: flex; flex-direction: column; gap: 14px; min-width: 0; }</style>
+<div class="ic bd-root" id="root"></div>
+<script>
+  var B = window.Buddy;
+  document.getElementById('root').innerHTML =
+    '<div class="ic__c">' + B.InfoCard({ tone: 'yellow', icon: 'bulb', eyebrow: 'Tip of the day', meta: '1 min', title: 'Pair a new habit with an old one', text: 'After brushing your teeth, drink a glass of water.', cta: 'Try it today' }) +
+    B.InfoCard({ tone: 'sky', icon: 'droplet', eyebrow: 'Did you know', title: 'Thirst often feels like hunger', text: 'Drink water before you snack.' }) +
+    '<div class="bd-grid-2">' + B.InsightCard({ label: 'Water', value: '6.4', unit: 'glasses', tone: 'sky', trend: { dir: 'up', text: '+12%' }, spark: [3, 4, 4, 5, 6, 5, 7] }) + B.InsightCard({ label: 'Sleep', value: '7.8', unit: 'hours', tone: 'orange', trend: { dir: 'down', text: '-0.4h' }, spark: [8, 7, 8, 6, 7, 6, 7] }) + '</div></div>' +
+    '<div class="ic__c">' + '<div class="bd-grid-2">' + B.ArticleCard({ cover: 'candy', mascot: 'buddy-sleepy', tag: 'Sleep', title: 'Wind down in 10 minutes', minutes: '4 min read' }) + B.ArticleCard({ cover: 'lagoon', mascot: 'leafy-umbrella', tag: 'Water', title: 'Why tiny sips work', minutes: '3 min read' }) + '</div>' +
+    B.QuoteCard({ text: 'Small steps beat big promises.', by: 'Leafy, your coach' }) + B.StepsCard({ title: 'Your first week', steps: [{ t: 'Add your first habit', done: true }, { t: 'Complete it three days', done: true }, { t: 'Invite a friend' }] }) + '</div>';
+</script>

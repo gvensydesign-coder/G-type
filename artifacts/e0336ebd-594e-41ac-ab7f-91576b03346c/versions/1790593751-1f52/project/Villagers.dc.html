@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Жители</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&family=Kurale&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0A08;font-family:'Kurale',serif;color:#E8DFC8}
+a{color:#E08A3C}a:hover{color:#F2B26A}
+.rus{font-family:'Ruslan Display',serif;font-weight:400}
+.plank{position:relative;background:linear-gradient(180deg,rgba(255,225,190,.05),rgba(0,0,0,.3)),repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,transparent 1px 7px),repeating-linear-gradient(180deg,rgba(255,215,170,.035) 0 1px,transparent 1px 13px),linear-gradient(90deg,#231A14,#2B2019 30%,#211813 60%,#2A1F18);border:1px solid #0A0806;box-shadow:inset 0 1px 0 rgba(255,220,180,.1),inset 0 0 0 2px #3B2C20,inset 0 0 0 3px #120D0A,0 12px 30px rgba(0,0,0,.7)}
+.nail{position:absolute;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#B0A898 0,#5B5650 35%,#1B1917 75%);box-shadow:0 1px 1px rgba(0,0,0,.8)}
+.inset{background:linear-gradient(180deg,#120E0B,#17120E);box-shadow:inset 0 2px 8px rgba(0,0,0,.85),inset 0 0 0 1px #0A0806}
+.back{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 18px;background:linear-gradient(180deg,#1C1612,#100D0B);border:1px solid #4A382A;box-shadow:inset 0 0 12px rgba(0,0,0,.8);font-family:'Ruslan Display',serif;font-size:14px;letter-spacing:2px;color:#CDBFA2;text-decoration:none;transition:transform .15s,border-color .2s,color .2s,box-shadow .2s}
+.back svg{transition:transform .2s}
+.back:hover{border-color:#C8702F;color:#F6D29A;box-shadow:inset 0 0 12px rgba(200,112,47,.2),0 0 14px rgba(224,138,60,.35)}
+.back:hover svg{transform:translateX(-4px)}
+.back:active{transform:scale(.95)}
+.btn{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:44px;padding:0 28px;border:0;background:linear-gradient(180deg,#7A5334,#2A1B12);clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%);cursor:pointer;font-family:'Ruslan Display',serif;font-size:13px;letter-spacing:2px;color:#E8DFC8;text-decoration:none;transition:transform .18s,filter .18s,color .2s,background .25s}
+.btn::before{content:'';position:absolute;inset:2px;z-index:-1;clip-path:inherit;background:linear-gradient(180deg,#2E2119,#150F0B)}
+.btn:hover{color:#F6D29A;transform:translateY(-2px);background:linear-gradient(180deg,#E08A3C,#6B2A15)}
+.btn:active{transform:scale(.96);filter:brightness(.8)}
+.btn.red{background:linear-gradient(180deg,#C8412F,#5E1914)}
+.btn.red::before{background:linear-gradient(180deg,#8E2A22,#4A120E)}
+.btn[disabled]{filter:grayscale(1) brightness(.5);cursor:not-allowed;transform:none}
+.vl{position:relative;display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;height:78px;padding:0 16px;background:linear-gradient(90deg,#1C1612,#120E0B);border:1px solid #4A382A;cursor:pointer;font-family:'Kurale',serif;color:#E8DFC8;text-align:left;transition:transform .2s,border-color .2s,box-shadow .2s,background .25s}
+.vl:hover{transform:translateX(5px);border-color:#C8702F;box-shadow:0 0 12px rgba(224,138,60,.25)}
+.vl:active{transform:translateX(5px) scale(.98)}
+.vl.sel{border-color:#C8412F;background:linear-gradient(90deg,rgba(142,42,34,.35),#120E0B 70%);box-shadow:inset 0 0 0 1px #C8412F}
+.face{width:50px;height:50px;flex-shrink:0;transform:rotate(45deg);border:2px solid #6B5440;overflow:hidden;background:#1A1411;box-shadow:0 0 0 2px #0A0806}
+.job{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:linear-gradient(180deg,#1C1612,#0F0C0A);border:1px solid #4A382A;box-shadow:inset 0 0 14px rgba(0,0,0,.85);cursor:pointer;font-family:'Kurale',serif;color:#CDBFA2;transition:transform .2s cubic-bezier(.3,1.5,.5,1),border-color .2s,box-shadow .2s,color .2s}
+.job svg{transition:transform .3s}
+.job:hover{transform:translateY(-4px);border-color:#C8702F;color:#F6D29A;box-shadow:0 0 14px rgba(224,138,60,.35)}
+.job:hover svg{transform:scale(1.15) rotate(-8deg)}
+.job:active{transform:scale(.94)}
+.job.on{border-color:#C8412F;color:#F3E6CC;background:linear-gradient(180deg,#5A1C16,#1A0E0B);box-shadow:inset 0 0 0 1px #C8412F,0 0 16px rgba(200,65,47,.4)}
+.job.fixed{cursor:not-allowed;opacity:.4}
+.rise{animation:riseIn .35s cubic-bezier(.2,.8,.3,1)}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.toast{animation:toast 2.6s ease forwards}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-14px)}10%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
+.dom{animation:dom 4s ease-in-out infinite}
+@keyframes dom{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.glint{animation:glint 2.6s ease-in-out infinite}
+@keyframes glint{0%,85%,100%{opacity:1}90%{opacity:.1}}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 70% 40%, #1E1A14 0%, #0E0C0A 70%); font-family: 'Kurale', serif; color: #E8DFC8">
+<svg width="0" height="0" style="position: absolute" aria-hidden="true"><defs>
+<pattern id="orn" width="28" height="14" patternUnits="userSpaceOnUse"><path d="M14 1.5 L21 7 L14 12.5 L7 7 Z" fill="none" stroke="#A8352A" stroke-width="1.3"></path><path d="M14 4.5 L17 7 L14 9.5 L11 7 Z" fill="#A8352A"></path><path d="M0 7 H5 M23 7 H28 M3 3 L5 7 L3 11 M25 3 L23 7 L25 11" stroke="#A8352A" stroke-width="1" fill="none"></path></pattern>
+<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+</defs></svg>
+
+<div style="position: absolute; left: 40px; top: 24px; right: 40px; height: 56px; display: flex; align-items: center; gap: 24px">
+<a class="back" href="Game.dc.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 4l-8 8 8 8"></path></svg>В ДЕРЕВНЮ</a>
+<h1 class="rus" style="margin: 0; font-size: 40px; letter-spacing: 2px; color: #E8DFC8; text-shadow: 0 3px 0 #000">Жители Выселок</h1>
+<div style="flex-grow: 1"></div>
+<sc-for list="{{prod}}" as="p" hint-placeholder-count="4">
+<div class="inset" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px">
+<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="{{p.d}}" fill="{{p.col}}" fill-rule="evenodd"></path></svg>
+<span style="font-size: 15px; color: {{p.tcol}}">{{p.v}}</span>
+</div>
+</sc-for>
+</div>
+
+<div class="plank" style="position: absolute; left: 40px; top: 100px; width: 440px; height: 590px; box-sizing: border-box; padding: 22px 20px; display: flex; flex-direction: column; gap: 8px">
+<span class="nail" style="left: 8px; top: 8px"></span><span class="nail" style="right: 8px; top: 8px"></span><span class="nail" style="left: 8px; bottom: 8px"></span><span class="nail" style="right: 8px; bottom: 8px"></span>
+<div style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 4px 6px">
+<span class="rus" style="font-size: 13px; letter-spacing: 2px; color: #A89A80">ДУШ В ДЕРЕВНЕ: {{count}}</span>
+<span style="font-size: 13px; color: #A89A80">без дела: <span style="color: #E08A3C">{{idle}}</span></span>
+</div>
+<sc-for list="{{people}}" as="v" hint-placeholder-count="6">
+<button class="{{v.cls}}" onClick="{{v.pick}}">
+<div class="face"><div style="width: 70px; height: 70px; margin: -10px 0 0 -10px; transform: rotate(-45deg); display: flex; align-items: flex-end; justify-content: center">
+<svg width="46" height="46" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="15" r="8" fill="{{v.tint}}"></circle><path d="M5 40 C6 28 12 24 20 24 C28 24 34 28 35 40 Z" fill="{{v.tint}}"></path></svg>
+</div></div>
+<div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1">
+<span style="font-size: 18px">{{v.name}}</span>
+<span style="font-size: 13px; color: #A89A80">{{v.jobName}}</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px">
+<span style="font-size: 12px; color: {{v.moodCol}}">{{v.mood}}</span>
+<div style="width: 70px; height: 5px; background: #140F0C; box-shadow: inset 0 0 0 1px #3B2C20"><div style="height: 5px; width: {{v.fearPct}}; background: linear-gradient(90deg, #6A3A6A, #C8412F)"></div></div>
+</div>
+</button>
+</sc-for>
+</div>
+
+<div class="plank" style="position: absolute; left: 510px; top: 100px; right: 40px; height: 400px; box-sizing: border-box; padding: 26px 30px">
+<span class="nail" style="left: 8px; top: 8px"></span><span class="nail" style="right: 8px; top: 8px"></span>
+<sc-for list="{{detail}}" as="d" hint-placeholder-count="1">
+<div class="rise" style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: baseline; gap: 14px">
+<h2 class="rus" style="margin: 0; font-size: 32px; color: #E8DFC8">{{d.name}}</h2>
+<span style="font-size: 15px; color: #A89A80">{{d.role}}</span>
+</div>
+<p style="margin: 0; font-size: 17px; line-height: 1.5; font-style: italic; color: #CDBFA2">«{{d.quote}}»</p>
+<svg width="100%" height="14" style="opacity: 0.45" aria-hidden="true"><rect width="100%" height="14" fill="url(#orn)"></rect></svg>
+<div class="rus" style="font-size: 13px; letter-spacing: 2px; color: #A89A80">ЗАНЯТИЕ</div>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{d.jobs}}" as="j" hint-placeholder-count="5">
+<button class="{{j.cls}}" onClick="{{j.pick}}" disabled="{{j.fixed}}">
+<svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path d="{{j.d}}" fill="currentColor" fill-rule="evenodd"></path></svg>
+<span style="font-size: 14px">{{j.name}}</span>
+<span style="font-size: 12px; color: #E08A3C">{{j.gives}}</span>
+</button>
+</sc-for>
+</div>
+<div style="font-size: 14px; color: #8F8570">{{d.note}}</div>
+</div>
+</sc-for>
+</div>
+
+<div class="plank" style="position: absolute; left: 510px; top: 520px; right: 40px; height: 170px; box-sizing: border-box; padding: 20px 30px; display: flex; align-items: center; gap: 26px">
+<span class="nail" style="left: 8px; bottom: 8px"></span><span class="nail" style="right: 8px; bottom: 8px"></span>
+<div class="inset dom" style="width: 110px; height: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: center">
+<svg width="84" height="84" viewBox="0 0 84 84" aria-label="Домовой">
+<path d="M42 14 C24 14 16 30 18 46 C19 58 28 68 42 68 C56 68 65 58 66 46 C68 30 60 14 42 14 Z" fill="#4A3A2A"></path>
+<path d="M20 44 C10 50 12 70 28 76 L56 76 C72 70 74 50 64 44 C58 60 26 60 20 44 Z" fill="#6A5238"></path>
+<g class="glint"><circle cx="34" cy="38" r="3.5" fill="#F0CC8A"></circle><circle cx="50" cy="38" r="3.5" fill="#F0CC8A"></circle></g>
+<path d="M36 50 Q42 54 48 50" stroke="#2A1E14" stroke-width="2" fill="none"></path>
+</svg>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1">
+<div style="display: flex; align-items: baseline; gap: 12px"><span class="rus" style="font-size: 22px; color: #E8DFC8">Домовой</span><span style="font-size: 14px; color: {{domCol}}">{{domMood}}</span></div>
+<div style="font-size: 14px; line-height: 1.45; color: #A89A80">Хозяин дома. Сыт и доволен — бережёт избы от ночных гостей. Обижен — начнёт шалить: прятать вещи, пугать скот.</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="font-size: 13px; color: #A89A80">Благосклонность</span>
+<div style="width: 220px; height: 7px; background: #140F0C; box-shadow: inset 0 0 0 1px #3B2C20"><div style="height: 7px; width: {{domPct}}; background: linear-gradient(90deg, #8A6A48, #F0CC8A); box-shadow: 0 0 8px rgba(240,204,138,0.4); transition: width .5s"></div></div>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<button class="btn" onClick="{{feed}}" disabled="{{cantFeed}}">КАША · 3 ЗЕРНА</button>
+<button class="btn red" onClick="{{gift}}" disabled="{{cantGift}}">ЛЕНТОЧКА · 1 СУКНО</button>
+</div>
+</div>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+<div class="toast plank" style="position: absolute; left: 50%; top: 28px; padding: 10px 22px; font-size: 15px; color: #F0E6CE">{{toast}}</div>
+</sc-if>
+<svg width="1280" height="720" style="position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0.09; mix-blend-mode: overlay" aria-hidden="true"><rect width="1280" height="720" filter="url(#gr)"></rect></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  say(msg) {
+    clearTimeout(this.tt);
+    this.setState({ toast: null });
+    setTimeout(() => this.setState({ toast: msg }), 20);
+    this.tt = setTimeout(() => this.setState({ toast: null }), 2700);
+  }
+  componentWillUnmount() { clearTimeout(this.tt); }
+  renderVals() {
+    const s = this.state || {};
+    const JOBS = [
+      { k: 'wood', name: 'Лесоруб', gives: '+4 брёв.', d: 'M11 3h2v19h-2zM13 4c5 0 7 3 7 6-3 0-5-1-7-2z', col: '#B08058' },
+      { k: 'stone', name: 'Каменотёс', gives: '+3 камня', d: 'M4 19l3-9 6-4 7 5-1 8z', col: '#9A9F94' },
+      { k: 'grain', name: 'Пахарь', gives: '+5 зерна', d: 'M12 2c2.2 2.2 2.2 5 0 7.2-2.2-2.2-2.2-5 0-7.2zM12 9.5c2.2 2.2 2.2 5 0 7.2-2.2-2.2-2.2-5 0-7.2zM11.2 16h1.6v6h-1.6z', col: '#D2B06A' },
+      { k: 'guard', name: 'Сторож', gives: '−4 страха', d: 'M4 4h16v8c0 5-4 8-8 10-4-2-8-5-8-10z', col: '#C8412F' },
+      { k: 'idle', name: 'Без дела', gives: 'отдых', d: 'M6 12a6 6 0 1 0 12 0 6 6 0 0 0-12 0zm2 0a4 4 0 1 1 8 0 4 4 0 0 1-8 0z', col: '#8F8570' }
+    ];
+    const P0 = [
+      { id: 'marfa', name: 'Марфа', role: 'ведунья', fixed: 'Ведунья', tint: '#6A5A4A', fear: 10, quote: 'Туман не зверь — его не зарубишь. Его переждать надо, да переговорить.', note: 'Ведунья не работает в поле — она держит обереги. Пока Марфа жива, обряды вдвое сильнее.' },
+      { id: 'erema', name: 'Ерёма', role: 'кузнец', job: 'stone', tint: '#5A4A3A', fear: 25, quote: 'Железо нечисть не любит. Ковать бы гвоздей побольше…', note: 'Бывший кузнец. Как каменотёс работает лучше других: +1 камень.' },
+      { id: 'prokop', name: 'Прокоп', role: 'охотник', job: 'wood', tint: '#4A5A4A', fear: 40, quote: 'В бору кто-то ходит по моим следам. Шаг в шаг.', note: 'Знает лес. Если поставить сторожем — страх падает быстрее.' },
+      { id: 'dunya', name: 'Дуняша', role: 'сирота', job: 'grain', tint: '#7A5A5A', fear: 65, quote: 'Мамка звала меня с болота. Я не пошла. Правильно ведь?', note: 'Напугана сильнее всех. Если страх деревни высок — может уйти на болото ночью.' },
+      { id: 'frol', name: 'Фрол', role: 'староста', job: 'guard', tint: '#5A5A6A', fear: 30, quote: 'Держимся, покуда держится. А там — как Бог даст.', note: 'Староста. Пока он сторожит, никто не уйдёт из деревни.' },
+      { id: 'agafya', name: 'Агафья', role: 'вдова', job: 'idle', tint: '#6A4A5A', fear: 55, quote: 'Муж ушёл за огнями на Покров. Вернулся. Только не он это был.', note: 'Без дела. Знает старые приговоры — пригодится в обрядах.' }
+    ];
+    const jobs = s.jobs || P0.reduce((a, p) => { a[p.id] = p.job || null; return a; }, {});
+    const selId = s.sel || 'dunya';
+    const dom = s.dom ?? 40;
+    const grain = s.grain ?? 35, cloth = s.cloth ?? 3;
+    const tally = { wood: 0, stone: 0, grain: 0, guard: 0, idle: 0 };
+    P0.forEach(p => { if (jobs[p.id]) tally[jobs[p.id]] += 1; });
+    const moodOf = f => f < 30 ? ['спокоен', '#A8C890'] : f < 55 ? ['тревожен', '#E0B060'] : ['напуган', '#E0604A'];
+    const sel = P0.find(p => p.id === selId);
+    return {
+      count: P0.length, idle: tally.idle,
+      prod: [
+        { d: JOBS[0].d, col: JOBS[0].col, v: '+' + (tally.wood * 4) + ' / день', tcol: '#E8DFC8' },
+        { d: JOBS[1].d, col: JOBS[1].col, v: '+' + (tally.stone * 3) + ' / день', tcol: '#E8DFC8' },
+        { d: JOBS[2].d, col: JOBS[2].col, v: '+' + (tally.grain * 5) + ' / день', tcol: '#E8DFC8' },
+        { d: JOBS[3].d, col: JOBS[3].col, v: '−' + (tally.guard * 4) + ' страха', tcol: '#E0806A' }
+      ],
+      people: P0.map(p => {
+        const m = moodOf(p.fear);
+        const jn = p.fixed || (JOBS.find(j => j.k === jobs[p.id]) || JOBS[4]).name;
+        return { name: p.name, tint: p.tint, jobName: p.role + ' · ' + jn.toLowerCase(), mood: m[0], moodCol: m[1], fearPct: p.fear + '%',
+          cls: p.id === selId ? 'vl sel' : 'vl', pick: () => this.setState({ sel: p.id }) };
+      }),
+      detail: [selId].map(() => ({
+        name: sel.name, role: sel.role, quote: sel.quote, note: sel.note,
+        jobs: JOBS.map(j => ({ name: j.name, gives: j.gives, d: j.d,
+          fixed: !!sel.fixed,
+          cls: sel.fixed ? 'job fixed' : jobs[sel.id] === j.k || (!jobs[sel.id] && j.k === 'idle') ? 'job on' : 'job',
+          pick: () => { if (!sel.fixed) { this.setState({ jobs: { ...jobs, [sel.id]: j.k } }); this.say(sel.name + ': ' + j.name.toLowerCase()); } } }))
+      })),
+      domPct: dom + '%',
+      domMood: dom < 30 ? 'обижен' : dom < 70 ? 'присматривается' : 'доволен',
+      domCol: dom < 30 ? '#E0604A' : dom < 70 ? '#E0B060' : '#A8C890',
+      cantFeed: grain < 3 || dom >= 100, cantGift: cloth < 1 || dom >= 100,
+      feed: () => { if (grain >= 3) { this.setState({ dom: Math.min(100, dom + 15), grain: grain - 3 }); this.say('Домовой доел кашу и довольно заворчал'); } },
+      gift: () => { if (cloth >= 1) { this.setState({ dom: Math.min(100, dom + 30), cloth: cloth - 1 }); this.say('Ленточка исчезла с печи до утра'); } },
+      hasToast: !!s.toast, toast: s.toast || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

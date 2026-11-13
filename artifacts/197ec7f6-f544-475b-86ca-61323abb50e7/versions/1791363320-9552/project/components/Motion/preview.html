@@ -1,0 +1,48 @@
+<!-- @dsCard group="Foundations" height=1000 width=900 subtitle="Живые демо анимаций с токенами длительности и кривых. Нажмите «Повторить»." -->
+<style>
+  .mo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 20px; background: var(--bg-app); color: var(--text-primary); }
+  .mt { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: var(--radius-xl); background: var(--bg-surface); border: 1px solid var(--bd-edge); box-shadow: var(--shadow-sm); min-width: 0; }
+  .mt h4 { margin: 0; font: 800 16px/20px var(--font-display); }
+  .mt p { margin: 0; font: 500 12px/16px var(--font-sans); color: var(--text-muted); }
+  .stage { position: relative; height: 112px; display: grid; place-items: center; border-radius: var(--radius-lg); background: var(--bg-surface-tint); overflow: hidden; }
+  .mt .bd-btn { align-self: flex-start; height: 32px; padding: 0 14px; font-size: 12px; }
+  .list { width: 70%; display: flex; flex-direction: column; gap: 6px; }
+  .list i { display: block; height: 22px; border-radius: var(--radius-sm); background: var(--bg-surface); box-shadow: var(--shadow-xs); }
+  .pbtn { height: 44px; padding: 0 26px; border-radius: var(--radius-pill); background: var(--brand); color: var(--text-on-brand); font: 800 14px/44px var(--font-display); user-select: none; cursor: pointer; transition: transform 380ms var(--ease-out); }
+  .pbtn:active { transform: translateY(1px) scale(.975); transition-duration: 160ms; }
+  .xs { position: relative; width: 70%; height: 74px; }
+  .xs > div { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 6px; justify-content: center; }
+  .xs i { display: block; height: 20px; border-radius: var(--radius-sm); background: var(--bg-surface); box-shadow: var(--shadow-xs); }
+  .xs .out { animation: xo 320ms cubic-bezier(.4, 0, .2, 1) both; pointer-events: none; }
+  .xs .in > i { animation: xr 420ms var(--ease-out) backwards; animation-delay: calc(var(--i) * 70ms); }
+  @keyframes xo { to { opacity: 0; transform: translateY(-8px) scale(.992); } }
+  @keyframes xr { from { opacity: 0; transform: translateY(14px); } }
+  .rows { width: 78%; display: flex; flex-direction: column; gap: 6px; }
+  .rows b { display: block; padding: 6px 10px; border-radius: var(--radius-sm); background: var(--bg-surface); box-shadow: var(--shadow-xs); font: 700 12px/16px var(--font-sans); transition: background 240ms var(--ease-out), color 240ms; cursor: pointer; }
+  .rows b.on { background: var(--brand); color: var(--text-on-brand); }
+  .num { font: 900 40px/44px var(--font-display); letter-spacing: -.03em; }
+</style>
+<div class="mo" id="root"></div>
+<script>
+  var B = window.Buddy;
+  var demos = [
+    { t: 'Check pop + burst', p: 'dur-base · ease-bounce. Выполнение привычки.', r: function (el) { el.innerHTML = B.HabitRow({ icon: 'droplet', tone: 'sky', title: 'Drink Water', meta: 'Tap the circle' }).replace('class="bd-habit"', 'class="bd-habit" style="width:86%;background:var(--bg-surface)"'); } },
+    { t: 'Mascot float', p: 'dur-ambient · ease-in-out, loop. Покой маскота.', r: function (el) { el.innerHTML = B.mascot('buddy-happy', { size: 88, cls: 'bd-anim-float' }); } },
+    { t: 'Flame flicker', p: '1.6s loop. Серия дней.', r: function (el) { el.innerHTML = B.mascot('buddy-streak', { size: 92, cls: 'bd-anim-flicker' }); } },
+    { t: 'Bubble in', p: 'dur-slow · ease-bounce. Реплика маскота.', r: function (el) { el.innerHTML = B.SpeechBubble({ text: "Let's start small!" }); } },
+    { t: 'Progress fill', p: 'dur-slow · ease-out. Заполнение прогресса.', r: function (el) { el.innerHTML = '<div style="width:78%">' + B.ProgressBar({ value: 0, tone: 'orange' }) + '</div>'; requestAnimationFrame(function () { requestAnimationFrame(function () { el.querySelector('.bd-bar > i').style.setProperty('--v', '72%'); }); }); } },
+    { t: 'Count up', p: '700ms · ease-out cubic. Цифры итогов.', r: function (el) { el.innerHTML = '<span class="num bd-num">0</span>'; B.countUp(el.firstChild, 8.5, 800, 1); } },
+    { t: 'Stagger rise', p: 'dur-base · 60ms шаг. Появление списка.', r: function (el) { el.innerHTML = '<div class="list bd-stagger"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div>'; } },
+    { t: 'Wiggle', p: 'dur-slow · ease-standard. Привлечь внимание (будильник).', r: function (el) { el.innerHTML = B.mascot('dawn-awake', { size: 88, cls: 'bd-anim-wiggle' }); } },
+    { t: 'Skeleton shimmer', p: '1.4s linear loop. Загрузка.', r: function (el) { el.innerHTML = '<div class="list"><i class="bd-skeleton"></i><i class="bd-skeleton" style="width:70%"></i><i class="bd-skeleton" style="width:50%"></i></div>'; } },
+    { t: 'Press and release', p: '160ms вниз · 380ms назад, ease-out. Кнопка продавливается на 1px и сжимается до 0.975, не «схлопывается».', r: function (el) { el.innerHTML = '<span class="pbtn" role="button" tabindex="0">Нажми и отпусти</span>'; } },
+    { t: 'Page cross-fade', p: 'Старый экран уходит за 320ms (подъём 8px), новый поднимается лесенкой с шагом 70ms.', r: function (el) { el.innerHTML = '<div class="xs"><div class="out"><i></i><i></i><i></i></div><div class="in"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div>'; } },
+    { t: 'Update in place', p: 'Меняется только то, что изменилось: нажмите строку, остальные не перерисовываются и не мигают.', r: function (el) { el.innerHTML = '<div class="rows"><b class="on">Рядом</b><b>Случай</b><b>Связь</b></div>'; el.firstChild.onclick = function (e) { var b = e.target.closest('b'); if (!b) return; el.querySelectorAll('b').forEach(function (x) { x.classList.toggle('on', x === b); }); }; } }
+  ];
+  var root = document.getElementById('root');
+  root.innerHTML = demos.map(function (d, i) { return '<div class="mt bd-root"><h4>' + d.t + '</h4><p>' + d.p + '</p><div class="stage" id="s' + i + '"></div><button type="button" class="bd-btn bd-btn--soft" data-i="' + i + '">Повторить</button></div>'; }).join('');
+  function play(i) { demos[i].r(document.getElementById('s' + i)); }
+  demos.forEach(function (d, i) { play(i); });
+  root.addEventListener('click', function (e) { var b = e.target.closest('button[data-i]'); if (b) play(+b.dataset.i); });
+  B.wire(root);
+</script>

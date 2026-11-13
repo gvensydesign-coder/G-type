@@ -1,0 +1,23 @@
+<!-- @dsCard group="Поверхности" height=330 -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>SectionHeader — превью</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;padding:16px;background:var(--bg);color:var(--ink);font:400 var(--fs-base)/var(--lh) var(--f-ui);-webkit-font-smoothing:antialiased}
+.row{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center}
+.row+.row,.cap+.row,.row+.cap{margin-top:var(--s3)}
+.cap{margin:0 0 var(--s2);font:var(--fw-sb) var(--fs-xs)/1.2 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.row+.cap,.stack+.cap{margin-top:var(--s5)}
+.stack{display:grid;gap:var(--s3);max-width:420px}
+.wrap{max-width:460px}.empty{padding:var(--s7) var(--s5)}</style>
+</head>
+<body>
+<div class="wrap"><p class="cap" style="margin-top:0">Заголовок секции и разделитель</p>
+<h4 class="sec-h">Оси</h4><hr class="divider"><h4 class="sec-h">Функции OpenType</h4>
+<p class="cap" style="margin-top:var(--s5)">Пустое состояние</p>
+<div class="empty"><i class="ico i-heart"></i><b>Пока пусто</b><span>Отмечайте гарнитуры сердечком, и они появятся здесь.</span><button class="btn pri" type="button">В библиотеку</button></div></div>
+</body>
+</html>

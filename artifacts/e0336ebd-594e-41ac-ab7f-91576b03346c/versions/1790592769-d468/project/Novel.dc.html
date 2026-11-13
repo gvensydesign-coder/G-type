@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Новелльные сцены</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Ruslan+Display&amp;family=Kurale&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0A08;font-family:'Kurale',serif;color:#E8DFC8}
+a{color:#E08A3C}a:hover{color:#F2B26A}
+.plank{position:relative;background:linear-gradient(180deg,rgba(255,225,190,.05),rgba(0,0,0,.3)),repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,transparent 1px 7px),repeating-linear-gradient(180deg,rgba(255,215,170,.035) 0 1px,transparent 1px 13px),linear-gradient(90deg,#231A14,#2B2019 30%,#211813 60%,#2A1F18);border:1px solid #0A0806;box-shadow:inset 0 1px 0 rgba(255,220,180,.1),inset 0 0 0 2px #3B2C20,inset 0 0 0 3px #120D0A,0 14px 40px rgba(0,0,0,.75)}
+.nail{position:absolute;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#B0A898 0,#5B5650 35%,#1B1917 75%);box-shadow:0 1px 1px rgba(0,0,0,.8)}
+.btn{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:48px;padding:0 34px;border:0;background:linear-gradient(180deg,#7A5334,#2A1B12);clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%);cursor:pointer;font-family:'Ruslan Display',serif;font-size:15px;letter-spacing:3px;color:#E8DFC8;text-decoration:none;transition:transform .18s,filter .18s,color .2s,background .25s}
+.btn::before{content:'';position:absolute;inset:2px;z-index:-1;clip-path:inherit;background:linear-gradient(180deg,#2E2119,#150F0B);transition:background .25s}
+.btn svg{transition:transform .2s}
+.btn:hover{color:#F6D29A;transform:translateY(-2px);background:linear-gradient(180deg,#E08A3C,#6B2A15)}
+.btn:hover::before{background:linear-gradient(180deg,#3B2519,#1A100B)}
+.btn:hover svg{transform:translateX(4px)}
+.btn:active{transform:translateY(1px) scale(.96);filter:brightness(.8)}
+.btn.red{background:linear-gradient(180deg,#C8412F,#5E1914)}
+.btn.red::before{background:linear-gradient(180deg,#8E2A22,#4A120E)}
+.tile{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 18px;background:linear-gradient(180deg,#1C1612,#100D0B);border:1px solid #4A382A;box-shadow:inset 0 0 12px rgba(0,0,0,.8),0 4px 10px rgba(0,0,0,.6);font-family:'Ruslan Display',serif;font-size:14px;letter-spacing:2px;color:#CDBFA2;text-decoration:none;transition:transform .15s,border-color .2s,color .2s,box-shadow .2s}
+.tile svg{transition:transform .2s}
+.tile:hover{border-color:#C8702F;color:#F6D29A;box-shadow:inset 0 0 12px rgba(200,112,47,.2),0 0 14px rgba(224,138,60,.35)}
+.tile:hover svg{transform:translateX(4px)}
+.tile:active{transform:scale(.95)}
+.bgIn{animation:bgIn .9s ease-out}
+@keyframes bgIn{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:scale(1)}}
+.slideL{animation:slideL .6s cubic-bezier(.2,.8,.3,1)}
+@keyframes slideL{from{opacity:0;transform:translateX(-60px)}to{opacity:1;transform:none}}
+.slideR{animation:slideR .6s cubic-bezier(.2,.8,.3,1)}
+@keyframes slideR{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:none}}
+.type{animation:type 1.8s steps(40,end)}
+@keyframes type{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.tag{animation:tag .5s cubic-bezier(.2,.8,.3,1)}
+@keyframes tag{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.breath{animation:breath 4s ease-in-out infinite;transform-box:fill-box;transform-origin:bottom center}
+@keyframes breath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.015)}}
+.fog{animation:drift 14s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateX(-40px)}to{transform:translateX(40px)}}
+.eyes{animation:blink 5s infinite}
+@keyframes blink{0%,92%,100%{opacity:1}95%{opacity:0}}
+.fire{animation:fire 1.2s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:bottom center}
+@keyframes fire{from{transform:scale(1,1);opacity:.5}to{transform:scale(1.1,1.2);opacity:.75}}
+.rag{animation:sway 4s ease-in-out infinite;transform-box:fill-box;transform-origin:top center}
+@keyframes sway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(6deg)}}
+.glow{animation:glow 3s ease-in-out infinite}
+@keyframes glow{0%,100%{opacity:.35}50%{opacity:.7}}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #0B0A08; font-family: 'Kurale', serif; color: #E8DFC8">
+<svg width="0" height="0" style="position: absolute" aria-hidden="true"><defs>
+<pattern id="orn" width="28" height="14" patternUnits="userSpaceOnUse"><path d="M14 1.5 L21 7 L14 12.5 L7 7 Z" fill="none" stroke="#A8352A" stroke-width="1.3"></path><path d="M14 4.5 L17 7 L14 9.5 L11 7 Z" fill="#A8352A"></path><path d="M0 7 H5 M23 7 H28 M3 3 L5 7 L3 11 M25 3 L23 7 L25 11" stroke="#A8352A" stroke-width="1" fill="none"></path></pattern>
+<pattern id="ornR" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#7E231C"></rect><path d="M8 2 L14 8 L8 14 L2 8 Z" fill="none" stroke="#D9C9A8" stroke-width="1"></path><rect x="7" y="7" width="2" height="2" fill="#D9C9A8"></rect></pattern>
+<radialGradient id="vig" cx="50%" cy="45%" r="70%"><stop offset="50%" stop-color="#000" stop-opacity="0"></stop><stop offset="100%" stop-color="#000" stop-opacity="0.85"></stop></radialGradient>
+<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+</defs></svg>
+
+<sc-for list="{{scenes}}" as="s" hint-placeholder-count="1">
+<sc-if value="{{s.on}}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px">
+
+<sc-if value="{{s.bgForest}}" hint-placeholder-val="{{ true }}">
+<svg class="bgIn" width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<rect width="1280" height="720" fill="#16211B"></rect>
+<rect width="1280" height="300" fill="#8A4A3A" opacity="0.1"></rect>
+<path d="M0 720 L0 330 L60 190 L120 340 L180 150 L250 350 L330 220 L400 360 L480 170 L560 380 L640 260 L720 390 L800 180 L880 370 L960 230 L1040 360 L1120 160 L1200 340 L1280 220 L1280 720 Z" fill="#1F4032" opacity="0.55"></path>
+<path d="M0 720 L0 430 L90 260 L170 450 L260 300 L350 470 L900 480 L990 290 L1080 460 L1170 280 L1280 440 L1280 720 Z" fill="#101812"></path>
+<path d="M300 720 C520 560 760 560 980 720 Z" fill="#433F39" opacity="0.5"></path>
+<g transform="translate(1000 470)"><path d="M0 0 V-120" stroke="#0B0F0D" stroke-width="7"></path><g class="rag"><path d="M2 -110 L14 -110 L12 -40 L7 -50 L3 -35 Z" fill="#8E2A22"></path></g></g>
+<g class="fog"><rect x="-60" y="430" width="1400" height="160" fill="#B7C4AF" opacity="0.08"></rect><rect x="-60" y="500" width="1400" height="120" fill="#B7C4AF" opacity="0.07"></rect></g>
+</svg>
+</sc-if>
+
+<sc-if value="{{s.bgIzba}}" hint-placeholder-val="{{ false }}">
+<svg class="bgIn" width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<rect width="1280" height="720" fill="#1C1714"></rect>
+<g stroke="#2A221B" stroke-width="3"><path d="M0 110 H1280 M0 205 H1280 M0 300 H1280 M0 395 H1280 M0 490 H1280"></path></g>
+<g stroke="#120E0B" stroke-width="1"><path d="M0 112 H1280 M0 207 H1280 M0 302 H1280 M0 397 H1280"></path></g>
+<rect x="780" y="140" width="210" height="180" fill="#2B2116" stroke="#433F39" stroke-width="8"></rect>
+<rect x="792" y="152" width="186" height="156" fill="#20303A" opacity="0.7"></rect>
+<path d="M885 152 V308 M792 230 H978" stroke="#433F39" stroke-width="6"></path>
+<path d="M770 132 H1000 M770 330 H1000" stroke="#5A4634" stroke-width="5"></path>
+<svg x="770" y="332" width="230" height="16"><rect width="230" height="16" fill="url(#ornR)"></rect></svg>
+<path d="M120 720 V360 L180 330 H420 L470 360 V720 Z" fill="#3A342D"></path>
+<path d="M130 360 H460" stroke="#2A241E" stroke-width="3"></path>
+<rect x="210" y="520" width="170" height="110" rx="60" fill="#0E0C0A"></rect>
+<ellipse class="fire" cx="295" cy="610" rx="60" ry="26" fill="#E08A3C"></ellipse>
+<ellipse class="fire" cx="295" cy="615" rx="34" ry="14" fill="#FFD08A"></ellipse>
+<rect x="0" y="640" width="1280" height="80" fill="#12100D"></rect>
+<rect class="glow" x="0" y="0" width="1280" height="720" fill="#E08A3C" opacity="0.05"></rect>
+</svg>
+</sc-if>
+
+<sc-if value="{{s.bgSwamp}}" hint-placeholder-val="{{ false }}">
+<svg class="bgIn" width="1280" height="720" viewBox="0 0 1280 720" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<rect width="1280" height="720" fill="#111918"></rect>
+<rect y="440" width="1280" height="280" fill="#142B27"></rect>
+<g stroke="#7F9681" stroke-width="1" opacity="0.25"><path d="M100 500 H380 M520 540 H900 M200 600 H560 M760 620 H1180 M60 670 H420"></path></g>
+<path d="M220 450 V210 L190 150 M220 260 L270 200 L300 210 M220 320 L170 290" stroke="#0B0F0D" stroke-width="10" fill="none"></path>
+<path d="M1030 450 V180 L1060 120 M1030 250 L980 200 M1030 330 L1090 290 L1110 300" stroke="#0B0F0D" stroke-width="12" fill="none"></path>
+<g class="rag"><path d="M1078 294 L1090 296 L1086 350 L1080 340 L1074 354 Z" fill="#8E2A22"></path></g>
+<circle class="glow" cx="652" cy="470" r="60" fill="#8E2A22" opacity="0.4"></circle>
+<g class="eyes"><circle cx="640" cy="470" r="3.5" fill="#FF5A4A"></circle><circle cx="664" cy="470" r="3.5" fill="#FF5A4A"></circle></g>
+<g class="fog"><rect x="-60" y="380" width="1400" height="140" fill="#B7C4AF" opacity="0.1"></rect></g>
+</svg>
+</sc-if>
+
+<svg width="1280" height="720" style="position: absolute; left: 0; top: 0; pointer-events: none" aria-hidden="true"><rect width="1280" height="720" fill="url(#vig)"></rect></svg>
+
+<sc-if value="{{s.hasPortrait}}" hint-placeholder-val="{{ true }}">
+<div class="{{s.portraitClass}}" style="{{s.portraitStyle}}">
+<svg width="320" height="380" viewBox="0 0 320 380" aria-hidden="true">
+<ellipse cx="160" cy="200" rx="150" ry="170" fill="{{s.aura}}" opacity="0.18"></ellipse>
+<g class="breath">
+<path d="M160 36 C118 36 98 78 103 118 C106 150 127 170 160 170 C193 170 214 150 217 118 C222 78 202 36 160 36 Z" fill="{{s.tint}}" stroke="#5A4634" stroke-width="1.5"></path>
+<path d="M36 380 C46 266 98 200 160 200 C222 200 274 266 284 380 Z" fill="{{s.tint}}" stroke="#5A4634" stroke-width="1.5"></path>
+</g>
+</svg>
+<div style="position: absolute; left: 0; right: 0; top: 160px; text-align: center; font-size: 13px; color: #8F8570">[портрет: {{s.speaker}}]</div>
+</div>
+</sc-if>
+
+<div class="plank" style="position: absolute; left: 110px; right: 110px; bottom: 26px; min-height: 180px; box-sizing: border-box; padding: 30px 40px 20px; display: flex; flex-direction: column; gap: 10px">
+<span class="nail" style="left: 9px; top: 9px"></span><span class="nail" style="right: 9px; top: 9px"></span><span class="nail" style="left: 9px; bottom: 9px"></span><span class="nail" style="right: 9px; bottom: 9px"></span>
+<div class="tag" style="position: absolute; left: 36px; top: -22px; height: 40px; padding: 0 26px 0 22px; display: flex; align-items: center; background: linear-gradient(180deg, #9A2E24, #6A1C16); box-shadow: inset 0 0 0 1px #C4473A, 0 4px 10px rgba(0,0,0,0.6); clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 0 100%); font-family: 'Ruslan Display', serif; font-size: 19px; letter-spacing: 1px; color: #F3E6CC">{{s.speaker}}</div>
+<svg width="100%" height="14" style="position: absolute; left: 0; top: 8px; opacity: 0.5" aria-hidden="true"><rect x="240" width="100%" height="14" fill="url(#orn)"></rect></svg>
+<p class="type" style="margin: 8px 0 0; font-size: 23px; line-height: 1.55; color: #EDE4CE; flex-grow: 1">{{s.text}}</p>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<div style="display: flex; align-items: center; gap: 8px">
+<sc-for list="{{s.dots}}" as="d" hint-placeholder-count="5"><span style="{{d}}"></span></sc-for>
+</div>
+<sc-if value="{{s.notLast}}" hint-placeholder-val="{{ true }}">
+<button class="btn" onClick="{{s.next}}">ДАЛЕЕ
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 4l8 8-8 8"></path></svg>
+</button>
+</sc-if>
+<sc-if value="{{s.isLast}}" hint-placeholder-val="{{ false }}">
+<a class="btn red" href="Game.dc.html">В ДЕРЕВНЮ
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 4l8 8-8 8"></path></svg>
+</a>
+</sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+</sc-for>
+
+<div style="position: absolute; top: 24px; right: 24px">
+<a class="tile" href="Game.dc.html">ПРОПУСТИТЬ
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l7 7-7 7M12 5l7 7-7 7"></path></svg>
+</a>
+</div>
+<svg width="1280" height="720" style="position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0.1; mix-blend-mode: overlay" aria-hidden="true"><rect width="1280" height="720" filter="url(#gr)"></rect></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const scenes = [
+      { bg: 'forest', speaker: 'Рассказчик', side: '', text: 'Третью ночь над Выселками стоит туман. Птицы замолчали ещё до заката, а собаки воют в сторону леса.' },
+      { bg: 'izba', speaker: 'Ведунья Марфа', side: 'left', tint: '#2E2A25', aura: '#E08A3C', text: 'Пришёл-таки, богатырь. Не ждали мы тебя — а всё ж ждали. Садись к печи, да от окна подальше.' },
+      { bg: 'izba', speaker: 'Богатырь', side: 'right', tint: '#3A2222', aura: '#E08A3C', text: 'Кто в тумане ходит, бабушка? На дороге следы — не звериные и не людские.' },
+      { bg: 'swamp', speaker: 'Голос из болота', side: 'left', tint: '#15221E', aura: '#C8412F', text: 'Тише, тише… Подойди ближе, путник. Мы давно тебя ждём.' },
+      { bg: 'izba', speaker: 'Ведунья Марфа', side: 'left', tint: '#2E2A25', aura: '#E08A3C', text: 'Вот и началось. Деревню поднимать надо — одним мечом тут не отобьёшься.' }
+    ];
+    const i = Math.min((this.state && this.state.i) || 0, scenes.length - 1);
+    const n = scenes.length;
+    return {
+      scenes: scenes.map((s, k) => {
+        const last = k === n - 1;
+        const right = s.side === 'right';
+        return {
+          on: k === i,
+          bgForest: s.bg === 'forest', bgIzba: s.bg === 'izba', bgSwamp: s.bg === 'swamp',
+          hasPortrait: !!s.side,
+          portraitClass: right ? 'slideR' : 'slideL',
+          portraitStyle: 'position: absolute; bottom: 196px; width: 320px; height: 380px; ' + (right ? 'right: 150px;' : 'left: 150px;'),
+          tint: s.tint || '#222', aura: s.aura || '#E08A3C',
+          speaker: s.speaker, text: s.text,
+          dots: scenes.map((x, j) => 'width: 8px; height: 8px; transform: rotate(45deg); ' +
+            (j === k ? 'background: #C8412F; box-shadow: 0 0 8px #E0604A;' : j < k ? 'background: #6B4A34;' : 'border: 1px solid #5A4634;')),
+          notLast: !last, isLast: last,
+          next: () => this.setState({ i: k + 1 })
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
