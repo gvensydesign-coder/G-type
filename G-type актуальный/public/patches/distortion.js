@@ -1132,18 +1132,68 @@
     catch (e) { return null; }
     finally { plainDepth--; }
   }
-  function polyArea(g) {
-    if (!g || !g.cs) return 0;
-    var a = 0;
-    for (var ci = 0; ci < g.cs.length; ci++) {
-      var n = g.cs[ci].nodes;
-      if (!n || n.length < 3) continue;
-      for (var i = 0; i < n.length; i++) {
-        var p = n[i], q = n[(i + 1) % n.length];
-        a += p.x * q.y - q.x * p.y;
+  function bboxPolys(polys) {
+    var minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9, n = 0;
+    for (var i = 0; i < polys.length; i++) {
+      var P = polys[i];
+      for (var j = 0; j < P.length; j++) {
+        var x = P[j][0], y = P[j][1];
+        if (x !== x || y !== y) continue;
+        if (x < minx) minx = x;
+        if (y < miny) miny = y;
+        if (x > maxx) maxx = x;
+        if (y > maxy) maxy = y;
+        n++;
       }
     }
-    return Math.abs(a) / 2;
+    return n ? [minx, miny, maxx, maxy] : null;
+  }
+  function rasterPolys(polys, box, N) {
+    var bits = new Uint8Array(N * N);
+    var x0 = box[0], y0 = box[1], sx = (box[2] - box[0]) / N, sy = (box[3] - box[1]) / N;
+    if (!(sx > 0) || !(sy > 0)) return bits;
+    for (var row = 0; row < N; row++) {
+      var y = y0 + (row + 0.5) * sy, xs = [];
+      for (var pi = 0; pi < polys.length; pi++) {
+        var P = polys[pi], L = P.length;
+        for (var i = 0; i < L; i++) {
+          var p = P[i], q = P[(i + 1) % L];
+          if ((p[1] <= y && q[1] > y) || (q[1] <= y && p[1] > y)) {
+            var t = (y - p[1]) / (q[1] - p[1]);
+            xs.push(p[0] + t * (q[0] - p[0]));
+          }
+        }
+      }
+      xs.sort(function (u, v) { return u - v; });
+      for (var k = 0; k + 1 < xs.length; k += 2) {
+        var c0 = Math.floor((xs[k] - x0) / sx), c1 = Math.ceil((xs[k + 1] - x0) / sx);
+        if (c0 < 0) c0 = 0;
+        if (c1 > N) c1 = N;
+        for (var c = c0; c < c1; c++) bits[row * N + c] = 1;
+      }
+    }
+    return bits;
+  }
+  function shapeDelta(plain, warp) {
+    if (!plain || !plain.cs || !warp || !warp.cs) return null;
+    var pw, ww;
+    try { pw = polysOfCs(plain.cs); ww = polysOfCs(warp.cs); }
+    catch (e) { return null; }
+    if (!pw.length || !ww.length) return null;
+    var box = bboxPolys(pw.concat(ww));
+    if (!box) return null;
+    var pad = Math.max(4, ((box[2] - box[0]) + (box[3] - box[1])) * 0.02);
+    box = [box[0] - pad, box[1] - pad, box[2] + pad, box[3] + pad];
+    var N = 24, a = rasterPolys(pw, box, N), b = rasterPolys(ww, box, N);
+    var diff = 0, uni = 0, ia = 0, ib = 0;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i]) ia++;
+      if (b[i]) ib++;
+      if (a[i] || b[i]) uni++;
+      if (!a[i] !== !b[i]) diff++;
+    }
+    if (!uni || !ia) return null;
+    return { xor: diff / uni, net: (ib - ia) / ia };
   }
   function xSpan(g) {
     var min = 1e9, max = -1e9;
@@ -1179,17 +1229,18 @@
       if (cache[id]) return cache[id];
       var w = window.gfSmart(ch, key);
       var p = plainGlyph(ch, key);
-      cache[id] = { w: w, p: p, aw: polyArea(w), ap: polyArea(p), sw: xSpan(w), sp: xSpan(p) };
+      cache[id] = { w: w, p: p, sw: xSpan(w), sp: xSpan(p) };
       return cache[id];
     }
     for (var i = 0; i < items.length; i++) {
       var it = items[i];
       if (it.t !== "tone" || !letterish(it.ch)) continue;
       var g = pair(it.gn || it.ch, it.key);
-      if (!(g.ap > 0) || !(g.aw > 0)) continue;
-      var d = g.aw / g.ap - 1;
-      var sev = clamp01((Math.abs(d) - 0.08) / 0.22);
-      if (sev > it.sev) { it.sev = sev; it.dev = d; it.warp = true; }
+      var sh = shapeDelta(g.p, g.w);
+      if (!sh) continue;
+      var sev = clamp01((sh.xor - 0.045) / 0.2);
+      var d = Math.abs(sh.net) >= 0.06 ? sh.net : (sh.xor > 0.045 ? sh.xor : sh.net);
+      if (sev > it.sev) { it.sev = sev; it.dev = d; it.warp = true; it.shape = Math.abs(sh.net) < 0.06; }
     }
     var pairs = [];
     for (i = 0; i < items.length; i++) {
@@ -1213,8 +1264,22 @@
     var analyze = function () {
       var res = orig.apply(this, arguments);
       if (!distortActive() || !res || !res.items || typeof window.HEAT.summarize !== "function") return res;
-      heatBefore(res.items);
+      try { heatBefore(res.items); } catch (e) { return res; }
       var again = window.HEAT.summarize(res.items, res.lines, res.refs);
+      var hidden = [];
+      for (var hi = 0; hi < again.items.length; hi++) {
+        var hit = again.items[hi];
+        if (hit.warp && hit.intended) { hit.intended = false; hidden.push(hit); }
+      }
+      if (hidden.length && again.score != null) {
+        var mean = 0;
+        for (hi = 0; hi < hidden.length; hi++) mean += hidden[hi].sev;
+        mean /= hidden.length;
+        var pen = 22 * mean;
+        var lim = Math.min(hidden.length, 8);
+        for (hi = 0; hi < lim; hi++) pen += 6 * Math.pow(hidden[hi].sev, 1.2);
+        again.score = Math.max(0, Math.min(100, Math.round(again.score - pen)));
+      }
       again.ms = res.ms;
       if (res.sc) again.sc = res.sc;
       return again;
@@ -1226,6 +1291,7 @@
     var text = function (it) {
       if (it && it.warp) {
         var pc = Math.round(Math.abs(it.dev || 0) * 100);
+        if (it.t === "tone" && it.shape) return { h: "«" + it.ch + "»", p: "искажение изменило рисунок знака." };
         if (it.t === "tone") return { h: "«" + it.ch + "»", p: "искажение сделало знак на " + pc + "% " + (it.dev < 0 ? "светлее." : "темнее.") };
         if (it.t === "pair") return { h: (it.a || "") + (it.b || ""), p: "искажение сделало промежуток на " + pc + "% " + (it.dev < 0 ? "уже." : "шире.") };
       }
@@ -1292,6 +1358,16 @@
     wrapView("getFinal");
     wrapView("gfSmart");
     hookHeat();
+    if (typeof window.autoKern === "function" && !window.autoKern.__gtPlain) {
+      var origKern = window.autoKern;
+      var kernFn = function () {
+        plainDepth++;
+        try { return origKern.apply(this, arguments); }
+        finally { plainDepth--; }
+      };
+      kernFn.__gtPlain = true;
+      window.autoKern = kernFn;
+    }
     window.__GT_DISTORT_API = {
       active: distortActive,
       params: function () { return JSON.parse(JSON.stringify(S.p)); },
