@@ -1113,10 +1113,20 @@
       return g;
     }
   }
+  var impSeen = -1;
+  function syncImpCache() {
+    try {
+      if (typeof IMP === "undefined" || !IMP || IMP.ver == null || IMP.ver === impSeen) return;
+      impSeen = IMP.ver;
+      if (typeof GCACHE !== "undefined" && GCACHE && GCACHE.clear) GCACHE.clear();
+      if (typeof cache !== "undefined" && cache && cache.clear) cache.clear();
+    } catch (e) {}
+  }
   function wrapView(name) {
     var orig = window[name];
     if (typeof orig !== "function" || orig.__gtView) return;
     var fn = function (ch) {
+      syncImpCache();
       return warpView(orig.apply(this, arguments), ch);
     };
     fn.__gtView = true;
@@ -1221,6 +1231,12 @@
     return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
   }
   function letterish(ch) { return typeof ch === "string" && /[\p{L}\p{N}]/u.test(ch); }
+  function clsOf(ch) {
+    if (/\p{Lu}/u.test(ch)) return "u";
+    if (/\p{Ll}/u.test(ch)) return "l";
+    if (/\p{Nd}/u.test(ch)) return "d";
+    return "p";
+  }
   function heatBefore(items) {
     if (!distortActive() || !items || !items.length) return;
     var cache = {};
@@ -1232,15 +1248,35 @@
       cache[id] = { w: w, p: p, sw: xSpan(w), sp: xSpan(p) };
       return cache[id];
     }
+    var tones = [];
     for (var i = 0; i < items.length; i++) {
       var it = items[i];
       if (it.t !== "tone" || !letterish(it.ch)) continue;
       var g = pair(it.gn || it.ch, it.key);
       var sh = shapeDelta(g.p, g.w);
       if (!sh) continue;
-      var sev = clamp01((sh.xor - 0.045) / 0.2);
-      var d = Math.abs(sh.net) >= 0.06 ? sh.net : (sh.xor > 0.045 ? sh.xor : sh.net);
-      if (sev > it.sev) { it.sev = sev; it.dev = d; it.warp = true; it.shape = Math.abs(sh.net) < 0.06; }
+      tones.push({ it: it, xor: sh.xor, net: sh.net, cls: clsOf(it.ch) });
+    }
+    var byCls = {};
+    for (i = 0; i < tones.length; i++) {
+      var ck = tones[i].cls;
+      if (!byCls[ck]) byCls[ck] = [];
+      byCls[ck].push(tones[i]);
+    }
+    for (i = 0; i < tones.length; i++) {
+      var t = tones[i];
+      var pool = byCls[t.cls] && byCls[t.cls].length >= 3 ? byCls[t.cls] : tones;
+      var mx = median(pool.map(function (x) { return x.xor; }));
+      var mn = median(pool.map(function (x) { return x.net; }));
+      var dx = t.xor - mx, dn = t.net - mn;
+      var mag = Math.max(Math.abs(dn), Math.abs(dx) > 0.06 ? Math.abs(dx) : 0);
+      var sev = clamp01((mag - 0.07) / 0.18);
+      if (sev > t.it.sev) {
+        t.it.sev = sev;
+        t.it.dev = Math.abs(dn) >= Math.abs(dx) ? dn : dx;
+        t.it.warp = true;
+        t.it.shape = Math.abs(dn) < 0.06;
+      }
     }
     var pairs = [];
     for (i = 0; i < items.length; i++) {
