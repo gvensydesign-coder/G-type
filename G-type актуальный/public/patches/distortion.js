@@ -971,7 +971,7 @@
     return cs;
   }
 
-  function warpLetter(polys, p, fx, seedG, jitter) {
+  function warpLetter(polys, p, fx, seedG, jitter, rec) {
     var sx = p.sx / 100, sy = p.sy / 100, tn = Math.tan((-p.slant * Math.PI) / 180);
     var pi, qi;
     for (pi = 0; pi < polys.length; pi++)
@@ -991,6 +991,7 @@
             polys[pi][qi][0] = cx0 + ddx * cc0 - ddy * ss0;
             polys[pi][qi][1] = cy0 + ddx * ss0 + ddy * cc0;
           }
+        if (rec) rec.jit = { cx0: cx0, cy0: cy0, cc: cc0, ss: ss0 };
       }
     }
     var warp = fx.twist || fx.lens || fx.wave || fx.noise;
@@ -1001,6 +1002,7 @@
     var cx = (bb2[0] + bb2[2]) / 2, cy = (bb2[1] + bb2[3]) / 2;
     var Rbase = Math.hypot(bb2[2] - bb2[0], bb2[3] - bb2[1]) * 0.62;
     var ox = cx, oy = cy;
+    if (rec) rec.field = { cx: cx, cy: cy, Rbase: Rbase, ox: ox, oy: oy };
     if (fx.twist) {
       var R = (Rbase * p.twistR) / 100, th = (p.twist / 100) * 1.4;
       for (pi = 0; pi < polys.length; pi++)
@@ -1064,9 +1066,11 @@
     if (fx.slice) {
       var N = Math.round(p.sliceN), As = (p.slice / 100) * 110, yA = -60, yB = 780;
       var h = (yB - yA) / N, out2 = [];
+      if (rec) rec.slice = { N: N, yA: yA, h: h, sh: [] };
       for (var k = 0; k < N; k++) {
         var y0 = k === 0 ? -Infinity : yA + k * h, y1 = k === N - 1 ? Infinity : yA + (k + 1) * h;
         var sh = (rnd(seedG, 100 + k) * 2 - 1) * As;
+        if (rec) rec.slice.sh[k] = sh;
         for (pi = 0; pi < polys.length; pi++) {
           var cc2 = clipBand(polys[pi], y0, y1);
           if (cc2) out2.push(cc2.map(function (q) { return [q[0] + sh, q[1]]; }));
@@ -1111,6 +1115,391 @@
     var adv2 = Math.max(1, Math.round(adv * Math.abs(p.sx / 100)));
     if (bb && bb[2] + 8 > adv2) adv2 = Math.ceil(bb[2] + 16);
     return { cs: csOfPolys(polys), adv: adv2 };
+  }
+
+  /* Каркас (скелет, перо, своя обводка, сетка) живёт в координатах построения.
+     Заливка берётся из уже искажённого getFinal. Точка каркаса проходит тот же
+     расчёт: направляющие, затем масштаб, наклон, вихрь, линза, волна, дрожь,
+     сдвиг полосы среза и общий сдвиг контура. Шипы и пиксели меняют только
+     край обводки, средняя линия остаётся в теле знака. */
+  var frameMemo = { paramKey: "", editKey: "", fr: null };
+  var framing = 0;
+  function editorS() {
+    try { return (0, eval)("S"); } catch (e) { return null; }
+  }
+  function edCh() {
+    var ES = editorS();
+    return ES && ES.sel ? ES.sel : "";
+  }
+  function editSig(ch) {
+    try {
+      var ES = editorS();
+      var ed = ES && ES.edits && ES.edits[ch];
+      return JSON.stringify(ed || null) + "|" + JSON.stringify(cur().p);
+    } catch (e) {
+      return "";
+    }
+  }
+  function plainEditorGlyph(ch) {
+    if (typeof window.getFinal !== "function") return null;
+    plainDepth++;
+    try {
+      var ES = editorS();
+      var key = (ES && ES.style) || "regular";
+      return window.getFinal(ch, key, { warp: false, slant: false, subdiv: false, rough: false });
+    } catch (e) {
+      return null;
+    } finally {
+      plainDepth--;
+    }
+  }
+  function frameFor(ch) {
+    if (framing || !distortActive() || !ch) return framing && frameMemo.fr ? frameMemo.fr : null;
+    var p = paramsForGlyph(ch);
+    if (!S.perLetter) p = Object.assign({}, p, { jit: 0 });
+    if (!paramsDiffer(p)) return null;
+    var font = typeof CUR_FONT !== "undefined" ? CUR_FONT : "";
+    var ES = editorS();
+    var style = (ES && ES.style) || "";
+    var paramKey = font + "|" + ch + "|" + style + "|" + S.seed + "|" + (S.perLetter ? 1 : 0) + "|" + JSON.stringify(p);
+    var dragging = false;
+    try { dragging = typeof drag !== "undefined" && drag && (drag.kind === "sk" || drag.kind === "cu" || drag.kind === "pn" || drag.kind === "lat"); } catch (e) {}
+    var editKey = dragging ? frameMemo.editKey : editSig(ch);
+    if (frameMemo.fr && frameMemo.paramKey === paramKey && (dragging || frameMemo.editKey === editKey)) return frameMemo.fr;
+    framing++;
+    try {
+      var g = plainEditorGlyph(ch);
+      if (!g || !g.cs || !g.cs.length) return null;
+      var polys = polysOfCs(g.cs);
+      if (!polys.length) return null;
+      var before = bbox(polys);
+      var fx = {};
+      FX.forEach(function (f) { fx[f.id] = p[f.id] !== 0; });
+      var seedG = hash(S.seed, ch.codePointAt(0) || 0);
+      var rec = {};
+      var warped = warpLetter(clone(polys), p, fx, seedG, !!S.perLetter, rec);
+      var bb = bbox(warped);
+      var shift = before && bb && bb[0] < before[0] - 1 ? before[0] - bb[0] : 0;
+      var fr = { p: p, fx: fx, seedG: seedG, jit: rec.jit || null, field: rec.field || null, slice: rec.slice || null, shift: shift };
+      frameMemo = { paramKey: paramKey, editKey: editKey, fr: fr };
+      return fr;
+    } catch (e) {
+      return null;
+    } finally {
+      framing--;
+    }
+  }
+  function fieldForward(x, y, fr) {
+    var p = fr.p;
+    var sx = p.sx / 100, sy = p.sy / 100, tn = Math.tan((-p.slant * Math.PI) / 180);
+    x *= sx;
+    y *= sy;
+    x += y * tn;
+    if (fr.jit) {
+      var ddx = x - fr.jit.cx0, ddy = y - fr.jit.cy0;
+      x = fr.jit.cx0 + ddx * fr.jit.cc - ddy * fr.jit.ss;
+      y = fr.jit.cy0 + ddx * fr.jit.ss + ddy * fr.jit.cc;
+    }
+    var F = fr.field;
+    if (!F) return [x, y];
+    var cx = F.cx, cy = F.cy, Rbase = F.Rbase, ox = F.ox, oy = F.oy, R, dx, dy, r;
+    if (fr.fx.twist) {
+      R = (Rbase * p.twistR) / 100;
+      var th = (p.twist / 100) * 1.4;
+      dx = x - cx;
+      dy = y - cy;
+      r = Math.hypot(dx, dy);
+      if (r < R) {
+        var f = 1 - r / R, aa = th * f * f, cc = Math.cos(aa), ss = Math.sin(aa);
+        x = cx + dx * cc - dy * ss;
+        y = cy + dx * ss + dy * cc;
+      }
+    }
+    if (fr.fx.lens) {
+      R = (Rbase * p.lensR) / 100;
+      var kk = (p.lens / 100) * 0.6;
+      dx = x - cx;
+      dy = y - cy;
+      r = Math.hypot(dx, dy);
+      if (r < R && r >= 1e-6) {
+        var t = r / R, ff = 1 + kk * (1 - t * t);
+        x = cx + dx * ff;
+        y = cy + dy * ff;
+      }
+    }
+    if (fr.fx.wave) {
+      var A = (p.wave / 100) * 70, Lw = p.waveL, angW = (p.waveD * Math.PI) / 180;
+      var tx = Math.cos(angW), ty = Math.sin(angW), phi = rnd(fr.seedG, 11) * 6.283;
+      var u = (x - ox) * tx + (y - oy) * ty;
+      var d = A * Math.sin(6.2832 * (u / Lw) + phi);
+      x += -ty * d;
+      y += tx * d;
+    }
+    if (fr.fx.noise) {
+      A = (p.noise / 100) * 45;
+      var Sc = p.noiseS, s1 = hash(fr.seedG, 21), s2 = hash(fr.seedG, 22);
+      var nu = (x - ox) / Sc, nv = (y - oy) / Sc;
+      x += A * vnoise(nu, nv, s1);
+      y += A * vnoise(nu, nv, s2);
+    }
+    return [x, y];
+  }
+  function sliceShift(y, sl) {
+    var N = sl.N, yA = sl.yA, h = sl.h;
+    for (var k = 0; k < N; k++) {
+      var y0 = k === 0 ? -Infinity : yA + k * h;
+      var y1 = k === N - 1 ? Infinity : yA + (k + 1) * h;
+      if (y >= y0 && y < y1) return sl.sh[k] || 0;
+    }
+    return 0;
+  }
+  function mapFont(x, y, fr) {
+    var q = fieldForward(x, y, fr);
+    x = q[0];
+    y = q[1];
+    if (fr.slice) x += sliceShift(y, fr.slice);
+    x += fr.shift || 0;
+    return [x, y];
+  }
+  function unmapFont(x, y, fr) {
+    x -= fr.shift || 0;
+    if (fr.slice) x -= sliceShift(y, fr.slice);
+    var p = fr.p;
+    var sx = p.sx / 100 || 1, sy = p.sy / 100 || 1, tn = Math.tan((-p.slant * Math.PI) / 180);
+    var px = (x - y * tn) / sx, py = y / sy;
+    for (var it = 0; it < 14; it++) {
+      var f = fieldForward(px, py, fr);
+      var ex = f[0] - x, ey = f[1] - y;
+      if (ex * ex + ey * ey < 0.04) return [px, py];
+      var eps = 0.5;
+      var fx = fieldForward(px + eps, py, fr);
+      var fy = fieldForward(px, py + eps, fr);
+      var j00 = (fx[0] - f[0]) / eps, j01 = (fy[0] - f[0]) / eps;
+      var j10 = (fx[1] - f[1]) / eps, j11 = (fy[1] - f[1]) / eps;
+      var det = j00 * j11 - j01 * j10;
+      if (Math.abs(det) < 1e-8) break;
+      var stepx = (j11 * ex - j01 * ey) / det;
+      var stepy = (-j10 * ex + j00 * ey) / det;
+      var step = Math.hypot(stepx, stepy);
+      if (step > 400) { stepx *= 400 / step; stepy *= 400 / step; }
+      px -= stepx;
+      py -= stepy;
+    }
+    return [px, py];
+  }
+  function pathBent(fr) {
+    return !!(fr && (fr.jit || fr.fx.twist || fr.fx.lens || fr.fx.wave || fr.fx.noise || fr.fx.slice));
+  }
+  function bezPoint(P, t) {
+    var u = 1 - t;
+    return [
+      u * u * u * P[0][0] + 3 * u * u * t * P[1][0] + 3 * u * t * t * P[2][0] + t * t * t * P[3][0],
+      u * u * u * P[0][1] + 3 * u * u * t * P[1][1] + 3 * u * t * t * P[2][1] + t * t * t * P[3][1],
+    ];
+  }
+  function guidePair() {
+    var g = null;
+    try { if (typeof rawGlyph === "function") g = rawGlyph(); } catch (e) {}
+    return { fx: g && g.fx, fy: g && g.fy };
+  }
+  function guideFwd(x, y, G) {
+    return [G.fx && G.fx.active ? G.fx.f(x) : x, G.fy && G.fy.active ? G.fy.f(y) : y];
+  }
+  function guideBack(x, y, G) {
+    return [G.fx && G.fx.active ? G.fx.inv(x) : x, G.fy && G.fy.active ? G.fy.inv(y) : y];
+  }
+  function hookSkeleton() {
+    if (typeof skMap === "function" && !skMap.__gtWarp) {
+      var origMap = skMap;
+      skMap = function () {
+        var base = origMap();
+        var ch = edCh();
+        var fr = frameFor(ch);
+        if (!fr || typeof toS !== "function" || typeof toW !== "function") return base;
+        return {
+          s: function (x, y) {
+            var pre = toW.apply(null, base.s(x, y));
+            var q = mapFont(pre[0], pre[1], fr);
+            return toS(q[0], q[1]);
+          },
+          inv: function (sx, sy) {
+            var font = toW(sx, sy);
+            var pre = unmapFont(font[0], font[1], fr);
+            var scr = toS(pre[0], pre[1]);
+            return base.inv(scr[0], scr[1]);
+          },
+        };
+      };
+      skMap.__gtWarp = true;
+    }
+    if (typeof skStrokePath === "function" && !skStrokePath.__gtWarp) {
+      var origStroke = skStrokePath;
+      skStrokePath = function (st, f) {
+        var fr = typeof S !== "undefined" ? frameFor(edCh()) : null;
+        if (!pathBent(fr) || !st || !st.nodes || st.nodes.length < 2 || typeof skSeg !== "function") return origStroke(st, f);
+        var P = new Path2D(), ns = st.nodes, n = ns.length, m = st.closed ? n : n - 1, first = true;
+        for (var i = 0; i < m; i++) {
+          var seg = skSeg(st, i);
+          var len = Math.hypot(seg[3][0] - seg[0][0], seg[3][1] - seg[0][1]);
+          var steps = Math.max(4, Math.min(36, Math.ceil(len / 16)));
+          for (var k = 0; k <= steps; k++) {
+            if (k === 0 && i > 0) continue;
+            var xy = bezPoint(seg, k / steps);
+            var q = f(xy[0], xy[1]);
+            if (first) { P.moveTo(q[0], q[1]); first = false; }
+            else P.lineTo(q[0], q[1]);
+          }
+        }
+        if (st.closed) P.closePath();
+        return P;
+      };
+      skStrokePath.__gtWarp = true;
+    }
+    if (typeof skDirAt === "function" && !skDirAt.__gtWarp) {
+      var origDir = skDirAt;
+      skDirAt = function (st, i, t, f) {
+        var fr = typeof S !== "undefined" ? frameFor(edCh()) : null;
+        if (!pathBent(fr) || typeof skSeg !== "function") return origDir(st, i, t, f);
+        var seg = skSeg(st, i);
+        var a = bezPoint(seg, Math.max(0, t - 0.02));
+        var b = bezPoint(seg, Math.min(1, t + 0.02));
+        var c = bezPoint(seg, t);
+        var pa = f(a[0], a[1]), pb = f(b[0], b[1]), pc = f(c[0], c[1]);
+        var dx = pb[0] - pa[0], dy = pb[1] - pa[1], l = Math.hypot(dx, dy) || 1;
+        return [pc, [dx / l, dy / l]];
+      };
+      skDirAt.__gtWarp = true;
+    }
+    if (typeof skHitSeg === "function" && !skHitSeg.__gtWarp) {
+      var origHit = skHitSeg;
+      skHitSeg = function (sx, sy) {
+        var fr = typeof S !== "undefined" ? frameFor(edCh()) : null;
+        if (!pathBent(fr) || typeof skData !== "function" || typeof skSeg !== "function") return origHit(sx, sy);
+        var d = skData();
+        if (!d) return null;
+        var f = skMap().s, best = null, bd = (typeof skR === "function" ? skR() : 11) + 2;
+        d.disp.forEach(function (st, si) {
+          if (st.dot) return;
+          var n = st.nodes.length, m = st.closed ? n : n - 1;
+          for (var i = 0; i < m; i++) {
+            var seg = skSeg(st, i);
+            for (var k = 1; k < 28; k++) {
+              var t = k / 28, xy = bezPoint(seg, t), q = f(xy[0], xy[1]);
+              var dd = Math.hypot(q[0] - sx, q[1] - sy);
+              if (dd < bd) { bd = dd; best = { si: si, i: i, t: t }; }
+            }
+          }
+        });
+        return best;
+      };
+      skHitSeg.__gtWarp = true;
+    }
+    if (typeof drawGrid === "function" && !drawGrid.__gtWarp && typeof gridPoint === "function" && typeof ffdPoint === "function") {
+      var origGrid = drawGrid;
+      drawGrid = function (c) {
+        var fr = typeof S !== "undefined" ? frameFor(edCh()) : null;
+        if (!fr) return origGrid(c);
+        var st = cur(), l = st.lat, w = V.w, acc = css("--sel");
+        var ES = editorS();
+        var U = getFinal(edCh(), (ES && ES.style) || "regular", { warp: false, slant: false, subdiv: false, rough: false });
+        if (U) {
+          var Pth = pathOf(U.cs, toS);
+          c.fillStyle = css("--glyph-fill");
+          c.fill(Pth, "nonzero");
+          c.strokeStyle = acc;
+          c.lineWidth = 1.5;
+          c.stroke(Pth);
+        }
+        var G = guidePair();
+        function mapS(x, y) {
+          var p = guideFwd(x, y, G);
+          var q = mapFont(p[0], p[1], fr);
+          return toS(q[0], q[1]);
+        }
+        c.strokeStyle = "rgba(252,71,60,.28)";
+        c.lineWidth = 1;
+        var M = 8, SEG = 24, a, k, q, s;
+        for (a = 0; a <= M; a++) {
+          c.beginPath();
+          for (k = 0; k <= SEG; k++) {
+            q = ffdPoint(l, w, a / M * w, BOX_Y0 + k / SEG * BOX_H);
+            s = mapS(q[0], q[1]);
+            if (k) c.lineTo(s[0], s[1]); else c.moveTo(s[0], s[1]);
+          }
+          c.stroke();
+          c.beginPath();
+          for (k = 0; k <= SEG; k++) {
+            q = ffdPoint(l, w, k / SEG * w, BOX_Y0 + a / M * BOX_H);
+            s = mapS(q[0], q[1]);
+            if (k) c.lineTo(s[0], s[1]); else c.moveTo(s[0], s[1]);
+          }
+          c.stroke();
+        }
+        c.strokeStyle = "rgba(0,0,0,.35)";
+        var i, j, g;
+        for (i = 0; i < LAT_N; i++) {
+          c.beginPath();
+          for (j = 0; j < LAT_N; j++) { g = gridPoint(i, j, l, w); s = mapS(g.x, g.y); if (j) c.lineTo(s[0], s[1]); else c.moveTo(s[0], s[1]); }
+          c.stroke();
+          c.beginPath();
+          for (j = 0; j < LAT_N; j++) { g = gridPoint(j, i, l, w); s = mapS(g.x, g.y); if (j) c.lineTo(s[0], s[1]); else c.moveTo(s[0], s[1]); }
+          c.stroke();
+        }
+        for (i = 0; i < LAT_N; i++) for (j = 0; j < LAT_N; j++) {
+          g = gridPoint(i, j, l, w);
+          s = mapS(g.x, g.y);
+          var on = ES.node && ES.node.lat && ES.node.i === i && ES.node.j === j;
+          var moved = Math.abs(l.dx[i][j]) > 1e-4 || Math.abs(l.dy[i][j]) > 1e-4;
+          c.fillStyle = (on || moved) ? acc : "#fff";
+          c.strokeStyle = on ? acc : "#000";
+          c.lineWidth = 1.5;
+          c.beginPath();
+          c.arc(s[0], s[1], 5, 0, 7);
+          c.fill();
+          c.stroke();
+        }
+      };
+      drawGrid.__gtWarp = true;
+    }
+    if (typeof hitGrid === "function" && !hitGrid.__gtWarp && typeof gridPoint === "function") {
+      var origGridHit = hitGrid;
+      hitGrid = function (sx, sy) {
+        var fr = typeof S !== "undefined" ? frameFor(edCh()) : null;
+        if (!fr) return origGridHit(sx, sy);
+        var l = cur().lat, best = null, bd = 13, G = guidePair();
+        for (var i = 0; i < LAT_N; i++) for (var j = 0; j < LAT_N; j++) {
+          var g = gridPoint(i, j, l, V.w);
+          var p0 = guideFwd(g.x, g.y, G);
+          var q = mapFont(p0[0], p0[1], fr);
+          var s = toS(q[0], q[1]);
+          var d = Math.hypot(s[0] - sx, s[1] - sy);
+          if (d < bd) { bd = d; best = { lat: true, i: i, j: j }; }
+        }
+        return best;
+      };
+      hitGrid.__gtWarp = true;
+    }
+    if (typeof onMove === "function" && !onMove.__gtLat) {
+      var origMove = onMove;
+      onMove = function (e) {
+        if (typeof drag !== "undefined" && drag && drag.kind === "lat") {
+          var fr = frameFor(edCh());
+          if (fr) {
+            var xy = pt(e), w = toW(xy[0], xy[1]), back = unmapFont(w[0], w[1], fr), pre = guideBack(back[0], back[1], guidePair());
+            var l = cur().lat, g = gridPoint(drag.i, drag.j, l, V.w);
+            var dx = (pre[0] - g.rx) / V.w, dy = (pre[1] - g.ry) / BOX_H;
+            if (e.shiftKey) { if (Math.abs(dx * V.w) > Math.abs(dy * BOX_H)) dy = 0; else dx = 0; }
+            l.dx[drag.i][drag.j] = Math.max(-0.12, Math.min(0.12, dx));
+            l.dy[drag.i][drag.j] = Math.max(-0.08, Math.min(0.08, dy));
+            bump();
+            syncNodeInfo();
+            return;
+          }
+        }
+        return origMove(e);
+      };
+      onMove.__gtLat = true;
+    }
   }
 
   var bakeDepth = 0;
@@ -1433,6 +1822,16 @@
         queueDraw();
         refreshView();
       },
+      fontPoint: function (x, y, ch) {
+        var fr = frameFor(ch || edCh());
+        if (!fr) return [x, y];
+        return mapFont(x, y, fr);
+      },
+      unfontPoint: function (x, y, ch) {
+        var fr = frameFor(ch || edCh());
+        if (!fr) return [x, y];
+        return unmapFont(x, y, fr);
+      },
     };
   }
 
@@ -1489,10 +1888,12 @@
     restoreLocal();
     hookProject();
     hookPanel();
+    hookSkeleton();
     var hookN = 0;
     var hookT = setInterval(function () {
       hookProject();
       hookPanel();
+      hookSkeleton();
       dockIntoParams();
       hookN += 1;
       var proj = window.projectJSON && window.projectJSON.__gtDistort && window.applyProject && window.applyProject.__gtDistort;
