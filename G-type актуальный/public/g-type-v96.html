@@ -4104,8 +4104,40 @@ __zrun('zc');__zrun('zu');
     return true;
   }
 
+  function escHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* Имя пресета пишется в <option> через innerHTML. Без экранирования короткая подпись создаёт тег и выполняет его. */
+  function guardPresetName() {
+    if (typeof window.cmpOptions !== "function" || cmpOptions.__gtEsc) return typeof window.cmpOptions === "function";
+    if (typeof window.loadPre !== "function") return false;
+    var orig = cmpOptions;
+    var read = loadPre;
+    function wrapped() {
+      window.loadPre = function () {
+        return read().map(function (it) {
+          return { name: escHtml(it.name), p: it.p };
+        });
+      };
+      try { return orig(); }
+      finally { window.loadPre = read; }
+    }
+    wrapped.__gtEsc = true;
+    window.cmpOptions = wrapped;
+    return true;
+  }
+
   function boot() {
     ensureStyles();
+    if (!guardPresetName()) {
+      var tries = 0;
+      var timer = setInterval(function () {
+        if (guardPresetName() || ++tries > 40) clearInterval(timer);
+      }, 50);
+    }
     if (migrateAxes()) return;
     var obs = new MutationObserver(function () {
       if (migrateAxes()) obs.disconnect();
