@@ -10,7 +10,7 @@
 </style>
 </head>
 <body>
-<iframe id="app" src="/g-type-v96.html" title="G-type"></iframe>
+<iframe id="app" src="/g-type-v96.html?distort=2" title="G-type"></iframe>
 <script>
 (function () {
   var frame = document.getElementById("app");
@@ -99,6 +99,13 @@
       dest.style.width = canvas.offsetWidth + "px";
       dest.style.height = canvas.offsetHeight + "px";
     }
+    function placeBox(dest, box) {
+      if (!dest || !box) return;
+      dest.style.left = "0px";
+      dest.style.top = "0px";
+      dest.style.width = box.clientWidth + "px";
+      dest.style.height = box.clientHeight + "px";
+    }
     function park() {
       var view = d.getElementById("view-distort");
       var cvw = d.getElementById("dst-cvw");
@@ -150,14 +157,10 @@
       var dy = (hpx - dh) / 2;
       ctx.drawImage(src, box.x, box.y, box.w, box.h, dx, dy, dw, dh);
     }
-    function sampleTransform() {
-      var slantEl = d.getElementById("dst-r-slant");
-      var sxEl = d.getElementById("dst-r-sx");
-      var syEl = d.getElementById("dst-r-sy");
-      var slant = slantEl ? +slantEl.value : 0;
-      var sx = sxEl ? +sxEl.value / 100 : 1;
-      var sy = syEl ? +syEl.value / 100 : 1;
-      return "skewX(" + (-slant) + "deg) scale(" + sx + "," + sy + ")";
+    function currentChar() {
+      var name = d.getElementById("gname");
+      var t = name && name.textContent ? name.textContent.trim() : "";
+      return t || "Ж";
     }
     function paint() {
       showArt();
@@ -165,40 +168,52 @@
       var spec = d.getElementById("spec");
       var stage = d.getElementById("stage");
       var txt = d.getElementById("txt");
-      place(specOver, spec);
+      placeBox(specOver, d.getElementById("specbox"));
       place(glyphOver, stage);
-      if (specOver) specOver.hidden = true;
+      if (specOver) specOver.hidden = off;
       if (glyphOver) glyphOver.hidden = off;
       if (spec) {
-        spec.style.visibility = "";
-        spec.style.transformOrigin = "0% 70%";
-        spec.style.transform = off ? "" : sampleTransform();
+        spec.style.transform = "";
+        spec.style.visibility = off ? "" : "hidden";
       }
       if (txt) {
-        txt.style.color = "";
-        txt.style.transformOrigin = "0% 70%";
-        txt.style.transform = off ? "" : sampleTransform();
+        txt.style.transform = "";
+        txt.style.color = off ? "" : "transparent";
       }
       if (stage) stage.style.visibility = off ? "" : "hidden";
       if (off || busy) { again = !off; return; }
       busy = true;
       var cv = d.getElementById("dst-cv");
       var apply = d.getElementById("dst-apply");
-      var ch = (w.S && w.S.sel) || "Ж";
-      place(glyphOver, stage);
-      park();
-      if (txt) txt.value = ch;
-      if (apply) { skipApply = true; apply.click(); skipApply = false; }
-      setTimeout(function () {
-        copy(cv, glyphOver, "glyph");
-        if (txt) txt.value = savedSample;
-        busy = false;
-        if (again) { again = false; paint(); }
-      }, 180);
+      var line = (savedSample || "ЖЕЛЕЗО").split("\n")[0].slice(0, 24);
+      function shot(text, target, canvas, mode, next) {
+        if (mode === "line") placeBox(target, d.getElementById("specbox"));
+        else place(target, canvas);
+        park();
+        if (txt) txt.value = text;
+        if (apply) { skipApply = true; apply.click(); skipApply = false; }
+        setTimeout(function () {
+          copy(cv, target, mode);
+          next();
+        }, 280);
+      }
+      shot(line, specOver, spec, "line", function () {
+        shot(currentChar(), glyphOver, stage, "glyph", function () {
+          if (txt) txt.value = savedSample;
+          busy = false;
+          if (again) { again = false; paint(); }
+        });
+      });
     }
 
     side.addEventListener("input", paint);
     side.addEventListener("change", paint);
+    var sampleBox = d.getElementById("txt");
+    if (sampleBox) sampleBox.addEventListener("input", function () {
+      if (skipApply) return;
+      savedSample = sampleBox.value;
+      paint();
+    });
     var applyBtn = d.getElementById("dst-apply");
     if (applyBtn) applyBtn.addEventListener("click", function () { if (!skipApply) setTimeout(paint, 180); });
     showArt();

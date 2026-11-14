@@ -4673,6 +4673,86 @@ __zrun('zc');__zrun('zu');
       S.p[id] = v;
     }
     queueDraw();
+    scheduleSave();
+  }
+
+  var saveTmr = 0;
+  var LS_KEY = "gtype-distort-v1";
+  function snapshot() {
+    return {
+      p: JSON.parse(JSON.stringify(S.p)),
+      perLetter: !!S.perLetter,
+      letterP: JSON.parse(JSON.stringify(S.letterP || {})),
+      seed: S.seed,
+      variants: !!S.variants,
+      selCh: S.selCh || "",
+    };
+  }
+  function applySnap(o) {
+    if (!o || !o.p || typeof o.p !== "object") return;
+    ALLP.forEach(function (def) {
+      var v = o.p[def.id];
+      if (typeof v !== "number" || !isFinite(v)) return;
+      S.p[def.id] = Math.max(def.min, Math.min(def.max, Math.round(v)));
+    });
+    S.perLetter = !!o.perLetter;
+    S.letterP = {};
+    if (o.letterP && typeof o.letterP === "object") {
+      Object.keys(o.letterP).forEach(function (ch) {
+        if (!ch || ch.length > 2 || typeof o.letterP[ch] !== "object") return;
+        var bag = {};
+        ALLP.forEach(function (def) {
+          var v = o.letterP[ch][def.id];
+          if (typeof v === "number" && isFinite(v)) bag[def.id] = Math.max(def.min, Math.min(def.max, Math.round(v)));
+        });
+        S.letterP[ch] = bag;
+      });
+    }
+    if (typeof o.seed === "number" && isFinite(o.seed)) S.seed = o.seed | 0;
+    S.variants = !!o.variants;
+    if (typeof o.selCh === "string") S.selCh = o.selCh.slice(0, 2);
+    syncSliders();
+    if (ui.swPer) ui.swPer.checked = S.perLetter;
+    if (ui.swVar) ui.swVar.checked = S.variants;
+    refreshLetters();
+    queueDraw();
+  }
+  function scheduleSave() {
+    clearTimeout(saveTmr);
+    saveTmr = setTimeout(function () {
+      try { localStorage.setItem(LS_KEY, JSON.stringify(snapshot())); } catch (e) {}
+    }, 200);
+  }
+  function restoreLocal() {
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (raw) applySnap(JSON.parse(raw));
+    } catch (e) {}
+  }
+  function hookProject() {
+    if (typeof window.projectJSON === "function" && !window.projectJSON.__gtDistort) {
+      var orig = window.projectJSON;
+      var fn = function () {
+        var o = orig.apply(this, arguments);
+        if (o && typeof o === "object") o.distort = snapshot();
+        return o;
+      };
+      fn.__gtDistort = true;
+      window.projectJSON = fn;
+    }
+    if (typeof window.applyProject === "function" && !window.applyProject.__gtDistort) {
+      var origA = window.applyProject;
+      var fa = function (pr) {
+        var ok = origA.apply(this, arguments);
+        if (pr && pr.distort) {
+          applySnap(pr.distort);
+          scheduleSave();
+        }
+        return ok;
+      };
+      fa.__gtDistort = true;
+      window.applyProject = fa;
+    }
   }
 
   function refreshLetters() {
@@ -4830,6 +4910,7 @@ __zrun('zc');__zrun('zu');
 
     ui.swPer.addEventListener("change", function () {
       S.perLetter = ui.swPer.checked;
+      scheduleSave();
       if (S.perLetter && !S.selCh) {
         var t = S.text.replace(/\s/g, "");
         S.selCh = t[0] || "";
@@ -4840,6 +4921,7 @@ __zrun('zc');__zrun('zu');
 
     ui.swVar.addEventListener("change", function () {
       S.variants = ui.swVar.checked;
+      scheduleSave();
       if (S.variants) {
         S.variantSeed = S.seed;
         renderVariants();
@@ -5223,10 +5305,14 @@ __zrun('zc');__zrun('zu');
     window.__GT_DISTORT_API = {
       active: distortActive,
       params: function () { return JSON.parse(JSON.stringify(S.p)); },
+      snapshot: snapshot,
       set: function (partial, flags) {
         Object.assign(S.p, partial || {});
         if (flags && typeof flags.perLetter === "boolean") S.perLetter = flags.perLetter;
+        if (flags && flags.letterP && typeof flags.letterP === "object") S.letterP = flags.letterP;
         syncSliders();
+        scheduleSave();
+        queueDraw();
       },
     };
   }
@@ -5261,6 +5347,14 @@ __zrun('zc');__zrun('zu');
     buildPanel();
     loadOut();
     installBake();
+    restoreLocal();
+    hookProject();
+    var hookN = 0;
+    var hookT = setInterval(function () {
+      hookProject();
+      hookN += 1;
+      if ((window.projectJSON && window.projectJSON.__gtDistort && window.applyProject && window.applyProject.__gtDistort) || hookN > 40) clearInterval(hookT);
+    }, 250);
     placeBtn();
     var obs = new MutationObserver(function () {
       placeBtn();
