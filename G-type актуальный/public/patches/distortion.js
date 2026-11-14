@@ -1,4 +1,4 @@
-/* Инструмент рейла «Искажение» — этап 1 (математика из proto/iskazhenie.html). */
+/* «Искажение» в ящике настроек. Математика знака из proto/iskazhenie.html. */
 (function () {
   "use strict";
   if (window.__GT_DISTORT_PATCH__) return;
