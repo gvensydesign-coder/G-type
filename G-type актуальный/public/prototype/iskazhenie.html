@@ -4,237 +4,222 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Прототип: Искажение в настройках</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
 <style>
-  :root{
-    --ink:#0b0b0c;--text:#0b0b0c;--text-2:#5c5c66;--text-3:#8a8a93;
-    --bg:#f4f4f5;--surface:#fff;--surface-2:#f4f4f5;--surface-3:#ececee;
-    --line:#e4e4e7;--canvas:#f7f7f8;
-    --rail:#1c1c1e;--on-rail:#fff;--rail-hi:#fff;
-    --accent-press:#DE3931;
-    --r-lg:16px;--r-md:12px;--r-pill:999px;
-    --sh-1:0 1px 2px rgba(11,11,12,.06),0 8px 24px rgba(11,11,12,.04);
-    --h-sm:28px;--h-md:34px;--h-lg:42px;
-    --fs-sm:12px;--fs-md:13px;--fs-lg:16px;
-    --f:Onest,system-ui,sans-serif;
-    --i-caret:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9h12l-6 8z' fill='black' stroke='black' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E");
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:#e7e7ea;color:var(--ink);font:400 14px/1.45 var(--f)}
-  button,input{font:inherit;color:inherit}
-  .agree{display:flex;gap:8px;align-items:center;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-  .agree b{font-weight:700;margin-right:8px}
-  .agree span{color:var(--text-2);font-size:var(--fs-md);flex:1}
-  .agree button{height:var(--h-md);padding:0 12px;border:0;border-radius:var(--r-pill);background:var(--surface-2);cursor:pointer;font-weight:600;font-size:var(--fs-sm)}
-  .agree button.on{background:var(--ink);color:#fff}
-  .app{display:grid;grid-template-columns:72px minmax(0,1fr);min-height:calc(100vh - 54px);background:var(--bg)}
-  .rail{background:transparent;padding:12px 0;display:flex;flex-direction:column;align-items:center;gap:8px}
-  .pill{width:52px;background:var(--rail);border-radius:26px;padding:8px 0;display:flex;flex-direction:column;align-items:center;gap:4px}
-  .rb{width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:var(--on-rail);display:grid;place-items:center;cursor:pointer}
-  .rb.on{background:var(--rail-hi);color:var(--ink)}
-  .work{display:grid;grid-template-rows:auto minmax(0,1fr);min-width:0}
-  .top{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
-  .modes{display:flex;gap:6px;flex:none}
-  .modes button{height:var(--h-md);padding:0 12px;border:0;border-radius:var(--r-pill);background:var(--surface);box-shadow:var(--sh-1);cursor:pointer;font-weight:600;font-size:var(--fs-sm)}
-  .modes button.on{background:var(--ink);color:#fff}
-  .sample-label{font-size:var(--fs-sm);color:var(--text-2);font-weight:600}
-  .sample{font-weight:800;font-size:34px;letter-spacing:-.03em;line-height:1;transform-origin:0 70%;white-space:nowrap}
-  .body{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:12px;padding:8px 16px 16px;min-height:0}
-  .pcard{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--sh-1);padding:8px 16px 16px;overflow:auto;min-height:0}
-  .pcard h2{margin:8px 0 10px;font-size:20px;font-weight:700}
-  .search{display:flex;align-items:center;height:var(--h-lg);padding:0 12px;border-radius:var(--r-pill);background:var(--surface-2);color:var(--text-3);font-size:var(--fs-md);margin-bottom:8px}
-  .chk{display:flex;align-items:center;gap:8px;font-size:var(--fs-md);margin:6px 0 8px}
-  .pane{border-top:1px solid var(--line)}
-  .pane-h{display:flex;align-items:center;gap:8px;width:100%;min-height:var(--h-lg);padding:0;border:0;background:none;cursor:pointer;font-weight:600;font-size:var(--fs-md);text-align:left}
-  .pane-h:hover{background:var(--surface-3)}
-  .pane-t{flex:1}
-  .pane-m{color:var(--text-2);font-weight:500;font-size:var(--fs-sm)}
-  .pane-chev{width:12px;height:12px;background:var(--text-3);-webkit-mask:var(--i-caret) center/contain no-repeat;mask:var(--i-caret) center/contain no-repeat}
-  .pane-h[aria-expanded="true"] .pane-chev{transform:scaleY(-1)}
-  .pane.shut .pane-b{display:none}
-  .pane-b{padding:4px 0 14px}
-  .art{width:min(168px,70%);aspect-ratio:1303/1416;margin:4px auto 10px;background:url("../art/distort.webp") center/contain no-repeat}
-  .note{margin:0 0 10px;color:var(--text-2);font-size:var(--fs-md);line-height:1.45}
-  .fx{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-  .chip{height:var(--h-sm);padding:0 10px;border:0;border-radius:var(--r-pill);background:var(--surface-2);cursor:pointer;font-size:var(--fs-sm)}
-  .chip.on{background:var(--ink);color:#fff}
-  .ctl{display:flex;flex-direction:column;gap:2px;margin:8px 0}
-  .ctl label{display:flex;justify-content:space-between;font-size:var(--fs-md)}
-  .ctl output{color:var(--text-2);font-variant-numeric:tabular-nums}
-  .ctl input[type=range]{width:100%;accent-color:var(--ink)}
-  .klink{display:inline-flex;align-items:center;height:var(--h-sm);padding:0 12px;border-radius:var(--r-pill);background:var(--surface-2);font-weight:600;font-size:var(--fs-sm);text-decoration:none;color:var(--ink);margin-top:8px}
-  .stage{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--sh-1);position:relative;min-height:520px;overflow:hidden}
-  .stage .glyph{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:280px;line-height:1;letter-spacing:-.04em;transform-origin:50% 60%}
-  .proofgrid{position:absolute;inset:24px;display:none;grid-template-columns:repeat(6,1fr);gap:8px;align-content:start}
-  .proofgrid i{display:grid;place-items:center;height:72px;background:var(--canvas);border-radius:8px;font-weight:700;font-size:28px;font-style:normal}
-  .tool[data-tool="proof"] .glyph{display:none}
-  .tool[data-tool="proof"] .proofgrid{display:grid}
-  .dock{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:6px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-pill);box-shadow:var(--sh-1)}
-  .dock b{min-width:34px;height:34px;display:grid;place-items:center;font-size:18px}
-  .dock button{height:34px;padding:0 10px;border:0;border-radius:var(--r-pill);background:transparent;cursor:pointer;font-size:var(--fs-sm);font-weight:600}
-  .dock button.on{background:var(--ink);color:#fff}
-  .caption{margin:0;padding:0 16px 16px;color:var(--text-2);font-size:var(--fs-md)}
-  @media (max-width:800px){
-    .app{grid-template-columns:1fr}
-    .rail{display:none}
-    .body{grid-template-columns:1fr}
-    .sample{font-size:26px}
-    .stage{min-height:280px}
-    .stage .glyph{font-size:160px}
-  }
+  html,body{margin:0;height:100%;background:#efeff1}
+  iframe{border:0;width:100%;height:100%;display:block}
 </style>
 </head>
 <body>
-<div class="agree">
-  <b>Прототип на согласование</b>
-  <span>В сервис ещё не встроено. Секция стоит в настройках, картинка только пока эффекта нет.</span>
-  <button type="button" id="s-shut" class="on">Закрыт</button>
-  <button type="button" id="s-empty">Пустой</button>
-  <button type="button" id="s-on">Эффект включён</button>
-</div>
-<div class="app">
-  <aside class="rail" aria-label="Рейл">
-    <div class="pill">
-      <button class="rb" type="button" aria-label="Главная"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z"/></svg></button>
-      <button class="rb on" type="button" aria-label="Редактор"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M5 19l4-1 10-10-3-3L6 15z"/></svg></button>
-      <button class="rb" type="button" aria-label="Избранное"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 19s-7-4.4-7-9a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 4.6-7 9-7 9z"/></svg></button>
-      <button class="rb" type="button" aria-label="Сообщество"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="9" cy="9" r="3"/><circle cx="16" cy="10" r="2.5"/><path d="M4 19c1-3 3-4 5-4s4 1 5 4M14 19c.4-2 1.6-3 3-3 1 0 2 .4 3 1.5"/></svg></button>
-    </div>
-  </aside>
-  <div class="work">
-    <header class="top">
-      <div class="modes" role="tablist" aria-label="Инструмент">
-        <button type="button" class="on" data-tool="edit">Редактор</button>
-        <button type="button" data-tool="proof">Проверка</button>
-        <button type="button" data-tool="kern">Кернинг</button>
-        <button type="button" data-tool="draw">Холст</button>
-      </div>
-      <div>
-        <div class="sample-label">Образец</div>
-        <div class="sample" id="sample">ЖЕЛЕЗО НОЧИ</div>
-      </div>
-    </header>
-    <div class="body">
-      <section class="pcard" aria-label="Настройки">
-        <h2>Настройки</h2>
-        <div class="search">Найти параметр</div>
-        <label class="chk"><input type="checkbox" checked disabled> Показывать пояснения</label>
-        <div class="pane shut"><button class="pane-h" type="button" aria-expanded="false"><span class="pane-t">Пресеты</span><i class="pane-chev"></i></button></div>
-        <div class="pane shut"><button class="pane-h" type="button" aria-expanded="false"><span class="pane-t">Знак</span><i class="pane-chev"></i></button></div>
-        <div class="pane shut"><button class="pane-h" type="button" aria-expanded="false"><span class="pane-t">Пропорции</span><i class="pane-chev"></i></button></div>
-        <div class="pane shut"><button class="pane-h" type="button" aria-expanded="false"><span class="pane-t">Штрихи</span><i class="pane-chev"></i></button></div>
-        <div class="pane shut"><button class="pane-h" type="button" aria-expanded="false"><span class="pane-t">Форма</span><i class="pane-chev"></i></button></div>
-        <div class="pane shut"><button class="pane-h" type="button" aria-expanded="false"><span class="pane-t">Конструкция</span><i class="pane-chev"></i></button></div>
-        <div class="pane shut"><button class="pane-h" type="button" aria-expanded="false"><span class="pane-t">Наклон и ритм</span><i class="pane-chev"></i></button></div>
-        <div class="pane shut" id="dst">
-          <button class="pane-h" type="button" id="dst-h" aria-expanded="false" aria-controls="dst-b">
-            <span class="pane-t">Искажение</span><span class="pane-m" id="dst-m" hidden>вкл</span><i class="pane-chev"></i>
-          </button>
-          <div class="pane-b" id="dst-b">
-            <div class="art" id="dst-art" aria-hidden="true"></div>
-            <p class="note" id="dst-note">Эффекта нет. Сдвиньте ползунок: изменятся и знак, и образец сверху.</p>
-            <div class="fx" role="group" aria-label="Эффект">
-              <button type="button" class="chip on" data-fx="slant">Наклон</button>
-              <button type="button" class="chip" data-fx="wave">Волна</button>
-              <button type="button" class="chip" data-fx="lens">Линза</button>
-            </div>
-            <div class="ctl">
-              <label for="slant">Наклон <output id="slant-o">0°</output></label>
-              <input id="slant" type="range" min="-25" max="25" value="0">
-            </div>
-            <div class="ctl">
-              <label for="wave">Волна <output id="wave-o">0</output></label>
-              <input id="wave" type="range" min="0" max="100" value="0">
-            </div>
-          </div>
-        </div>
-        <a class="klink" href="#kern">Кернинг пар…</a>
-      </section>
-      <section class="stage tool" id="stage" data-tool="edit" aria-label="Холст">
-        <div class="glyph" id="glyph">Ж</div>
-        <div class="proofgrid" id="grid" aria-hidden="true"></div>
-        <div class="dock">
-          <b id="gname">Ж</b>
-          <button type="button" class="on">Точки</button>
-          <button type="button">Сетка</button>
-          <button type="button">Скелет</button>
-        </div>
-      </section>
-    </div>
-    <p class="caption" id="cap">Секция закрыта и стоит между «Наклон и ритм» и «Кернинг пар…». Картинки в рабочей области нет.</p>
-  </div>
-</div>
+<iframe id="app" src="/g-type-v96.html" title="G-type"></iframe>
 <script>
 (function () {
-  var pane = document.getElementById("dst");
-  var head = document.getElementById("dst-h");
-  var art = document.getElementById("dst-art");
-  var note = document.getElementById("dst-note");
-  var mark = document.getElementById("dst-m");
-  var slant = document.getElementById("slant");
-  var wave = document.getElementById("wave");
-  var sample = document.getElementById("sample");
-  var glyph = document.getElementById("glyph");
-  var grid = document.getElementById("grid");
-  var stage = document.getElementById("stage");
-  var cap = document.getElementById("cap");
-  var letters = "ЖЕЛЕЗОНОЧИАа".split("");
-  grid.innerHTML = letters.map(function (ch) { return "<i>" + ch + "</i>"; }).join("");
+  var frame = document.getElementById("app");
+  frame.addEventListener("load", function () { boot(frame.contentWindow, frame.contentDocument); });
 
-  function open(on) {
-    pane.classList.toggle("shut", !on);
-    head.setAttribute("aria-expanded", on ? "true" : "false");
+  function boot(w, d) {
+    var tries = 0;
+    var timer = setInterval(function () {
+      tries += 1;
+      if (tries > 80) { clearInterval(timer); return; }
+      if (!w.setTab || !w.dwOpen || !d.getElementById("view-distort") || !d.getElementById("rb-distort") || !d.querySelector("#params .grp")) return;
+      clearInterval(timer);
+      var skip = d.getElementById("onb-skip");
+      if (skip && d.getElementById("onb") && !d.getElementById("onb").hidden) skip.click();
+      if (w.S && w.S.tab !== "edit") w.setTab("edit");
+      w.dwOpen("edit", "params");
+      setTimeout(function () { mount(w, d); }, 400);
+    }, 150);
   }
-  head.addEventListener("click", function () { open(pane.classList.contains("shut")); paint(); });
 
-  function active() { return +slant.value !== 0 || +wave.value !== 0; }
+  function mount(w, d) {
+    if (d.getElementById("gt-dst-grp")) return;
+    var params = d.getElementById("params");
+    var side = d.querySelector("#view-distort .dst-side");
+    if (!params || !side) return;
 
-  function paint() {
-    var a = active();
-    var opened = !pane.classList.contains("shut");
-    art.hidden = !(opened && !a);
-    art.style.display = opened && !a ? "block" : "none";
-    mark.hidden = !a;
-    note.textContent = a
-      ? "Эффект пишется в знак на холсте и в образец сверху. Картинка спрятана, пока эффект включён."
-      : "Эффекта нет. Сдвиньте ползунок: изменятся и знак, и образец сверху.";
-    document.getElementById("slant-o").textContent = slant.value + "°";
-    document.getElementById("wave-o").textContent = wave.value;
-    var sk = "skewX(" + (-slant.value) + "deg) scaleY(" + (1 - wave.value / 400) + ")";
-    sample.style.transform = sk;
-    glyph.style.transform = sk;
-    grid.querySelectorAll("i").forEach(function (el) { el.style.transform = sk; });
-    var bits = [];
-    if (+slant.value) bits.push("наклон " + slant.value + "°");
-    if (+wave.value) bits.push("волна " + wave.value);
-    cap.textContent = !opened
-      ? "Секция закрыта и стоит между «Наклон и ритм» и «Кернинг пар…». Картинки в рабочей области нет."
-      : (a
-        ? "Эффект включён (" + bits.join(", ") + "). Образец и знак сдвигаются одинаково, картинка скрыта."
-        : "Секция открыта, эффекта нет: внутри неё картинка. Образец и знак прямые.");
-    document.getElementById("s-shut").classList.toggle("on", !opened);
-    document.getElementById("s-empty").classList.toggle("on", opened && !a);
-    document.getElementById("s-on").classList.toggle("on", opened && a);
+    var css = d.createElement("style");
+    css.id = "gt-dst-proto";
+    css.textContent =
+      "#rb-distort{display:none!important}" +
+      "#view-distort{position:fixed!important;left:-4000px!important;top:0!important;width:960px;height:480px;display:grid!important;visibility:hidden!important;pointer-events:none!important}" +
+      "#gt-dst-grp.shut .gt-dst-body{display:none!important}" +
+      "#gt-dst-grp .dst-h{display:none}" +
+      "#gt-dst-grp .dst-side{display:flex;flex-direction:column;gap:12px;padding:4px 0 12px;background:transparent;box-shadow:none}" +
+      "#gt-dst-grp .dst-art{width:min(168px,70%);aspect-ratio:1303/1416;align-self:center;background:url(\"/art/distort.webp\") center/contain no-repeat}" +
+      "#gt-dst-grp .dst-fx{display:flex;flex-wrap:wrap;gap:6px}" +
+      "#gt-dst-grp .dst-sec{display:flex;flex-direction:column;gap:8px}" +
+      "#gt-dst-grp .dst-sec h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-2)}" +
+      "#gt-dst-grp .dst-sw{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}" +
+      "#gt-dst-grp .dst-sw input{accent-color:var(--ink)}" +
+      "#gt-dst-grp .dst-ctl{display:flex;flex-direction:column;gap:2px}" +
+      "#gt-dst-grp .dst-ctl label{display:flex;justify-content:space-between;gap:8px;font-size:13px}" +
+      "#gt-dst-grp .dst-ctl output{font-variant-numeric:tabular-nums;color:var(--text-2)}" +
+      "#gt-dst-grp .dst-ctl input[type=range]{width:100%;accent-color:var(--ink)}" +
+      "#gt-dst-grp .dst-sub{margin-left:12px;padding-left:12px;border-left:2px solid var(--line)}" +
+      "#gt-dst-grp .dst-vars{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}" +
+      "#gt-dst-grp .dst-vars canvas{width:100%;background:var(--canvas);border-radius:8px;box-shadow:inset 0 0 0 1px var(--line)}" +
+      "#gt-dst-grp .btn.pri-accent{align-self:flex-start;background:var(--accent-press);color:#fff}" +
+      "#gt-spec-over,#gt-glyph-over{position:absolute;pointer-events:none;z-index:3}" +
+      "#stagebox,#specbox{position:relative}";
+    d.head.appendChild(css);
+
+    var grp = d.createElement("div");
+    grp.className = "grp shut";
+    grp.id = "gt-dst-grp";
+    grp.innerHTML = '<h5>Искажение</h5><div class="gt-dst-body"></div>';
+    params.appendChild(grp);
+    grp.querySelector(".gt-dst-body").appendChild(side);
+
+    var btn = d.getElementById("rb-distort");
+    if (btn && btn.getAttribute("aria-pressed") !== "true") btn.click();
+    var edit = d.getElementById("view-edit");
+    if (edit) edit.hidden = false;
+    var view = d.getElementById("view-distort");
+    if (view) view.hidden = false;
+
+    var specOver = over(d, d.getElementById("spec"), "gt-spec-over");
+    var glyphOver = over(d, d.getElementById("stage"), "gt-glyph-over");
+    var art = side.querySelector(".dst-art");
+    var busy = false;
+    var again = false;
+    var skipApply = false;
+    var savedSample = (d.getElementById("txt") && d.getElementById("txt").value) || "ЖЕЛЕЗО НОЧИ";
+
+    function idle() {
+      return !(w.__GT_DISTORT_API && w.__GT_DISTORT_API.active && w.__GT_DISTORT_API.active());
+    }
+    function showArt() {
+      if (!art) return;
+      art.style.display = idle() ? "" : "none";
+    }
+    function place(dest, canvas) {
+      if (!dest || !canvas) return;
+      dest.style.left = canvas.offsetLeft + "px";
+      dest.style.top = canvas.offsetTop + "px";
+      dest.style.width = canvas.offsetWidth + "px";
+      dest.style.height = canvas.offsetHeight + "px";
+    }
+    function park() {
+      var view = d.getElementById("view-distort");
+      var cvw = d.getElementById("dst-cvw");
+      if (!view) return;
+      view.style.width = "880px";
+      view.style.height = "420px";
+      view.style.gridTemplateColumns = "1fr";
+      if (cvw) {
+        cvw.style.width = "880px";
+        cvw.style.height = "380px";
+        cvw.style.flex = "none";
+      }
+    }
+    function inkBox(src) {
+      var c = src.getContext("2d");
+      var im = c.getImageData(0, 0, src.width, src.height).data;
+      var minX = src.width, minY = src.height, maxX = 0, maxY = 0, any = false, x, y, a;
+      for (y = 0; y < src.height; y += 2) {
+        for (x = 0; x < src.width; x += 2) {
+          a = im[(y * src.width + x) * 4 + 3];
+          if (a > 24) {
+            any = true;
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (!any) return null;
+      return { x: minX, y: minY, w: Math.max(1, maxX - minX), h: Math.max(1, maxY - minY) };
+    }
+    function copy(src, dest, mode) {
+      if (!src || !dest) return;
+      var ratio = Math.min(2, w.devicePixelRatio || 1);
+      var wpx = Math.max(2, Math.round(dest.offsetWidth * ratio));
+      var hpx = Math.max(2, Math.round(dest.offsetHeight * ratio));
+      dest.width = wpx;
+      dest.height = hpx;
+      var ctx = dest.getContext("2d");
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, wpx, hpx);
+      var box = src.width && src.height ? inkBox(src) : null;
+      if (!box) return;
+      var pad = mode === "line" ? hpx * 0.08 : Math.min(wpx, hpx) * 0.08;
+      var sc = Math.min((wpx - pad * 2) / box.w, (hpx - pad * 2) / box.h);
+      var dw = box.w * sc, dh = box.h * sc;
+      var dx = mode === "line" ? pad : (wpx - dw) / 2;
+      var dy = (hpx - dh) / 2;
+      ctx.drawImage(src, box.x, box.y, box.w, box.h, dx, dy, dw, dh);
+    }
+    function sampleTransform() {
+      var slantEl = d.getElementById("dst-r-slant");
+      var sxEl = d.getElementById("dst-r-sx");
+      var syEl = d.getElementById("dst-r-sy");
+      var slant = slantEl ? +slantEl.value : 0;
+      var sx = sxEl ? +sxEl.value / 100 : 1;
+      var sy = syEl ? +syEl.value / 100 : 1;
+      return "skewX(" + (-slant) + "deg) scale(" + sx + "," + sy + ")";
+    }
+    function paint() {
+      showArt();
+      var off = idle();
+      var spec = d.getElementById("spec");
+      var stage = d.getElementById("stage");
+      var txt = d.getElementById("txt");
+      place(specOver, spec);
+      place(glyphOver, stage);
+      if (specOver) specOver.hidden = true;
+      if (glyphOver) glyphOver.hidden = off;
+      if (spec) {
+        spec.style.visibility = "";
+        spec.style.transformOrigin = "0% 70%";
+        spec.style.transform = off ? "" : sampleTransform();
+      }
+      if (txt) {
+        txt.style.color = "";
+        txt.style.transformOrigin = "0% 70%";
+        txt.style.transform = off ? "" : sampleTransform();
+      }
+      if (stage) stage.style.visibility = off ? "" : "hidden";
+      if (off || busy) { again = !off; return; }
+      busy = true;
+      var cv = d.getElementById("dst-cv");
+      var apply = d.getElementById("dst-apply");
+      var ch = (w.S && w.S.sel) || "Ж";
+      place(glyphOver, stage);
+      park();
+      if (txt) txt.value = ch;
+      if (apply) { skipApply = true; apply.click(); skipApply = false; }
+      setTimeout(function () {
+        copy(cv, glyphOver, "glyph");
+        if (txt) txt.value = savedSample;
+        busy = false;
+        if (again) { again = false; paint(); }
+      }, 180);
+    }
+
+    side.addEventListener("input", paint);
+    side.addEventListener("change", paint);
+    var applyBtn = d.getElementById("dst-apply");
+    if (applyBtn) applyBtn.addEventListener("click", function () { if (!skipApply) setTimeout(paint, 180); });
+    showArt();
+    if (applyBtn) applyBtn.click();
+    setTimeout(function () {
+      if (grp.classList.contains("shut")) {
+        var h = grp.querySelector("h5");
+        if (h) h.click();
+      }
+    }, 200);
   }
-  slant.addEventListener("input", function () { open(true); paint(); });
-  wave.addEventListener("input", function () { open(true); paint(); });
-  document.getElementById("s-shut").onclick = function () { open(false); paint(); };
-  document.getElementById("s-empty").onclick = function () { slant.value = 0; wave.value = 0; open(true); paint(); };
-  document.getElementById("s-on").onclick = function () { slant.value = 12; wave.value = 0; open(true); paint(); };
-  document.querySelectorAll(".modes button").forEach(function (b) {
-    b.addEventListener("click", function () {
-      document.querySelectorAll(".modes button").forEach(function (x) { x.classList.toggle("on", x === b); });
-      stage.dataset.tool = b.dataset.tool;
-      document.getElementById("gname").textContent = b.dataset.tool === "proof" ? "Аа" : "Ж";
-    });
-  });
-  document.querySelectorAll(".chip").forEach(function (c) {
-    c.addEventListener("click", function () {
-      document.querySelectorAll(".chip").forEach(function (x) { x.classList.toggle("on", x === c); });
-    });
-  });
-  paint();
+
+  function over(d, canvas, id) {
+    if (!canvas || !canvas.parentElement) return null;
+    var c = d.createElement("canvas");
+    c.id = id;
+    c.hidden = true;
+    c.setAttribute("aria-hidden", "true");
+    canvas.parentElement.appendChild(c);
+    return c;
+  }
 })();
 </script>
 </body>
