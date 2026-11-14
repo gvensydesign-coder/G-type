@@ -1,0 +1,31 @@
+<!-- @dsCard group="Поверхности" height=330 -->
+<!doctype html>
+<html lang="ru">
+<head>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/design-system/tokens.css">
+<link rel="stylesheet" href="/design-system/components/bundle.css">
+<link rel="stylesheet" href="/design-system/later.css">
+<script>const q=new URLSearchParams(location.search).get("theme"); if(q==="dark"||q==="light") document.documentElement.dataset.theme=q;</script>
+
+<meta charset="utf-8">
+<title>Pane — превью</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;padding:16px;background:var(--bg);color:var(--ink);font:400 var(--fs-base)/var(--lh) var(--f-ui);-webkit-font-smoothing:antialiased}
+.row{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center}
+.row+.row,.cap+.row,.row+.cap{margin-top:var(--s3)}
+.cap{margin:0 0 var(--s2);font:var(--fw-sb) var(--fs-xs)/1.2 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.row+.cap,.stack+.cap{margin-top:var(--s5)}
+.stack{display:grid;gap:var(--s3);max-width:420px}
+.pw{max-width:360px}</style>
+</head>
+<body>
+<div class="pw"><section class="pane"><button class="pane-h" type="button" aria-expanded="true"><span class="pane-t">Предпросмотр</span><span class="pane-m">60 px</span><i class="pane-chev"></i></button><div class="pane-b"><div class="ctl"><label><span>Размер</span><output>60</output></label><input type="range" value="40" style="--lo:0%;--hi:40%" aria-label="Размер"></div></div></section>
+<section class="pane shut"><button class="pane-h" type="button" aria-expanded="false"><span class="pane-t">Режимы</span><span class="pane-m">2</span><i class="pane-chev"></i></button><div class="pane-b"><label class="tgl"><input type="checkbox" role="switch" checked><span>Скелет</span></label></div></section>
+<section class="pane shut"><button class="pane-h" type="button" aria-expanded="false"><span class="pane-t">Оси</span><i class="pane-chev"></i></button><div class="pane-b"><label class="tgl"><input type="checkbox" role="switch"><span>Ширина</span></label></div></section></div>
+<script>
+document.querySelectorAll('.pane-h').forEach(function(b){b.addEventListener('click',function(){var p=b.parentNode,o=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',String(!o));p.classList.toggle('shut',o)})})
+</script>
+</body>
+</html>

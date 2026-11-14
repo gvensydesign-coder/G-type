@@ -1,0 +1,923 @@
+--- /tmp/index-zc.js	2026-11-14 18:02:05.557443127 +0000
++++ /tmp/g-type-v96-zc.js	2026-11-14 18:02:05.685442590 +0000
+@@ -7152,7 +7152,9 @@
+ if(nodes.length>=3)out.push({hole:!!e[0],nodes});}
+ return out;}
+ function impPack(){
+-const g={};for(const ch of Object.keys(IMP.glyphs)){const r=IMP.glyphs[ch];if(!r.c||!r.c.length)continue;const o={c:impPackC(r.c)};if(r.src)o.n=r.src;if(r.adj)o.a=r.adj;if(r.k&&Math.abs(r.k-1)>1e-9)o.k=Math.round(r.k*1e6)/1e6;g[ch]=o;}
++const g={};let rawTot=0;
++for(const ch of Object.keys(IMP.glyphs)){const r=IMP.glyphs[ch];if(!r.c||!r.c.length)continue;const o={c:impPackC(r.c)};if(r.src)o.n=r.src;
++if(r.raw&&r.raw.length){const pr=impPackC(r.raw),L=JSON.stringify(pr).length;if(L<=8000&&rawTot+L<=300000){rawTot+=L;o.r=pr;}}if(r.adj)o.a=r.adj;if(r.k&&Math.abs(r.k-1)>1e-9)o.k=Math.round(r.k*1e6)/1e6;if(r.forms){o.f={};for(const f of Object.keys(r.forms))o.f[f]=impPackC(r.forms[f]);if(r.cn)o.q=r.cn;}g[ch]=o;}
+ return Object.keys(g).length?{v:1,family:IMP.family,autoFill:IMP.autoFill!==false,g}:null;}
+ function impUnpack(o){
+ for(const k of Object.keys(IMP.glyphs))delete IMP.glyphs[k];IMP.warn={};
+@@ -7161,7 +7163,9 @@
+ for(const ch of Object.keys(o.g)){if(!(Array.from(ch).length===1))continue;const r=o.g[ch],c=impUnpackC(r&&r.c);if(!c.length)continue;
+ const bb=impBBox(c);if(!bb)continue;
+ const rec={c,bb,k:isFinite(+r.k)&&+r.k>0?+r.k:1,src:typeof r.n==='string'?r.n.slice(0,80):'',adj:null,v:0};
++if(r.r){const rr=impUnpackC(r.r);if(rr.length&&rr.reduce((q,c)=>q+c.nodes.length,0)<=2000)rec.raw=rr;}
+ if(r.a&&typeof r.a==='object'){const a={};if(isFinite(+r.a.dy)&&+r.a.dy)a.dy=Math.max(-300,Math.min(300,+r.a.dy));if(isFinite(+r.a.s)&&+r.a.s&&+r.a.s!==100)a.s=Math.max(40,Math.min(250,+r.a.s));for(const q of 'lr')if(isFinite(+r.a[q])&&+r.a[q])a[q]=Math.max(-200,Math.min(300,+r.a[q]));if(Object.keys(a).length)rec.adj=a;}
++if(r.f&&typeof r.f==='object'){const fm={};for(const f of ['en','ex','b']){const fc=impUnpackC(r.f[f]);if(fc.length)fm[f]=fc;}if(Object.keys(fm).length){rec.forms=fm;const q=r.q&&typeof r.q==='object'?r.q:{},lv=v=>v==='base'||v==='xh'?v:null;rec.cn={entry:lv(q.entry),exit:lv(q.exit)};}}
+ IMP.glyphs[ch]=rec;}}
+ IMP.ver++;}
+ const TRC={MAXSIDE:1200,MAXC:800,MAXNODE:20000};
+@@ -7465,6 +7469,298 @@
+ const old=IMP.glyphs[ch];
+ IMP.glyphs[ch]={c:res.cs,bb:res.bb,k:(res.k||1)*(kScale||1),src:name||'',adj:old&&old.adj?old.adj:null,v:++IMP.ver};
+ delete IMP.warn[ch];return true;}
++const PPC=(function(){
++'use strict';
++const DPMM=8, PW=210, PH=297, CW=PW*DPMM, CH=PH*DPMM;
++const GEO={cols:8,rows:9,gx:12,gy:26,gw:186,gh:250,
++markers:[[11,11],[199,11],[199,286],[11,286]],mk:8,hole:3,
++cap:6.5,xh:12.0,base:21.5,desc:26.0,
++bits:{x0:101.5,pitch:3,y:10.5,n:30,size:2.2}};
++GEO.cw=GEO.gw/GEO.cols;GEO.ch=GEO.gh/GEO.rows;GEO.per=GEO.cols*GEO.rows;
++const HINT_ZONE={w:4.8,h:3.1};
++const CAP_MM=GEO.base-GEO.cap, UNIT_MM=700/CAP_MM, UPP=UNIT_MM/DPMM;
++const RU_U='АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ', RU_L='абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
++const PRESETS={
++min:{id:0,name:'Минимальный русский',set:RU_U+RU_L},
++full:{id:1,name:'Русский + цифры и знаки',set:RU_U+RU_L+'0123456789.,!?:;-—«»()"…'},
++lat:{id:2,name:'Русский + латиница',set:RU_U+RU_L+'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'},
++custom:{id:4,name:'Свой набор',set:''}};
++const uniq=s=>[...new Set([...s].filter(c=>!/\s/.test(c)))].join('');
++const hashStr=s=>{let h=2166136261;for(const c of s){h^=c.codePointAt(0);h=Math.imul(h,16777619)>>>0;}return h>>>0;};
++const pagesOf=set=>{const a=[...set],o=[];for(let i=0;i<a.length;i+=GEO.per)o.push(a.slice(i,i+GEO.per));return o.length?o:[[]];};
++const cellRect=k=>{const c=k%GEO.cols,r=(k/GEO.cols)|0;return {x:GEO.gx+c*GEO.cw,y:GEO.gy+r*GEO.ch,w:GEO.cw,h:GEO.ch};};
++function codeBits(presetId,page,pages,set){
++const b=[1],push=(v,n)=>{for(let i=n-1;i>=0;i--)b.push((v>>i)&1);};
++push(presetId,3);push(page,4);push(pages-1,4);push(hashStr(set)&4095,12);
++const chk=hashStr(b.join(''))&31;push(chk,5);b.push(1);return b;}
++function decodeBits(b){
++if(b.length!==30||b[0]!==1||b[29]!==1)return null;
++const rd=(a,n)=>{let v=0;for(let i=0;i<n;i++)v=v*2+b[a+i];return v;};
++const chk=hashStr(b.slice(0,24).join(''))&31;if(chk!==rd(24,5))return null;
++return {preset:rd(1,3),page:rd(4,4),pages:rd(8,4)+1,hash:rd(12,12)};}
++function lumOf(d,n){const g=new Uint8ClampedArray(n);for(let i=0;i<n;i++)g[i]=(d[4*i]*77+d[4*i+1]*150+d[4*i+2]*29)>>8;return g;}
++function ccLabel(m,w,h){
++const lab=new Int32Array(w*h),st=new Int32Array(w*h),comps=[];let id=0;
++for(let s=0;s<w*h;s++){
++if(!m[s]||lab[s])continue;id++;let sp=0,area=0,x0=w,y0=h,x1=-1,y1=-1,sx=0,sy=0,sxx=0,syy=0,sxy=0;st[sp++]=s;lab[s]=id;
++while(sp){const p=st[--sp],x=p%w,y=(p/w)|0;area++;sx+=x;sy+=y;sxx+=x*x;syy+=y*y;sxy+=x*y;
++if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;
++for(let dy=-1;dy<=1;dy++){const yy=y+dy;if(yy<0||yy>=h)continue;
++for(let dx=-1;dx<=1;dx++){const xx=x+dx;if(xx<0||xx>=w)continue;const q=yy*w+xx;if(m[q]&&!lab[q]){lab[q]=id;st[sp++]=q;}}}}
++comps.push({id,area,x0,y0,x1,y1,sx,sy,sxx,syy,sxy});}
++return {lab,comps};}
++function solveH(dst,src){
++const A=[];for(let i=0;i<4;i++){const [u,v]=dst[i],[x,y]=src[i];
++A.push([u,v,1,0,0,0,-u*x,-v*x,x]);A.push([0,0,0,u,v,1,-u*y,-v*y,y]);}
++for(let c=0;c<8;c++){let p=c;for(let r=c+1;r<8;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;
++[A[c],A[p]]=[A[p],A[c]];if(Math.abs(A[c][c])<1e-12)return null;
++for(let r=0;r<8;r++){if(r===c)continue;const f=A[r][c]/A[c][c];for(let k=c;k<9;k++)A[r][k]-=f*A[c][k];}}
++return [...Array(8).keys()].map(i=>A[i][8]/A[i][i]).concat(1);}
++const applyH=(H,u,v)=>{const d=H[6]*u+H[7]*v+1;return [(H[0]*u+H[1]*v+H[2])/d,(H[3]*u+H[4]*v+H[5])/d];};
++function findMarkers(img){
++const s=img.small,w=s.w,h=s.h,N=w*h;
++const I=new Float64Array((w+1)*(h+1));
++for(let y=0;y<h;y++){let r=0;for(let x=0;x<w;x++){r+=s.g[y*w+x];I[(y+1)*(w+1)+x+1]=I[y*(w+1)+x+1]+r;}}
++const R=Math.max(14,Math.round(w/22)),m=new Uint8Array(N);
++for(let y=0;y<h;y++){const y0=Math.max(0,y-R),y1=Math.min(h,y+R+1);
++for(let x=0;x<w;x++){const x0=Math.max(0,x-R),x1=Math.min(w,x+R+1);
++const sum=I[y1*(w+1)+x1]-I[y0*(w+1)+x1]-I[y1*(w+1)+x0]+I[y0*(w+1)+x0],mean=sum/((x1-x0)*(y1-y0));
++if(s.g[y*w+x]<0.62*mean&&s.g[y*w+x]<150)m[y*w+x]=1;}}
++const {comps}=ccLabel(m,w,h);
++const minA=Math.pow(0.007*Math.max(w,h),2),maxA=Math.pow(0.09*Math.max(w,h),2),cand=[];
++for(const c of comps){
++const bw=c.x1-c.x0+1,bh=c.y1-c.y0+1;if(c.area<minA||c.area>maxA)continue;
++const asp=bw/bh,fill=c.area/(bw*bh);if(asp<0.45||asp>2.2||fill<0.5)continue;
++const mx=c.sx/c.area,my=c.sy/c.area,cxx=c.sxx/c.area-mx*mx,cyy=c.syy/c.area-my*my,cxy=c.sxy/c.area-mx*my;
++const tr=cxx+cyy,det=cxx*cyy-cxy*cxy,disc=Math.sqrt(Math.max(0,tr*tr/4-det)),l1=tr/2+disc,l2=tr/2-disc;
++if(l2<=0||l1/l2>1.9)continue;
++cand.push({x:(mx+0.5)*s.k,y:(my+0.5)*s.k,area:c.area*s.k*s.k,sq:l1/l2+Math.abs(1-fill)});}
++cand.sort((a,b)=>a.sq-b.sq);const C=cand.slice(0,14);
++let best=null;
++const cross=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
++for(let a=0;a<C.length;a++)for(let b=a+1;b<C.length;b++)for(let c=b+1;c<C.length;c++)for(let d=c+1;d<C.length;d++){
++const q=[C[a],C[b],C[c],C[d]],cx=(q[0].x+q[1].x+q[2].x+q[3].x)/4,cy=(q[0].y+q[1].y+q[2].y+q[3].y)/4;
++q.sort((p,r)=>Math.atan2(p.y-cy,p.x-cx)-Math.atan2(r.y-cy,r.x-cx));
++let ok=true;for(let i=0;i<4;i++)if(cross(q[i],q[(i+1)%4],q[(i+2)%4])<=0)ok=false;if(!ok)continue;
++const ar=q.map(p=>p.area),mn=Math.min(...ar),mxa=Math.max(...ar);if(mxa/mn>2.6)continue;
++const area=Math.abs(q.reduce((s2,p,i)=>s2+(p.x*q[(i+1)%4].y-q[(i+1)%4].x*p.y),0))/2;
++const sides=[0,1,2,3].map(i=>Math.hypot(q[i].x-q[(i+1)%4].x,q[i].y-q[(i+1)%4].y)),rat=Math.min(sides[0],sides[1])/Math.max(sides[0],sides[1]);
++if(Math.min(rat,1/rat)<0.2)continue;
++if(!best||area>best.area)best={area,q};}
++if(!best)return {ok:false,cand:cand.length};
++let q=best.q;let i0=0;for(let i=1;i<4;i++)if(q[i].x+q[i].y<q[i0].x+q[i0].y)i0=i;
++q=q.slice(i0).concat(q.slice(0,i0));
++return {ok:true,pts:q.map(p=>[p.x,p.y]),cand:cand.length};}
++function warpCanon(img,H){
++const out=new Uint8ClampedArray(CW*CH),g=img.g,w=img.w,h=img.h;
++for(let v=0;v<CH;v++){
++for(let u=0;u<CW;u++){
++const d=H[6]*u+H[7]*v+1,x=(H[0]*u+H[1]*v+H[2])/d-0.5,y=(H[3]*u+H[4]*v+H[5])/d-0.5;
++if(x<0||y<0||x>=w-1||y>=h-1){out[v*CW+u]=255;continue;}
++const x0=x|0,y0=y|0,fx=x-x0,fy=y-y0,i=y0*w+x0;
++out[v*CW+u]=(g[i]*(1-fx)+g[i+1]*fx)*(1-fy)+(g[i+w]*(1-fx)+g[i+w+1]*fx)*fy;}}
++return out;}
++function flatten(g,w,h){
++const B=24,bw=Math.ceil(w/B),bh=Math.ceil(h/B),bg=new Float32Array(bw*bh),hist=new Uint16Array(64);
++for(let by=0;by<bh;by++)for(let bx=0;bx<bw;bx++){
++hist.fill(0);let n=0;const x1=Math.min(w,(bx+1)*B),y1=Math.min(h,(by+1)*B);
++for(let y=by*B;y<y1;y++)for(let x=bx*B;x<x1;x++){hist[g[y*w+x]>>2]++;n++;}
++let acc=0,t=n*0.15,b=63;for(;b>0;b--){acc+=hist[b];if(acc>=t)break;}bg[by*bw+bx]=b*4+2;}
++const dil=(a,r)=>{const o=new Float32Array(a.length);for(let y=0;y<bh;y++)for(let x=0;x<bw;x++){let m=0;
++for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const yy=y+dy,xx=x+dx;if(yy<0||xx<0||yy>=bh||xx>=bw)continue;const v=a[yy*bw+xx];if(v>m)m=v;}o[y*bw+x]=m;}return o;};
++const box=a=>{const o=new Float32Array(a.length);for(let y=0;y<bh;y++)for(let x=0;x<bw;x++){let s=0,n=0;
++for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const yy=y+dy,xx=x+dx;if(yy<0||xx<0||yy>=bh||xx>=bw)continue;s+=a[yy*bw+xx];n++;}o[y*bw+x]=s/n;}return o;};
++let m=box(box(dil(bg,2)));
++const out=new Uint8ClampedArray(w*h);
++for(let y=0;y<h;y++){const fy=Math.min(bh-1.001,Math.max(0,(y+0.5)/B-0.5)),y0=fy|0,ty=fy-y0;
++for(let x=0;x<w;x++){const fx=Math.min(bw-1.001,Math.max(0,(x+0.5)/B-0.5)),x0=fx|0,tx=fx-x0;
++const b=(m[y0*bw+x0]*(1-tx)+m[y0*bw+x0+1]*tx)*(1-ty)+(m[(y0+1)*bw+x0]*(1-tx)+m[(y0+1)*bw+x0+1]*tx)*ty;
++out[y*w+x]=Math.min(255,g[y*w+x]*255/Math.max(40,b));}}
++return out;}
++function baseThreshold(n,w,rects){
++const hist=new Float64Array(256);let tot=0;
++for(const [x0,y0,x1,y1] of rects)for(let y=y0;y<y1;y+=2)for(let x=x0;x<x1;x+=2){hist[n[y*w+x]]++;tot++;}
++let acc=0,P=255;for(let i=0;i<256;i++){acc+=hist[i];if(acc>=tot*0.5){P=i;break;}}
++let s=0,c=0;for(let i=0;i<P*0.55;i++){s+=i*hist[i];c+=hist[i];}
++const K=c>tot*0.0015?s/c:45;
++return Math.max(90,Math.min(165,(P+K)/2));}
++const thrOf=(base,sharp,off)=>Math.max(55,Math.min(175,base+(50-sharp)*0.9+(off||0)));
++function readBits(n){
++const g=GEO.bits,bits=[],r=Math.round(0.6*DPMM);
++for(let i=0;i<g.n;i++){const cx=Math.round((g.x0+i*g.pitch)*DPMM),cy=Math.round(g.y*DPMM);let s=0,c=0;
++for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++){s+=n[y*CW+x];c++;}bits.push(s/c<140?1:0);}
++return decodeBits(bits);}
++function processPhoto(img){
++const mk=findMarkers(img);if(!mk.ok)return {ok:false,why:'markers',cand:mk.cand};
++const dst=GEO.markers.map(([x,y])=>[x*DPMM,y*DPMM]);
++let pts=mk.pts,H=solveH(dst,pts),can=warpCanon(img,H);
++const hole=i=>{const [cx,cy]=dst[i],r=Math.round(0.9*DPMM);let s=0,c=0;for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++){s+=can[y*CW+x];c++;}return s/c;};
++let j=0,bv=-1;for(let i=0;i<4;i++){const v=hole(i);if(v>bv){bv=v;j=i;}}
++let rot=0;
++if(j!==0){pts=pts.slice(j).concat(pts.slice(0,j));rot=j;H=solveH(dst,pts);can=warpCanon(img,H);}
++const rf=[];let okRef=true;
++for(let i=0;i<4;i++){
++const [cx,cy]=dst[i],r=Math.round(6.5*DPMM);let lo=255,hi=0;const hh=new Float64Array(256);
++for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++)hh[can[y*CW+x]]++;
++const tot=(2*r+1)*(2*r+1);let a=0,p5=0,p95=255;for(let t=0;t<256;t++){a+=hh[t];if(a<tot*0.05)p5=t;if(a<tot*0.95)p95=t;}
++const thr=(p5+p95)/2;let sx=0,sy=0,c=0;
++for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++)if(can[y*CW+x]<thr){sx+=x;sy+=y;c++;}
++if(c<0.3*Math.pow(GEO.mk*DPMM,2)){okRef=false;break;}
++rf.push([sx/c+0.5,sy/c+0.5]);}
++if(okRef){
++const src2=rf.map(([u,v])=>applyH(H,u,v));const H2=solveH(dst,src2);
++if(H2){H=H2;can=warpCanon(img,H);}}
++const n=flatten(can,CW,CH);
++const code=readBits(n);
++const rects=[];for(let k=0;k<GEO.per;k++){const r=cellRect(k);rects.push([Math.round((r.x+1)*DPMM),Math.round((r.y+1)*DPMM),Math.round((r.x+r.w-1)*DPMM),Math.round((r.y+r.h-1)*DPMM)]);}
++const base=baseThreshold(n,CW,rects);
++return {ok:true,n,base,code,rot,markers:mk.pts,H,refined:okRef};}
++const PUNCT_SMALL='.,-—·\'"«»:;…`', MULTI='ыЫёЁйЙiIjJ!?:;="«»%…ЩщЦц';
++const isLower=c=>/[а-яёa-z]/.test(c),isUpper=c=>/[А-ЯЁA-Z0-9]/.test(c);
++function classify(ch,m){
++if(m.empty)return {state:'empty',why:['пусто']};
++const why=[];
++if(m.touch)why.push('касается границы');
++const exp=isLower(ch)?GEO.base-GEO.xh:isUpper(ch)?CAP_MM:0;
++if(exp&&(m.bh<0.4*exp||m.bw<0.22*exp))why.push('слишком мелко');
++if(m.blobs>1&&!MULTI.includes(ch))why.push('два пятна');
++return {state:why.length?'warn':'ok',why};}
++function sliceCell(n,k,thr,hint){
++const r=cellRect(k),ins=0.9;
++const X0=Math.round((r.x+ins)*DPMM),Y0=Math.round((r.y+ins)*DPMM),X1=Math.round((r.x+r.w-ins)*DPMM),Y1=Math.round((r.y+r.h-ins)*DPMM),w=X1-X0,h=Y1-Y0;
++const m=new Uint8Array(w*h);
++const zx=Math.round((HINT_ZONE.w-ins)*DPMM),zy=Math.round((HINT_ZONE.h-ins)*DPMM);
++for(let y=0;y<h;y++)for(let x=0;x<w;x++){if(hint!==false&&x<zx&&y<zy)continue;if(n[(Y0+y)*CW+X0+x]<thr)m[y*w+x]=1;}
++const cc=ccLabel(m,w,h);
++const speck=8;let keep=cc.comps.filter(c=>c.area>=speck);
++keep=keep.filter(c=>{const bw=c.x1-c.x0+1,bh=c.y1-c.y0+1;return !((bh<=3&&bw>6*DPMM)||(bw<=3&&bh>6*DPMM));});
++const base=Math.round((r.y+GEO.base)*DPMM)-Y0;
++if(!keep.length)return {empty:true,m:{empty:true},...classify('',{empty:true}),cell:k,thr};
++const ids=new Set(keep.map(c=>c.id));
++let x0=w,y0=h,x1=-1,y1=-1,ink=0,touch=false;
++for(const c of keep){x0=Math.min(x0,c.x0);y0=Math.min(y0,c.y0);x1=Math.max(x1,c.x1);y1=Math.max(y1,c.y1);ink+=c.area;
++if(c.x0===0||c.y0===0||c.x1===w-1||c.y1===h-1)touch=true;}
++keep.sort((a,b)=>b.area-a.area);
++let blobs=1,gap=0;if(keep.length>1){const a=keep[0];for(const b of keep.slice(1)){if(b.area>=0.2*a.area){const g=Math.max(a.x0,b.x0)-Math.min(a.x1,b.x1);const gx=Math.max(b.x0-a.x1,a.x0-b.x1,0);if(gx>1.2*DPMM||Math.max(b.y0-a.y1,a.y0-b.y1,0)>1.2*DPMM){blobs++;gap=Math.max(gap,gx);}void g;}}}
++const P=4,cx0=Math.max(0,x0-P),cy0=Math.max(0,y0-P),cx1=Math.min(w-1,x1+P),cy1=Math.min(h-1,y1+P),cw=cx1-cx0+1,chh=cy1-cy0+1;
++const km=new Uint8Array(cw*chh);
++for(let y=0;y<chh;y++)for(let x=0;x<cw;x++){const l=cc.lab[(cy0+y)*w+cx0+x];if(l&&ids.has(l))km[y*cw+x]=1;}
++const dm=new Uint8Array(cw*chh);
++for(let y=0;y<chh;y++)for(let x=0;x<cw;x++)if(km[y*cw+x]){for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const yy=y+dy,xx=x+dx;if(yy>=0&&xx>=0&&yy<chh&&xx<cw)dm[yy*cw+xx]=1;}}
++const data=new Uint8Array(cw*chh).fill(255);
++for(let y=0;y<chh;y++)for(let x=0;x<cw;x++)if(dm[y*cw+x]){const l=cc.lab[(cy0+y)*w+cx0+x];if(!l||ids.has(l))data[y*cw+x]=n[(Y0+cy0+y)*CW+X0+cx0+x];}
++const m2={ink,bw:(x1-x0+1)/DPMM,bh:(y1-y0+1)/DPMM,blobs,gap,touch,empty:false};
++return {empty:false,m:m2,cell:k,thr,...classify('',m2),glyph:{w:cw,h:chh,data,thr,base:base-cy0,upp:UPP,ox:X0+cx0,oy:Y0+cy0,k}};}
++function rotateGray(n,w,h,th){
++const c=Math.cos(th),s=Math.sin(th),cx=w/2,cy=h/2,o=new Uint8ClampedArray(w*h);
++for(let y=0;y<h;y++)for(let x=0;x<w;x++){
++const xr=x-cx,yr=y-cy,sx=xr*c-yr*s+cx-0.5,sy=xr*s+yr*c+cy-0.5;
++if(sx<0||sy<0||sx>=w-1||sy>=h-1){o[y*w+x]=255;continue;}
++const x0=sx|0,y0=sy|0,fx=sx-x0,fy=sy-y0,i=y0*w+x0;
++o[y*w+x]=(n[i]*(1-fx)+n[i+1]*fx)*(1-fy)+(n[i+w]*(1-fx)+n[i+w+1]*fx)*fy;}
++return o;}
++function estimateSkew(n,w,h,thr){
++const pts=[];const step=Math.max(1,Math.round(Math.sqrt(w*h/60000)));
++for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step)if(n[y*w+x]<thr)pts.push(x,y);
++const score=deg=>{const th=deg*Math.PI/180,c=Math.cos(th),s=Math.sin(th),hist=new Float32Array(h+w+8);
++for(let i=0;i<pts.length;i+=2){const yy=Math.round((pts[i+1]*c-pts[i]*s)/2)+((w/2)|0);if(yy>=0&&yy<hist.length)hist[yy]++;}
++let sc=0;for(const v of hist)sc+=v*v;return sc;};
++let best=0,bs=-1;for(let d=-6;d<=6;d+=0.5){const v=score(d);if(v>bs){bs=v;best=d;}}
++for(let d=best-0.5;d<=best+0.5;d+=0.1){const v=score(d);if(v>bs){bs=v;best=d;}}
++return best*Math.PI/180;}
++function cropPaper(img){
++const B=16,bw=Math.ceil(img.w/B),bh=Math.ceil(img.h/B),m=new Float32Array(bw*bh);
++for(let by=0;by<bh;by++)for(let bx=0;bx<bw;bx++){let s=0,c=0;for(let y=by*B;y<Math.min(img.h,by*B+B);y+=2)for(let x=bx*B;x<Math.min(img.w,bx*B+B);x+=2){s+=img.g[y*img.w+x];c++;}m[by*bw+bx]=s/c;}
++const hist=new Float64Array(256);for(const v of m)hist[Math.min(255,v|0)]++;
++let sum=0;for(let i=0;i<256;i++)sum+=i*hist[i];let wb=0,sb=0,best=-1,t=128;
++for(let i=0;i<256;i++){wb+=hist[i];const wf=m.length-wb;if(!wb||!wf)continue;sb+=i*hist[i];const mb=sb/wb,mf=(sum-sb)/wf,v=wb*wf*(mb-mf)*(mb-mf);if(v>best){best=v;t=i;}}
++let lo=0,hi=0,nl=0,nh=0;for(const v of m){if(v<=t){lo+=v;nl++;}else{hi+=v;nh++;}}
++if(!nl||!nh||hi/nh-lo/nl<45||nl<0.04*m.length)return img;
++let x0=bw,y0=bh,x1=-1,y1=-1;
++for(let by=0;by<bh;by++)for(let bx=0;bx<bw;bx++)if(m[by*bw+bx]>t){x0=Math.min(x0,bx);x1=Math.max(x1,bx);y0=Math.min(y0,by);y1=Math.max(y1,by);}
++const ix=Math.max(4,Math.round(0.04*bw)),iy=Math.max(4,Math.round(0.04*bh));
++x0+=ix;x1-=ix;y0+=iy;y1-=iy;if(x1-x0<8||y1-y0<8)return img;
++const X0=x0*B,Y0=y0*B,X1=Math.min(img.w,(x1+1)*B),Y1=Math.min(img.h,(y1+1)*B),w=X1-X0,h=Y1-Y0,g=new Uint8ClampedArray(w*h);
++for(let y=0;y<h;y++)for(let x=0;x<w;x++)g[y*w+x]=img.g[(Y0+y)*img.w+X0+x];
++return Object.assign({},img,{g,w,h,cropped:[X0,Y0]});}
++function sheetAnalyze(img0,sharp){
++const img=cropPaper(img0),w=img.w,h=img.h;let n=flatten(img.g,w,h);
++const base=baseThreshold(n,w,[[Math.round(w*0.02),Math.round(h*0.02),Math.round(w*0.98),Math.round(h*0.98)]]);
++const thr=thrOf(base,sharp,0);
++const th=estimateSkew(n,w,h,thr);
++if(Math.abs(th)>0.004)n=rotateGray(n,w,h,th);
++const bin=new Uint8Array(w*h);for(let i=0;i<w*h;i++)bin[i]=n[i]<thr?1:0;
++const cc=ccLabel(bin,w,h);
++const dead=new Set();for(const c of cc.comps){const bw=c.x1-c.x0+1,bh=c.y1-c.y0+1;if((bh<=3&&bw>w*0.12)||(bw<=3&&bh>h*0.12)||bh>0.45*h||bw>0.9*w||c.area<5)dead.add(c.id);}
++const prof=new Float32Array(h);
++for(const c of cc.comps){if(dead.has(c.id))continue;for(let y=c.y0;y<=c.y1;y++)prof[y]+=0;}
++for(let y=0;y<h;y++){let s=0;for(let x=0;x<w;x++){const l=cc.lab[y*w+x];if(l&&!dead.has(l))s++;}prof[y]=s;}
++const sm=new Float32Array(h);for(let y=0;y<h;y++){let s=0,c=0;for(let d=-2;d<=2;d++){const yy=y+d;if(yy>=0&&yy<h){s+=prof[yy];c++;}}sm[y]=s/c;}
++const mx=Math.max(...sm),t=Math.max(1.5,0.03*mx);let runs=[],a=-1;
++for(let y=0;y<h;y++){if(sm[y]>t){if(a<0)a=y;}else if(a>=0){runs.push([a,y-1]);a=-1;}}if(a>=0)runs.push([a,h-1]);
++const med=arr=>{const s=[...arr].sort((p,q)=>p-q);return s.length?s[s.length>>1]:0;};
++let mh=med(runs.map(r=>r[1]-r[0]+1));
++const merged=[];for(const r of runs){const L=merged[merged.length-1];if(L&&r[0]-L[1]<0.2*mh)L[1]=r[1];else merged.push([...r]);}
++mh=med(merged.map(r=>r[1]-r[0]+1));
++const lines=merged.filter(r=>r[1]-r[0]+1>=0.35*mh).map(r=>({y0:Math.max(0,r[0]-3),y1:Math.min(h-1,r[1]+3)}));
++return {n,w,h,thr,base,theta:th,cc,dead,lines};}
++const NODESC='рудфцщ,;()[]у';
++function sheetSegment(A,texts){
++const {w,n,cc,dead,thr}=A,items=[],report=[];
++const boxOf=c=>{let x0=1e9,y0=1e9,x1=-1,y1=-1;for(let y=c.y0;y<=c.y1;y++)for(let x=Math.max(c.x0,c.xl);x<=Math.min(c.x1,c.xr-1);x++){const l=cc.lab[y*w+x];if(l&&c.ids.has(l)){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}}
++c.x0=x0;c.x1=x1;c.y0=y0;c.y1=y1;return c;};
++A.lines.forEach((L,li)=>{
++const want=[...(texts[li]||'')].filter(ch=>!/\s/.test(ch));
++const words=(texts[li]||'').trim().split(/\s+/).filter(Boolean).map(s=>[...s]);
++if(!want.length){report.push({found:0,want:0,ok:true,skip:true});return;}
++const lh=L.y1-L.y0+1,minA=Math.max(8,0.0008*lh*lh);
++let cs=cc.comps.filter(c=>!dead.has(c.id)&&c.area>=minA&&(c.y0+c.y1)/2>=L.y0&&(c.y0+c.y1)/2<=L.y1).map(c=>({ids:new Set([c.id]),x0:c.x0,x1:c.x1,y0:c.y0,y1:c.y1,xl:-1e9,xr:1e9,area:c.area}));
++cs.sort((a,b)=>a.x0-b.x0);
++const mg=[];for(const c of cs){const l=mg[mg.length-1];
++if(l){const ov=Math.min(l.x1,c.x1)-Math.max(l.x0,c.x0)+1,mn=Math.min(l.x1-l.x0+1,c.x1-c.x0+1);
++if(ov>=0.35*mn){c.ids.forEach(i=>l.ids.add(i));l.x0=Math.min(l.x0,c.x0);l.x1=Math.max(l.x1,c.x1);l.y0=Math.min(l.y0,c.y0);l.y1=Math.max(l.y1,c.y1);l.area+=c.area;continue;}}
++mg.push(c);}
++cs=mg;const found0=cs.length;
++const W=words.length,gaps=cs.slice(1).map((c,i)=>({i:i+1,g:c.x0-cs[i].x1}));
++const br=new Set(gaps.slice().sort((a,b)=>b.g-a.g).slice(0,Math.max(0,W-1)).map(g=>g.i));
++const groups=[];let cur=[];cs.forEach((c,i)=>{if(i&&br.has(i)){groups.push(cur);cur=[];}cur.push(c);});groups.push(cur);
++while(groups.length>W&&groups.length>1){   let bi=1,bg=1e9;for(let i=1;i<groups.length;i++){const g=groups[i][0].x0-groups[i-1][groups[i-1].length-1].x1;if(g<bg){bg=g;bi=i;}}groups[bi-1]=groups[bi-1].concat(groups[bi]);groups.splice(bi,1);}
++let okAll=groups.length===W;const final=[];
++words.forEach((wd,wi)=>{
++let g=(groups[wi]||[]).map(c=>c);const need=wd.length;
++let guard=0;
++while(g.length<need&&guard++<12){
++let bi=0,bw=0;g.forEach((c,i)=>{const ww=c.x1-c.x0+1;if(ww>bw){bw=ww;bi=i;}});if(bw<6)break;
++const c=g[bi],ww=c.x1-c.x0+1,lo=Math.max(c.x0+1,Math.round(c.x0+0.3*ww)),hi=Math.min(c.x1-1,Math.round(c.x0+0.7*ww));
++let cut=Math.round((lo+hi)/2),cm=1e9;
++for(let x=lo;x<=hi;x++){let s=0;for(let y=c.y0;y<=c.y1;y++){const l=cc.lab[y*w+x];if(l&&c.ids.has(l)&&x>=c.xl&&x<c.xr)s++;}if(s<cm||(s===cm&&Math.abs(x-(lo+hi)/2)<Math.abs(cut-(lo+hi)/2))){cm=s;cut=x;}}
++const A1={ids:c.ids,xl:c.xl,xr:cut,x0:c.x0,x1:c.x1,y0:c.y0,y1:c.y1},B1={ids:c.ids,xl:cut,xr:c.xr,x0:c.x0,x1:c.x1,y0:c.y0,y1:c.y1};
++boxOf(A1);boxOf(B1);g.splice(bi,1,A1,B1);}
++while(g.length>need&&g.length>1){let bi=1,bg=1e9;for(let i=1;i<g.length;i++){const gg=g[i].x0-g[i-1].x1;if(gg<bg){bg=gg;bi=i;}}
++const a=g[bi-1],b=g[bi];b.ids.forEach(i=>a.ids.add(i));a.x0=Math.min(a.x0,b.x0);a.x1=Math.max(a.x1,b.x1);a.y0=Math.min(a.y0,b.y0);a.y1=Math.max(a.y1,b.y1);a.xl=Math.min(a.xl,b.xl);a.xr=Math.max(a.xr,b.xr);g.splice(bi,1);}
++if(g.length!==need)okAll=false;
++g.forEach((c,i)=>{if(wd[i])final.push({ch:wd[i],c});});});
++const bots=final.filter(f=>!NODESC.includes(f.ch)).map(f=>f.c.y1).sort((a,b)=>a-b);
++const allb=final.map(f=>f.c.y1).sort((a,b)=>a-b);
++const baseY=(bots.length?bots:allb)[((bots.length?bots:allb).length>>1)]+0.5;
++final.forEach(f=>{
++const c=f.c,P=4,cx0=Math.max(0,c.x0-P),cy0=Math.max(0,c.y0-P),cx1=Math.min(w-1,c.x1+P),cy1=Math.min(A.h-1,c.y1+P),cw=cx1-cx0+1,chh=cy1-cy0+1;
++const km=new Uint8Array(cw*chh);
++for(let y=0;y<chh;y++)for(let x=0;x<cw;x++){const gx=cx0+x,gy=cy0+y,l=cc.lab[gy*w+gx];if(l&&c.ids.has(l)&&gx>=c.xl&&gx<c.xr)km[y*cw+x]=1;}
++const data=new Uint8Array(cw*chh).fill(255);
++for(let y=0;y<chh;y++)for(let x=0;x<cw;x++){let near=false;for(let dy=-2;dy<=2&&!near;dy++)for(let dx=-2;dx<=2;dx++){const yy=y+dy,xx=x+dx;if(yy>=0&&xx>=0&&yy<chh&&xx<cw&&km[yy*cw+xx]){near=true;break;}}
++if(near){const gx=cx0+x,gy=cy0+y,l=cc.lab[gy*w+gx];if(!l||(c.ids.has(l)&&gx>=c.xl&&gx<c.xr)||dead.has(l))data[y*cw+x]=n[gy*w+gx];}}
++items.push({ch:f.ch,line:li,glyph:{w:cw,h:chh,data,thr,base:baseY-cy0,upp:1,ox:cx0,oy:cy0,sheet:true},bw:c.x1-c.x0+1,bh:c.y1-c.y0+1,area:c.area});});
++report.push({found:found0,want:want.length,ok:okAll&&final.length===want.length});});
++const XS='аеосэзнмтиюягшчл',CS='АВЕКМНОРСТХ';
++const med=arr=>{const s=[...arr].sort((a,b)=>a-b);return s.length?s[s.length>>1]:0;};
++let hx=med(items.filter(i=>XS.includes(i.ch)).map(i=>i.bh)),upp;
++if(hx)upp=450/hx;else{const hc=med(items.filter(i=>CS.includes(i.ch)).map(i=>i.bh));upp=hc?700/hc:UPP;}
++items.forEach(i=>{i.glyph.upp=upp;const sc=upp/UNIT_MM;i.m={empty:false,ink:i.area,bw:i.bw*sc,bh:i.bh*sc,blobs:1,touch:false};});
++return {items,report,upp};}
++return {DPMM,PW,PH,CW,CH,GEO,HINT_ZONE,CAP_MM,UNIT_MM,UPP,RU_U,RU_L,PRESETS,uniq,hashStr,pagesOf,cellRect,codeBits,decodeBits,lumOf,ccLabel,solveH,applyH,findMarkers,warpCanon,flatten,baseThreshold,thrOf,readBits,processPhoto,
++classify,sliceCell,isLower,isUpper,rotateGray,estimateSkew,cropPaper,sheetAnalyze,sheetSegment};
++})();
+ const DECO={LIM:{els:10,nodes:28,total:80,off:900,handle:700,sc0:0.4,sc1:2.4},ctx:[]};
+ const decoNum=(v,lo,hi,d)=>{v=+v;return isFinite(v)?Math.max(lo,Math.min(hi,v)):d;};
+ const decoR1=v=>Math.round(v*10)/10;
+@@ -12747,7 +13043,7 @@
+ for(const r of PARAMS)if(!(r[0] in F.params)&&!NZ_KEYS.includes(r[0])&&!['track','space','slant'].includes(r[0]))F.params[r[0]]=null;
+ for(const id in FONTS)if(id!=='nit'){const f=FONTS[id];f.params=f.params||{};for(const k of NZ_KEYS)if(!(k in f.params))f.params[k]=null;}
+ for(const r of NZ_ROWS)F.params[r[0]]=[r[1],NZ_RANGE[r[0]][0],NZ_RANGE[r[0]][1],r[4]];
+-if(typeof globalThis!=='undefined')globalThis.NIT=NIT;globalThis.NZS={eng:nzEng,get:nzGet,S:nzS,RANGE:NZ_RANGE,DEF:NZ_DEF,FB:nzFB,topo:nzTopo,ref:nzRef,raster:nzRaster,build:nzBuildRaw,ALL:NZ_ALL};
++if(typeof globalThis!=='undefined')globalThis.NIT=NIT;globalThis.NZS={skel:nzSkel,asc:NZ_ASC,eng:nzEng,get:nzGet,S:nzS,RANGE:NZ_RANGE,DEF:NZ_DEF,FB:nzFB,topo:nzTopo,ref:nzRef,raster:nzRaster,build:nzBuildRaw,ALL:NZ_ALL};
+ }
+ })();
+ (function(){
+@@ -14656,6 +14952,17 @@
+ case '˛':{const P=[[cx+30,yb],[cx+12,yb-38],[cx-10,yb-75],[cx+10,yb-110],[cx+48,yb-100]];out.push(A(drnStroke(P,P.map(()=>w*0.7))));break;}
+ default:return null;}
+ return out;}
++function drnMarkGap(stem){return Math.max(40,Math.round(0.32*(stem||80)))+DRN.ov;}
++function drnBreveFor(bb,stem,capital,cx,yb){
++const W=Math.max(1,bb.x1-bb.x0),st=Math.max(30,stem||80),wid=Math.round(W*0.62);
++const hair=Math.max(18,Math.min(72,Math.round(st*0.55),Math.round(wid*0.2)));
++const hw=Math.max(40,wid/2-hair*0.5),Ht=(capital?0.15:0.2)*DRN.cap,h=Math.max(Ht*0.4,Math.min(Ht-hair,wid*(capital?0.28:0.42))),P=[],Wd=[];
++for(let i=0;i<=14;i++){const u=i/7-1;P.push([cx+u*hw,yb+h*u*u]);Wd.push(hair*(1+0.3*u*u));}
++return [{k:'add',t:'draft',cs:drnStroke(P,Wd)}];}
++function drnDierFor(bb,stem,cx,yb){
++const W=Math.max(1,bb.x1-bb.x0),st=Math.max(30,stem||80),r=Math.max(12,Math.min(Math.round(st*0.5),Math.round(W*0.085))),dx=Math.max(Math.round(r*1.9),Math.round(W*0.2));
++return [{k:'add',t:'draft',cs:[drnEllipse(cx-dx,yb+r,r,r),drnEllipse(cx+dx,yb+r,r,r)]}];}
++function drnMarkFor(mark,bb,stem,capital,cx,yb){return mark==='˘'?drnBreveFor(bb,stem,capital,cx,yb):mark==='¨'?drnDierFor(bb,stem,cx,yb):null;}
+ const DRC={
+ SH:[['circle','Круг'],['square','Квадрат'],['diamond','Ромб'],['tri','Треугольник'],['pent','Пятиугольник'],['hex','Шестиугольник'],['oct','Восьмиугольник']],
+ SPEC:{circle:{n:0,R:0.5,ph:0},square:{n:4,R:0.70711,ph:Math.PI/4},diamond:{n:4,R:0.5,ph:0},tri:{n:3,R:0.56,ph:Math.PI/2},
+@@ -14840,6 +15147,573 @@
+ const pa=prof(a),pb=prof(b);if(pa&&pb){const t=(low(a)||low(b))?tL:tU,G0=Math.max(Math.min(t*0.4,60),12),g=kernGap(pa,pb,1e4);if(g)v=Math.max(v,Math.ceil((G0-g.min)/2)*2);}
+ return Math.min(0,v)||Math.max(0,v);};
+ return out;}
++const STRK=(function(){
++const hyp=Math.hypot,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
++const STEP=6,MET={base:0,xh:500,cap:700,asc:760,desc:-210};
++const DEF={thick:70,smooth:35,pen:'round',nib:35,endStyle:'round',join:true,snapR:0.8,fillet:0.3,nodeCap:90,connect:true,connExt:60,connCaps:false};
++const LIM={thick:[20,140],smooth:[0,100],nib:[0,90],snapR:[0.6,1.2],fillet:[0,0.5],nodeCap:[30,200],connExt:[0,160]};
++const PENS=['round','broad'],ENDS=['round','cut','point','serif'];
++function norm(p){const o=Object.assign({},DEF);if(p&&typeof p==='object')for(const k in LIM){const v=+p[k];if(isFinite(v))o[k]=clamp(v,LIM[k][0],LIM[k][1]);}
++if(p&&PENS.includes(p.pen))o.pen=p.pen;if(p&&ENDS.includes(p.endStyle))o.endStyle=p.endStyle;
++if(p){if(typeof p.join==='boolean')o.join=p.join;if(typeof p.connect==='boolean')o.connect=p.connect;if(typeof p.connCaps==='boolean')o.connCaps=p.connCaps;}
++o.nodeCap=Math.round(o.nodeCap);return o;}
++const r1=v=>Math.round(v*10)/10;
++let UID=1;const touch=L=>{L.rev=++UID;return L;};
++function newLayer(){return touch({strokes:[],joins:[],seq:0,conn:{entry:'auto',exit:'auto'}});}
++const V={sub:(a,b)=>[a[0]-b[0],a[1]-b[1]],add:(a,b)=>[a[0]+b[0],a[1]+b[1]],mul:(a,s)=>[a[0]*s,a[1]*s],dot:(a,b)=>a[0]*b[0]+a[1]*b[1],norm:a=>{const l=hyp(a[0],a[1])||1;return [a[0]/l,a[1]/l];}};
++function resampleArc(pts,step){const n=pts.length;if(n<2)return pts.map(p=>p.slice());const cum=[0];for(let i=1;i<n;i++)cum.push(cum[i-1]+hyp(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
++const L=cum[n-1];if(L<1e-6)return [pts[0].slice()];const m=Math.max(1,Math.round(L/step)),out=[];let j=0;
++for(let k=0;k<=m;k++){const s=k/m*L;while(j<n-2&&cum[j+1]<s)j++;const seg=cum[j+1]-cum[j],t=seg>1e-9?(s-cum[j])/seg:0,a=pts[j],b=pts[j+1];
++out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,(a[2]==null?1:a[2])+((b[2]==null?1:b[2])-(a[2]==null?1:a[2]))*t]);}
++return out;}
++function polyLen(P){let L=0;for(let i=1;i<P.length;i++)L+=hyp(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);return L;}
++function gaussW(sigma){const R=Math.max(1,Math.ceil(sigma*2.5)),w=[];let s=0;for(let k=-R;k<=R;k++){const v=Math.exp(-k*k/(2*sigma*sigma));w.push(v);s+=v;}return {R,w:w.map(v=>v/s)};}
++function smoothOpen(P,sigma){const n=P.length;if(sigma<0.25||n<3)return P.map(p=>p.slice());const {R,w}=gaussW(sigma),out=[];
++for(let i=0;i<n;i++){if(i===0||i===n-1){out.push(P[i].slice());continue;}let x=0,y=0,ww=0;
++for(let k=-R;k<=R;k++){let j=i+k,px,py,pw;
++if(j<0){const jj=Math.min(-j,n-1);px=2*P[0][0]-P[jj][0];py=2*P[0][1]-P[jj][1];pw=P[jj][2];}
++else if(j>n-1){const jj=Math.max(2*(n-1)-j,0);px=2*P[n-1][0]-P[jj][0];py=2*P[n-1][1]-P[jj][1];pw=P[jj][2];}
++else{px=P[j][0];py=P[j][1];pw=P[j][2];}
++const c=w[k+R];x+=px*c;y+=py*c;ww+=(pw==null?1:pw)*c;}
++out.push([x,y,ww]);}
++return out;}
++function smoothClosed(P,sigma){const n=P.length;if(sigma<0.25||n<4)return P.map(p=>p.slice());const {R,w}=gaussW(sigma),out=[];
++for(let i=0;i<n;i++){let x=0,y=0,ww=0;for(let k=-R;k<=R;k++){const q=P[((i+k)%n+n)%n],c=w[k+R];x+=q[0]*c;y+=q[1]*c;ww+=(q[2]==null?1:q[2])*c;}out.push([x,y,ww]);}
++return out;}
++function detectCorners(P,step,arcWin,thrDeg){const n=P.length,k=Math.max(2,Math.round(arcWin/step));if(n<2*k+1)return [];
++const sm=smoothOpen(P,1.5),ang=new Array(n).fill(0);
++for(let i=k;i<n-k;i++){const ax=sm[i][0]-sm[i-k][0],ay=sm[i][1]-sm[i-k][1],bx=sm[i+k][0]-sm[i][0],by=sm[i+k][1]-sm[i][1],la=hyp(ax,ay),lb=hyp(bx,by);
++if(la<1e-6||lb<1e-6)continue;ang[i]=Math.acos(clamp((ax*bx+ay*by)/(la*lb),-1,1))*180/Math.PI;}
++const out=[];
++for(let i=k;i<n-k;i++){if(ang[i]<thrDeg)continue;let mx=true;
++for(let j=Math.max(k,i-k);j<=Math.min(n-k-1,i+k);j++)if(ang[j]>ang[i]||(ang[j]===ang[i]&&j<i)){mx=false;break;}
++if(mx)out.push(i);}
++return out;}
++function bez(Q,t){const u=1-t,a=u*u*u,b=3*u*u*t,c=3*u*t*t,d=t*t*t;return [a*Q[0][0]+b*Q[1][0]+c*Q[2][0]+d*Q[3][0],a*Q[0][1]+b*Q[1][1]+c*Q[2][1]+d*Q[3][1]];}
++function bez1(Q,t){const u=1-t;return [3*u*u*(Q[1][0]-Q[0][0])+6*u*t*(Q[2][0]-Q[1][0])+3*t*t*(Q[3][0]-Q[2][0]),3*u*u*(Q[1][1]-Q[0][1])+6*u*t*(Q[2][1]-Q[1][1])+3*t*t*(Q[3][1]-Q[2][1])];}
++function bez2(Q,t){const u=1-t;return [6*u*(Q[2][0]-2*Q[1][0]+Q[0][0])+6*t*(Q[3][0]-2*Q[2][0]+Q[1][0]),6*u*(Q[2][1]-2*Q[1][1]+Q[0][1])+6*t*(Q[3][1]-2*Q[2][1]+Q[1][1])];}
++function splitBz(Q,t){const l=(a,b)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],a=l(Q[0],Q[1]),b=l(Q[1],Q[2]),c=l(Q[2],Q[3]),d=l(a,b),e=l(b,c),f=l(d,e);return [[Q[0],a,d,f],[f,e,c,Q[3]]];}
++function chordParam(P){const u=[0];for(let i=1;i<P.length;i++)u.push(u[i-1]+hyp(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]));const L=u[u.length-1]||1;return u.map(v=>v/L);}
++function genBez(P,u,t1,t2){const n=P.length,p0=P[0],p3=P[n-1];let c00=0,c01=0,c11=0,x0=0,x1=0;
++for(let i=0;i<n;i++){const t=u[i],s=1-t,b1=3*s*s*t,b2=3*s*t*t,b0=s*s*s,b3=t*t*t,a1=V.mul(t1,b1),a2=V.mul(t2,b2);
++c00+=V.dot(a1,a1);c01+=V.dot(a1,a2);c11+=V.dot(a2,a2);
++const tmp=[P[i][0]-(p0[0]*(b0+b1)+p3[0]*(b2+b3)),P[i][1]-(p0[1]*(b0+b1)+p3[1]*(b2+b3))];x0+=V.dot(a1,tmp);x1+=V.dot(a2,tmp);}
++const det=c00*c11-c01*c01;let al=0,ar=0;if(Math.abs(det)>1e-12){al=(x0*c11-x1*c01)/det;ar=(c00*x1-c01*x0)/det;}
++const seg=hyp(p3[0]-p0[0],p3[1]-p0[1]),eps=1e-6*seg;
++if(al<eps||ar<eps){const d=seg/3;return [p0,V.add(p0,V.mul(t1,d)),V.add(p3,V.mul(t2,d)),p3];}
++return [p0,V.add(p0,V.mul(t1,al)),V.add(p3,V.mul(t2,ar)),p3];}
++function reparam(Q,P,u){return u.map((t,i)=>{const d=V.sub(bez(Q,t),P[i]),d1=bez1(Q,t),d2=bez2(Q,t),num=V.dot(d,d1),den=V.dot(d1,d1)+V.dot(d,d2);return Math.abs(den)<1e-12?t:clamp(t-num/den,0,1);});}
++function maxErr(Q,P,u){let m=0,at=Math.floor(P.length/2);for(let i=1;i<P.length-1;i++){const d=V.sub(bez(Q,u[i]),P[i]),e=d[0]*d[0]+d[1]*d[1];if(e>m){m=e;at=i;}}return {m,at};}
++function fitCubic(P,t1,t2,err,out,depth){const n=P.length;
++if(n===2){const d=hyp(P[1][0]-P[0][0],P[1][1]-P[0][1])/3;out.push([P[0],V.add(P[0],V.mul(t1,d)),V.add(P[1],V.mul(t2,d)),P[1]]);return;}
++let u=chordParam(P),Q=genBez(P,u,t1,t2),e=maxErr(Q,P,u);
++if(e.m<err*err){out.push(Q);return;}
++if(e.m<err*err*16)for(let k=0;k<4;k++){u=reparam(Q,P,u);Q=genBez(P,u,t1,t2);e=maxErr(Q,P,u);if(e.m<err*err){out.push(Q);return;}}
++if(depth>40){out.push(Q);return;}
++const at=clamp(e.at,1,n-2),c=V.norm(V.sub(P[at-1],P[at+1]));
++fitCubic(P.slice(0,at+1),t1,c,err,out,depth+1);fitCubic(P.slice(at),V.mul(c,-1),t2,err,out,depth+1);}
++function fitRun(pts,err,tS,tE){const P=[];for(const p of pts){const l=P[P.length-1];if(!l||hyp(p[0]-l[0],p[1]-l[1])>1e-6)P.push([p[0],p[1]]);}
++if(P.length<2)return [];const k=Math.min(3,P.length-1),t1=tS||V.norm(V.sub(P[k],P[0])),t2=tE?V.mul(tE,-1):V.norm(V.sub(P[P.length-1-k],P[P.length-1]));
++const out=[];fitCubic(P,t1,t2,err,out,0);return out;}
++function flattenSegs(segs,step){const out=[];segs.forEach((Q,si)=>{const L=hyp(Q[1][0]-Q[0][0],Q[1][1]-Q[0][1])+hyp(Q[2][0]-Q[1][0],Q[2][1]-Q[1][1])+hyp(Q[3][0]-Q[2][0],Q[3][1]-Q[2][1]),m=Math.max(2,Math.ceil(L/step));
++for(let k=si===0?0:1;k<=m;k++)out.push(bez(Q,k/m));});return out;}
++function makeStroke(L,raw){const pts=[];for(const p of raw){const l=pts[pts.length-1];if(!l||hyp(p[0]-l[0],p[1]-l[1])>0.5)pts.push([p[0],p[1],p[2]==null?1:p[2]]);}
++if(pts.length<2||polyLen(pts)<14)return null;
++const R=resampleArc(pts,STEP).map(p=>[r1(p[0]),r1(p[1]),Math.round(p[2]*100)/100]);
++return {id:L?++L.seq:-1,pts:R,corners:detectCorners(R,STEP,40,55)};}
++function endTangent(P,e,arc){const n=P.length,i=e===0?0:n-1,st=e===0?1:-1;let acc=0,j=i;
++while(acc<arc&&j+st>=0&&j+st<n){acc+=hyp(P[j+st][0]-P[j][0],P[j+st][1]-P[j][1]);j+=st;}
++return V.norm([P[i][0]-P[j][0],P[i][1]-P[j][1]]);}
++function nearestOnPoly(P,x,y){let best={d:1e9},acc=0;
++for(let i=0;i<P.length-1;i++){const ax=P[i][0],ay=P[i][1],bx=P[i+1][0],by=P[i+1][1],dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy,t=l2>1e-9?clamp(((x-ax)*dx+(y-ay)*dy)/l2,0,1):0,
++px=ax+dx*t,py=ay+dy*t,d=hyp(x-px,y-py),sl=Math.sqrt(l2);if(d<best.d)best={d,i,pt:[px,py],s:acc+sl*t};acc+=sl;}
++best.total=acc;return best;}
++function segInter(a,b,c,d){const r=[b[0]-a[0],b[1]-a[1]],s=[d[0]-c[0],d[1]-c[1]],den=r[0]*s[1]-r[1]*s[0];if(Math.abs(den)<1e-9)return null;
++const t=((c[0]-a[0])*s[1]-(c[1]-a[1])*s[0])/den,u=((c[0]-a[0])*r[1]-(c[1]-a[1])*r[0])/den;
++return t>=0&&t<=1&&u>=0&&u<=1?{t,u,pt:[a[0]+r[0]*t,a[1]+r[1]*t]}:null;}
++function linkedSet(g){const s=new Set();for(const j of g.joins){s.add(j.a.s+':'+j.a.e);if(j.kind==='EE')s.add(j.b.s+':'+j.b.e);}return s;}
++function endCandidate(g,N,e,prm,linked){const T=prm.thick,thr=prm.snapR*T,P=N.pts,n=P.length,q=P[e===0?0:n-1],tan=endTangent(P,e,T*1.2),tanA=endTangent(P,e,T*0.45),lenN=polyLen(P);let best=null;
++const cand=[];
++for(const M of g.strokes)for(const f of [0,1]){
++if(M.id===N.id&&f===e)continue;if(M.id===N.id&&lenN<3*T)continue;if(linked.has(M.id+':'+f))continue;
++const Q=M.pts[f===0?0:M.pts.length-1],d=hyp(q[0]-Q[0],q[1]-Q[1]);if(d<=thr)cand.push({d,M,f,Q});}
++cand.sort((a,b)=>a.d-b.d);
++if(cand.length){const c=cand[0],tb=endTangent(c.M.pts,c.f,T*0.45),ang=Math.acos(clamp(-(tanA[0]*tb[0]+tanA[1]*tb[1]),-1,1))*180/Math.PI;
++return {kind:'EE',d:c.d,a:{s:N.id,e},b:{s:c.M.id,e:c.f},pt:[(q[0]+c.Q[0])/2,(q[1]+c.Q[1])/2],smooth:ang<35,ang};}
++for(const M of g.strokes){if(M.id===N.id)continue;const MP=M.pts,maxTail=thr*1.25;let acc=0;
++for(let k=e===1?n-1:0;e===1?k>=1:k<n-1;k+=e===1?-1:1){const a=e===1?P[k-1]:P[k],b=e===1?P[k]:P[k+1];acc+=hyp(b[0]-a[0],b[1]-a[1]);if(acc>maxTail+STEP)break;
++let hit=null;
++for(let m=0;m<MP.length-1;m++){const h=segInter(a,b,MP[m],MP[m+1]);if(h){const dd=hyp(h.pt[0]-q[0],h.pt[1]-q[1]);if(!hit||dd<hit.dd)hit={...h,dd};}}
++if(hit&&hit.dd<=maxTail){const near=nearestOnPoly(MP,hit.pt[0],hit.pt[1]);
++if(near.s<T*0.35&&!linked.has(M.id+':0')||near.total-near.s<T*0.35&&!linked.has(M.id+':1'))continue;
++const c={kind:'T',d:hit.dd*0.5,M,pt:hit.pt,trim:e===1?n-k:k+1,s:near.s};if(!best||c.d<best.d)best=c;break;}}
++if(best&&best.M===M)continue;
++const np=nearestOnPoly(MP,q[0],q[1]);if(np.d>thr)continue;
++if((np.s<T*0.5&&!linked.has(M.id+':0'))||(np.total-np.s<T*0.5&&!linked.has(M.id+':1')))continue;
++const far=[q[0]+tan[0]*thr*1.6,q[1]+tan[1]*thr*1.6];let ray=null;
++for(let m=0;m<MP.length-1;m++){const h=segInter(q,far,MP[m],MP[m+1]);if(h&&(!ray||h.t<ray.t))ray=h;}
++const c=ray&&ray.t*thr*1.6<=thr*1.3?{kind:'T',d:np.d,M,pt:ray.pt,trim:0,s:nearestOnPoly(MP,ray.pt[0],ray.pt[1]).s}:{kind:'T',d:np.d,M,pt:np.pt,trim:1,s:np.s};
++if(!best||c.d<best.d)best=c;}
++if(best)return {kind:'T',d:best.d,a:{s:N.id,e},b:{s:best.M.id,s2:best.s},pt:best.pt,trim:best.trim,smooth:false};
++return null;}
++function detectJoins(g,N,prm){const T=prm.thick,thr=prm.snapR*T,out=[],tmp={strokes:g.strokes.includes(N)?g.strokes:g.strokes.concat([N]),joins:g.joins},linked=linkedSet(g),used=new Set();
++for(const e of [1,0]){if(linked.has(N.id+':'+e)||used.has(N.id+':'+e))continue;const c=endCandidate(tmp,N,e,prm,linked);if(!c)continue;
++if(c.kind==='EE'){const kb=c.b.s+':'+c.b.e;if(used.has(kb))continue;used.add(kb);used.add(N.id+':'+e);}out.push(c);}
++for(const M of g.strokes){if(M.id===N.id)continue;
++for(const f of [0,1]){const key=M.id+':'+f;if(linked.has(key)||used.has(key))continue;const Q=M.pts[f===0?0:M.pts.length-1],np=nearestOnPoly(N.pts,Q[0],Q[1]);if(np.d>thr)continue;
++if((np.s<T*0.5&&!linked.has(N.id+':0')&&!used.has(N.id+':0'))||(np.total-np.s<T*0.5&&!linked.has(N.id+':1')&&!used.has(N.id+':1')))continue;
++const c=endCandidate({strokes:tmp.strokes.filter(s=>s.id===N.id||s.id===M.id),joins:g.joins},M,f,prm,linked);
++if(c&&c.kind==='T'&&c.b.s===N.id){used.add(key);out.push(c);}}}
++return out;}
++function commit(L,raw,prm,opts){const N=makeStroke(L,raw);if(!N)return null;const joins=(prm.join&&!(opts&&opts.noSnap))?detectJoins(L,N,prm):[];
++L.strokes.push(N);for(const j of joins){j.id=++L.seq;L.joins.push(j);}touch(L);return {stroke:N,joins};}
++function split(L,jid){const n=L.joins.length;L.joins=L.joins.filter(j=>j.id!==jid);if(L.joins.length!==n)touch(L);return L.joins.length!==n;}
++function clear(L){L.strokes=[];L.joins=[];touch(L);}
++function preview(L,raw,prm){const N=makeStroke(null,raw);if(!N)return [];N.id=-1;return detectJoins(L,N,prm);}
++function effStroke(s,g){let pts=s.pts.map(p=>p.slice()),corners=s.corners.slice();const free=[true,true];
++for(const j of g.joins){if(j.kind!=='T'||j.a.s!==s.id)continue;free[j.a.e]=false;const w=pts[j.a.e===0?0:pts.length-1][2];
++if(j.a.e===1){pts=pts.slice(0,Math.max(1,pts.length-j.trim));pts.push([j.pt[0],j.pt[1],w]);corners=corners.filter(c=>c<pts.length-1);}
++else{const k=Math.min(j.trim,pts.length-1);pts=[[j.pt[0],j.pt[1],w]].concat(pts.slice(k));corners=corners.map(c=>c-k+1).filter(c=>c>0);}}
++return {id:s.id,pts,corners,free};}
++function buildPaths(g){const st={};g.strokes.forEach(s=>{st[s.id]=effStroke(s,g);});const link={};
++for(const j of g.joins)if(j.kind==='EE'&&st[j.a.s]&&st[j.b.s]){link[j.a.s+':'+j.a.e]={j,o:j.b};link[j.b.s+':'+j.b.e]={j,o:j.a};st[j.a.s].free[j.a.e]=false;st[j.b.s].free[j.b.e]=false;}
++const seen=new Set(),paths=[];
++const finish=p=>{p.corners=[...new Set(p.corners)].filter(c=>c>=0&&c<p.pts.length).sort((a,b)=>a-b);return p;};
++const walk=(sid,e0)=>{const path={pts:[],corners:[],closed:false,ids:[],free0:false,free1:false};let cs=sid,ein=e0,jf=null;
++for(let guard=0;guard<200;guard++){const S=st[cs],fwd=ein===0,n=S.pts.length,P=fwd?S.pts:S.pts.slice().reverse(),C=fwd?S.corners:S.corners.map(c=>n-1-c);
++seen.add(cs);path.ids.push(cs);
++if(!jf){path.free0=S.free[ein];P.forEach(p=>path.pts.push(p.slice()));C.forEach(c=>path.corners.push(c));}
++else{const last=path.pts.length-1,w=(path.pts[last][2]+P[0][2])/2;path.pts[last]=[jf.j.pt[0],jf.j.pt[1],w];if(!jf.j.smooth)path.corners.push(last);
++for(let i=1;i<P.length;i++)path.pts.push(P[i].slice());C.forEach(c=>{if(c>=1)path.corners.push(last+c);});}
++const eout=fwd?1:0,Lk=link[cs+':'+eout];
++if(!Lk){path.free1=S.free[eout];break;}
++const o=Lk.o;
++if(o.s===sid&&o.e===e0){path.pts.pop();path.closed=true;path.pts[0]=[Lk.j.pt[0],Lk.j.pt[1],path.pts[0][2]];if(!Lk.j.smooth)path.corners.push(0);break;}
++if(seen.has(o.s))break;jf=Lk;cs=o.s;ein=o.e;}
++return finish(path);};
++for(const s of g.strokes){if(seen.has(s.id))continue;const unl=[0,1].find(e=>!link[s.id+':'+e]);if(unl!==undefined)paths.push(walk(s.id,unl));}
++for(const s of g.strokes)if(!seen.has(s.id))paths.push(walk(s.id,0));
++return paths;}
++function fitPath(path,prm){const sigma=prm.smooth/100*7,tol=1.2+prm.smooth*0.05;let P=path.pts,C=path.corners.slice();const segs=[],starts=[];let sm=[];
++if(path.closed&&C.length===0){const S=smoothClosed(P,sigma),n=S.length;sm=S;
++if(n>=6){const tan=i=>V.norm(V.sub(S[(i+2)%n],S[(i-2+n)%n])),br=[0,1,2,3].map(q=>Math.round(n*q/4));
++for(let b=0;b<4;b++){const i0=br[b],i1=br[(b+1)%4],run=[];let i=i0;for(;;){run.push(S[i]);if(i===i1&&run.length>1)break;i=(i+1)%n;}
++segs.push(...fitRun(run,tol,tan(i0),tan(i1)));}}}
++else{let Q=P,cs=C;
++if(path.closed){const c0=C[0];Q=P.slice(c0).concat(P.slice(0,c0));Q.push(Q[0].slice());cs=C.map(c=>(c-c0+P.length)%P.length).filter(c=>c>0);}
++const cuts=[0,...cs.filter(c=>c>0&&c<Q.length-1),Q.length-1];
++for(let k=0;k<cuts.length-1;k++){const run=smoothOpen(Q.slice(cuts[k],cuts[k+1]+1),sigma);sm.push(...(k?run.slice(1):run));
++if(run.length>=2){starts.push(segs.length);segs.push(...fitRun(run,tol));}}}
++const flat=flattenSegs(segs,3),cumS=[0];for(let i=1;i<sm.length;i++)cumS.push(cumS[i-1]+hyp(sm[i][0]-sm[i-1][0],sm[i][1]-sm[i-1][1]));
++const LS=cumS[cumS.length-1]||1,cumF=[0];for(let i=1;i<flat.length;i++)cumF.push(cumF[i-1]+hyp(flat[i][0]-flat[i-1][0],flat[i][1]-flat[i-1][1]));
++const LF=cumF[cumF.length-1]||1;let j=0;
++const poly=flat.map((p,i)=>{const s=cumF[i]/LF*LS;while(j<sm.length-2&&cumS[j+1]<s)j++;const seg=cumS[j+1]-cumS[j],t=seg>1e-9?clamp((s-cumS[j])/seg,0,1):0,
++w0=sm[j][2]==null?1:sm[j][2],w1=sm[Math.min(j+1,sm.length-1)][2]==null?1:sm[Math.min(j+1,sm.length-1)][2];return [p[0],p[1],w0+(w1-w0)*t];});
++return {segs,poly,closed:path.closed,free0:path.free0,free1:path.free1,corners:C.length,starts:path.closed&&C.length===0?[]:starts.slice(path.closed?0:1)};}
++function paramKey(prm){return [prm.thick,prm.smooth,prm.pen,prm.nib,prm.endStyle,prm.fillet,prm.nodeCap].join('|');}
++const SKC=new Map();
++function skeleton(L,prm){const k=L.rev+'#'+prm.thick+'|'+prm.smooth+'|'+prm.snapR;let r=SKC.get(k);if(r)return r;r=buildPaths(L).map(p=>fitPath(p,prm));if(SKC.size>120)SKC.clear();SKC.set(k,r);return r;}
++const arcLen=Q=>{let L=0,p=Q[0];for(let k=1;k<=12;k++){const q=bez(Q,k/12);L+=hyp(q[0]-p[0],q[1]-p[1]);p=q;}return L;};
++function taperSplit(segs,prm,free0,free1){const T=prm.thick,marks=[0.4,0.8,1.2,1.6].map(m=>m*T);let out=segs.map(q=>q.map(p=>p.slice()));
++const cut=(front)=>{let acc=0;const rest=[];
++const arr=front?out.slice():out.slice().reverse().map(q=>[q[3],q[2],q[1],q[0]]);const res=[];let mi=0;
++for(let i=0;i<arr.length;i++){let Q=arr[i];
++while(mi<marks.length){const L=arcLen(Q);if(acc+L<=marks[mi]+1e-6)break;const need=marks[mi]-acc;if(need<3){mi++;continue;}
++let lo=0,hi=1;for(let it=0;it<18;it++){const m=(lo+hi)/2,[a]=splitBz(Q,m);if(arcLen(a)<need)lo=m;else hi=m;}
++const [a,b]=splitBz(Q,(lo+hi)/2);res.push(a);acc+=arcLen(a);Q=b;mi++;}
++acc+=arcLen(Q);res.push(Q);}
++return front?res:res.reverse().map(q=>[q[3],q[2],q[1],q[0]]);};
++if(free0)out=cut(true);if(free1)out=cut(false);return out;}
++function nodesOf(sk,prm,tap){const T=prm.thick;let segs=sk.segs,starts=sk.starts.slice();if(!segs.length)return null;
++const closed=sk.closed&&sk.corners===0||sk.closed;
++const cornerPts=starts.map(i=>segs[i][0]);
++if(tap){segs=taperSplit(segs,prm,!sk.closed&&sk.free0,!sk.closed&&sk.free1);starts=[];cornerPts.forEach(p=>{const i=segs.findIndex(q=>hyp(q[0][0]-p[0],q[0][1]-p[1])<1e-6);if(i>=0)starts.push(i);});}
++const n=segs.length,isCorner=new Set(starts),cum=[0];for(let i=0;i<n;i++)cum.push(cum[i]+arcLen(segs[i]));const Ltot=cum[n]||1,pl=sk.poly;
++const wAt=(x,y)=>{let b=1e18,w=1;for(const p of pl){const d=(p[0]-x)*(p[0]-x)+(p[1]-y)*(p[1]-y);if(d<b){b=d;w=p[2];}}return w;};
++const nodes=[],K=sk.closed?n:n+1;
++for(let k=0;k<K;k++){const P=k<n?segs[k][0]:segs[n-1][3],b=k<n?segs[k][1]:null,a=k>0?segs[k-1][2]:(sk.closed?segs[n-1][2]:null);
++let w=wAt(P[0],P[1]);
++if(tap){const d=cum[k]<=Ltot-cum[k]?cum[k]:Ltot-cum[k],f=0.1+0.9*Math.pow(clamp(d/(1.6*T),0,1),0.85);
++if((!sk.closed&&((sk.free0&&cum[k]<=Ltot/2)||(sk.free1&&cum[k]>Ltot/2)))) w*=f;}
++nodes.push({x:P[0],y:P[1],a:a?{x:a[0],y:a[1]}:null,b:b?{x:b[0],y:b[1]}:null,type:(isCorner.has(k)||(k===0&&sk.closed&&sk.corners>0))?'corner':'smooth',j:'round',w:Math.round(w*1000)/1000});}
++nodes.forEach(nd=>{nd.x=nd.x;});
++return nodes;}
++function penOf(prm){const T=prm.thick;return prm.pen==='broad'?{kind:'ell',rx:T/2,ry:T*0.13,ang:prm.nib}:{kind:'ell',rx:T/2,ry:T/2,ang:0};}
++function skelStrokes(skels,prm){const out=[],es=prm.endStyle,nib=prm.nib*Math.PI/180,T=prm.thick;
++for(const sk of skels){const nodes=nodesOf(sk,prm,es==='point');if(!nodes||nodes.length<2)continue;
++const cap={round:'R',point:'R',serif:'R',cut:{cut:[Math.cos(nib),Math.sin(nib)]}}[es];
++const st={nodes,cap0:sk.closed?'R':cap,cap1:sk.closed?'R':cap,closed:!!sk.closed,j:'round'};out.push(st);
++if(es==='serif'&&!sk.closed)for(const e of [0,1]){if(!(e===0?sk.free0:sk.free1))continue;
++const nd=e===0?nodes[0]:nodes[nodes.length-1],nx=e===0?nodes[1]:nodes[nodes.length-2],bn=e===0?nd.b:nd.a,t=V.norm([nd.x-(bn?bn.x:nx.x),nd.y-(bn?bn.y:nx.y)]),nr=[-t[1],t[0]],wE=T*nd.w,
++c=[nd.x-t[0]*wE*0.12,nd.y-t[1]*wE*0.12],hw=wE*0.85,hh=wE*0.17;
++const q=[[c[0]-nr[0]*hw-t[0]*hh,c[1]-nr[1]*hw-t[1]*hh],[c[0]+nr[0]*hw-t[0]*hh,c[1]+nr[1]*hw-t[1]*hh],[c[0]+nr[0]*hw+t[0]*hh,c[1]+nr[1]*hw+t[1]*hh],[c[0]-nr[0]*hw+t[0]*hh,c[1]-nr[1]*hw+t[1]*hh]];
++const ar=q.reduce((s,p,i)=>{const o=q[(i+1)%4];return s+p[0]*o[1]-o[0]*p[1];},0);if(ar<0)q.reverse();
++out.push({dot:true,x:c[0],y:c[1],r:1,poly:[{hole:false,nodes:q.map(p=>({x:p[0],y:p[1],a:null,b:null}))}]});}}
++return out;}
++const cArea=c=>{const P=flatC(c,6);let a=0;for(let i=0;i<P.length;i++){const q=P[(i+1)%P.length];a+=P[i][0]*q[1]-q[0]*P[i][1];}return a/2;};
++function filletConcave(cs,r){if(!(r>1))return cs;
++return cs.map(c=>{const n=c.nodes,N=n.length;if(N<3)return c;const ar=cArea(c),sgn=((ar>0)===!c.hole)?1:-1;
++const hs=i=>{const A=n[i],B=n[(i+1)%N];return {A,B,P1:A.b||null,P2:B.a||null,line:!A.b&&!B.a};};
++const cp=i=>{const s=hs(i);return [[s.A.x,s.A.y],s.P1?[s.P1.x,s.P1.y]:[s.A.x,s.A.y],s.P2?[s.P2.x,s.P2.y]:[s.B.x,s.B.y],[s.B.x,s.B.y]];};
++const Qs=[];for(let i=0;i<N;i++)Qs.push(cp(i));const len=Qs.map(arcLen);
++const info=new Array(N).fill(null);
++for(let i=0;i<N;i++){const Qi=Qs[(i-1+N)%N],Qo=Qs[i];
++let din=V.sub(Qi[3],Qi[2]);if(hyp(din[0],din[1])<1e-6)din=V.sub(Qi[3],Qi[1]);if(hyp(din[0],din[1])<1e-6)din=V.sub(Qi[3],Qi[0]);
++let dou=V.sub(Qo[1],Qo[0]);if(hyp(dou[0],dou[1])<1e-6)dou=V.sub(Qo[2],Qo[0]);if(hyp(dou[0],dou[1])<1e-6)dou=V.sub(Qo[3],Qo[0]);
++const ti=V.norm(din),to=V.norm(dou),cr=ti[0]*to[1]-ti[1]*to[0],dt=V.dot(ti,to);
++if(sgn*cr>-0.1)continue;
++const phi=Math.atan2(Math.abs(cr),dt),d=r*Math.tan(phi/2),lim=0.48*Math.min(len[(i-1+N)%N],len[i]);
++if(d<0.8)continue;const dd=Math.min(d,lim),rr=dd/Math.tan(phi/2);info[i]={ti,to,phi,d:dd,h:4/3*Math.tan(phi/4)*rr};}
++if(!info.some(Boolean))return c;
++const tAt=(Q,d,fromEnd)=>{const L=arcLen(Q);let lo=0,hi=1;const tgt=fromEnd?L-d:d;for(let it=0;it<20;it++){const m=(lo+hi)/2,[a]=splitBz(Q,m);if(arcLen(a)<tgt)lo=m;else hi=m;}return (lo+hi)/2;};
++const out=[];const exitOf=new Array(N),entryOf=new Array(N);
++for(let i=0;i<N;i++){const A=n[i];
++if(info[i]){const inf=info[i],Qi=Qs[(i-1+N)%N],Qo=Qs[i];
++const ti_=tAt(Qi,inf.d,true),to_=tAt(Qo,inf.d,false),pin=bez(Qi,ti_),pout=bez(Qo,to_);
++entryOf[i]={x:pin[0],y:pin[1],a:null,b:{x:pin[0]+inf.ti[0]*inf.h,y:pin[1]+inf.ti[1]*inf.h},t:ti_};
++exitOf[i]={x:pout[0],y:pout[1],a:{x:pout[0]-inf.to[0]*inf.h,y:pout[1]-inf.to[1]*inf.h},b:null,t:to_};}
++else{const nd={x:A.x,y:A.y,a:A.a?{x:A.a.x,y:A.a.y}:null,b:A.b?{x:A.b.x,y:A.b.y}:null};entryOf[i]=nd;exitOf[i]=nd;}}
++for(let i=0;i<N;i++){const j=(i+1)%N,s=hs(i);
++const t0=info[i]?exitOf[i].t:0,t1=info[j]?entryOf[j].t:1;
++if(info[i]||info[j]){let Q=Qs[i];if(t1<1){Q=splitBz(Q,t1)[0];}const u0=t1<1?t0/t1:t0;if(t0>0){Q=splitBz(Q,u0)[1];}
++if(!s.line){exitOf[i].b={x:Q[1][0],y:Q[1][1]};entryOf[j].a={x:Q[2][0],y:Q[2][1]};}
++else{if(info[i])exitOf[i].b=null;if(info[j])entryOf[j].a=null;}}}
++for(let i=0;i<N;i++){if(info[i]){out.push(entryOf[i],exitOf[i]);}else out.push(entryOf[i]);}
++out.forEach(q=>{delete q.t;});
++return {hole:c.hole,nodes:out};});}
++function stubSegsFor(side,cn,prm,geo){const a=cn[side];if(!a)return null;const yJ=lvlY(a.lvl,prm.thick);let P0,P3,e0;
++if(side==='exit'){P0=a.pt;P3=[geo.xE,yJ];e0=V.norm([1+0.6*a.dir[0],0.6*a.dir[1]]);}else{P0=[geo.xS,yJ];P3=a.pt;e0=[1,0];}
++const e3=side==='entry'?V.norm([-1+0.6*a.dir[0],0.6*a.dir[1]]):[1,0],dist=Math.max(30,hyp(P3[0]-P0[0],P3[1]-P0[1]));
++const Q=side==='exit'?[P0,V.add(P0,V.mul(e0,dist*0.4)),[P3[0]-dist*0.4,P3[1]],P3]:[P0,[P0[0]+dist*0.4,P0[1]],V.add(P3,V.mul(e3,dist*0.4)),P3];
++return {segs:[Q],poly:flattenSegs([Q],3).map(p=>[p[0],p[1],1]),closed:false,free0:false,free1:false,corners:0,starts:[],stub:side};}
++const lvlY=(lvl,T)=>lvl==='base'?Math.max(0.5*T+25,T*0.86):MET.xh-0.57*T;
++const lvlOf=y=>(y<=MET.xh/2+1?'base':'xh');
++function exactOutline(strokes,prm){
++const pen=skPenOf(penOf(prm),{stem:prm.thick,hair:prm.thick,nib:prm.nib}),raw=skelToContours(strokes,pen,{stem:prm.thick,hair:prm.thick,nib:prm.nib,term:0});
++if(!raw.length)return [];
++let u=skUnionChecked(raw);u=skSimplify(u,1.2);u=filletConcave(u,prm.fillet*prm.thick);
++u=u.filter(c=>c.nodes.length>=3&&Math.abs(cArea(c))>30);
++if(prm.nodeCap&&typeof skReduce==='function'){try{u=skReduce(u,prm.nodeCap,2,3.5);}catch(e){}}
++return u;}
++let RC=null;
++function stampRaster(ctx,sk,prm){const T=prm.thick,P=sk.poly,n=P.length;if(!n)return;const nib=prm.nib*Math.PI/180,broad=prm.pen==='broad',es=prm.endStyle;
++for(let i=0;i<n;i++){let w=P[i][2]||1;const x=P[i][0],y=P[i][1];if(es==='point'&&!sk.closed){
++let d0=0,d1=0;for(let k=1;k<=i;k++)d0+=hyp(P[k][0]-P[k-1][0],P[k][1]-P[k-1][1]);for(let k=i+1;k<n;k++)d1+=hyp(P[k][0]-P[k-1][0],P[k][1]-P[k-1][1]);
++if(sk.free0)w*=0.1+0.9*Math.pow(clamp(d0/(1.6*T),0,1),0.85);if(sk.free1)w*=0.1+0.9*Math.pow(clamp(d1/(1.6*T),0,1),0.85);}
++const D=T*w;ctx.beginPath();if(broad)ctx.ellipse(x,y,D/2,D*0.13,nib,0,6.2832);else ctx.arc(x,y,D/2,0,6.2832);ctx.fill();}}
++function distSq(tgt,W,H,g){const INF=1e12,m=Math.max(W,H),f=new Float64Array(m),d=new Float64Array(m),v=new Int32Array(m),z=new Float64Array(m+1),N=W*H;
++const edt=(n)=>{let k=0;v[0]=0;z[0]=-1e20;z[1]=1e20;for(let q=1;q<n;q++){let s;for(;;){const p=v[k];s=((f[q]+q*q)-(f[p]+p*p))/(2*q-2*p);if(s<=z[k]&&k>0)k--;else break;}
++if(s<=z[k]){v[k]=q;z[k]=-1e20;z[k+1]=1e20;}else{k++;v[k]=q;z[k]=s;z[k+1]=1e20;}}k=0;for(let q=0;q<n;q++){while(z[k+1]<q)k++;const p=v[k];d[q]=(q-p)*(q-p)+f[p];}};
++for(let i=0;i<N;i++)g[i]=tgt[i]?0:INF;
++for(let x=0;x<W;x++){for(let y=0,k=x;y<H;y++,k+=W)f[y]=g[k];edt(H);for(let y=0,k=x;y<H;y++,k+=W)g[k]=d[y];}
++for(let y=0;y<H;y++){const o=y*W;for(let x=0;x<W;x++)f[x]=g[o+x];edt(W);for(let x=0;x<W;x++)g[o+x]=d[x];}return g;}
++function closingField(mask,W,H,r){const N=W*H,d1=distSq(mask,W,H,new Float32Array(N)),D=new Uint8Array(N),r2=r*r;for(let i=0;i<N;i++)D[i]=d1[i]<=r2?0:1;
++const d2=distSq(D,W,H,new Float32Array(N)),th=r+0.5,f=d2;for(let i=0;i<N;i++)f[i]=Math.sqrt(d2[i])-th;for(let i=0;i<N;i++)if(mask[i]&&f[i]<0.5)f[i]=0.5;return f;}
++function marching(f,W,H){const eid=(x,y,vert)=>(y*W+x)*2+(vert?1:0),next=new Map(),pos=new Map();
++const ptOn=(x,y,vert)=>{const a=f[y*W+x],b=vert?f[(y+1)*W+x]:f[y*W+x+1],t=a/(a-b);return vert?[x,y+t]:[x+t,y];},cpos=[[0,0],[1,0],[1,1],[0,1]];
++for(let y=0;y<H-1;y++)for(let x=0;x<W-1;x++){const i0=y*W+x,p0=f[i0]>0,p1=f[i0+1]>0,p2=f[i0+W+1]>0,p3=f[i0+W]>0,cnt=(p0?1:0)+(p1?1:0)+(p2?1:0)+(p3?1:0);if(cnt===0||cnt===4)continue;
++const c=[p0,p1,p2,p3],E=[eid(x,y,0),eid(x+1,y,1),eid(x,y+1,0),eid(x,y,1)],EP=[[x,y,0],[x+1,y,1],[x,y+1,0],[x,y,1]],segs=[];
++const iso=(k,inside)=>segs.push([(k+3)%4,k,inside?k:(k+1)%4]);
++if(cnt===1)iso(c.indexOf(true),true);else if(cnt===3)iso(c.indexOf(false),false);
++else if(c[0]===c[2]){const avg=(f[y*W+x]+f[y*W+x+1]+f[(y+1)*W+x+1]+f[(y+1)*W+x])/4;if(avg>0){for(let k=0;k<4;k++)if(!c[k])iso(k,false);}else{for(let k=0;k<4;k++)if(c[k])iso(k,true);}}
++else{const ed=[];for(let k=0;k<4;k++)if(c[k]!==c[(k+1)%4])ed.push(k);segs.push([ed[0],ed[1],c.indexOf(true)]);}
++for(const [ea,eb,ic] of segs){let A=ea,B=eb,PA=ptOn(...EP[ea]),PB=ptOn(...EP[eb]);const cp=[x+cpos[ic][0],y+cpos[ic][1]],cr=(PB[0]-PA[0])*(cp[1]-PA[1])-(PB[1]-PA[1])*(cp[0]-PA[0]);
++if(cr>0){A=eb;B=ea;const t=PA;PA=PB;PB=t;}next.set(E[A],E[B]);pos.set(E[A],PA);pos.set(E[B],PB);}}
++const loops=[],seen=new Set();
++for(const s of next.keys()){if(seen.has(s))continue;const loop=[];let c=s,guard=0;while(!seen.has(c)&&next.has(c)&&guard++<2e6){seen.add(c);loop.push(pos.get(c));c=next.get(c);}if(c===s&&loop.length>3)loops.push(loop);}
++return loops;}
++const areaOf=P=>{let a=0;for(let i=0,n=P.length;i<n;i++){const p=P[i],q=P[(i+1)%n];a+=p[0]*q[1]-q[0]*p[1];}return a/2;};
++function fitLoop(L,err,cornerDeg){const pts=L.map(p=>[p[0],p[1],1]);pts.push(pts[0].slice());const R=resampleArc(pts,3);R.pop();const P=R,n=P.length;if(n<6)return [];
++const S=smoothClosed(P,1.2).map(p=>[p[0],p[1]]),k=3,ang=new Array(n).fill(0);
++for(let i=0;i<n;i++){const a=S[(i-k+n)%n],b=S[i],c=S[(i+k)%n],ax=b[0]-a[0],ay=b[1]-a[1],bx=c[0]-b[0],by=c[1]-b[1],la=hyp(ax,ay),lb=hyp(bx,by);ang[i]=la>1e-9&&lb>1e-9?Math.acos(clamp((ax*bx+ay*by)/(la*lb),-1,1))*180/Math.PI:0;}
++const corners=[];for(let i=0;i<n;i++){if(ang[i]<cornerDeg)continue;let mx=true;for(let j=-k;j<=k;j++){const q=(i+j+n)%n;if(ang[q]>ang[i]||(ang[q]===ang[i]&&j<0)){mx=false;break;}}if(mx)corners.push(i);}
++const tan=i=>V.norm(V.sub(S[(i+2)%n],S[(i-2+n)%n])),breaks=corners.map(i=>({i,corner:true}));
++if(breaks.length<2){const have=new Set(breaks.map(b=>b.i)),base=breaks.length?breaks[0].i:0,parts=breaks.length?3:4;
++for(let q=breaks.length?1:0;q<parts;q++){const i=(base+Math.round(n*q/parts))%n;if(!have.has(i)){have.add(i);breaks.push({i,corner:false});}}}
++breaks.sort((a,b)=>a.i-b.i);const segs=[];
++for(let b=0;b<breaks.length;b++){const a0=breaks[b],a1=breaks[(b+1)%breaks.length],run=[];let i=a0.i;for(;;){run.push(S[i]);if(i===a1.i&&run.length>1)break;i=(i+1)%n;if(run.length>n+1)break;}
++const tS=a0.corner?V.norm(V.sub(run[Math.min(2,run.length-1)],run[0])):tan(a0.i),tE=a1.corner?V.norm(V.sub(run[run.length-1],run[Math.max(0,run.length-3)])):tan(a1.i);segs.push(...fitRun(run,err,tS,tE));}
++return segs;}
++function rasterOutline(skels,prm){if(typeof document==='undefined'&&typeof OffscreenCanvas==='undefined')return null;
++const T=prm.thick,pad=T*1.15+10,u=2.2;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
++for(const s of skels)for(const p of s.poly){x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1]);}
++if(x0>x1)return [];x0-=pad;y0-=pad;x1+=pad;y1+=pad;const W=Math.ceil((x1-x0)/u),H=Math.ceil((y1-y0)/u);
++const cv=RC||(RC=typeof OffscreenCanvas!=='undefined'?new OffscreenCanvas(W,H):document.createElement('canvas'));cv.width=W;cv.height=H;
++const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);ctx.setTransform(1/u,0,0,-1/u,-x0/u,y1/u);ctx.fillStyle='#000';
++for(const s of skels)stampRaster(ctx,s,prm);
++const id=ctx.getImageData(0,0,W,H).data,mask=new Uint8Array(W*H);for(let i=0;i<W*H;i++)mask[i]=id[i*4+3]>127?1:0;
++const f=closingField(mask,W,H,Math.max(0.6,prm.fillet*T/u));
++let loops=marching(f,W,H).map(l=>l.map(p=>[x0+(p[0]+0.5)*u,y1-(p[1]+0.5)*u])).map(l=>({l,a:areaOf(l)})).filter(o=>Math.abs(o.a)>40);
++if(!loops.length)return [];const big=loops.reduce((m,o)=>Math.abs(o.a)>Math.abs(m.a)?o:m,loops[0]),flip=big.a<0;
++const cs=[];for(const o of loops){const pts=flip?o.l.slice().reverse():o.l,segs=fitLoop(pts,0.9,58);if(segs.length<2)continue;
++cs.push({hole:(flip?-o.a:o.a)<0,nodes:segs.map((q,i)=>({x:q[0][0],y:q[0][1],a:segs[(i-1+segs.length)%segs.length][2]?{x:segs[(i-1+segs.length)%segs.length][2][0],y:segs[(i-1+segs.length)%segs.length][2][1]}:null,b:{x:q[1][0],y:q[1][1]}}))});}
++return cs;}
++function outlineOf(skels,prm,stubs){const all=stubs&&stubs.length?skels.concat(stubs):skels,res={mode:'exact',cs:[]};
++try{res.cs=exactOutline(skelStrokes(all,prm),prm);}catch(e){res.cs=[];res.err=String(e&&e.message);}
++if(!res.cs.length&&all.length){let r=null;try{r=rasterOutline(all,prm);}catch(e){}if(r&&r.length){res.cs=r;res.mode='raster';}}
++if(res.cs.length&&typeof csgKey==='function'&&typeof CSG_CACHE!=='undefined'){const cp=res.cs.map(c=>({hole:c.hole,nodes:c.nodes.map(n=>({x:n.x,y:n.y,a:n.a&&{...n.a},b:n.b&&{...n.b}}))}));CSG_CACHE.set(csgKey(cp),cp);}
++return res;}
++const OC=new Map();
++function build(L,prm,adv){const k=L.rev+'#'+paramKey(prm)+'#'+prm.snapR;let r=OC.get(k);if(r)return r;
++const sk=skeleton(L,prm),o=sk.length?outlineOf(sk,prm):{cs:[],mode:'exact'};
++r={cs:o.cs,mode:o.mode,nodes:o.cs.reduce((s,c)=>s+c.nodes.length,0),skels:sk,err:o.err};if(OC.size>240)OC.clear();OC.set(k,r);return r;}
++const cpCs=cs=>cs.map(c=>({hole:!!c.hole,nodes:c.nodes.map(n=>({x:n.x,y:n.y,a:n.a?{x:n.a.x,y:n.a.y}:null,b:n.b?{x:n.b.x,y:n.b.y}:null}))}));
++function skelEnds(skels){const ends=[],pts=[];
++for(const sk of skels){const P=sk.poly;if(!P.length)continue;P.forEach(p=>pts.push(p));
++if(!sk.closed&&P.length>6){if(sk.free0)ends.push({pt:P[0],dir:V.norm(V.sub(P[0],P[Math.min(6,P.length-1)]))});if(sk.free1)ends.push({pt:P[P.length-1],dir:V.norm(V.sub(P[P.length-1],P[Math.max(0,P.length-7)]))});}}
++return {ends,pts};}
++function pickSide(side,mode,skels,adv){if(mode==='off')return null;const {ends,pts}=skelEnds(skels);if(!pts.length)return null;const sgn=side==='exit'?1:-1,score=p=>sgn*p[0];
++const bestBy=arr=>{if(!arr.length)return null;const mx=Math.max(...arr.map(o=>score(o.pt)));return arr.filter(o=>score(o.pt)>=mx-2).reduce((m,o)=>o.pt[1]<m.pt[1]?o:m);};
++const inZone=p=>side==='exit'?p[0]>=0.55*adv:p[0]<=0.45*adv;let chosen=null,lvl=null;
++if(mode==='auto'){const cands=ends.filter(e=>inZone(e.pt)),baseC=cands.filter(e=>lvlOf(e.pt[1])==='base');chosen=bestBy(baseC);
++if(!chosen){const nb=pts.filter(p=>p[1]<=70&&inZone(p)).map(p=>({pt:p})),o=bestBy(nb);if(o)chosen={pt:o.pt,dir:[sgn,0]};}
++if(!chosen)chosen=bestBy(cands);
++if(!chosen){const o=bestBy(pts.map(p=>({pt:p})));chosen={pt:o.pt,dir:[sgn,0]};}
++lvl=lvlOf(chosen.pt[1]);}
++else{const ty=mode==='base'?MET.base+60:MET.xh,tol=70,near=pts.filter(p=>Math.abs(p[1]-ty)<=tol).map(p=>({pt:p}));
++const o=near.length?bestBy(near):pts.map(p=>({pt:p})).reduce((m,q)=>(!m||Math.abs(q.pt[1]-ty)<Math.abs(m.pt[1]-ty))?q:m,null),e=ends.find(en=>hyp(en.pt[0]-o.pt[0],en.pt[1]-o.pt[1])<8);
++chosen={pt:o.pt,dir:e?e.dir:[sgn,0]};lvl=mode;}
++return {pt:[chosen.pt[0],chosen.pt[1]],dir:chosen.dir,lvl};}
++function conn(L,prm,adv){const sk=skeleton(L,prm),c=L.conn||{entry:'auto',exit:'auto'};return {entry:pickSide('entry',c.entry,sk,adv),exit:pickSide('exit',c.exit,sk,adv)};}
++function formCs(L,prm,adv,form,geo){const sk=skeleton(L,prm),cn=conn(L,prm,adv),stubs=[];
++if(form.entry&&cn.entry)stubs.push(stubSegsFor('entry',cn,prm,geo));if(form.exit&&cn.exit)stubs.push(stubSegsFor('exit',cn,prm,geo));
++if(!stubs.length)return null;const k='F'+L.rev+'#'+paramKey(prm)+'#'+prm.snapR+'#'+adv+'#'+(form.entry?1:0)+(form.exit?1:0)+'#'+Math.round(geo.xS)+','+Math.round(geo.xE)+','+prm.thick;
++let r=OC.get(k);if(r)return r;const o=outlineOf(sk,prm,stubs);r={cs:o.cs,mode:o.mode};if(OC.size>240)OC.clear();OC.set(k,r);return r;}
++const isLowerCh=ch=>/\p{Ll}/u.test(ch);
++const connEligible=(ch,prm)=>prm.connect&&(prm.connCaps?/\p{L}/u.test(ch):isLowerCh(ch));
++function layoutWord(str,prm,get){const chars=[...str],items=[];let x=0,conns=0;const info=chars.map(ch=>{const g=get(ch);if(!g||!g.L||!g.L.strokes.length)return {ch,g:null};const b=build(g.L,prm,g.adv);if(!b.cs.length)return {ch,g:null};
++const bb=csBBox(b.cs),cn=conn(g.L,prm,g.adv);return {ch,g,b,bb,cn,ok:connEligible(ch,prm)};});
++for(let i=0;i<chars.length;i++){const a=info[i];if(!a.g){x+=chars[i]===' '?260:0;items.push({ch:chars[i],x,cs:null});continue;}
++const p=info[i-1],nx=info[i+1];
++const cin=!!(prm.connect&&a.ok&&p&&p.g&&p.ok&&p.cn.exit&&a.cn.entry&&p.cn.exit.lvl===a.cn.entry.lvl),
++cout=!!(prm.connect&&a.ok&&nx&&nx.g&&nx.ok&&a.cn.exit&&nx.cn.entry&&a.cn.exit.lvl===nx.cn.entry.lvl);
++const sp=a.g.sp||{l:50,r:50},geo=formGeo(a.bb,sp,prm),origin=a.bb.x0-sp.l;let cs=a.b.cs;
++if(cin||cout){const f=formCs(a.g.L,prm,a.g.adv,{entry:cin,exit:cout},geo);if(f&&f.cs.length)cs=f.cs;}
++const adv=a.bb.x1+sp.r-origin+(cout?prm.connExt:0);
++items.push({ch:a.ch,x,origin,cs,form:(cin?'<':'')+(cout?'>':''),entry:cin,exit:cout});if(cout)conns++;x+=adv;}
++return {items,width:x,conns};}
++function csBBox(cs){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const c of cs)for(const q of flatC(c,4)){x0=Math.min(x0,q[0]);x1=Math.max(x1,q[0]);y0=Math.min(y0,q[1]);y1=Math.max(y1,q[1]);}return {x0,y0,x1,y1};}
++const formGeo=(bb,sp,prm)=>({xS:bb.x0-sp.l,xE:bb.x1+sp.r+prm.connExt});
++const f1=v=>(Math.round(v*10)/10).toString();
++function segsD(segs,closed,X,Y){if(!segs.length)return '';let d='M'+f1(X(segs[0][0]))+' '+f1(Y(segs[0][0]));
++for(const q of segs)d+='C'+f1(X(q[1]))+' '+f1(Y(q[1]))+' '+f1(X(q[2]))+' '+f1(Y(q[2]))+' '+f1(X(q[3]))+' '+f1(Y(q[3]));return d+(closed?'Z':'');}
++function nodesD(nodes,closed,X,Y){if(!nodes.length)return '';let d='M'+f1(X(nodes[0]))+' '+f1(Y(nodes[0])),n=nodes.length;
++for(let i=0;i<(closed?n:n-1);i++){const a=nodes[i],b=nodes[(i+1)%n];if(a.b||b.a){const p1=a.b||a,p2=b.a||b;d+='C'+f1(X(p1))+' '+f1(Y(p1))+' '+f1(X(p2))+' '+f1(Y(p2))+' '+f1(X(b))+' '+f1(Y(b));}else d+='L'+f1(X(b))+' '+f1(Y(b));}
++return d+(closed?'Z':'');}
++const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
++function svgDoc(title,groups,width,top,extra){const w=Math.max(100,Math.ceil(width+80)),h=top+300;let nl=0,nc=0;const out=[];
++for(const g of groups){out.push('<g data-glyph="'+esc(g.ch)+'">');for(const d of g.paths){out.push('<path class="line" d="'+d+'"/>');nl++;}for(const d of g.conns||[]){out.push('<path class="conn" d="'+d+'"/>');nc++;}out.push('</g>');}
++return {svg:'<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="-40 0 '+w+' '+h+'" width="'+(w*0.05).toFixed(1)+'mm" height="'+(h*0.05).toFixed(1)+'mm" data-lines="'+nl+'" data-connections="'+nc+'"'+(extra||'')+'>\n<title>'+esc(title)+'</title>\n<style>path{fill:none;stroke:#000;stroke-width:1;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}</style>\n'+out.join('\n')+'\n</svg>\n',lines:nl,conns:nc};}
++function plotWord(str,prm,get){const top=820,W=layoutWord(str,prm,get),groups=[];
++for(const it of W.items){if(!it.cs)continue;const g=get(it.ch),sk=skeleton(g.L,prm),bb=csBBox(build(g.L,prm,g.adv).cs),sp=g.sp||{l:50,r:50},dx=it.x-(bb.x0-sp.l);
++const X=p=>p[0]+dx,Y=p=>top-p[1],paths=sk.map(s=>segsD(s.segs,s.closed,X,Y)).filter(Boolean),conns=[];
++if(it.entry||it.exit){const geo=formGeo(bb,sp,prm),cn=conn(g.L,prm,g.adv);for(const sd of ['entry','exit']){if(!it[sd]||!cn[sd])continue;const st=stubSegsFor(sd,cn,prm,geo);conns.push(segsD(st.segs,false,X,Y));}}
++groups.push({ch:it.ch,paths,conns});}
++return svgDoc(str+': одна линия на штрих',groups,W.width,top);}
++function plotNit(str,p){if(typeof NIT==='undefined'||typeof NZS==='undefined'||!NZS.skel||!NZS.eng)return null;const e=NZS.eng(p||{}),top=NZS.asc||900,nzSkel=NZS.skel,groups=[];let x=0;
++for(const ch of str){if(ch===' '){x+=260;continue;}const g=NIT.glyph(ch,{S:e.S,width:e.width,wob:e.wob,join:e.join,seed:e.seed});if(!g)continue;
++const X=q=>q.x+x,Y=q=>top-q.y,paths=[];for(const st of nzSkel(g.strokes,e.S)){if(st.dot){paths.push(nodesD([{x:st.x-0.01,y:st.y},{x:st.x+0.01,y:st.y}],false,X,Y));continue;}paths.push(nodesD(st.nodes,!!st.closed,X,Y));}
++groups.push({ch,paths});x+=g.adv;}
++return svgDoc('Нить: скелет '+str,groups,x,top);}
++function pack(L){const s=L.strokes.map(st=>{const o={i:st.id,p:[]};let wv=false;for(const q of st.pts){o.p.push(r1(q[0]),r1(q[1]));if(Math.abs((q[2]==null?1:q[2])-1)>0.004)wv=true;}
++if(wv)o.w=st.pts.map(q=>Math.round((q[2]==null?1:q[2])*100));if(st.corners&&st.corners.length)o.c=st.corners.slice();return o;});
++const j=L.joins.map(q=>{const o={i:q.id,k:q.kind==='EE'?'e':'t',a:[q.a.s,q.a.e],pt:[r1(q.pt[0]),r1(q.pt[1])]};
++if(q.kind==='EE'){o.b=[q.b.s,q.b.e];if(q.smooth)o.m=1;if(q.ang!=null)o.g=Math.round(q.ang);}else{o.b=[q.b.s,Math.round(q.b.s2*10)/10];o.r=q.trim|0;}return o;});
++const r={s,j,n:L.seq};if(L.conn&&(L.conn.entry!=='auto'||L.conn.exit!=='auto'))r.cn=[L.conn.entry,L.conn.exit];return r;}
++const num=(v,a,b)=>{v=+v;return isFinite(v)?clamp(v,a,b):null;};
++function unpack(o){const L=newLayer();if(!o||typeof o!=='object')return L;const ids=new Set();
++for(const t of Array.isArray(o.s)?o.s.slice(0,400):[]){if(!t||!Array.isArray(t.p))continue;const id=Math.round(+t.i);if(!(id>0)||ids.has(id))continue;const pts=[];
++for(let k=0;k+1<t.p.length&&pts.length<3000;k+=2){const x=num(t.p[k],-5000,5000),y=num(t.p[k+1],-5000,5000);if(x==null||y==null){pts.length=0;break;}
++const w=Array.isArray(t.w)&&t.w[k/2]!=null?num(+t.w[k/2]/100,0.3,2):1;pts.push([x,y,w==null?1:w]);}
++if(pts.length<2)continue;ids.add(id);const cs=Array.isArray(t.c)?t.c.map(Number).filter(c=>Number.isInteger(c)&&c>=0&&c<pts.length):[];L.strokes.push({id,pts,corners:cs});}
++for(const q of Array.isArray(o.j)?o.j.slice(0,800):[]){if(!q||!Array.isArray(q.a)||!Array.isArray(q.b)||!Array.isArray(q.pt))continue;const id=Math.round(+q.i),as=Math.round(+q.a[0]),ae=Math.round(+q.a[1]),bs=Math.round(+q.b[0]);
++if(!ids.has(as)||!ids.has(bs)||(ae!==0&&ae!==1))continue;const x=num(q.pt[0],-5000,5000),y=num(q.pt[1],-5000,5000);if(x==null||y==null)continue;
++if(q.k==='e'){const be=Math.round(+q.b[1]);if(be!==0&&be!==1)continue;L.joins.push({id,kind:'EE',a:{s:as,e:ae},b:{s:bs,e:be},pt:[x,y],smooth:!!q.m,ang:num(q.g,0,180)==null?0:+q.g,d:0});}
++else{const s2=num(q.b[1],0,1e5);if(s2==null)continue;L.joins.push({id,kind:'T',a:{s:as,e:ae},b:{s:bs,s2},pt:[x,y],trim:clamp(Math.round(+q.r)||0,0,3000),smooth:false,d:0});}}
++L.seq=Math.max(Math.round(+o.n)||0,...L.strokes.map(s=>s.id),...L.joins.map(j=>j.id),0);
++if(Array.isArray(o.cn)){const ok=['auto','off','base','xh'];if(ok.includes(o.cn[0]))L.conn.entry=o.cn[0];if(ok.includes(o.cn[1]))L.conn.exit=o.cn[1];}
++return L;}
++function mirror(L,vert,W){const f=vert?p=>[p[0],MET.cap-p[1],p[2]]:p=>[W-p[0],p[1],p[2]];L.strokes.forEach(s=>{s.pts=s.pts.map(f);});
++L.joins.forEach(j=>{j.pt=vert?[j.pt[0],MET.cap-j.pt[1]]:[W-j.pt[0],j.pt[1]];});
++if(!vert){const c=L.conn;L.conn={entry:c.exit,exit:c.entry};}touch(L);}
++function stats(L,prm,adv){const b=build(L,prm,adv);return {strokes:L.strokes.length,joins:L.joins.length,paths:b.skels.length,contours:b.cs.length,holes:b.cs.filter(c=>c.hole).length,nodes:b.nodes,mode:b.mode};}
++const gname=ch=>{const c=ch.codePointAt(0);return c>0xFFFF?'u'+c.toString(16).toUpperCase():'uni'+c.toString(16).toUpperCase().padStart(4,'0');};
++return {DEF,LIM,norm,newLayer,touch,commit,split,clear,preview,detectJoins,skeleton,build,conn,formCs,formGeo,layoutWord,plotWord,plotNit,pack,unpack,mirror,stats,gname,cpCs,csBBox,
++connEligible,filletConcave,rasterOutline,fitRun,makeStroke,paramKey,penOf,MET,lvlOf,lvlY,isLowerCh};
++})();
++function stkFormShape(ch,f,g){const P=impPar(ch,g.p),rec=IMP.glyphs[ch];if(!P.N||!rec||!rec.forms||!rec.forms[f])return [];
++const N=P.N,rb=impBBox(rec.c),kS=(rec.k||1)*(N.S||1),dx=N.bb.x0-rb.x0*kS,dy=N.bb.y0-rb.y0*kS;
++const Nf={cs:impAff(rec.forms[f],x=>x*kS+dx,y=>y*kS+dy),W:N.W,cat:N.cat};Nf.bb=impBBox(Nf.cs);
++return P.ident?cloneC(Nf.cs):impBuild(Nf,P.k,P.zone,g.p,P.rx,P.ry);}
++function stkFormDef(ch,f,base){return {k:base.k,opt:{imp:1,alt:true,base:ch,feat:'stk',own:true,fixed:true,stkF:f},w:p=>Math.max(40,impPar(ch,p).w),shape:g=>stkFormShape(ch,f,g)};}
++function stkAddForms(F){if(!F||!F.GL||typeof IMP==='undefined')return;
++for(const k of Object.keys(F.GL))if(F.GL[k]&&F.GL[k].opt&&F.GL[k].opt.stkF)delete F.GL[k];
++for(const ch of Object.keys(IMP.glyphs)){const rec=IMP.glyphs[ch];if(!rec||!rec.forms||!F.GL[ch])continue;
++for(const f of Object.keys(rec.forms))F.GL[STRK.gname(ch)+'.'+f]=stkFormDef(ch,f,F.GL[ch]);}}
++const _stk_ir=impRegister;
++impRegister=function(){const F=_stk_ir.apply(this,arguments);try{stkAddForms(F);}catch(e){}return F;};
++function stkItems(){const o=[];if(typeof IMP==='undefined')return o;
++for(const ch of Object.keys(IMP.glyphs)){const rec=IMP.glyphs[ch];if(rec&&rec.forms&&rec.cn)o.push({ch,sfx:'',rec});
++const vs=IMP.vars&&IMP.vars[ch];if(rec&&vs)vs.forEach((v,i)=>{if(v&&v.forms&&v.cn)o.push({ch,sfx:'.alt'+(i+1),rec:v});});}
++return o;}
++const _stk_o1=otFeaturesO1;
++otFeaturesO1=function(glyphs,gidByName,gidByCh,feats,looks,fontId,st){
++_stk_o1.apply(this,arguments);
++const id=(fontId&&fontId!=='-nokern')?fontId:CUR_FONT;if(id!=='imp'||typeof IMP==='undefined')return;
++const gn=(it,f)=>gidByName[STRK.gname(it.ch)+it.sfx+'.'+f],gb=it=>it.sfx?gidByName[STRK.gname(it.ch)+it.sfx]:gidByCh[it.ch],S1=[],S2=[],R1=[],R2=[];
++const cov=a=>otCoverage([...new Set(a.filter(x=>x!=null))].sort((p,q)=>p-q));
++const items=stkItems();
++for(const lvl of ['base','xh']){
++const aBase=[],aEx=[],bBase=[],bEx=[],exForms=[];
++for(const it of items){const rec=it.rec,g0=gb(it);if(!rec||!rec.forms||!rec.cn||g0==null)continue;
++const ex=gn(it,'ex'),en=gn(it,'en'),bb=gn(it,'b');
++if(rec.cn.exit===lvl&&ex!=null){aBase.push(g0);exForms.push(ex);if(bb!=null)exForms.push(bb);S1.push([g0,ex]);}
++if(rec.cn.entry===lvl&&en!=null){bBase.push(g0);S2.push([g0,en]);if(ex!=null&&bb!=null){bEx.push(ex);S2.push([ex,bb]);}}}
++if(aBase.length&&bBase.length){R1.push({inp:cov(aBase),ahead:cov(bBase)});R2.push({back:cov(exForms),inp:cov([...bBase,...bEx])});}}
++if(!S1.length||!S2.length||!R1.length)return;
++const uniq=a=>{const m=new Map();for(const [x,y] of a)m.set(x,y);return [...m.entries()];};
++looks.push({type:1,subs:[otSingleSubst(uniq(S1))]});const l1=looks.length-1;looks.push({type:1,subs:[otSingleSubst(uniq(S2))]});const l2=looks.length-1;
++const lk=[];
++for(const r of R1){looks.push({type:6,subs:[otoChain3([],[r.inp],[r.ahead],l1)]});lk.push(looks.length-1);}
++for(const r of R2){looks.push({type:6,subs:[otoChain3([r.back],[r.inp],[],l2)]});lk.push(looks.length-1);}
++feats.push({tag:'calt',lookups:lk});};
++const VAR=(function(){
++const MAX=4,hyp=Math.hypot;
++const own=ch=>!!(IMP.glyphs[ch]&&IMP.glyphs[ch].c&&IMP.glyphs[ch].c.length);
++IMP.vars=IMP.vars||{};IMP.vseed=IMP.vseed||1;
++const list=ch=>(own(ch)&&IMP.vars[ch])||[];
++const nOf=ch=>own(ch)?1+list(ch).length:0;
++const name=(ch,i)=>STRK.gname(ch)+(i?'.alt'+i:'');
++function hash3(ch,k,seed){let h=(ch.codePointAt(0)*73856093)^(k*19349663)^(seed*83492791);h=Math.imul(h^(h>>>15),2246822507);h^=h>>>13;h=Math.imul(h,3266489909);return (h^(h>>>16))>>>0;}
++function trans(ch,k,n,seed){if(n<2)return 0;const cand=[];for(let i=0;i<n;i++)if(i!==k)cand.push(i);return cand[hash3(ch,k,seed)%cand.length];}
++function rotate(text,seed,on,nf){
++nf=nf||nOf;seed=seed==null?IMP.vseed:seed;const out=[];let prev=0,start=true;
++for(const ch of Array.from(text)){
++if(ch==='\n'||ch==='\r'){out.push(0);prev=0;start=true;continue;}
++let idx=0;if(on!==false&&!start){const n=nf(ch);if(n>=2)idx=trans(ch,prev,n,seed);}
++out.push(idx);prev=idx;start=false;}
++return out;}
++function frame(ch){const rec=IMP.glyphs[ch];if(!rec||!rec.c||!rec.c.length)return null;const N=impNorm(ch);if(!N)return null;
++const rb=impBBox(rec.c);if(!rb)return null;const kS=(rec.k||1)*(N.S||1);if(!(kS>0))return null;
++return {rec,N,rb,kS,dx:N.bb.x0-rb.x0*kS,dy:N.bb.y0-rb.y0*kS};}
++const toNorm=(F,cs)=>impAff(cs,x=>x*F.kS+F.dx,y=>y*F.kS+F.dy);
++const toRaw=(F,cs)=>impAff(cs,x=>(x-F.dx)/F.kS,y=>(y-F.dy)/F.kS);
++function valid(cs){if(!Array.isArray(cs)||!cs.length)return false;let nodes=0,solid=0;
++for(const c of cs){if(!c||!Array.isArray(c.nodes)||c.nodes.length<3)return false;nodes+=c.nodes.length;if(!c.hole)solid++;
++for(const n of c.nodes){if(!isFinite(n.x)||!isFinite(n.y)||Math.abs(n.x)>1e6||Math.abs(n.y)>1e6)return false;}}
++if(!solid||nodes>4000)return false;const bb=impBBox(cs);return !!bb&&bb.x1-bb.x0>1e-6&&bb.y1-bb.y0>1e-6;}
++const cp=cs=>cloneC(cs);
++function rec1(c,src,forms,cn){const r={c,bb:impBBox(c),src:src||'copy'};if(forms&&Object.keys(forms).length){r.forms={};for(const f of Object.keys(forms))r.forms[f]=cp(forms[f]);if(cn)r.cn={entry:cn.entry||null,exit:cn.exit||null};}return r;}
++function touch(){IMP.ver++;}
++function room(ch){return own(ch)&&nOf(ch)<MAX;}
++function add(ch,cs,src,forms,cn){if(!room(ch))return {ok:false,why:'max'};if(!valid(cs))return {ok:false,why:'bad'};
++(IMP.vars[ch]||(IMP.vars[ch]=[])).push(rec1(cs,src,forms,cn));touch();return {ok:true,n:nOf(ch)};}
++function addCopy(ch){const r=IMP.glyphs[ch];if(!r)return {ok:false,why:'none'};return add(ch,cp(r.c),'copy',r.forms,r.cn);}
++function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
++function jitterFn(F,strength,rnd){
++const s=Math.max(0.2,Math.min(1,strength==null?1:strength)),u=1/F.kS,bb=F.rb,cx=(bb.x0+bb.x1)/2,cy=(bb.y0+bb.y1)/2;
++const R=()=>rnd()*2-1,th=R()*2*s*Math.PI/180,sx=1+R()*0.03*s,sy=1+R()*0.03*s,dy0=R()*10*s*u,A=(0.35+0.65*rnd())*6*s*u,H=(bb.y1-bb.y0)||1,W=(bb.x1-bb.x0)||1;
++const f1=0.8+rnd()*0.8,f2=0.8+rnd()*0.8,p1=rnd()*6.283,p2=rnd()*6.283,co=Math.cos(th),si=Math.sin(th);
++return (x,y)=>{let X=(x-cx)*sx,Y=(y-cy)*sy;const rx=X*co-Y*si,ry=X*si+Y*co;
++return [cx+rx+A*Math.sin(6.283*((y-bb.y0)/H)*f1+p1),cy+ry+dy0+A*Math.sin(6.283*((x-bb.x0)/W)*f2+p2)];};}
++function mapCs(cs,fn){return cs.map(c=>({hole:c.hole,nodes:c.nodes.map(n=>{const p=fn(n.x,n.y),o={x:p[0],y:p[1],a:null,b:null};
++if(n.a){const q=fn(n.a.x,n.a.y);o.a={x:q[0],y:q[1]};}if(n.b){const q=fn(n.b.x,n.b.y);o.b={x:q[0],y:q[1]};}return o;})}));}
++function jitterOf(ch,strength,seed){const F=frame(ch);if(!F)return null;
++const rnd=mulberry32(seed!=null?seed:Math.floor(Math.random()*2147483646)+1),fn=jitterFn(F,strength,rnd),r=F.rec;
++return {c:mapCs(r.c,fn),forms:r.forms?Object.fromEntries(Object.keys(r.forms).map(f=>[f,mapCs(r.forms[f],fn)])):null,cn:r.cn};}
++function addJitter(ch,strength,seed){const j=jitterOf(ch,strength,seed);if(!j)return {ok:false,why:'none'};return add(ch,j.c,'jit',j.forms,j.cn);}
++function replace(ch,i,cs,src,forms,cn){const v=IMP.vars[ch]&&IMP.vars[ch][i-1];if(!v)return {ok:false,why:'none'};if(!valid(cs))return {ok:false,why:'bad'};
++IMP.vars[ch][i-1]=rec1(cs,src,forms,cn);touch();return {ok:true};}
++function replaceNorm(ch,i,csNorm,src){const F=frame(ch);if(!F)return {ok:false,why:'none'};return replace(ch,i,toRaw(F,csNorm),src||'draw');}
++function replaceJitter(ch,i,strength,seed){const j=jitterOf(ch,strength,seed);if(!j)return {ok:false,why:'none'};return replace(ch,i,j.c,'jit',j.forms,j.cn);}
++function addNormCs(ch,csNorm,src){const F=frame(ch);if(!F)return {ok:false,why:'none'};return add(ch,toRaw(F,csNorm),src||'draw');}
++function del(ch,i){const v=IMP.vars[ch];if(!v||i<1||i>v.length)return null;const old=v.splice(i-1,1)[0];if(!v.length)delete IMP.vars[ch];touch();return {rec:old,at:i};}
++function restore(ch,o){if(!o||!own(ch)||nOf(ch)>=MAX)return false;const v=IMP.vars[ch]||(IMP.vars[ch]=[]);v.splice(Math.min(o.at-1,v.length),0,o.rec);touch();return true;}
++function setMain(ch,i){const r=IMP.glyphs[ch],v=IMP.vars[ch]&&IMP.vars[ch][i-1];if(!r||!v)return false;
++const m={c:r.c,bb:r.bb,src:r.src,forms:r.forms,cn:r.cn};
++r.c=v.c;r.bb=impBBox(v.c);r.src=v.src==='draw'?'draw':(v.src==='jit'||v.src==='copy'?r.src:v.src);if(v.forms){r.forms=v.forms;r.cn=v.cn;}else{delete r.forms;delete r.cn;}
++v.c=m.c;v.bb=impBBox(m.c);v.src=m.src||'copy';if(m.forms){v.forms=m.forms;v.cn=m.cn;}else{delete v.forms;delete v.cn;}
++touch();return true;}
++function clear(ch){if(IMP.vars[ch]){delete IMP.vars[ch];touch();return true;}return false;}
++function total(){let n=0,l=0;for(const ch of Object.keys(IMP.vars)){if(!own(ch))continue;n+=IMP.vars[ch].length;l++;}return {extra:n,letters:l};}
++function prune(){for(const ch of Object.keys(IMP.vars))if(!own(ch)||!Array.isArray(IMP.vars[ch])||!IMP.vars[ch].length)delete IMP.vars[ch];
++for(const ch of Object.keys(IMP.vars))IMP.vars[ch]=IMP.vars[ch].filter(v=>v&&valid(v.c)).slice(0,MAX-1);
++for(const ch of Object.keys(IMP.vars))if(!IMP.vars[ch].length)delete IMP.vars[ch];}
++const VC=new WeakMap();
++function shapeOf(ch,i,g,f){
++const P=impPar(ch,g.p),F=frame(ch),v=IMP.vars[ch]&&IMP.vars[ch][i-1];if(!P.N||!F||!v)return null;
++let m=VC.get(P);if(!m||m.ver!==IMP.ver){m={ver:IMP.ver,k:Object.create(null)};VC.set(P,m);}
++const key=i+(f?'.'+f:'');if(m.k[key])return m.k[key];
++const vb=impBBox(v.c),dxv=F.N.bb.x0-vb.x0*F.kS;
++const Nf={cs:impAff(f?v.forms[f]:v.c,x=>x*F.kS+dxv,y=>y*F.kS+F.dy),W:F.N.W,cat:F.N.cat};Nf.bb=impBBox(Nf.cs);
++const adj=F.rec.adj||{},bn=impBBox(impAff(v.c,x=>x*F.kS+dxv,y=>y*F.kS+F.dy));
++const w=Math.max(40,((bn?bn.x1-bn.x0:F.N.W)+(adj.l||0)+(adj.r||0))*P.k+2*P.rx);
++const cs=P.ident?cloneC(Nf.cs):impBuild(Nf,P.k,P.zone,g.p,P.rx,P.ry);
++return m.k[key]={cs,w};}
++function varDef(ch,i,base){return {k:base.k,opt:{imp:1,alt:true,base:ch,feat:'vari',own:true,kernAs:true,varN:i},
++w:p=>{const r=shapeOf(ch,i,{p});return r?r.w:Math.max(40,impPar(ch,p).w);},shape:g=>{const r=shapeOf(ch,i,g);return r?cloneC(r.cs):[];}};}
++function formDef(ch,i,f,base){return {k:base.k,opt:{imp:1,alt:true,base:ch,feat:'stk',own:true,fixed:true,stkF:f,varF:i},
++w:p=>{const r=shapeOf(ch,i,{p});return r?r.w:Math.max(40,impPar(ch,p).w);},shape:g=>{const r=shapeOf(ch,i,g,f);return r?cloneC(r.cs):[];}};}
++function addGL(F){if(!F||!F.GL)return;
++for(const k of Object.keys(F.GL))if(F.GL[k]&&F.GL[k].opt&&(F.GL[k].opt.feat==='vari'||F.GL[k].opt.varF))delete F.GL[k];
++prune();
++for(const ch of Object.keys(IMP.vars)){const base=F.GL[ch];if(!base||!own(ch))continue;
++IMP.vars[ch].forEach((v,j)=>{const i=j+1;F.GL[name(ch,i)]=varDef(ch,i,base);
++if(v.forms&&v.cn)for(const f of Object.keys(v.forms))F.GL[name(ch,i)+'.'+f]=formDef(ch,i,f,base);});}}
++const _vr_ir=impRegister;
++impRegister=function(){const F=_vr_ir.apply(this,arguments);try{addGL(F);}catch(e){console.warn('variants',e&&e.message);}return F;};
++const _vr_fg=finalGlyph;
++finalGlyph=function(ch,st,edits,opt){
++const d=typeof GL==='object'&&GL[ch],o=d&&d.opt;
++if(o&&o.feat==='vari'&&edits){const be=edGet(edits,o.base);if(be&&(be.sbL||be.sbR)){const e2=Object.assign({},edits);e2[ch]={sbL:be.sbL||0,sbR:be.sbR||0};return _vr_fg.call(this,ch,st,e2,opt);}}
++return _vr_fg.apply(this,arguments);};
++const _vr_pack=impPack;
++impPack=function(){const p=_vr_pack.apply(this,arguments);if(!p)return p;
++for(const ch of Object.keys(IMP.vars)){const g=p.g[ch];if(!g||!own(ch))continue;const vs=IMP.vars[ch].filter(v=>v&&valid(v.c));if(!vs.length)continue;
++g.v=vs.slice(0,MAX-1).map(v=>{const o={c:impPackC(v.c)};if(v.src&&v.src!=='copy')o.n=v.src;if(v.forms){o.f={};for(const f of Object.keys(v.forms))o.f[f]=impPackC(v.forms[f]);if(v.cn)o.q=v.cn;}return o;});}
++if(IMP.vseed&&IMP.vseed!==1&&Object.keys(IMP.vars).some(ch=>own(ch)))p.vs=IMP.vseed;
++return p;};
++const _vr_unpack=impUnpack;
++impUnpack=function(o){_vr_unpack.apply(this,arguments);IMP.vars={};IMP.vseed=1;
++if(o&&typeof o==='object'&&o.g&&typeof o.g==='object'){
++if(isFinite(+o.vs)&&+o.vs>=1&&+o.vs<=999)IMP.vseed=Math.round(+o.vs);
++for(const ch of Object.keys(o.g)){const r=o.g[ch];if(!r||!Array.isArray(r.v)||!own(ch))continue;const out=[];
++for(const x of r.v.slice(0,MAX-1)){const c=impUnpackC(x&&x.c);if(!valid(c))continue;
++const rec={c,bb:impBBox(c),src:x.n==='draw'||x.n==='jit'?x.n:'copy'};
++if(x.f&&typeof x.f==='object'){const fm={};for(const f of ['en','ex','b']){const fc=impUnpackC(x.f[f]);if(fc.length)fm[f]=fc;}
++if(Object.keys(fm).length){rec.forms=fm;const q=x.q&&typeof x.q==='object'?x.q:{},lv=v=>v==='base'||v==='xh'?v:null;rec.cn={entry:lv(q.entry),exit:lv(q.exit)};}}
++out.push(rec);}
++if(out.length)IMP.vars[ch]=out;}}};
++const _vr_o1=otFeaturesO1;
++otFeaturesO1=function(glyphs,gidByName,gidByCh,feats,looks,fontId,st){
++const id=(fontId&&fontId!=='-nokern')?fontId:CUR_FONT,mine=id==='imp'&&typeof IMP!=='undefined';
++let plan=null;
++if(mine){
++const L=[];for(const ch of Object.keys(IMP.vars)){const g0=gidByCh[ch];if(g0==null||!own(ch))continue;const ids=[g0];
++for(let i=1;i<=IMP.vars[ch].length;i++){const g=gidByName[name(ch,i)];if(g==null)break;ids.push(g);}
++if(ids.length>=2)L.push({ch,ids});}
++if(L.length)plan=L;}
++let rot=null;
++if(plan){const maxN=Math.max(...plan.map(x=>x.ids.length)),seed=IMP.vseed||1,single=[];
++for(let c=1;c<maxN;c++){const pr=plan.filter(x=>x.ids.length>c).map(x=>[x.ids[0],x.ids[c]]);looks.push({type:1,subs:[otSingleSubst(pr)]});single.push(looks.length-1);}
++const altSet=[];for(let k=0;k<maxN;k++)altSet.push([]);
++const isAlt=new Set();for(const x of plan)x.ids.forEach((g,i)=>{if(i>0){altSet[i].push(g);isAlt.add(g);}});
++const zero=[];glyphs.forEach((g,i)=>{if(!isAlt.has(i))zero.push(i);});altSet[0]=zero;
++const subs=[];
++for(let k=0;k<maxN;k++){const back=altSet[k];if(!back.length)continue;
++for(let c=1;c<maxN;c++){const inp=plan.filter(x=>trans(x.ch,k,x.ids.length,seed)===c&&x.ids.length>c).map(x=>x.ids[0]);if(!inp.length)continue;
++subs.push(otChain3([otCoverage(back)],[otCoverage(inp)],single[c-1]));}}
++if(subs.length){looks.push({type:6,subs});rot={li:looks.length-1};}
++for(let c=1;c<maxN&&c<=3;c++)feats.push({tag:'ss0'+c,lookups:[single[c-1]]});}
++_vr_o1.apply(this,arguments);
++if(rot){
++const all=feats.filter(f=>f.tag==='calt'),keep=new Set([rot.li]);all.forEach(f=>f.lookups.forEach(x=>keep.add(x)));
++const merged={tag:'calt',lookups:[...keep].sort((a,b)=>a-b)};
++for(let i=feats.length-1;i>=0;i--)if(feats[i].tag==='calt')feats.splice(i,1);
++feats.push(merged);}};
++return {MAX,nOf,list,trans,rotate,frame,toNorm,toRaw,valid,room,add,addCopy,addJitter,addNormCs,replace,replaceNorm,replaceJitter,del,restore,setMain,clear,total,prune,name,mulberry32,own,
++seed:()=>IMP.vseed||1,setSeed:v=>{IMP.vseed=Math.max(1,Math.min(999,Math.round(v)||1));touch();}};
++})();
+ const DCS_STYLES={
+ outline:{ru:'Контурное',suffix:'Outline',tip:'Только линия по контуру знака, середина пустая.'},
+ inline_in:{ru:'Оконтуренное — внутренняя линия',suffix:'Inline',tip:'Чёрный знак с белой линией внутри, на расстоянии от края.'},

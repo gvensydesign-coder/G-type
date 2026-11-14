@@ -1,0 +1,30 @@
+<!-- @dsCard group="Обратная связь" height=210 -->
+<!doctype html>
+<html lang="ru">
+<head>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/design-system/tokens.css">
+<link rel="stylesheet" href="/design-system/components/bundle.css">
+<link rel="stylesheet" href="/design-system/later.css">
+<script>const q=new URLSearchParams(location.search).get("theme"); if(q==="dark"||q==="light") document.documentElement.dataset.theme=q;</script>
+
+<meta charset="utf-8">
+<title>Tooltip — превью</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;padding:16px;background:var(--bg);color:var(--ink);font:400 var(--fs-base)/var(--lh) var(--f-ui);-webkit-font-smoothing:antialiased}
+.row{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center}
+.row+.row,.cap+.row,.row+.cap{margin-top:var(--s3)}
+.cap{margin:0 0 var(--s2);font:var(--fw-sb) var(--fs-xs)/1.2 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.row+.cap,.stack+.cap{margin-top:var(--s5)}
+.stack{display:grid;gap:var(--s3);max-width:420px}
+.tipbox{margin-top:36px}.tip::after{opacity:1;transform:translate(-50%,0)}
+.toast{position:static;transform:none;opacity:1;display:inline-block;border-radius:var(--r-pill);font-weight:var(--fw-m)}</style>
+</head>
+<body>
+<p class="cap">Подсказка</p>
+<div class="row tipbox"><button class="ibtn tip" type="button" data-tip="Назад (Ctrl+Z)" aria-label="Назад"><i class="ico i-undo"></i></button><button class="btn tip" type="button" data-tip="Скачать .ttf">Скачать</button></div>
+<p class="cap">Уведомление</p>
+<div class="row"><div class="toast" role="status">Шрифт сохранён</div><div class="toast" role="status">Скопировано</div></div>
+</body>
+</html>

@@ -1,0 +1,107 @@
+--- /tmp/v94-zm.js	2026-11-14 18:03:06.053187578 +0000
++++ /tmp/v96-zm.js	2026-11-14 18:03:06.065187526 +0000
+@@ -718,7 +718,6 @@
+ else if(a==='back'){ const hs=history.state&&history.state.cm;hs&&hs.fl&&(R.a||R.c)?history.back():nav({});}
+ else if(a==='how'){if(HOW&&HOW.b===t)howClose(false,true);else howOpen(t);}
+ else if(a==='fav')toggleFav(t.dataset.id,t);
+-else if(a==='filter'){LF=t.dataset.f;renderGrid();}
+ else if(a==='cta')runCta(t.dataset.cta);
+ else if(a==='next')nav({a:t.dataset.id});
+ else if(a==='och')nav({c:t.dataset.id});
+@@ -727,7 +726,6 @@
+ function toggleFav(id,btn){
+ const on=!ST.fav[id];if(on)ST.fav[id]=1;else delete ST.fav[id];saveNow();
+ $$('[data-act=fav][data-id="'+id+'"]').forEach(b=>starSync(b,id));
+-if(atLanding()){if(LF==='fav'){renderGrid();const nb=$('.cm-grid [data-act=fav]',ROOT)||$('.cm-bar-f [data-f=fav]',ROOT);if(nb)nb.focus();}else barSync();}
+ try{toast(on?'Статья добавлена в избранное':'Статья убрана из избранного');}catch(e){}
+ }
+ function starSync(b,id){const on=!!ST.fav[id];b.setAttribute('aria-pressed',on?'true':'false');const l=(on?'Убрать из избранного: ':'В избранное: ')+ART[id].title;b.setAttribute('aria-label',l);b.title=l;}
+@@ -742,7 +740,6 @@
+ if(p>0)return card?'':'<span class="cm-chip cm-state"><span class="cm-pb" role="progressbar" aria-label="Прочитано" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+p+'" style="--w:'+p+'%"><i></i></span>Прочитано '+p+' %</span>';
+ return card?'':'<span class="cm-chip cm-state">Не прочитано</span>';
+ }
+-let LF='all';
+ const kick=t=>'<span class="cm-kick">'+t+'</span>';
+ const coverHTML=(o,alt,label,extra)=>'<div class="cm-cv">'+(o.cover?'<img src="'+esc(o.cover)+'" alt="'+esc(o.coverAlt||alt)+'" loading="lazy" decoding="async">':'<canvas role="img" aria-label="'+esc(label)+'"></canvas>')+(extra||'')+'</div>';
+ const coverImgs=root=>$$('.cm-cv img',root).forEach(im=>im.addEventListener('error',()=>im.classList.add('bad')));
+@@ -755,7 +752,7 @@
+ const steps=fs.k==='done'?'':'<button type="button" class="btn lg cm-howb" data-act="how" aria-expanded="false" aria-controls="cm-howp" aria-haspopup="true">Как участвовать<i class="ico i-chev-down" aria-hidden="true"></i></button>';
+ ROOT.innerHTML='<article class="cm-ban" data-ch="'+fc.id+'" aria-label="'+(fs.k==='run'?'Сейчас идёт':'Ближайший')+' челлендж"><div class="cm-bx"><h3>'+esc(fc.title)+'</h3><p class="cm-bl">'+esc(fc.lead)+'</p><div class="cm-bm">'+stHTML(fs)+'<span class="cm-bd">'+esc(fmtRange(fc))+'</span></div><div class="cm-bb"><button type="button" class="btn pri lg" data-act="och" data-id="'+fc.id+'">Открыть челлендж<span class="vh">: '+esc(fc.title)+'</span></button>'+steps+'</div></div>'+coverHTML(fc,'Пример плаката к челленджу «'+fc.title+'»','Пример плаката от G-type к теме «'+fc.title+'»')
+ +(fs.k==='done'?'':'<div class="cm-howp" id="cm-howp" role="group" aria-labelledby="cm-howh"><div class="cm-howi"><div class="cm-howc"><h4 id="cm-howh">Как участвовать</h4><ol><li>Выберите шрифт в G-type</li><li>Наберите свой текст и настройте шрифт под настроение</li><li>Сделайте плакат и сохраните его в «Мои работы»</li></ol></div></div></div>')+'</article>'
+-+'<section class="cm-sec" id="cm-les" aria-labelledby="cm-lh"><div class="vhead"><div class="cm-hh"><h2 id="cm-lh">Уроки</h2><span class="cm-hn">Для новичков · '+DT.arts.length+' '+((n=>n%10===1&&n%100!==11?'урок':n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?'урока':'уроков')(DT.arts.length))+'</span></div><div class="vctl"><div class="seg cm-bar-f" role="group" aria-label="Фильтр уроков"></div></div></div><div class="cm-grid" id="cm-grid"></div><div class="cm-empty" id="cm-empty" hidden></div></section>'
+++'<section class="cm-sec" id="cm-les" aria-labelledby="cm-lh"><div class="vhead"><h2 id="cm-lh">Уроки</h2></div><div class="cm-grid" id="cm-grid"></div></section>'
+ +sec('Скоро',rest(g.soon))+sec('Идут сейчас',rest(g.run))+sec('Завершённые',rest(g.done))
+ +'<p class="cm-note">Раздел пока работает в пробном режиме: даты и правила настоящие, а приём работ ещё не подключён. Всё, что вы делаете здесь, хранится только в вашем браузере.</p>';
+ renderGrid();
+@@ -775,19 +772,10 @@
+ c.fillStyle=pl.bg;c.fillRect(0,0,w,h);const f=ch.poster.fmt,r=f==='1:1'?1:f==='9:16'?9/16:.8,m=Math.round(h*.09),ph=h-2*m,pw=Math.min(ph*r,w-2*m),hh=pw/r,x=(w-pw)/2,y=(h-hh)/2;
+ c.save();c.fillStyle=pl.line;c.fillRect(x-1,y-1,pw+2,hh+2);c.translate(x,y);c.beginPath();c.rect(0,0,pw,hh);c.clip();posterDraw(c,pw,hh,ch);c.restore();
+ }
+-function barSync(){const bar=$('.cm-bar-f',ROOT);if(!bar)return;const n={all:DT.arts.length,fav:favIds().length,unread:DT.arts.filter(a=>!ST.read[a.id]).length};$$('button',bar).forEach(b=>{const k=b.dataset.f;b.textContent=({all:'Все',fav:'Избранное',unread:'Не прочитано'})[k]+' · '+n[k];});}
+ function renderGrid(){
+-const bar=$('.cm-bar-f',ROOT),grid=$('#cm-grid',ROOT),em=$('#cm-empty',ROOT);if(!grid)return;
++const grid=$('#cm-grid',ROOT);if(!grid)return;
+ anDrop(grid);
+-const nf=favIds().length,nu=DT.arts.filter(a=>!ST.read[a.id]).length;
+-const F=[['all','Все',DT.arts.length],['fav','Избранное',nf],['unread','Не прочитано',nu]];
+-const fk=document.activeElement&&bar.contains(document.activeElement)?document.activeElement.dataset.f:null;
+-bar.innerHTML=F.map(([k,t,n])=>'<button type="button" class="'+(LF===k?'on':'')+'" data-act="filter" data-f="'+k+'" aria-pressed="'+(LF===k)+'">'+t+' · '+n+'</button>').join('');
+-if(fk){const nb=bar.querySelector('[data-f="'+fk+'"]');if(nb)nb.focus();}
+-const list=DT.arts.filter(a=>LF==='fav'?ST.fav[a.id]:LF==='unread'?!ST.read[a.id]:true);
+-grid.innerHTML=list.map(cardHTML).join('');grid.hidden=!list.length;
+-em.hidden=!!list.length;
+-if(!list.length)em.innerHTML=LF==='fav'?'<b>В избранном пока нет статей</b><span>Нажмите «В избранное» на карточке урока, и он появится здесь и в разделе «Избранное».</span><button type="button" class="btn" data-act="filter" data-f="all">Показать все уроки</button>':'<b>Все уроки прочитаны</b><span>Любой из них можно открыть заново.</span><button type="button" class="btn" data-act="filter" data-f="all">Показать все уроки</button>';
++grid.innerHTML=DT.arts.map(cardHTML).join('');
+ $$('.cm-card',grid).forEach((el,k)=>{const a=ART[el.dataset.art],cv=$('canvas',el),def=COVERS[a.anim];
+ if(cv)anAdd({cv,ar:2,cov:true,id:a.anim,D:def.D,poster:def.poster,draw:def.draw,t:def.poster,vis:false,ready:false,init:()=>{}});});
+ coverImgs(grid);
+@@ -798,16 +786,18 @@
+ let PG=null;
+ function viewArticle(id){
+ const a=ART[id],nx=ART[a.next];
+-const secs=a.secs.map(s=>'<h2>'+esc(s.h)+'</h2>'+s.p.map(p=>'<p>'+md(p)+'</p>').join('')+(s.demo&&DEMOS[s.demo]?'<figure class="cm-demo" data-demo="'+s.demo+'"><div class="cm-dv" style="--dh:'+DEMOS[s.demo].dh+'px'+(DEMOS[s.demo].dhp?';--dhp:'+DEMOS[s.demo].dhp+'px':'')+'"><canvas role="img" aria-label="'+esc(DEMOS[s.demo].cap)+'"></canvas></div><div class="cm-dc"></div><figcaption class="cm-cap">'+esc(DEMOS[s.demo].cap)+'</figcaption></figure>':'')).join('');
++const secs=a.secs.map((s,si)=>'<h2 id="cm-s'+si+'">'+esc(s.h)+'</h2>'+s.p.map(p=>'<p>'+md(p)+'</p>').join('')+(s.demo&&DEMOS[s.demo]?'<figure class="cm-demo" data-demo="'+s.demo+'"><div class="cm-dv" style="--dh:'+DEMOS[s.demo].dh+'px'+(DEMOS[s.demo].dhp?';--dhp:'+DEMOS[s.demo].dhp+'px':'')+'"><canvas role="img" aria-label="'+esc(DEMOS[s.demo].cap)+'"></canvas></div><div class="cm-dc"></div><figcaption class="cm-cap">'+esc(DEMOS[s.demo].cap)+'</figcaption></figure>':'')).join('');
+ const quiz=a.quiz.map((q,qi)=>'<fieldset class="cm-q" data-q="'+qi+'"><legend>'+(qi+1)+'. '+esc(q.q)+'</legend>'+q.o.map((o,oi)=>'<button type="button" class="cm-opt" data-o="'+oi+'" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span>'+esc(o)+'</span></button>').join('')+'<p class="cm-fb" role="status"></p></fieldset>').join('');
+ const ctas=a.cta.map((c,i)=>'<li><button type="button" class="btn'+(i?'':' pri')+'" data-act="cta" data-cta="'+c.act+'">'+esc(c.l)+'</button><span class="cm-hint">'+esc(c.h)+'</span></li>').join('');
+ ROOT.innerHTML='<div class="cm-art" data-art="'+id+'"><div class="cm-prog" role="progressbar" aria-label="Прочитано" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>'
+ +'<div class="cm-col cm-ah"><button type="button" class="btn ghost sm cm-back" data-act="back"><i class="ico i-back" aria-hidden="true"></i>Все уроки</button>'+chips(a,0,starBtn(id)+'<span id="cm-rs">'+stateHTML(id)+'</span>')+'<h1 tabindex="-1">'+esc(a.title)+'</h1><p class="cm-lead">'+esc(a.lead)+'</p></div>'
+-+'<div class="cm-col cm-prose">'+secs+'</div>'
+++(a.secs.length>1?'<nav class="cm-col cm-toc" aria-labelledby="cm-toch"><h2 id="cm-toch">В этом уроке</h2><ol>'+a.secs.map((s,si)=>'<li><a href="#cm-s'+si+'" data-toc="'+si+'">'+esc(s.h)+'</a></li>').join('')+'<li><a href="#cm-qh" data-toc="q">Проверьте себя</a></li></ol></nav>':'')+'<div class="cm-col cm-prose">'+secs+'</div>'
+ +'<section class="cm-col cm-quiz" aria-labelledby="cm-qh"><h2 id="cm-qh">Проверьте себя</h2>'+quiz+'<p class="cm-score" id="cm-score"></p></section>'
+ +'<section class="cm-col cm-cta" aria-labelledby="cm-ch"><h2 id="cm-ch">Попробовать в G-type</h2><ul class="cm-ctas">'+ctas+'</ul></section>'
+++'<section class="cm-col cm-more" aria-labelledby="cm-mh"><h2 id="cm-mh">Дальше по теме</h2><ul>'+DT.arts.filter(x=>x.id!==id&&x.id!==nx.id).sort((x,y)=>(y.tag===a.tag)-(x.tag===a.tag)).slice(0,2).map(x=>'<li><button type="button" class="cm-ml" data-act="open" data-id="'+x.id+'"><b>'+esc(x.title)+'</b><span>'+x.min+' мин · '+esc(x.tag)+'</span></button></li>').join('')+'</ul></section>'
+ +'<section class="cm-col cm-next" aria-labelledby="cm-nh"><div><h2 id="cm-nh">Следующий урок</h2><b>'+esc(nx.title)+'</b><span>'+nx.min+' мин · '+esc(nx.tag)+'</span></div><button type="button" class="btn" data-act="next" data-id="'+nx.id+'">Читать дальше</button></section></div>';
+ $$('.cm-demo',ROOT).forEach(mountDemo);
++$$('.cm-toc a',ROOT).forEach(l=>l.addEventListener('click',e=>{e.preventDefault();const t=document.getElementById(l.dataset.toc==='q'?'cm-qh':'cm-s'+l.dataset.toc);if(t){t.scrollIntoView({behavior:motionOff()?'auto':'smooth',block:'start'});try{t.setAttribute('tabindex','-1');t.focus({preventScroll:true});}catch(x){}}}));
+ quizInit(id);scoreSync(id);
+ const h=$('h1',ROOT);if(h)try{h.focus({preventScroll:true});}catch(e){}
+ bindProg(id);
+@@ -867,7 +857,7 @@
+ const faq=c.faq.map((f,i)=>paneHTML('cm-faq-'+id+'-'+i,esc(f[0]),'<p class="cm-cap">'+esc(f[1])+'</p>',{cls:'line'})).join('');
+ const works=worksOf(id);
+ ROOT.innerHTML='<div class="cm-ch" style="display:flex;flex-direction:column;gap:clamp(18px,2.2vw,28px);min-width:0">'
+-+'<section class="cm-hero" aria-labelledby="cm-hh"><div class="cm-hx"><button type="button" class="btn ghost sm cm-back" data-act="back"><i class="ico i-back" aria-hidden="true"></i>Все челленджи</button><div class="cm-row">'+kick('Челлендж')+stHTML(s)+'</div><h1 id="cm-hh" tabindex="-1">'+esc(c.title)+'</h1><p class="cm-lead">'+esc(c.brief)+'</p><p class="cm-dl"><span><b>Даты:</b> '+esc(fmtRange(c))+'</span></p>'
+++'<section class="cm-hero" aria-labelledby="cm-hh"><div class="cm-hx"><button type="button" class="btn ghost sm cm-back" data-act="back"><i class="ico i-back" aria-hidden="true"></i>Все челленджи</button><div class="cm-row">'+kick('Челлендж')+stHTML(s)+(works.length?'<span class="cm-st cm-in"><i class="ico i-check" aria-hidden="true"></i>Вы участвуете</span>':'')+'</div><h1 id="cm-hh" tabindex="-1">'+esc(c.title)+'</h1><p class="cm-lead">'+esc(c.brief)+'</p><p class="cm-dl"><span><b>Даты:</b> '+esc(fmtRange(c))+'</span></p>'
+ +(s.k==='done'?'<p class="cm-cap">Приём работ завершён '+esc(fmtD(c.end))+'.</p>':'')
+ +'<div class="cm-act"><button type="button" class="btn pri lg" data-act="prep">Подготовить работу</button><button type="button" class="btn lg" data-act="ics"><i class="ico i-cal" aria-hidden="true"></i>Добавить в календарь</button></div></div>'
+ +'<div class="cm-hp"><div class="cm-pv"><canvas role="img" aria-label="Пример плаката от G-type: «'+esc(c.poster.phrase)+'»"></canvas></div></div></section>'
+@@ -881,7 +871,7 @@
+ +'<div class="cm-tool"><h3>Уроки по теме</h3><p>Короткие статьи, которые пригодятся в этой работе.</p><div class="cm-lks">'+les+'</div></div>'
+ +'<div class="cm-tool cm-tool-chk"><h3>Чек-лист перед отправкой</h3><ul class="cm-chk">'+chk+'</ul></div></div></section>'
+ +'<div class="cm-two"><section class="cm-box" aria-labelledby="cm-ph"><h2 id="cm-ph">Мой прогресс</h2><div class="cm-ps"><span class="cm-pb" id="cm-pbar" role="progressbar" aria-label="Выполнено" aria-valuemin="0" aria-valuemax="'+PROG.length+'"><i></i></span><span class="cm-cap" id="cm-pn" style="margin:0"></span></div><ul class="cm-chk" id="cm-prog">'+prog+'</ul><p class="cm-cap">Три первых пункта отмечаются сами, когда вы выбираете шрифт, меняете настройки или скачиваете постер после открытия этой страницы.</p></section>'
+-+'<section class="cm-box" aria-labelledby="cm-wh"><h2 id="cm-wh">Мои работы</h2><p class="cm-cap" style="margin:0">Ваши постеры, сделанные через «Макет постера». Хранятся только в этом браузере и никуда не отправляются.</p><div id="cm-works"></div><div class="cm-act"><button type="button" class="btn" data-act="prep">Подготовить работу</button></div></section></div>'
+++'<section class="cm-box" aria-labelledby="cm-wh"><h2 id="cm-wh">Работы участников</h2><p class="cm-cap" style="margin:0"><b>Ваши работы.</b> Постеры, сделанные через «Макет постера». Чужих работ здесь пока нет: публикации участников не подключены, поэтому показываем только то, что сделали вы. Работы хранятся только в этом браузере и никуда не отправляются.</p><div id="cm-works"></div><div class="cm-act"><button type="button" class="btn" data-act="prep">Подготовить работу</button></div></section></div>'
+ +(s.k==='done'?'<section class="cm-box" aria-labelledby="cm-sh"><h2 id="cm-sh">Итоги</h2><div class="cm-res">Итоги ещё не опубликованы. Организаторы покажут их здесь, когда подведут.</div></section>':'')
+ +'<section class="cm-box cm-faq" aria-labelledby="cm-fh"><h2 id="cm-fh">Вопросы и ответы</h2>'+faq+'</section></div>';
+ $$('.pane',ROOT).forEach(pn=>paneInit(pn,pn.dataset.pane,false));
+@@ -902,8 +892,9 @@
+ }
+ function worksRender(id){
+ const box=$('#cm-works',ROOT);if(!box)return;const w=worksOf(id);
+-box.innerHTML=w.length?'<div class="cm-works">'+w.map((x,i)=>'<figure class="cm-work" style="margin:0"><img alt="Ваша работа: постер '+esc(x.fmt)+', шрифт «'+esc(x.font||'')+'»" src="'+esc(x.img)+'"><span>'+esc(x.d)+' · '+esc(x.fmt)+' · '+esc(x.font||'')+'</span><button type="button" class="ibtn sm cm-wx" data-act="wdel" data-i="'+i+'" aria-label="Убрать работу из списка"><i class="ico i-close" aria-hidden="true"></i></button></figure>').join('')+'</div>':'<div class="cm-empty"><i class="ico i-image" aria-hidden="true"></i><b>Пока пусто</b><span>Сделайте постер в «Макете постера»: после «Скачать PNG» он появится здесь. Чужих работ тут нет, только ваши.</span><button type="button" class="btn" data-act="prep">Подготовить работу</button></div>';
++box.innerHTML=w.length?'<div class="cm-works">'+w.map((x,i)=>'<figure class="cm-work" style="margin:0"><img alt="Ваша работа: постер '+esc(x.fmt)+', шрифт «'+esc(x.font||'')+'»" src="'+esc(x.img)+'"><span>'+esc(x.d)+' · '+esc(x.fmt)+' · '+esc(x.font||'')+'</span><button type="button" class="ibtn sm cm-wx" data-act="wdel" data-i="'+i+'" aria-label="Убрать работу из списка"><i class="ico i-close" aria-hidden="true"></i></button></figure>').join('')+'</div>':'<div class="cm-empty"><i class="ico i-image" aria-hidden="true"></i><b>Пока пусто</b><span>Сделайте постер в «Макете постера»: после «Скачать PNG» он появится здесь, и у челленджа появится отметка «Вы участвуете».</span><button type="button" class="btn" data-act="prep">Подготовить работу</button></div>';
+ const nx=box.nextElementSibling;if(nx&&nx.classList.contains('cm-act'))nx.hidden=!w.length;
++const hs=$('.cm-row .cm-in',ROOT);if(!hs&&w.length){const r=$('.cm-hx .cm-row',ROOT);if(r)r.insertAdjacentHTML('beforeend','<span class="cm-st cm-in"><i class="ico i-check" aria-hidden="true"></i>Вы участвуете</span>');}else if(hs&&!w.length)hs.remove();
+ }
+ function openFont(id){if(!FONTS[id])return;actNote('font');toEdit(id);}
+ function chClick(a,t){

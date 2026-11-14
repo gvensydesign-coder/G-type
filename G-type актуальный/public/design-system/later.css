@@ -1,0 +1,105 @@
+/* Поздние правила поверх снимка v40. Живая страница — public/g-type-v96.html, 14 ноября 2026.
+   tokens.css не переписывать: этот файл подставляют превью компонентов. */
+
+:root,
+:root[data-theme="light"] {
+  --accent-press: #de3931;
+  --accent-hover: #ed3f35;
+  --focus-ring: var(--ink);
+  --focus: rgba(11, 11, 12, 0.16);
+  --track-on: #cfcfd4;
+  --i-comm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8.2' r='2.2'/%3E%3Cpath d='M4.2 17.6c.5-2.6 2.3-3.8 4.8-3.8s4.3 1.2 4.8 3.8'/%3E%3Ccircle cx='16.2' cy='9.1' r='1.7'/%3E%3Cpath d='M13.4 17.6c.4-2 1.7-3 2.8-3s2.4 1 2.8 3'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="dark"] {
+  --accent-press: #de3931;
+  --accent-hover: #ed3f35;
+  --focus-ring: var(--ink);
+  --focus: rgba(242, 242, 244, 0.28);
+  --track-on: #6b6b75;
+}
+
+.i-comm {
+  --ic: var(--i-comm);
+}
+
+.logo i {
+  color: inherit;
+}
+
+.rail .logo::after {
+  background: currentColor;
+}
+
+.btn.pri,
+.btn.pri:active {
+  background: var(--accent-press);
+  color: var(--on-accent);
+}
+
+.btn.pri:hover {
+  background: var(--accent-hover);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--focus);
+}
+
+.inp:focus,
+.inp:focus-visible,
+.srch:focus-within,
+.psearch:focus-within {
+  box-shadow: inset 0 0 0 2px var(--focus-ring);
+}
+
+.lcard:focus-visible,
+.tag:focus-visible,
+input[type="checkbox"]:not(.dr-sw input, .tgl input):focus-visible {
+  outline: 2px solid var(--focus-ring);
+}
+
+.lcard.on .nb.go,
+.notch .nb.go {
+  background: var(--accent-press);
+  border-color: var(--accent-press);
+  color: var(--on-accent);
+}
+
+.badge:not(.danger):not(.mute) {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"] {
+  accent-color: var(--ink);
+}
+
+input[type="checkbox"]:not(.dr-sw input, .tgl input):checked {
+  border-color: var(--ink);
+  background-color: var(--ink);
+}
+
+input[type="radio"]:checked {
+  border-color: var(--ink);
+  background: radial-gradient(circle, var(--ink) 0 4.5px, transparent 5.5px);
+}
+
+label.tgl > input[type="checkbox"]:checked {
+  background: var(--ink);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  background: var(--ink);
+}
+
+input[type="range"]::-moz-range-thumb {
+  background: var(--ink);
+}
+
+.ctl output.clamp {
+  color: var(--accent-text);
+}

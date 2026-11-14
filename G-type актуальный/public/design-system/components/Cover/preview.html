@@ -1,0 +1,61 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="ru">
+<head>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/design-system/tokens.css">
+<link rel="stylesheet" href="/design-system/components/bundle.css">
+<link rel="stylesheet" href="/design-system/later.css">
+<script>const q=new URLSearchParams(location.search).get("theme"); if(q==="dark"||q==="light") document.documentElement.dataset.theme=q;</script>
+
+<meta charset="utf-8">
+<title>G-type</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--bg); color:var(--ink); font-family:var(--f-ui, "Onest", system-ui, sans-serif); overflow:hidden; }
+  .cover { position:relative; height:288px; overflow:hidden; }
+  .art { position:absolute; top:0; left:480px; width:480px; height:288px; overflow:hidden; }
+  .art svg { display:block; width:480px; height:288px; }
+  .c-brand { fill:var(--accent-press); }
+  .c-ink { fill:var(--ink); }
+  .c-paper { fill:var(--paper); }
+  .c-tint { fill:var(--bg); }
+  .c-panel { fill:var(--panel-2); }
+  .c-dot { fill:var(--bg); }
+  .c-blk { rx:var(--r-lg); }
+  .c-notch { fill:var(--bg); }
+  .words { position:absolute; left:var(--s6); right:var(--s6); bottom:var(--s6); max-width:440px; }
+  .name { margin:0; font-size:120px; line-height:.92; font-weight:800; letter-spacing:-.04em; color:var(--ink); }
+    .tagline { margin:var(--s2) 0 0 4px; font-size:14px; line-height:20px; color:var(--text-2); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      accent-press 176x240 bled off the top (the brand slab) · paper 128x144 (the white surface) · ink 112x192, bleeding off the bottom (the rail pill) · panel-2 96x64 (the ground tint) — about 38% of the right half
+  arrangement one tall red slab with satellites; every block carries a notch cut in its top-right corner, as the card does
+  pattern     pills and discs from "pill controls, round arrow button": a 24px notch disc on each block, a stack of three pill rows (r-pill) cut into the slab in accent-soft, from the notch-card motif
+  scales      sides in 8px multiples; gutters s4 (16); corners r-lg (22) and r-pill (disc radius 12 = half of s6); notch squares nn (56) with a 18px concave corner
+-->
+<rect class="c-brand c-blk" x="16" y="-22" width="176" height="262" rx="22"/>
+<rect class="c-notch" x="136" y="-22" width="56" height="56" rx="0"/>
+<circle class="c-ink" cx="164" cy="6" r="20"/>
+<rect class="c-paper c-blk" x="208" y="72" width="128" height="144" rx="22"/>
+<rect class="c-notch" x="280" y="72" width="56" height="56" rx="0"/>
+<circle class="c-brand" cx="308" cy="100" r="20"/>
+<rect class="c-ink c-blk" x="352" y="96" width="112" height="212" rx="22"/>
+<rect class="c-panel c-blk" x="208" y="232" width="96" height="40" rx="20"/>
+<rect class="c-tint" x="40" y="160" width="96" height="16" rx="8"/>
+<rect class="c-tint" x="40" y="184" width="64" height="16" rx="8"/>
+<rect class="c-tint" x="40" y="208" width="120" height="16" rx="8"/>
+<rect class="c-paper" x="376" y="128" width="64" height="16" rx="8"/>
+<rect class="c-paper" x="376" y="152" width="40" height="16" rx="8"/>
+</svg>
+</div>
+<div class="words"><h1 class="name">G-type</h1><p class="tagline">Параметрические шрифты для кириллицы и латиницы</p></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,76 @@
+/* == HEAT W96 == «Тепловая карта» (ui_heat.js, DESIGN_SYSTEM §23). Исключение для данных: шкала карты не бренд-красная, красный только на самом горячем конце. */
+:root{
+  /* на холсте образца (светлый лист в обеих темах): холодно → горячо, рисуется с multiply */
+  --cv-heat-0:#7DB3EA;--cv-heat-1:#2F6BC4;--cv-heat-2:#F0CF3F;--cv-heat-3:#F4933A;--cv-heat-4:#E2392F;
+  /* на поверхностях интерфейса: легенда, точки в отчёте */
+  --heat-0:#4F8FCC;--heat-1:#2D68C0;--heat-2:#E8BF22;--heat-3:#EE8424;--heat-4:#D8352B;
+}
+html[data-theme=dark]{--heat-0:#78AEE8;--heat-1:#4F8FE0;--heat-2:#F5D95A;--heat-3:#F7A04C;--heat-4:#FF6B5F}
+.heat-ov{position:absolute;left:0;top:0;pointer-events:none;mix-blend-mode:multiply;z-index:2;transition:opacity var(--dur-fast) var(--ease-out)}
+.heat-ov.stale{opacity:0;transition-duration:var(--dur-instant);transition-timing-function:var(--ease-in)}   /* уход быстрее прихода */
+.heatbar{display:flex;align-items:center;gap:var(--s2) var(--s3);flex-wrap:wrap;min-width:0}
+.heatbar[hidden]{display:none}
+.heat-seg{max-width:100%;overflow-x:auto;scrollbar-width:none}
+.heat-seg::-webkit-scrollbar{display:none}
+.heat-seg button{flex:none}
+.heat-leg{display:inline-flex;align-items:center;flex-wrap:wrap;gap:var(--s1) var(--s4);min-height:var(--h-md);padding:0 var(--s2);color:var(--text-2);font:var(--fw-m) var(--fs-md)/1.2 var(--f-ui);min-width:0;max-width:100%}
+.hl-k{display:inline-flex;align-items:center;gap:var(--s2);white-space:nowrap}
+.hl-bar{display:block;flex:none;width:28px;height:8px;border-radius:var(--r-pill)}
+.hl-bar.cool{background:linear-gradient(90deg,var(--heat-0),var(--heat-1))}
+.hl-bar.warm{background:linear-gradient(90deg,var(--heat-2),var(--heat-3),var(--heat-4))}
+.heat-ring{position:absolute;z-index:3;border-radius:var(--r-sm);box-shadow:0 0 0 2px var(--ink),0 0 0 5px var(--focus);pointer-events:none;animation:heat-ring var(--dur-slow) var(--ease-out) 3 alternate both}
+@keyframes heat-ring{from{opacity:.25}to{opacity:1}}
+/* вход панели слоёв и карточки: opacity + сдвиг 4 px, --dur-fast; выход мгновенный (hidden) */
+@keyframes heat-in{from{opacity:0;transform:translateY(var(--s1))}}
+@keyframes heat-fade{from{opacity:0}}
+.heatbar:not([hidden]),.heat-tip.pin:not([hidden]){animation:heat-in var(--dur-fast) var(--ease-out) both}
+@media (prefers-reduced-motion:reduce){.heat-ring{animation:none}.heat-ov{transition:none}.heatbar:not([hidden]),.heat-tip.pin:not([hidden]){animation:heat-fade var(--dur-instant) linear both}}
+/* подсказка и карточка */
+.heat-tip{position:fixed;z-index:60;max-width:min(340px,calc(100vw - 16px));padding:var(--s3) var(--s4);border-radius:var(--r-md);background:var(--paper);color:var(--ink);box-shadow:var(--sh-3);font:var(--fw-m) var(--fs-md)/1.4 var(--f-ui);pointer-events:none}
+.heat-tip.pin{pointer-events:auto}
+.heat-tip[hidden]{display:none}
+.heat-tip p{margin:var(--s1) 0 0;color:var(--text)}
+.ht-h{display:flex;align-items:center;gap:var(--s2);min-width:0}
+.ht-h b{font-weight:var(--fw-b);font-size:var(--fs-base)}
+.ht-dot{flex:none;width:10px;height:10px;border-radius:50%;display:inline-block}
+.ht-k{margin-left:auto;font:var(--fw-sb) var(--fs-xs)/1 var(--f-ui);color:var(--text-2);padding:var(--s1) var(--s2);border-radius:var(--r-pill);background:var(--panel);white-space:nowrap}
+.ht-a{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s3)}
+/* «Проверка» */
+#heat-pf .pane-b{padding:0 var(--s4) var(--s4)}
+.heat-bar2{display:flex;align-items:center;gap:var(--s2) var(--s3);flex-wrap:wrap;margin:var(--s2) 0 var(--s3)}
+.heat-row{display:flex;gap:var(--s2) var(--s3);align-items:center;flex-wrap:wrap;min-width:0;max-width:100%}
+.heat-sheet{position:relative;background:var(--canvas);border-radius:var(--r-md);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.heat-sheet>canvas:first-child{display:block;width:100%}
+.heat-rep{margin-top:var(--s4)}
+.hr-score{display:flex;align-items:center;gap:var(--s4);padding:var(--s4);border-radius:var(--r-md);background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.hr-n{flex:none;display:flex;align-items:baseline;gap:var(--s1);color:var(--ink)}
+.hr-n b{font:var(--fw-b) var(--fs-3xl)/1 var(--f-ui);letter-spacing:-.02em}
+.hr-n span{font:var(--fw-m) var(--fs-sm)/1 var(--f-ui);color:var(--text-2)}
+.hr-v{min-width:0;flex:1}
+.hr-v h4,.hr-cols h4{margin:0;font:var(--fw-sb) var(--fs-md)/1.3 var(--f-ui);color:var(--ink)}
+.hr-v p{margin:var(--s1) 0 0;font-size:var(--fs-md);color:var(--text-2)}
+.hr-intent{margin:var(--s3) 0 0;padding:var(--s3) var(--s4);border-radius:var(--r-md);background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);font-size:var(--fs-md);color:var(--text-2)}
+.hr-intent b{color:var(--ink);font-weight:var(--fw-sb)}
+.hr-cols{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s4);margin-top:var(--s4)}
+.hr-list{list-style:none;margin:var(--s2) 0 0;padding:0;display:flex;flex-direction:column;gap:var(--s2)}
+.hr-list li{display:flex;gap:var(--s3);padding:var(--s3) var(--s4);border-radius:var(--r-md);background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);min-width:0}
+.hr-list:has(.hr-ok){gap:0;padding:0 var(--s4);border-radius:var(--r-md);background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.hr-list li.hr-ok{padding:var(--s3) 0;border-radius:0;background:none;box-shadow:none;justify-content:space-between;align-items:baseline;gap:var(--s3);font-size:var(--fs-md);color:var(--text-2)}
+.hr-ok+.hr-ok{border-top:1px solid var(--line)}
+.hr-ok b{font:var(--fw-sb) var(--fs-md)/1.3 var(--f-ui);color:var(--ink);text-align:right}
+.hr-none{font-size:var(--fs-md);color:var(--text-2)}
+.hr-bad{align-items:flex-start}
+.hr-bad .ht-dot{margin-top:5px}
+.hr-t{min-width:0;flex:1}
+.hr-t b{font:var(--fw-b) var(--fs-base)/1.3 var(--f-ui);color:var(--ink);margin-right:var(--s2)}
+.hr-t .ht-k{margin-left:0;display:inline-block;vertical-align:1px}
+.hr-t p{margin:var(--s1) 0 0;font-size:var(--fs-md);color:var(--text-2)}
+.hr-a{display:flex;flex-direction:column;gap:var(--s2);flex:none;align-items:stretch}
+@media (max-width:1060px){.hr-cols{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:720px){
+  #heat-pf .pane-b{padding:0 var(--s3) var(--s3)}
+  .hr-bad{flex-wrap:wrap}.hr-a{flex-direction:row;flex-wrap:wrap;width:100%;padding-left:calc(10px + var(--s3))}
+  .hr-score{padding:var(--s3)}
+  .heat-leg{width:100%;gap:var(--s1) var(--s3);padding:0 var(--s1)}
+  .heat-tip{left:var(--s2)!important;right:var(--s2);max-width:none;top:auto!important;bottom:var(--s3)}
+}
