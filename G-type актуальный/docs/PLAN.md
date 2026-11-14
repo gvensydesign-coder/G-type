@@ -1,6 +1,6 @@
 # План G-type
 
-Сверено 14 ноября 2026, 21:58 МСК. Исходники архива v94 лежат в `service/`: `template.html`, `assemble.py` и модули. `python3 service/build.py` собирает v94, поднимает ядро и интерфейс слоем `service/delta/` до упакованной v96 и вшивает патчи `public/patches/` в `public/g-type-v96.html`.
+Сверено 14 ноября 2026, 22:42 МСК. Исходники архива v94 лежат в `service/`: `template.html`, `assemble.py` и модули. `python3 service/build.py` собирает v94, поднимает ядро и интерфейс слоем `service/delta/` до упакованной v96 и вшивает патчи `public/patches/` в `public/g-type-v96.html`.
 
 Та же сборка выгружается в папку `G-type актуальный` репозитория [gvensydesign-coder/G-type](https://github.com/gvensydesign-coder/G-type/tree/main/G-type%20%D0%B0%D0%BA%D1%82%D1%83%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9). Корень того репозитория не трогать: там экспорт Claude от 13 ноября 2026. После каждого шага папка обновляется заново.
 
@@ -44,4 +44,6 @@
 
 ## После каждого подхода
 
-Обнови навык `.cursor/skills/g-type-design-system/SKILL.md`, этот файл, `README.md` и `public/design-system/later.css`, если менялись цвет, рейл, экраны или состав файла шрифта. Затем обнови папку `G-type актуальный` на GitHub.
+Обнови навык `.cursor/skills/g-type-design-system/SKILL.md`, этот файл, `README.md` и `public/design-system/later.css`, если менялись цвет, рейл, экраны или состав файла шрифта. Навык `.cursor/skills/type-design-foundation/SKILL.md` обновляй вместе с ними, когда меняется конструкция знака, рецепт, кернинг или метка гарнитуры. Затем обнови папку `G-type актуальный` на GitHub.
+
+Навык создания шрифтов установлен 14 ноября 2026, 22:42 МСК, из последней копии в экспорте Claude. Рецепты четырнадцати гарнитур уже лежат в `service/RECIPE_*.md`. Файла `kb/PARATYPE_KB.md` в репозитории нет: до его появления словарь берётся из раздела 16 навыка.
