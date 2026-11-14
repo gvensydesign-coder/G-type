@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent
 REPO = ROOT.parent
 DELTA = ROOT / "delta"
 OUT = REPO / "public" / "g-type-v96.html"
-PATCHES = ["layout.js", "visual.js", "distortion.js"]
+PATCHES = ["layout.js", "visual.js", "distortion.js", "art.js"]
 
 EXPECT = {
     "html": "b60faf4ac0d7",

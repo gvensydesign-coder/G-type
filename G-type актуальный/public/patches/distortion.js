@@ -552,6 +552,7 @@
       "#view-distort .dst-cvw{flex:1;position:relative;background:var(--canvas);border-radius:var(--r-md);min-height:200px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}" +
       "#view-distort .dst-cvw canvas{position:absolute;inset:0;width:100%;height:100%;display:block}" +
       "#view-distort .dst-side{background:var(--card);border-radius:var(--r-lg);box-shadow:var(--sh-1);padding:var(--s4);overflow:auto;min-height:0;display:flex;flex-direction:column;gap:var(--s4)}" +
+      "#view-distort .dst-art{width:min(168px,100%);aspect-ratio:1303/1416;flex:none;align-self:center;background:url(\"art/distort.webp\") center/contain no-repeat}" +
       "#view-distort .dst-h{display:flex;align-items:center;gap:var(--s2);margin:0}" +
       "#view-distort .dst-h h2{margin:0 auto 0 0;font:600 var(--fs-lg)/1 var(--f-ui)}" +
       "#view-distort .dst-note{margin:0;font-size:var(--fs-md);color:var(--text-2);line-height:1.45}" +
@@ -621,6 +622,7 @@
       '<p class="dst-note" id="dst-disclaimer">Сдвиньте ползунок: эффект запишется в TTF, OTF, WOFF и WOFF2, в семейство и в вариативный файл. Каждый знак искажается от своего центра.</p>' +
       "</div>" +
       '<aside class="dst-side">' +
+      '<div class="dst-art" aria-hidden="true"></div>' +
       '<div class="dst-h"><h2>Искажение</h2><button type="button" class="nb-close" id="dst-close" aria-label="Закрыть"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
       '<div class="dst-sec"><h3>Эффекты</h3><div class="dst-fx" id="dst-fxnames"></div></div>' +
       '<div class="dst-sec"><h3>Общие настройки</h3><div id="dst-shared"></div></div>' +
