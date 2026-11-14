@@ -10,7 +10,7 @@
 </style>
 </head>
 <body>
-<iframe id="app" src="/g-type-v96.html?distort=2" title="G-type"></iframe>
+<iframe id="app" src="/g-type-v96.html?distort=3" title="G-type"></iframe>
 <script>
 (function () {
   var frame = document.getElementById("app");
@@ -168,41 +168,36 @@
       var spec = d.getElementById("spec");
       var stage = d.getElementById("stage");
       var txt = d.getElementById("txt");
-      placeBox(specOver, d.getElementById("specbox"));
       place(glyphOver, stage);
-      if (specOver) specOver.hidden = off;
+      if (specOver) specOver.hidden = true;
       if (glyphOver) glyphOver.hidden = off;
       if (spec) {
         spec.style.transform = "";
-        spec.style.visibility = off ? "" : "hidden";
+        spec.style.visibility = "";
       }
       if (txt) {
         txt.style.transform = "";
-        txt.style.color = off ? "" : "transparent";
+        txt.style.color = "";
       }
       if (stage) stage.style.visibility = off ? "" : "hidden";
       if (off || busy) { again = !off; return; }
       busy = true;
       var cv = d.getElementById("dst-cv");
       var apply = d.getElementById("dst-apply");
-      var line = (savedSample || "ЖЕЛЕЗО").split("\n")[0].slice(0, 24);
       function shot(text, target, canvas, mode, next) {
-        if (mode === "line") placeBox(target, d.getElementById("specbox"));
-        else place(target, canvas);
+        place(target, canvas);
         park();
         if (txt) txt.value = text;
         if (apply) { skipApply = true; apply.click(); skipApply = false; }
         setTimeout(function () {
           copy(cv, target, mode);
           next();
-        }, 280);
+        }, 220);
       }
-      shot(line, specOver, spec, "line", function () {
-        shot(currentChar(), glyphOver, stage, "glyph", function () {
-          if (txt) txt.value = savedSample;
-          busy = false;
-          if (again) { again = false; paint(); }
-        });
+      shot(currentChar(), glyphOver, stage, "glyph", function () {
+        if (txt) txt.value = savedSample;
+        busy = false;
+        if (again) { again = false; paint(); }
       });
     }
 

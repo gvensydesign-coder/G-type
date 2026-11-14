@@ -4674,6 +4674,7 @@ __zrun('zc');__zrun('zu');
     }
     queueDraw();
     scheduleSave();
+    refreshView();
   }
 
   var saveTmr = 0;
@@ -4716,6 +4717,7 @@ __zrun('zc');__zrun('zu');
     if (ui.swVar) ui.swVar.checked = S.variants;
     refreshLetters();
     queueDraw();
+    refreshView();
   }
   function scheduleSave() {
     clearTimeout(saveTmr);
@@ -5246,15 +5248,151 @@ __zrun('zc');__zrun('zu');
     return { cs: csOfPolys(polys), adv: adv2 };
   }
 
+  var bakeDepth = 0;
+  var plainDepth = 0;
+  function warpView(g, ch) {
+    if (!g || !g.cs || !g.cs.length || !distortActive() || bakeDepth || plainDepth) return g;
+    try {
+      var baked = bakeGlyphCs(g.cs, g.adv, g.ch || ch);
+      if (!baked) return g;
+      var copy = {};
+      for (var k in g) copy[k] = g[k];
+      copy.cs = baked.cs;
+      copy.adv = baked.adv;
+      return copy;
+    } catch (e) {
+      return g;
+    }
+  }
+  function wrapView(name) {
+    var orig = window[name];
+    if (typeof orig !== "function" || orig.__gtView) return;
+    var fn = function (ch) {
+      return warpView(orig.apply(this, arguments), ch);
+    };
+    fn.__gtView = true;
+    window[name] = fn;
+  }
+  function refreshView() {
+    try { if (typeof window.schedule === "function") window.schedule(); } catch (e) {}
+    try { if (window.HEAT && window.HEAT.refresh) window.HEAT.refresh(); } catch (e) {}
+  }
+  function plainGlyph(ch, key) {
+    plainDepth++;
+    try { return window.gfSmart(ch, key || "regular"); }
+    catch (e) { return null; }
+    finally { plainDepth--; }
+  }
+  function polyArea(g) {
+    if (!g || !g.cs) return 0;
+    var a = 0;
+    for (var ci = 0; ci < g.cs.length; ci++) {
+      var n = g.cs[ci].nodes;
+      if (!n || n.length < 3) continue;
+      for (var i = 0; i < n.length; i++) {
+        var p = n[i], q = n[(i + 1) % n.length];
+        a += p.x * q.y - q.x * p.y;
+      }
+    }
+    return Math.abs(a) / 2;
+  }
+  function xSpan(g) {
+    var min = 1e9, max = -1e9;
+    if (!g || !g.cs) return null;
+    for (var ci = 0; ci < g.cs.length; ci++) {
+      var n = g.cs[ci].nodes;
+      if (!n) continue;
+      for (var i = 0; i < n.length; i++) {
+        if (n[i].x < min) min = n[i].x;
+        if (n[i].x > max) max = n[i].x;
+      }
+    }
+    if (!(max > min)) return null;
+    return { min: min, max: max, adv: g.adv || 0 };
+  }
+  function gapOf(a, b) {
+    if (!a || !b) return NaN;
+    return a.adv + b.min - a.max;
+  }
+  function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function median(arr) {
+    if (!arr.length) return 0;
+    var s = arr.slice().sort(function (x, y) { return x - y; });
+    var m = s.length >> 1;
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  }
+  function letterish(ch) { return typeof ch === "string" && /[\p{L}\p{N}]/u.test(ch); }
+  function heatBefore(items) {
+    if (!distortActive() || !items || !items.length) return;
+    var cache = {};
+    function pair(ch, key) {
+      var id = (key || "") + "|" + ch;
+      if (cache[id]) return cache[id];
+      var w = window.gfSmart(ch, key);
+      var p = plainGlyph(ch, key);
+      cache[id] = { w: w, p: p, aw: polyArea(w), ap: polyArea(p), sw: xSpan(w), sp: xSpan(p) };
+      return cache[id];
+    }
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      if (it.t !== "tone" || !letterish(it.ch)) continue;
+      var g = pair(it.gn || it.ch, it.key);
+      if (!(g.ap > 0) || !(g.aw > 0)) continue;
+      var d = g.aw / g.ap - 1;
+      var sev = clamp01((Math.abs(d) - 0.08) / 0.22);
+      if (sev > it.sev) { it.sev = sev; it.dev = d; it.warp = true; }
+    }
+    var pairs = [];
+    for (i = 0; i < items.length; i++) {
+      it = items[i];
+      if (it.t !== "pair" || !letterish(it.a) || !letterish(it.b)) continue;
+      var A = pair(it.gnA || it.a, it.key), B = pair(it.gnB || it.b, it.key);
+      var gw = gapOf(A.sw, B.sw), gp = gapOf(A.sp, B.sp);
+      if (!(gp > 20) || !(gw > 0)) continue;
+      pairs.push({ it: it, d: gw / gp - 1 });
+    }
+    var mid = median(pairs.map(function (x) { return x.d; }));
+    for (i = 0; i < pairs.length; i++) {
+      var dev = pairs[i].d - mid;
+      var sevP = clamp01((Math.abs(dev) - 0.05) / 0.18);
+      if (sevP > pairs[i].it.sev) { pairs[i].it.sev = sevP; pairs[i].it.dev = dev; pairs[i].it.warp = true; }
+    }
+  }
+  function hookHeat() {
+    if (!window.HEAT || typeof window.HEAT.analyze !== "function" || window.HEAT.analyze.__gtDistort) return;
+    var orig = window.HEAT.analyze;
+    var analyze = function () {
+      var res = orig.apply(this, arguments);
+      if (!distortActive() || !res || !res.items || typeof window.HEAT.summarize !== "function") return res;
+      heatBefore(res.items);
+      var again = window.HEAT.summarize(res.items, res.lines, res.refs);
+      again.ms = res.ms;
+      if (res.sc) again.sc = res.sc;
+      return again;
+    };
+    analyze.__gtDistort = true;
+    window.HEAT.analyze = analyze;
+    if (typeof window.HEAT.text !== "function" || window.HEAT.text.__gtDistort) return;
+    var origText = window.HEAT.text;
+    var text = function (it) {
+      if (it && it.warp) {
+        var pc = Math.round(Math.abs(it.dev || 0) * 100);
+        if (it.t === "tone") return { h: "«" + it.ch + "»", p: "искажение сделало знак на " + pc + "% " + (it.dev < 0 ? "светлее." : "темнее.") };
+        if (it.t === "pair") return { h: (it.a || "") + (it.b || ""), p: "искажение сделало промежуток на " + pc + "% " + (it.dev < 0 ? "уже." : "шире.") };
+      }
+      return origText.apply(this, arguments);
+    };
+    text.__gtDistort = true;
+    window.HEAT.text = text;
+  }
   function installBake() {
     if (window.__GT_BAKE_INSTALLED) return;
     if (typeof window.finalGlyph !== "function" || typeof window.buildTTF !== "function") return;
     window.__GT_BAKE_INSTALLED = true;
     var origFG = window.finalGlyph;
-    var depth = 0;
     window.finalGlyph = function (ch, st, edits, opt) {
       var fg = origFG.apply(this, arguments);
-      if (!depth || !fg || !fg.cs || !fg.cs.length) return fg;
+      if (!bakeDepth || !fg || !fg.cs || !fg.cs.length) return fg;
       try {
         var baked = bakeGlyphCs(fg.cs, fg.adv, fg.ch || ch);
         if (!baked) return fg;
@@ -5272,12 +5410,12 @@ __zrun('zc');__zrun('zu');
       if (typeof orig !== "function" || orig.__gtBake) return;
       var fn = function () {
         var on = distortActive();
-        if (on) depth++;
+        if (on) bakeDepth++;
         var left = false;
         function leave() {
           if (left) return;
           left = true;
-          if (on) depth--;
+          if (on) bakeDepth--;
         }
         try {
           var args = arguments;
@@ -5302,6 +5440,9 @@ __zrun('zc');__zrun('zu');
     wrap("buildVariableTTF");
     wrap("buildVariablePair");
     wrap("famBuildAll");
+    wrapView("getFinal");
+    wrapView("gfSmart");
+    hookHeat();
     window.__GT_DISTORT_API = {
       active: distortActive,
       params: function () { return JSON.parse(JSON.stringify(S.p)); },
@@ -5313,6 +5454,7 @@ __zrun('zc');__zrun('zu');
         syncSliders();
         scheduleSave();
         queueDraw();
+        refreshView();
       },
     };
   }
