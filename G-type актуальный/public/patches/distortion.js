@@ -508,6 +508,7 @@
     if (ui.swPer) ui.swPer.checked = S.perLetter;
     if (ui.swVar) ui.swVar.checked = S.variants;
     if (ui.spec) ui.spec.textContent = S.text;
+    syncArt();
     var note = document.getElementById("dst-disclaimer");
     if (note) note.textContent = distortActive()
       ? "Эффект записывается в скачиваемый файл. Каждый знак искажается от своего центра. Пять вариантов остаются на экране: в файл попадает основной вид."
@@ -523,6 +524,7 @@
     }
     queueDraw();
     scheduleSave();
+    syncArt();
     refreshView();
   }
 
@@ -658,15 +660,29 @@
       "#view-distort .btn.pri-accent:hover{background:var(--accent-hover)}" +
       "#view-distort .btn.pri-accent:active{background:var(--accent-press)}" +
       "#view-distort .nb-close{width:var(--h-md);height:var(--h-md);border:0;border-radius:var(--r-pill);background:var(--surface-2);cursor:pointer;display:grid;place-items:center;color:var(--text)}" +
-      "#rb-distort svg{width:22px;height:22px;display:block}" +
-      "body:not(.rm-work) #rb-distort{display:none!important}" +
+      "#rb-distort{display:none!important}" +
+      "#view-distort{position:fixed!important;left:-4000px!important;top:0!important;width:8px!important;height:8px!important;overflow:hidden!important;visibility:hidden!important;pointer-events:none!important}" +
+      "#gt-dst-grp.shut .gt-dst-body{display:none!important}" +
+      "#gt-dst-grp .dst-h,#gt-dst-grp .dst-note{display:none}" +
+      "#gt-dst-grp .dst-side{display:flex;flex-direction:column;gap:var(--s3);margin:0;padding:0 0 var(--s2);background:transparent;box-shadow:none;border-radius:0;min-height:0;overflow:visible}" +
+      "#gt-dst-grp .dst-art{width:min(168px,72%);aspect-ratio:1303/1416;margin:0 auto var(--s2);flex:none;align-self:center;background:url(\"art/distort.webp\") center/contain no-repeat}" +
+      "#gt-dst-grp .dst-art[hidden]{display:none!important}" +
+      "#gt-dst-grp .dst-sec h3{margin:var(--s2) 0 var(--s1);font:600 var(--fs-xs)/1.2 var(--f-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--text-2)}" +
+      "#gt-dst-grp .dst-fx{display:flex;flex-wrap:wrap;gap:var(--s1)}" +
+      "#gt-dst-grp .dst-sw{display:flex;align-items:center;gap:var(--s2);min-height:var(--h-sm);font-size:var(--fs-sm);color:var(--text);cursor:pointer}" +
+      "#gt-dst-grp .dst-sw input{accent-color:var(--ink);width:16px;height:16px}" +
+      "#gt-dst-grp .dst-sub{margin-left:var(--s3);padding-left:var(--s3);border-left:2px solid var(--line)}" +
+      "#gt-dst-grp .dst-vars{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--s2)}" +
+      "#gt-dst-grp .dst-vars canvas{width:100%;background:var(--canvas);border-radius:var(--r-xs);box-shadow:inset 0 0 0 1px var(--line)}" +
+      "#gt-dst-grp .btn.pri-accent{align-self:flex-start;background:var(--accent-press);color:var(--on-accent)}" +
+      "#gt-dst-grp .btn.pri-accent:hover{background:var(--accent-hover)}" +
       "@media(max-width:960px){#view-distort{grid-template-columns:1fr;grid-template-rows:minmax(180px,34vh) minmax(0,1fr)}}";
     document.head.appendChild(st);
   }
 
   function mkSlider(def, parent, sub) {
     var d = document.createElement("div");
-    d.className = "dst-ctl" + (sub ? " dst-sub" : "");
+    d.className = "dst-ctl ctl" + (sub ? " dst-sub" : "");
     d.dataset.id = def.id;
     d.innerHTML =
       '<label for="dst-r-' +
@@ -1420,30 +1436,50 @@
     };
   }
 
-  function placeBtn() {
-    var tools = document.getElementById("rp-tools");
-    if (!tools) return false;
+  function syncArt() {
+    var art = document.querySelector(".dst-art");
+    if (!art) return;
+    art.hidden = distortActive();
+  }
+
+  function undock() {
+    var view = document.getElementById("view-distort");
+    var side = document.querySelector(".dst-side");
+    if (view && side && side.parentNode !== view) view.appendChild(side);
+  }
+
+  function dockIntoParams() {
+    var params = document.getElementById("params");
+    var side = document.querySelector(".dst-side");
     var btn = document.getElementById("rb-distort");
-    if (!btn) {
-      btn = document.createElement("button");
-      btn.className = "rb";
-      btn.type = "button";
-      btn.id = "rb-distort";
-      btn.setAttribute("data-tip", "Искажение");
-      btn.setAttribute("aria-label", "Искажение");
-      btn.setAttribute("aria-pressed", open ? "true" : "false");
-      btn.innerHTML =
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">' +
-        '<path d="M3 9c2.5-3 5-3 7.5 0s5 3 7.5 0 5-3 7.5 0"/>' +
-        '<path d="M3 15c2.5-3 5-3 7.5 0s5 3 7.5 0 5-3 7.5 0"/></svg>';
-      btn.addEventListener("click", togglePanel);
+    if (btn) btn.remove();
+    if (!params || !side || !params.querySelector(".grp:not(#gt-dst-grp)")) return;
+    var grp = document.getElementById("gt-dst-grp");
+    if (!grp) {
+      grp = document.createElement("div");
+      grp.id = "gt-dst-grp";
+      grp.className = "grp shut";
+      grp.innerHTML = '<h5>Искажение</h5><div class="gt-dst-body"></div>';
     }
-    if (btn.parentNode !== tools) {
-      var more = document.getElementById("rail-more-btn");
-      if (more && more.parentNode === tools) tools.insertBefore(btn, more);
-      else tools.appendChild(btn);
-    }
-    return true;
+    var body = grp.querySelector(".gt-dst-body");
+    if (body && side.parentNode !== body) body.appendChild(side);
+    if (grp.parentNode !== params || params.lastElementChild !== grp) params.appendChild(grp);
+    if (ui.panel) ui.panel.hidden = true;
+    open = true;
+    syncArt();
+  }
+
+  function hookPanel() {
+    if (typeof window.buildPanel !== "function" || window.buildPanel.__gtDock) return;
+    var orig = window.buildPanel;
+    var fn = function () {
+      undock();
+      var result = orig.apply(this, arguments);
+      dockIntoParams();
+      return result;
+    };
+    fn.__gtDock = true;
+    window.buildPanel = fn;
   }
 
   function boot() {
@@ -1452,18 +1488,22 @@
     installBake();
     restoreLocal();
     hookProject();
+    hookPanel();
     var hookN = 0;
     var hookT = setInterval(function () {
       hookProject();
+      hookPanel();
+      dockIntoParams();
       hookN += 1;
-      if ((window.projectJSON && window.projectJSON.__gtDistort && window.applyProject && window.applyProject.__gtDistort) || hookN > 40) clearInterval(hookT);
+      var proj = window.projectJSON && window.projectJSON.__gtDistort && window.applyProject && window.applyProject.__gtDistort;
+      if (proj && document.getElementById("gt-dst-grp")) clearInterval(hookT);
+      if (hookN > 40) clearInterval(hookT);
     }, 250);
-    placeBtn();
+    dockIntoParams();
     var obs = new MutationObserver(function () {
-      placeBtn();
-      if (open && !document.body.classList.contains("rm-work")) closePanel();
+      dockIntoParams();
     });
-    obs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+    obs.observe(document.body, { childList: true, subtree: true });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
