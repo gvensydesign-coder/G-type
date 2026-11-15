@@ -1,0 +1,455 @@
+term	letter	english	category
+Автохинтинг	А	Auto-hinting	hinting_rendering
+Агат	А	Agate, Ruby	metrics
+Акут	А	Acute	diacritics_scripts
+Акцент	А	Accents	diacritics_scripts
+Акцидентные шрифты	А	Display typefaces	typesetting_layout
+Акциденция	А	Display matter	printing_legacy
+Алиасинг	А	Aliasing	hinting_rendering
+Алфавит	А	Alphabet	diacritics_scripts
+Альтернативный глиф	А	Alternate glyph	opentype_features
+Амперсанд	А	Ampersand, Et sign	punctuation_symbols
+Английская антиква старого стиля	А	English old style serif	classification_history
+Английская линейка	А	French Line	typesetting_layout
+Английский параграф	А	Paragraph Mark, Pilcrow	punctuation_symbols
+Англо-американская типометрическая система	А	Anglo-American Point System, Pica System	metrics
+Англо-шотландская антиква	А	Scotch Roman	classification_history
+Антиалиасинг	А	Anti-aliasing	hinting_rendering
+Антиква	А	Serif	classification_history
+Антиква нового стиля	А	Modern Serif, Neoclassical	classification_history
+Антиква старого стиля	А	Old style serif	classification_history
+Апекс	А	Apex	anatomy
+Апертура	А	Aperture	anatomy
+Апостроф	А	Apostrophe	punctuation_symbols
+Апрош	А	Letterspace	spacing_kerning
+Арабские цифры	А	Arabic numerals	other
+Ассюре	А	Cheque line	typesetting_layout
+Астериск	А	Asterisk	punctuation_symbols
+Бабашка	Б	Quotation quad, Hollow quad	printing_legacy
+Базовая линия	Б	Baseline, Font line	metrics
+Базовый кегль	Б	Basic size	metrics
+Бастарда	Б	Bastarda	classification_history
+Бикамеральный алфавит	Б	Bicameral alphabet	diacritics_scripts
+Боковое свисание	Б	Kern	spacing_kerning
+Боргес	Б	Borgis, Bourgeois	metrics
+Бордюр	Б	Border	typesetting_layout
+Брайля шрифт	Б	Braille	other
+Бреве	Б	Breve	diacritics_scripts
+Бреве кириллическое	Б	Cyrillic breve	diacritics_scripts
+Бриллиант	Б	Brilliant, Excelsior, Four-to-pica	metrics
+Брусковые шрифты	Б	Slab Serif	classification_history
+Буква	Б	Character, Letter	diacritics_scripts
+Буквоотливная наборная машина «Монотайп»	Б	Monotype typesetting machine	printing_legacy
+Буллит	Б	Bullet	punctuation_symbols
+Валютные знаки	В	Currency Symbols, Monetary Symbols	punctuation_symbols
+Вариативные шрифты	В	Variable fonts	technology_formats
+Веб-шрифты	В	Web fonts	technology_formats
+Векторные шрифты	В	Vector font, Vector type	technology_formats
+Венгерское ударение	В	Hungarumlaut, Double acute	diacritics_scripts
+Венецианская антиква	В	Venetian old style serif	classification_history
+Версалы	В	Versals	typesetting_layout
+Верстатка	В	Composer's stick	printing_legacy
+Верстка	В	Make-up, Page-proof	typesetting_layout
+Вертикальная засечка	В	Beak	anatomy
+Верхний выносной элемент	В	Ascender	anatomy
+Верхняя линия прописных	В	Cap line	metrics
+Верхняя линия строчных	В	Mean line, x-height line	metrics
+Верхняя точка	В	Overdot	diacritics_scripts
+Виньетка	В	Vignette	typesetting_layout
+Внутрибуквенный просвет	В	Counter, Eye	anatomy
+Вопросительный знак	В	Question mark	punctuation_symbols
+Восклицательный знак	В	Exclamation mark, Exclamation point	punctuation_symbols
+Встраивание шрифтов	В	Font embedding	technology_formats
+Выключенный текст	В	Justified text	typesetting_layout
+Выключка	В	Justification	typesetting_layout
+Выносной элемент	В	Extender	anatomy
+Высокая печать	В	Letterpress	printing_legacy
+Высота прописных знаков	В	Cap height	metrics
+Высота строчных знаков	В	X-height	metrics
+Вязь	В	Vyaz'	diacritics_scripts
+Гаральды	Г	Garalde	classification_history
+Гарнитура наборного шрифта	Г	Typeface, Type Family	classification_history
+Гарнитурные особенности	Г	Font attributes	classification_history
+Гарнитурные признаки	Г	Style features	anatomy
+Гарт	Г	Type alloy, Type metal	printing_legacy
+Геометрические брусковые шрифты	Г	Geometric Slab-Serif Fonts	classification_history
+Геометрические гротески	Г	Geometric Sans	classification_history
+Глаголица	Г	Glagolitic script	diacritics_scripts
+Глаз	Г	Eye	anatomy
+Глиптальные шрифты	Г	Glyptal types	classification_history
+Глиф	Г	Glyph	technology_formats
+Голландская антиква старого стиля	Г	Dutch old style serif	classification_history
+Горизонталь	Г	Arm	anatomy
+Горячий набор	Г	Hot-metal composition	printing_legacy
+Готический шрифт	Г	Blackletter	classification_history
+Гравис	Г	Grave	diacritics_scripts
+Гражданский шрифт	Г	Civil type, Grazhdansky type	classification_history
+Граммалог	Г	Grammalogue	punctuation_symbols
+Графема	Г	Grapheme	diacritics_scripts
+Гротески	Г	Sans Serif, Gothic, Grotesk	classification_history
+Гротески, новые	Г	Neo-grotesque	classification_history
+Гротески, старые	Г		classification_history
+Гуманистическая антиква	Г		classification_history
+Гуманистические брусковые шрифты	Г		classification_history
+Гуманистические гротески	Г		classification_history
+Гуманистический курсив	Г		classification_history
+Гуманистический минускул	Г		classification_history
+Двоеточие	Д		punctuation_symbols
+Двойная линейка	Д		typesetting_layout
+Двойной боргес	Д		metrics
+Двойной дэггер	Д		punctuation_symbols
+Двухчастная конструкция буквы	Д		anatomy
+Декоративное начертание	Д		classification_history
+Дефис	Д		punctuation_symbols
+Диакритика	Д		diacritics_scripts
+Диамант	Д		metrics
+Диграф	Д		diacritics_scripts
+Дизайнер шрифта	Д		design_process
+Диэрезис	Д		diacritics_scripts
+Длинное тире	Д		punctuation_symbols
+Дробная черта	Д		punctuation_symbols
+Дуга	Д		anatomy
+Дукт	Д		anatomy
+Дуктальные шрифты	Д		classification_history
+Дэггер	Д		punctuation_symbols
+Евро	Е		punctuation_symbols
+Египетские шрифты	Е		classification_history
+Жирная линейка	Ж		typesetting_layout
+Жирный шрифт	Ж		other
+Заглавные буквы	З		other
+Заголовочный шрифт	З		classification_history
+Заплечико	З		anatomy
+Запятая	З		punctuation_symbols
+Засечка	З		anatomy
+Звездочка	З		punctuation_symbols
+Знак возврата каретки	З		punctuation_symbols
+Знак номера	З		punctuation_symbols
+Знак шрифта	З		other
+Знаки препинания	З		punctuation_symbols
+Идеограмма	И		diacritics_scripts
+Идеографическое письмо	И		diacritics_scripts
+Икарус	И		other
+Индексы на верхнюю линию	И		typesetting_layout
+Индексы на нижнюю линию	И		typesetting_layout
+Инициал	И		typesetting_layout
+Инструкция	И		hinting_rendering
+Интерлиньяж	И		typesetting_layout
+Интерполяция	И		technology_formats
+Интерробанг	И		punctuation_symbols
+Ионик	И		classification_history
+Итальянские шрифты	И		classification_history
+Кавычки	К		punctuation_symbols
+Кавычки-„лапки“	К		punctuation_symbols
+Кавычки-«ёлочки»	К		punctuation_symbols
+Каллиграфия	К		design_process
+Канцлей	К		classification_history
+Канчелляреска	К		classification_history
+Капитальное письмо	К		typesetting_layout
+Капитель	К		anatomy
+Каплевидный элемент	К		anatomy
+Капля	К		anatomy
+Каролингский минускул	К		classification_history
+Карон	К		diacritics_scripts
+Квадрат	К		metrics
+Квадрата	К		metrics
+Квадратичная кривая	К		technology_formats
+Квадратные скобки	К		punctuation_symbols
+Кверти	К		technology_formats
+Кегельная площадка	К		metrics
+Кегельная шпация	К		spacing_kerning
+Кегельный шпон	К		printing_legacy
+Кегль	К		metrics
+Кернинг	К		spacing_kerning
+Кернинговые пары	К		spacing_kerning
+Кириллица	К		diacritics_scripts
+Кларендон	К		classification_history
+Классификация наборных шрифтов	К		classification_history
+Классицистические шрифты	К		classification_history
+Кодировка шрифта	К		technology_formats
+Кодовая страница	К		technology_formats
+Количество точек на дюйм	К		hinting_rendering
+Колонна Траяна	К		classification_history
+Комплект знаков шрифта	К		technology_formats
+Композитный знак	К		diacritics_scripts
+Компьютерный набор	К		technology_formats
+Коническая кривая	К		technology_formats
+Контраст шрифта	К		metrics
+Контрпуансон	К		printing_legacy
+Контур знака	К		anatomy
+Контурное начертание	К		classification_history
+Контурные шрифты	К		classification_history
+Концевой элемент	К		anatomy
+Копирайт	К		punctuation_symbols
+Короткое тире	К		punctuation_symbols
+Корпус	К		metrics
+Косая черта	К		punctuation_symbols
+Косой шрифт	К		classification_history
+Крестик	К		punctuation_symbols
+Кривые Безье	К		technology_formats
+Кроссбар	К		anatomy
+Круглая шпация	К		spacing_kerning
+Круглоготический шрифт	К		classification_history
+Круглые скобки	К		punctuation_symbols
+Кружок	К		punctuation_symbols
+Крупнокегельный шрифт	К		printing_legacy
+Кубическая кривая	К		technology_formats
+Курсив	К		classification_history
+Латиница	Л		diacritics_scripts
+Латинские шрифты	Л		classification_history
+Лигатура	Л		opentype_features
+Линейка наборная	Л		typesetting_layout
+Линия верхних выносных элементов	Л		metrics
+Линия нижних выносных элементов	Л		metrics
+Линия прописных	Л		metrics
+Линия строчных	Л		metrics
+Линия шрифта	Л		metrics
+Линотипная строка	Л		printing_legacy
+Литера	Л		printing_legacy
+Ловушка	Л		printing_legacy
+Логотип	Л		design_process
+Ломбардские версалы	Л		classification_history
+Макрон	М		diacritics_scripts
+Малоконтрастная антиква	М		classification_history
+Малтипл мастерс	М		technology_formats
+Марзан	М		classification_history
+Математические символы	М		punctuation_symbols
+Матрица шрифтовая	М		printing_legacy
+Машинный набор	М		printing_legacy
+Маюскулы	М		other
+Маюскульные цифры	М		other
+Маюскульный курсив	М		classification_history
+Медиеваль	М		classification_history
+Межбуквенный пробел	М		spacing_kerning
+Межсловный пробел	М		spacing_kerning
+Металлический набор	М		printing_legacy
+Металлический шрифт	М		printing_legacy
+Метрики	М		metrics
+Минускулы	М		other
+Минускульные цифры	М		other
+Минускульный курсив	М		classification_history
+Миньон	М		metrics
+Миттель	М		metrics
+Многоточие	М		punctuation_symbols
+Моноширинные шрифты	М		technology_formats
+Набор текста	Н		typesetting_layout
+Наборный шрифт	Н		printing_legacy
+Надстрочные знаки	Н		diacritics_scripts
+Наклонный шрифт	Н		classification_history
+Наплыв	Н		anatomy
+Насыщенность шрифта	Н		classification_history
+Начертание	Н		classification_history
+Неалфавитные знаки	Н		punctuation_symbols
+Неалфавитные шрифты	Н		classification_history
+Невыключенный набор	Н		typesetting_layout
+Неконтрастные шрифты	Н		classification_history
+Неразрывный пробел	Н		spacing_kerning
+Нескругленная засечка	Н		anatomy
+Нижний выносной элемент	Н		anatomy
+Новостильная антиква	Н		classification_history
+Нонпарель	Н		metrics
+Обелиск	О		punctuation_symbols
+Овал	О		anatomy
+Огонек	О		anatomy
+Оконтуренное начертание	О		classification_history
+Октоторп	О		punctuation_symbols
+Орнамент	О		typesetting_layout
+Орфография	О		other
+Основное начертание	О		classification_history
+Основной штрих	О		anatomy
+Ось изменения рисунка	О		anatomy
+Ось овалов	О		anatomy
+Отливная форма	О		printing_legacy
+Отсечка	О		anatomy
+Оттененное начертание	О		classification_history
+Отточие	О		punctuation_symbols
+ОупенТайп	О		technology_formats
+Очко литеры	О		metrics
+Очко шрифта	О		metrics
+Пайка	П		metrics
+Панграмма	П		other
+Паносе	П		classification_history
+Парагон	П		metrics
+Параграф	П		punctuation_symbols
+Параграф английский	П		punctuation_symbols
+Парангон	П		metrics
+Парантез	П		punctuation_symbols
+Перекладина	П		anatomy
+Переплетные шрифты	П		classification_history
+Переходная антиква	П		classification_history
+Перл	П		metrics
+Петит	П		metrics
+Петля	П		anatomy
+Пиктограмма	П		punctuation_symbols
+Плотность очка шрифта	П		metrics
+Подстрочные знаки	П		typesetting_layout
+Полиграмма	П		other
+Политипаж	П		printing_legacy
+Полуапрош	П		spacing_kerning
+Полужирное начертание	П		classification_history
+Полукруглая шпация	П		spacing_kerning
+Полуовал	П		anatomy
+Полуунциал	П		classification_history
+Полуустав	П		classification_history
+Полуэм	П		metrics
+Постановка очка	П		typesetting_layout
+ПостСкрипт	П		technology_formats
+ПостСкрипт Тайп 1	П		technology_formats
+Присоединение	П		other
+Пробельные элементы	П		spacing_kerning
+Прописные буквы	П		other
+Прописные и строчные	П		other
+Пропорции шрифта	П		metrics
+Пропорциональный шрифт	П		metrics
+Прямое начертание	П		classification_history
+Пуансон	П		printing_legacy
+Пуансонист	П		printing_legacy
+Пункт Дидо	П		metrics
+Пункт типографский	П		metrics
+Равновысокие цифры	Р		metrics
+Различимость	Р		other
+Разрешение	Р		hinting_rendering
+Разрядка	Р		spacing_kerning
+Рантовая линейка	Р		typesetting_layout
+Раппорт	Р		typesetting_layout
+Растр	Р		hinting_rendering
+Растрирование	Р		hinting_rendering
+Растровый шрифт	Р		hinting_rendering
+Растровый элемент	Р		hinting_rendering
+Реглет	Р		printing_legacy
+Реконструкция шрифта	Р		design_process
+Решетка	Р		typesetting_layout
+Римские цифры	Р		other
+Римский курсив	Р		classification_history
+Рисованный шрифт	Р		classification_history
+Рост прописных букв	Р		metrics
+Рост строчных букв	Р		metrics
+Рост шрифта	Р		metrics
+Росчерк	Р		other
+Ротунда	Р		classification_history
+Рукописные шрифты	Р		classification_history
+Рустика	Р		classification_history
+Ручной набор	Р		printing_legacy
+Ручной шрифт	Р		classification_history
+Сверхжирное начертание	С		classification_history
+Сверхсветлое начертание	С		classification_history
+Сверхузкое начертание	С		classification_history
+Сверхширокое начертание	С		classification_history
+Светлая линейка	С		typesetting_layout
+Светлое начертание	С		classification_history
+Свисание	С		spacing_kerning
+Свисающий элемент	С		anatomy
+Седиль	С		diacritics_scripts
+Сериф	С		anatomy
+Сигнет	С		punctuation_symbols
+Силлабическое письмо	С		diacritics_scripts
+Символ	С		punctuation_symbols
+Символьные шрифты	С		classification_history
+Система Дидо	С		metrics
+Система письма	С		diacritics_scripts
+Скобки	С		punctuation_symbols
+Скоропись	С		classification_history
+Скругление	С		anatomy
+Скругленная засечка	С		anatomy
+Словолитня	С		printing_legacy
+Слоговое письмо	С		diacritics_scripts
+Слэш	С		punctuation_symbols
+Сноски знак	С		punctuation_symbols
+Собака	С		punctuation_symbols
+Соединительный штрих	С		anatomy
+Спина	С		anatomy
+Сплайн	С		technology_formats
+Старостильная антиква	С		classification_history
+Степень ширины	С		classification_history
+Стоящий инициал	С		typesetting_layout
+Строкоотливная наборная машина «Линотайп»	С		printing_legacy
+Строкоотливной набор	С		printing_legacy
+Строчная буква	С		other
+Субиндексы	С		typesetting_layout
+Супериндексы	С		typesetting_layout
+Табличные цифры	Т		metrics
+Текст	Т		typesetting_layout
+Текстовые шрифты	Т		classification_history
+Текстура	Т		classification_history
+Терция	Т		metrics
+Тильда	Т		diacritics_scripts
+Типографика	Т		other
+Типометрическая линейка	Т		metrics
+Типометрическая система	Т		metrics
+Типометрия	Т		metrics
+Тире	Т		punctuation_symbols
+Титло	Т		diacritics_scripts
+Титульный шрифт	Т		classification_history
+Толщина литеры	Т		anatomy
+Тонкая линейка	Т		typesetting_layout
+Тонкая шпация	Т		spacing_kerning
+Точка	Т		punctuation_symbols
+Точка акцент	Т		diacritics_scripts
+Точка с запятой	Т		punctuation_symbols
+Трекинг	Т		spacing_kerning
+Третная шпация	Т		spacing_kerning
+ТруТайп	Т		technology_formats
+Угловые скобки	У		punctuation_symbols
+Угол наклона шрифта	У		metrics
+Ударение	У		diacritics_scripts
+Удобочитаемость шрифта	У		other
+Узел	У		anatomy
+Узкое начертание	У		classification_history
+Умлаут	У		diacritics_scripts
+Униширинные шрифты	У		metrics
+Унциал	У		classification_history
+Устав	У		classification_history
+Утопленный инициал	У		typesetting_layout
+Ухо	У		anatomy
+Факсимильная реконструкция	Ф		design_process
+Фигурные скобки	Ф		punctuation_symbols
+Флерон	Ф		typesetting_layout
+Фонема	Ф		diacritics_scripts
+Фонетические шрифты	Ф		other
+Форма литеры	Ф		anatomy
+Формат набора	Ф		typesetting_layout
+Формат цифрового шрифта	Ф		technology_formats
+Формульный набор	Ф		typesetting_layout
+Фотонабор	Ф		printing_legacy
+Фотонаборный автомат	Ф		printing_legacy
+Фрактура	Ф		classification_history
+Хвост буквы	Х		anatomy
+Химические символы	Х		punctuation_symbols
+Хинт	Х		hinting_rendering
+Хинтование	Х		hinting_rendering
+Холодный набор	Х		printing_legacy
+Художник наборного шрифта	Х		design_process
+Цветность	Ц		other
+Циркумфлекс	Ц		diacritics_scripts
+Цифровая единица	Ц		technology_formats
+Цифровой шрифт	Ц		technology_formats
+Цифры	Ц		other
+Цицеро	Ц		metrics
+Четвертная шпация	Ч		spacing_kerning
+Числа	Ч		other
+Читаемость	Ч		other
+Шаблон шрифтовой	Ш		design_process
+Шатированная линейка	Ш		typesetting_layout
+Швабахер	Ш		classification_history
+Шип	Ш		anatomy
+Ширина знака шрифта	Ш		metrics
+Широкое начертание	Ш		classification_history
+Шпация	Ш		spacing_kerning
+Шпон	Ш		printing_legacy
+Шрифт	Ш		other
+Шрифтовая семья	Ш		classification_history
+Шрифтовое выделение	Ш		typesetting_layout
+Шрифтовое оформление	Ш		typesetting_layout
+Шрифтовой редактор	Ш		technology_formats
+Шрифты «грейскейл»	Ш		technology_formats
+Штамб	Ш		anatomy
+Штрихи	Ш		anatomy
+Штриховая линейка	Ш		typesetting_layout
+Экранные шрифты	Э		hinting_rendering
+Экспертный комплект	Э		technology_formats
+Экстремальная точка	Э		anatomy
+Эм	Э		metrics
+Эн	Э		metrics
+Эсцет	Э		diacritics_scripts
+Юникод	Ю		technology_formats
+Язык	Я		other
+Якорь	Я		other
