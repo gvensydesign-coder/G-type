@@ -54,25 +54,48 @@ const BLOCKS = {
   п: [[0, 0, 1, 5], [3, 0, 4, 5], [0, 4, 4, 5]], е: [[0, 0, 1, 5], [1, 0, 4, 1], [1, 2, 3, 3], [1, 4, 4, 5]],
   л: [[0, 0, 1, 4], [3, 0, 4, 5], [0, 4, 4, 5]], с: [[0, 0, 1, 5], [1, 0, 4, 1], [1, 4, 4, 5]],
 };
-async function drawLetters(page, letters) {
-  const X0 = 509, CW = 62.6, BASE = 633, RH = 62.6;
-  const mouse = (t, x, y) => page.send("Input.dispatchMouseEvent", { type: t, x, y, button: t === "mouseMoved" ? "none" : "left", buttons: t === "mouseReleased" ? 0 : 1, clickCount: 1 });
+const key = (page, k, code, vk) => page.send("Input.dispatchKeyEvent", { type: "keyDown", key: k, code, windowsVirtualKeyCode: vk }).then(() => page.send("Input.dispatchKeyEvent", { type: "keyUp", key: k, code, windowsVirtualKeyCode: vk }));
+// mode: "shape" (rectangle tool, drag), "pen" (corner clicks, close on the first point, Enter), "stroke" (drag a line per stem).
+async function drawLetters(page, letters, mode = "shape", X0 = 509) {
+  const CW = 62.6, BASE = 633, RH = 62.6;
+  const mouse = (t, x, y, down) => page.send("Input.dispatchMouseEvent", { type: t, x, y, button: t === "mouseMoved" && !down ? "none" : "left", buttons: down ? 1 : 0, clickCount: 1 });
+  const tool = async (name) => { await page.ev(`[...document.querySelectorAll('.dr-ib')].find(b=>(b.getAttribute('aria-label')||b.title||'').trim()===${JSON.stringify(name)}).click()`); await sleep(300); };
+  if (mode === "pen") await tool("Перо");
+  if (mode === "stroke") await tool("Штрих");
   for (const ch of letters) {
-    await page.ev(`[...document.querySelectorAll('.dr-gl')].find(b=>b.getAttribute('aria-label')==='Знак ${ch}').click()`);
+    await page.ev(`(()=>{const b=[...document.querySelectorAll('.dr-gl')].find(b=>(b.getAttribute('aria-label')||'').split(',')[0]==='Знак ${ch}');b.click()})()`);
     await sleep(250);
     for (const [c0, r0, c1, r1] of BLOCKS[ch]) {
-      const xa = X0 + c0 * CW, ya = BASE - r0 * RH, xb = X0 + c1 * CW, yb = BASE - r1 * RH;
-      await mouse("mouseMoved", xa + 1, ya - 1);
-      await mouse("mousePressed", xa + 1, ya - 1);
-      for (let i = 1; i <= 3; i++) await mouse("mouseMoved", xa + ((xb - xa) * i) / 3, ya + ((yb - ya) * i) / 3);
-      await mouse("mouseReleased", xb, yb);
-      await sleep(80);
+      if (mode === "pen") {
+        for (const [c, r] of [[c0, r0], [c1, r0], [c1, r1], [c0, r1], [c0, r0]]) {
+          const x = X0 + c * CW, y = BASE - r * RH;
+          await mouse("mouseMoved", x, y, false); await sleep(60);
+          await mouse("mousePressed", x, y, true); await sleep(30);
+          await mouse("mouseReleased", x, y, false); await sleep(150);
+        }
+        await key(page, "Enter", "Enter", 13); await sleep(250);
+        continue;
+      }
+      let xa, ya, xb, yb;
+      if (mode === "shape") { xa = X0 + c0 * CW + 1; ya = BASE - r0 * RH - 1; xb = X0 + c1 * CW; yb = BASE - r1 * RH; }
+      else if (r1 - r0 > c1 - c0) { xa = xb = X0 + ((c0 + c1) / 2) * CW; ya = BASE - (r0 + 0.3) * RH; yb = BASE - (r1 - 0.3) * RH; }
+      else { ya = yb = BASE - ((r0 + r1) / 2) * RH; xa = X0 + (c0 + 0.3) * CW; xb = X0 + (c1 - 0.3) * CW; }
+      await mouse("mouseMoved", xa, ya, false);
+      await mouse("mousePressed", xa, ya, true);
+      for (let i = 1; i <= 4; i++) await mouse("mouseMoved", xa + ((xb - xa) * i) / 4, ya + ((yb - ya) * i) / 4, true);
+      await mouse("mouseReleased", xb, yb, false);
+      await sleep(200);
     }
+    if (mode === "stroke") { await key(page, "Enter", "Enter", 13); await sleep(200); }
     await page.ev(`document.querySelector('#dr-sv').click()`);
-    await sleep(250);
+    await sleep(300);
   }
 }
 
+// The same, on a text made of the glyphs the user actually has (the sample text of a tiny font may contain none of them).
+const LAB_OWN = `(()=>{const S=(0,eval)("S");const av=Object.keys(IMP.glyphs).filter(c=>/\\p{L}/u.test(c));const w=[];for(let i=0;i<av.length;i+=4)w.push(av.slice(i,i+4).join(''));
+  const r=HEAT.run(w.join(' '),'regular',60);const p=HEAT.run(HEAT.TEXT,'regular',24,900);
+  return {font:S.fontId,tab:S.tab,on:HEAT.on,score:r.score,proof:p.score,used:r.gtUsed,glyphs:av.length,finite:r.items.every(i=>isFinite(i.sev)&&isFinite(i.dev))}})()`;
 const LAB_STATE = `(()=>{const S=(0,eval)("S");const t=S.text||'';const r=HEAT.run(t,'regular',60);const p=HEAT.run(HEAT.TEXT,'regular',24,900);
   return {font:S.fontId,tab:S.tab,on:HEAT.on,last:HEAT.last?HEAT.last.score:null,score:r.score,proof:p.score,used:r.gtUsed,skipped:(r.gtSkipped||[]).length,items:r.items.length,
     finite:r.items.every(i=>isFinite(i.sev)&&isFinite(i.dev))}})()`;
@@ -90,10 +113,10 @@ const DEFECTS = `(async()=>{const S=(0,eval)("S");const sl=ms=>new Promise(r=>se
     for(const c of g.cs)cs.push(Object.assign({},c,{nodes:c.nodes.map(n=>({x:n.x+60,y:n.y,a:n.a&&{x:n.a.x+60,y:n.a.y},b:n.b&&{x:n.b.x+60,y:n.b.y}}))}));return Object.assign({},g,{cs});};
   const heavy=sc();window.gfSmart=orig;
   const adv=window.gfSmart(gnOf[F],'regular').adv;
-  S.edits[F]={sbR:Math.round(adv*.4)};bump();const wide=sc();
+  S.edits[F]={sbR:Math.round(adv*.4)};bump();const advMoves=Math.abs(window.gfSmart(gnOf[F],'regular').adv-adv)>1;const wide=sc();
   S.edits[F]={sbR:-Math.round(adv*.25)};bump();const tight=sc();
   delete S.edits[F];bump();const back=sc();
-  return {H,F,base,heavy,wide,tight,back}})()`;
+  return {H,F,base,heavy,wide,tight,back,advMoves}})()`;
 
 export default async function run() {
   const t = createSuite("heatmap");
@@ -140,7 +163,7 @@ export default async function run() {
       const miss = [], notBack = [];
       for (const [id, v] of Object.entries(r)) {
         if (!(Math.min(v.heavy, v.wide, v.tight) <= v.base - 2)) miss.push(`${id} base ${v.base} heavy ${v.heavy} wide ${v.wide} tight ${v.tight}`);
-        if (v.heavy === v.base && v.wide === v.base && v.tight === v.base) miss.push(id + " no reaction");
+        if (v.advMoves && v.wide > v.base - 2) miss.push(`${id}: extra side bearing +0.4 not caught (${v.base} -> ${v.wide})`);
         if (v.back !== v.base) notBack.push(`${id} ${v.base} -> ${v.back}`);
       }
       assert(!miss.length, "defects not caught: " + miss.join("; "));
@@ -245,6 +268,93 @@ export default async function run() {
       assert(s.skipped > 0, "unwritten letters not skipped");
       assert(s.finite, "NaN in items");
     });
+    await t.check("paper font: open-sided pairs (С Т, Е Ж, Т У) are not flagged, a really touching pair is, and «Исправить» spreads it", async () => {
+      const r = await page.ev(`(()=>{const r=HEAT.run('АБВГ ДЕЖК ЛМОП РСТУ ФШЩ','regular',60);
+        const bad=r.items.filter(i=>i.t==='pair'&&i.sev>=0.25).map(i=>i.a+i.b);return {score:r.score,bad}})()`);
+      assert(r.score >= 97 && !r.bad.length, "clean handwriting flagged: " + JSON.stringify(r));
+      await page.ev(`(0,eval)("S").edits['O']={sbR:-140};bump()`);
+      await sleep(400);
+      await page.ev(`setTab('proof')`);
+      assert(await waitFor(page, `!!document.querySelector('#heat-rep .hr-score')`, 30, 1000), "report not shown");
+      const before = await page.ev(`({s:+document.querySelector('.hr-n b').textContent,t:[...document.querySelectorAll('#heat-rep .hr-bad p')].map(p=>p.textContent).join('|'),b:!!document.querySelector('#heat-rep [data-rp=fix]')})`);
+      assert(/касаются/.test(before.t) && before.b, "touching pair not offered a fix: " + JSON.stringify(before));
+      await page.ev(`document.querySelector('#heat-rep [data-rp=fix]').click()`);
+      await sleep(4000);
+      const after = await page.ev(`({s:+document.querySelector('.hr-n b').textContent,t:[...document.querySelectorAll('#heat-rep .hr-bad p')].map(p=>p.textContent).join('|')})`);
+      assert(after.s > before.s && !/касаются/.test(after.t), `fix did not separate the pair: ${before.s} -> ${after.s}`);
+      await page.ev(`delete (0,eval)("S").edits['O'];bump();setTab('edit')`);
+    });
+    await t.check("Ctrl+Z after an edit brings the lab font score back", async () => {
+      await sleep(1500);
+      const sc = `(()=>{const av=Object.keys(IMP.glyphs).filter(c=>/\\p{L}/u.test(c));const w=[];for(let i=0;i<av.length;i+=4)w.push(av.slice(i,i+4).join(''));return HEAT.run(w.join(' '),'regular',60).score})()`;
+      const base = await page.ev(sc);
+      await page.ev(`(()=>{const ch=Object.keys(IMP.glyphs).filter(c=>/\\p{L}/u.test(c))[1];snap();(0,eval)("S").edits[ch]={sbR:Math.round(getFinal(ch,'regular').adv*.4)};bump()})()`);
+      await sleep(1200);
+      const low = await page.ev(sc);
+      await page.ev(`document.body.focus()`);
+      await key(page, "z", "KeyZ", 90).catch(() => {});
+      await page.send("Input.dispatchKeyEvent", { type: "keyDown", key: "z", code: "KeyZ", windowsVirtualKeyCode: 90, modifiers: 2 });
+      await page.send("Input.dispatchKeyEvent", { type: "keyUp", key: "z", code: "KeyZ", windowsVirtualKeyCode: 90, modifiers: 2 });
+      await sleep(1800);
+      const back = await page.ev(sc);
+      assert(low < base, `defect not caught (${base} -> ${low})`);
+      assert(back === base, `undo did not restore the score: ${base} -> ${low} -> ${back}`);
+    });
+    await t.check("«Отрисовать свой шрифт», pen: corner clicks closed on the first point give a font with a score", async () => {
+      await page.goto("home", 1440, 900);
+      await skipTours(page);
+      await openHash(page, "draw");
+      await drawLetters(page, "НОПЕЛР", "pen");
+      const n = await page.ev(`document.querySelector('#dr-setb').textContent`);
+      assert(/[3-9]\s*из/.test(n), "pen glyphs not saved: " + n);
+      await page.ev(`document.querySelector('#dr-fontb').click()`);
+      await sleep(1200);
+      await page.ev(`document.querySelector('#dr-mfo').click()`);
+      assert(await waitFor(page, `(0,eval)("S").fontId==='imp'&&(0,eval)("S").tab==='edit'`, 30, 1000), "font not created");
+      await sleep(3500);
+      const s = await page.ev(LAB_OWN);
+      assert(s.on && typeof s.score === "number" && s.used >= 3 && s.finite, "pen font not scored: " + JSON.stringify(s));
+    });
+    for (const method of ["draw", "stroke", "paper"]) {
+      await t.check(`«Свой шрифт за четыре шага», способ «${method}»: до шага «Проверка» карта включена и считает`, async () => {
+        await page.goto("home", 1440, 900);
+        await skipTours(page);
+        await page.ev(`document.querySelector('#flow-card').click()`);
+        await sleep(1200);
+        await page.ev(`document.querySelector('[data-a=method][data-m=${method}]').click()`);
+        await sleep(500);
+        await page.ev(`document.querySelector('[data-a=next]').click()`);
+        await sleep(2000);
+        await page.ev(`document.querySelector('[data-a=openmode]').click()`);
+        await sleep(2500);
+        await skipTours(page);
+        await sleep(600);
+        await skipTours(page);
+        await sleep(400);
+        if (method === "paper") {
+          await page.ev(`document.querySelector('#pp-to-photo').click()`);
+          await sleep(800);
+          await setFiles(page, "#pp-file", [PAPER]);
+          await sleep(5000);
+          await page.ev(`document.querySelector('#pp-to-check').click()`);
+          await sleep(5000);
+          await page.ev(`document.querySelector('#pp-to-font').click()`);
+          await sleep(6000);
+          await page.ev(`document.querySelector('#pp-commit').click()`);
+          assert(await waitFor(page, `(0,eval)("S").fontId==='imp'`, 40, 1000), "font not created");
+        } else {
+          await drawLetters(page, "НОПЕЛР", method === "draw" ? "shape" : method, method === "draw" ? 509 : 685);
+          await page.ev(`document.querySelector('#fl-chip')&&document.querySelector('#fl-chip').click()`);
+          await sleep(1800);
+          await page.ev(`document.querySelector('[data-a=next]').click()`);
+          assert(await waitFor(page, `(0,eval)("S").fontId==='imp'&&(0,eval)("S").tab==='edit'`, 30, 1000), "step «Проверка» not reached");
+        }
+        await sleep(3500);
+        const s = await page.ev(LAB_OWN);
+        assert(s.on, "heat map is off: " + JSON.stringify(s));
+        assert(typeof s.score === "number" && typeof s.proof === "number" && s.finite, "no score: " + JSON.stringify(s));
+      });
+    }
     await t.check("a font with fewer than three glyphs does not crash the heat map", async () => {
       const r = await page.ev(`(()=>{try{const S=(0,eval)("S");for(const k of Object.keys(IMP.glyphs))if(!'Н'.includes(k))delete IMP.glyphs[k];IMP.ver++;iuRegisterNow();
         const q=HEAT.run('НН ПОЛК','regular',60);return {ok:true,score:q.score,verdict:q.verdict}}catch(e){return {ok:false,err:String(e)}}})()`);

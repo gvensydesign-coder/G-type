@@ -7334,7 +7334,7 @@ __zrun('zc');__zrun('zu');
   var sevPairStd = function (d) { return d < 0 ? clamp01((-d - 0.10) / 0.30) : clamp01((d - 0.12) / 0.30); };
   var sevToneRel = function (d) { return clamp01((Math.abs(d) - 0.08) / 0.27); };
 
-  function relative(items, lines, refs, sc, HM, kinds) {
+  function relative(items, lines, refs, sc, HM, kinds, add) {
     var dist = distortOn(), idx = {}, tones = [], pairs = [], words = [];
     items.forEach(function (it) { idx[it.t + "|" + it.ln + "|" + it.i] = it; it.rel = true; });
     for (var li = 0; li < lines.length; li++) {
@@ -7348,14 +7348,14 @@ __zrun('zc');__zrun('zu');
       });
       for (var i = 0; i < info.length; i++) {
         var B = info[i], it = idx["tone|" + li + "|" + i];
-        if (it && kinds.tone) {
-          if (dist) { if (!it.warp) { it.sev = 0; it.dev = 0; } }
+        if (it && (kinds.tone || add)) {
+          if (dist) { if (!add && !it.warp) { it.sev = 0; it.dev = 0; } }
           else if (B && B.P0) {
             var cl = cls(B.c.ch), a = cl === "l" ? B.P.areaX : B.P.areaC, a0 = cl === "l" ? B.P0.areaX : B.P0.areaC;
             var dA = a0 > 0 ? a / a0 - 1 : 0, raw;
             if (B.P.sw > 0 && B.P0.sw > 0) raw = 0.8 * (B.P.sw / B.P0.sw - 1) + 0.2 * dA; else raw = 0.4 * dA;
             tones.push({ it: it, raw: Math.max(-0.6, Math.min(0.6, raw)) });
-          } else { it.sev = 0; it.dev = 0; }
+          } else if (!add) { it.sev = 0; it.dev = 0; }
         }
         if (!i) continue;
         var pit = idx["pair|" + li + "|" + i], A = info[i - 1];
@@ -7371,33 +7371,52 @@ __zrun('zc');__zrun('zu');
             if (wu0 > 40) words.push({ it: wit, dev: wit.wu / wu0 - 1 });
           }
         }
-        if (pit && kinds.pair) {
-          if (dist) { if (!pit.warp) { pit.sev = 0; pit.dev = 0; pit.touch = false; } }
+        if (pit && (kinds.pair || add)) {
+          if (dist) { if (!add && !pit.warp) { pit.sev = 0; pit.dev = 0; pit.touch = false; } }
           else if (A && B && A.P0 && B.P0 && pit.site) {
-            var st = pit.site, dx0 = A.P0.adv + (st.dx - A.g.adv), m0 = HM.areaGap(A.P0, B.P0, dx0, st.n, st.D), e = 0.1 * st.D;
-            pairs.push({ it: pit, raw: (pit.gap + e) / (m0.a + e) - 1, m0: m0, ref: ref });
-          } else { pit.sev = 0; pit.dev = 0; pit.touch = false; }
+            var st = pit.site, dx0 = A.P0.adv + (st.dx - A.g.adv), m0 = HM.areaGap(A.P0, B.P0, dx0, st.n, st.D);
+            /* глубина белого у штатной оценки ограничена, и лишнее поле на ней «насыщается»: сдвиг считаем без ограничения */
+            var u1 = HM.areaGap(A.P, B.P, st.dx, st.n, 1e6).a, u0 = HM.areaGap(A.P0, B.P0, dx0, st.n, 1e6).a;
+            var fl = ref.flat[pit.band] > 0 ? ref.flat[pit.band] : pit.tgt;
+            pairs.push({ it: pit, raw: (u1 - u0) / Math.max(fl > 0 ? fl : 0, 40), m0: m0, ref: ref });
+          } else if (!add) { pit.sev = 0; pit.dev = 0; pit.touch = false; }
         }
       }
     }
     var mt = tones.length >= 3 ? med(tones.map(function (x) { return x.raw; })) : 0;
-    tones.forEach(function (x) { x.it.dev = x.raw - mt; x.it.sev = sevToneRel(x.it.dev); });
+    tones.forEach(function (x) {
+      var d = x.raw - mt, sv = sevToneRel(d);
+      if (add && Math.abs(d) < 0.15) sv = 0;
+      if (!add || sv > x.it.sev) { x.it.dev = d; x.it.sev = sv; }
+    });
     var bands = {};
     pairs.forEach(function (x) { (bands[x.it.band] = bands[x.it.band] || []).push(x.raw); });
     pairs.forEach(function (x) {
       var arr = bands[x.it.band], md = arr.length >= 3 ? med(arr) : 0, it = x.it;
-      it.dev = (1 + x.raw) / (1 + md) - 1;
-      it.sev = sevPairStd(it.dev);
+      var d = x.raw - md, sv = sevPairStd(d);
+      if (add && Math.abs(d) < 0.2) sv = 0;
+      var punct = function (c) { return !!c && /^[\p{P}\p{S}]$/u.test(c); };
+      if ((punct(it.a) || punct(it.b)) && d > 0) sv = 0;
+      if (add) {
+        if (sv > it.sev) { it.dev = d; it.sev = sv; }
+        return;
+      }
+      it.dev = d;
+      it.sev = sv;
       if (it.touch) {
         var flat = x.ref.flat[it.band] > 0 ? x.ref.flat[it.band] : it.tgt;
         if (x.m0.min < 1e8 && x.m0.min <= Math.max(2, 0.12 * flat)) it.touch = false; else it.sev = Math.max(it.sev, 0.78);
       }
-      if ((cls(it.a) === "p" || cls(it.b) === "p") && it.dev > 0) it.sev = 0;
     });
     words.forEach(function (x) {
       var sv = sevPairStd(x.dev);
+      if (add && Math.abs(x.dev) < 0.25) sv = 0;
       x.it.sev = kinds.word ? sv : Math.max(x.it.sev || 0, sv);
       x.it.wdev = x.dev;
+      if (sv >= 0.3) {
+        x.it.xs = Math.max(x.it.xs || 0, sv);
+        x.it.ratio = x.dev > 0 ? Math.max(x.it.ratio || 0, 4) : Math.min(x.it.ratio || 3, 2);
+      }
     });
     if (kinds.rhy) items.forEach(function (it) { if (it.t === "rhy") { it.sev = 0; it.dev = 0; } });
   }
@@ -7426,6 +7445,17 @@ __zrun('zc');__zrun('zu');
   /* Классы знаков, которые штатный счётчик закрыл («мало знаков»): тон и пары считаем сами по тем же опорным числам. */
   function gated(ref, c) {
     return !!(ref && ref.min && ref.min[c] && ref.min[c].any && !ref.min[c].ok);
+  }
+  /* Сторона знака «открыта» (перекладины Е, чаша С, рука Т): белое по площади там определяется формой, а не полем. */
+  function openSide(ref, P, sd, n) {
+    var ex = sd === "R" ? P.xmax : P.xmin, thr = Math.max(0.18 * (P.xmax - P.xmin), 0.06 * ref.xh), c = 0, t = 0;
+    for (var r = 0; r < n; r++) {
+      var v = sd === "R" ? P.R[r] : P.L[r];
+      if (v !== v) continue;
+      t++;
+      if (Math.abs(v - ex) <= thr) c++;
+    }
+    return t ? c / t : 1;
   }
   function fill(items, lines, refs, sc, HM) {
     var any = false;
@@ -7471,7 +7501,8 @@ __zrun('zc');__zrun('zu');
         if (!gated(ref, bnd === "cap" ? "u" : "l") || have["pair|" + li + "|" + i]) continue;
         if (typeof window.kernBlocked === "function" && window.kernBlocked(A.c.ch, B.c.ch)) continue;
         var n = bnd === "cap" ? N : ref.nX, D = ref.D[bnd];
-        pl.push({ i: i, A: A, B: B, band: bnd, n: n, D: D, m: HM.areaGap(A.P, B.P, dx, n, D), dx: dx, ca: ca, cb: cb });
+        pl.push({ i: i, A: A, B: B, band: bnd, n: n, D: D, m: HM.areaGap(A.P, B.P, dx, n, D), dx: dx, ca: ca, cb: cb,
+          open: openSide(ref, A.P, "R", n) < 0.5 || openSide(ref, B.P, "L", n) < 0.5 });
       }
       var tTxt = med(pl.map(function (p) { return p.m.a; }));
       pl.forEach(function (p) {
@@ -7482,6 +7513,8 @@ __zrun('zc');__zrun('zu');
         var dev = p.m.a / t - 1;
         if (p.m.min < 1e8 && p.m.min > 1.2 * flat) dev = Math.max(dev, 0.9 * (p.m.min / flat - 1));
         var sev = sevPairStd0(dev), touch = false;
+        var swr = ref.tone && ref.tone[p.band === "cap" ? "u" : "l"] && ref.tone[p.band === "cap" ? "u" : "l"].sw;
+        if (p.open || (dev < 0 && p.m.min > 3 * Math.max(swr > 0 ? swr : 0, 20))) sev = 0;
         if (p.m.min < 8) { touch = true; sev = Math.max(sev, 0.78); }
         if ((p.ca === "p" || p.cb === "p") && dev > 0) sev = 0;
         var bandH = p.band === "cap" ? ref.cap : ref.xh;
@@ -7494,6 +7527,69 @@ __zrun('zc');__zrun('zu');
     return out;
   }
   var sevPairStd0 = function (d) { return d < 0 ? clamp01((-d - 0.25) / 0.40) : clamp01((d - 0.40) / 0.50); };
+
+
+  /* «Исправить кернинг»: штатное решение доводит среднее белое до нормы, но у рукописных знаков с вылетом штриха
+     пара может остаться касающейся. Здесь сдвиг ещё и оставляет просвет не меньше чистого. */
+  function gv(n) {
+    try { return (0, eval)(n); } catch { return undefined; }
+  }
+  function safeFix(f, HM) {
+    var it = f && f.items && f.items[0], s = it && it.site;
+    if (!s || !(f.t === "pair") || typeof window.kernInfo !== "function" || typeof window.kernApply !== "function") return false;
+    var S = evalS(), st = S && S.styles && S.styles[f.key];
+    if (!st) return false;
+    var lo = -260, hi = 260, i, d;
+    var area = function (x) { return HM.areaGap(s.PA, s.PB, s.dx + x, s.n, s.D); };
+    var fa = function (x) { return area(x).a - s.t; };
+    if (fa(lo) > 0) d = lo; else if (fa(hi) < 0) d = hi;
+    else {
+      for (i = 0; i < 30; i++) { var m = (lo + hi) / 2; if (fa(m) < 0) lo = m; else hi = m; }
+      d = (lo + hi) / 2;
+    }
+    var ref = (HM.lastPf && HM.lastPf.refs && HM.lastPf.refs[f.key]) || (HM.last && HM.last.refs && HM.last.refs[f.key]);
+    var sw = ref && ref.tone && ((ref.tone.u && ref.tone.u.sw) || (ref.tone.l && ref.tone.l.sw)), clear = Math.max(20, 0.8 * (sw > 0 ? sw : 0));
+    while (area(d).min < clear && d < 500) d += 2;
+    d = Math.round(d);
+    var GLm = gv("GL"), FASTv = gv("FAST"), kernOfF = gv("kernOf");
+    if (typeof kernOfF !== "function") return false;
+    var get = function (ch) { return GLm && GLm[ch] && GLm[ch].skel ? window.getFinal(ch, f.key, FASTv) : window.getFinal(ch, f.key); };
+    var info = window.kernInfo(f.a, f.b, st, f.key, get);
+    if (info.blocked) { window.toast("Между этими знаками кернинг не применяется"); return true; }
+    var v0 = Math.round(kernOfF(f.a, f.b, f.key)), want = v0 + d, v1 = Math.max(-info.hi, Math.min(info.hi, want));
+    window.snap();
+    window.kernApply(st, f.a, f.b, v1, "exc", info);
+    if (want !== v1) {
+      var e = S.edits[f.a] || (S.edits[f.a] = {});
+      e.sbR = Math.max(-120, Math.min(120, (e.sbR || 0) + (want - v1)));
+    }
+    window.persist();
+    window.schedule();
+    window.toast("Кернинг " + f.a + f.b + ": " + (v0 < 0 ? "−" : "") + Math.abs(v0) + " → " + (v1 < 0 ? "−" : "") + Math.abs(v1));
+    if (want !== v1 && typeof window.bump === "function") window.bump();
+    HM.refresh();
+    return true;
+  }
+  function wireFix(HM) {
+    document.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest('#heat-rep [data-rp="fix"],#heat-tip [data-ha="fix"]');
+      if (!b) return;
+      var S = evalS();
+      if (S && (S.fontId === FONT || INTENT[S.fontId])) return;
+      var f = null, tip = b.closest("#heat-tip");
+      if (tip) f = tip._f;
+      else {
+        var res = HM.lastPf;
+        f = res && res.top && res.top[+b.dataset.i];
+      }
+      var done = false;
+      try { done = safeFix(f, HM); } catch { done = false; }
+      if (!done) return;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (tip) { tip.hidden = true; tip.classList.remove("pin"); }
+    }, true);
+  }
 
   function hook() {
     var HM = window.HEAT;
@@ -7509,7 +7605,7 @@ __zrun('zc');__zrun('zu');
         list = clean(items, lines);
         if (curSc && enough(lines)) list = fill(list, lines, refs, curSc, HM);
         if (body && curSc) list = measure(list, lines, refs, curSc, HM);
-        if (!body && kinds && curSc) relative(list, lines, refs, curSc, HM, kinds);
+        if (!body && curSc) relative(list, lines, refs, curSc, HM, kinds || {}, !kinds);
         markWords(list, lines, body ? null : kinds);
       }
       relaxMin(list, refs);
@@ -7538,6 +7634,7 @@ __zrun('zc');__zrun('zu');
     };
     an.__gtBodyScale = true;
     HM.analyze = an;
+    wireFix(HM);
     var origToggle = HM.toggle;
     HM.toggle = function (on) {
       if (!autoCall && HM.on && (on === undefined || !on)) userOff = true;
