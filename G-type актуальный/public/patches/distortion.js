@@ -203,6 +203,132 @@
       }
     return polys;
   }
+  var SPIKE_FREE = 0.35;
+  var SPIKE_BEND = 0.75;
+  function spikeClearance(polys, R) {
+    var bb = bbox(polys), E = [], i, pi;
+    if (!bb) return null;
+    var CELL = 48, W = Math.ceil((bb[2] - bb[0] + 2 * R) / CELL) + 1, grid = {};
+    function cellOf2(x, y) { return [Math.floor((x - bb[0] + R) / CELL), Math.floor((y - bb[1] + R) / CELL)]; }
+    for (pi = 0; pi < polys.length; pi++) {
+      var P = polys[pi], n = P.length;
+      for (i = 0; i < n; i++) {
+        var a = P[i], b = P[(i + 1) % n], id = E.length;
+        E.push([a[0], a[1], b[0] - a[0], b[1] - a[1], pi, i]);
+        var c0 = cellOf2(Math.min(a[0], b[0]), Math.min(a[1], b[1])), c1 = cellOf2(Math.max(a[0], b[0]), Math.max(a[1], b[1]));
+        for (var cx = c0[0]; cx <= c1[0]; cx++)
+          for (var cy = c0[1]; cy <= c1[1]; cy++) (grid[cy * W + cx] || (grid[cy * W + cx] = [])).push(id);
+      }
+    }
+    var seen = new Int32Array(E.length), stamp = 0, out = [];
+    for (pi = 0; pi < polys.length; pi++) {
+      var Q = polys[pi], m = Q.length, lim = new Array(m);
+      for (i = 0; i < m; i++) {
+        var pa = Q[(i + m - 1) % m], pb = Q[(i + 1) % m], px = Q[i][0], py = Q[i][1];
+        var tx = pb[0] - pa[0], ty = pb[1] - pa[1], ll = Math.hypot(tx, ty) || 1, dir = i % 2 === 1 ? 1 : -1, nx = (dir * ty) / ll, ny = (-dir * tx) / ll, best = Infinity;
+        stamp++;
+        var r0 = cellOf2(Math.min(px, px + nx * R), Math.min(py, py + ny * R)), r1 = cellOf2(Math.max(px, px + nx * R), Math.max(py, py + ny * R));
+        for (var gx = r0[0]; gx <= r1[0]; gx++)
+          for (var gy = r0[1]; gy <= r1[1]; gy++) {
+            var ids = grid[gy * W + gx];
+            if (!ids) continue;
+            for (var k = 0; k < ids.length; k++) {
+              var e = E[ids[k]];
+              if (seen[ids[k]] === stamp) continue;
+              seen[ids[k]] = stamp;
+              if (e[4] === pi && (e[5] === i || e[5] === (i + m - 1) % m)) continue;
+              var den = nx * e[3] - ny * e[2];
+              if (Math.abs(den) < 1e-9) continue;
+              var qx = e[0] - px, qy = e[1] - py;
+              var t = (qx * e[3] - qy * e[2]) / den, u = (qx * ny - qy * nx) / den;
+              if (t > 0.5 && t < best && t <= R && u >= 0 && u <= 1) best = t;
+            }
+          }
+        var bx = px - pa[0], by = py - pa[1], cx2 = pb[0] - px, cy2 = pb[1] - py, cr = bx * cy2 - by * cx2;
+        if (Math.abs(cr) > 1e-6) {
+          var rad = (Math.hypot(bx, by) * Math.hypot(cx2, cy2) * Math.hypot(tx, ty)) / (2 * Math.abs(cr));
+          if (dir === 1 && ((pa[0] + pb[0]) / 2 - px) * nx + ((pa[1] + pb[1]) / 2 - py) * ny > 0) best = Math.min(best, (rad * SPIKE_BEND) / SPIKE_FREE);
+        }
+        lim[i] = best;
+      }
+      out.push(lim);
+    }
+    return out;
+  }
+  function spikeCrossings(polys) {
+    var bb = bbox(polys), E = [], pi, i;
+    if (!bb) return [];
+    var CELL = 48, W = Math.ceil((bb[2] - bb[0]) / CELL) + 2, grid = {};
+    function cc(v, lo) { return Math.floor((v - lo) / CELL); }
+    for (pi = 0; pi < polys.length; pi++) {
+      var P = polys[pi], n = P.length;
+      for (i = 0; i < n; i++) {
+        var a = P[i], b = P[(i + 1) % n], id = E.length;
+        E.push([a[0], a[1], b[0], b[1], pi, i, n]);
+        var x0 = cc(Math.min(a[0], b[0]), bb[0]), x1 = cc(Math.max(a[0], b[0]), bb[0]);
+        var y0 = cc(Math.min(a[1], b[1]), bb[1]), y1 = cc(Math.max(a[1], b[1]), bb[1]);
+        for (var gx = x0; gx <= x1; gx++)
+          for (var gy = y0; gy <= y1; gy++) (grid[gy * W + gx] || (grid[gy * W + gx] = [])).push(id);
+      }
+    }
+    var seen = new Int32Array(E.length).fill(-1), bad = {}, res = [];
+    function orient(ax, ay, bx, by, qx, qy) { return (bx - ax) * (qy - ay) - (by - ay) * (qx - ax); }
+    function mark(e) {
+      var v = e[5] % 2 === 1 ? e[5] : (e[5] + 1) % e[6], k = e[4] * 1e6 + v;
+      if (!bad[k]) { bad[k] = 1; res.push([e[4], v]); }
+    }
+    for (var id1 = 0; id1 < E.length; id1++) {
+      var e1 = E[id1];
+      var xa = cc(Math.min(e1[0], e1[2]), bb[0]), xb = cc(Math.max(e1[0], e1[2]), bb[0]);
+      var ya = cc(Math.min(e1[1], e1[3]), bb[1]), yb = cc(Math.max(e1[1], e1[3]), bb[1]);
+      for (var gx2 = xa; gx2 <= xb; gx2++)
+        for (var gy2 = ya; gy2 <= yb; gy2++) {
+          var ids = grid[gy2 * W + gx2];
+          if (!ids) continue;
+          for (var k = 0; k < ids.length; k++) {
+            var id2 = ids[k];
+            if (id2 <= id1 || seen[id2] === id1) continue;
+            seen[id2] = id1;
+            var e2 = E[id2];
+            if (e1[4] === e2[4] && (e2[5] === (e1[5] + 1) % e1[6] || e1[5] === (e2[5] + 1) % e2[6])) continue;
+            var d1 = orient(e1[0], e1[1], e1[2], e1[3], e2[0], e2[1]), d2 = orient(e1[0], e1[1], e1[2], e1[3], e2[2], e2[3]);
+            if (d1 * d2 >= 0) continue;
+            var d3 = orient(e2[0], e2[1], e2[2], e2[3], e1[0], e1[1]), d4 = orient(e2[0], e2[1], e2[2], e2[3], e1[2], e1[3]);
+            if (d3 * d4 >= 0) continue;
+            mark(e1);
+            mark(e2);
+          }
+        }
+    }
+    return res;
+  }
+  function spikeOut(polys, A, seedG) {
+    var clear = spikeClearance(polys, A / SPIKE_FREE), V = [], out = polys, it;
+    if (!clear) return polys;
+    polys.forEach(function (P, pi) {
+      var n = P.length, nrm = new Array(n), kk = new Array(n), sc = new Array(n);
+      for (var i = 0; i < n; i++) {
+        var a = P[(i + n - 1) % n], b = P[(i + 1) % n], ttx = b[0] - a[0], tty = b[1] - a[1], ll = Math.hypot(ttx, tty) || 1;
+        nrm[i] = [tty / ll, -ttx / ll];
+        kk[i] = i % 2 === 1 ? Math.min(A * (0.55 + 0.45 * rnd(seedG, pi * 1000 + i)), SPIKE_FREE * clear[pi][i]) : -Math.min(A * 0.12, SPIKE_FREE * clear[pi][i]);
+        sc[i] = 1;
+      }
+      V.push({ P: P, nrm: nrm, kk: kk, sc: sc });
+    });
+    for (it = 0; it < 17; it++) {
+      out = V.map(function (v) {
+        return v.P.map(function (q, i) {
+          var k = v.kk[i] * v.sc[i];
+          return [q[0] + v.nrm[i][0] * k, q[1] + v.nrm[i][1] * k];
+        });
+      });
+      if (it === 16) break;
+      var bad = spikeCrossings(out.map(function (P) { return P.map(function (q) { return [Math.round(q[0]), Math.round(q[1])]; }); }));
+      if (!bad.length) break;
+      for (var b2 = 0; b2 < bad.length; b2++) V[bad[b2][0]].sc[bad[b2][1]] *= 0.6;
+    }
+    return out;
+  }
   function pixelate(polys, cell, xo) {
     var bb = bbox(polys);
     if (!bb) return polys;
@@ -322,17 +448,7 @@
         }
     }
     if (fx.spikes) {
-      A = (p.spikes / 100) * 80;
-      polys = polys.map(function (P, pi) {
-        var n = P.length, o = new Array(n);
-        for (var i = 0; i < n; i++) {
-          var a = P[(i + n - 1) % n], b = P[(i + 1) % n], ttx = b[0] - a[0], tty = b[1] - a[1],
-            ll = Math.hypot(ttx, tty) || 1, nx = tty / ll, ny = -ttx / ll;
-          var kk2 = i % 2 === 1 ? A * (0.55 + 0.45 * rnd(seedG, pi * 1000 + i)) : -A * 0.12;
-          o[i] = [P[i][0] + nx * kk2, P[i][1] + ny * kk2];
-        }
-        return o;
-      });
+      polys = spikeOut(polys, (p.spikes / 100) * 80, seedG);
     }
     if (fx.slice) {
       var N = Math.round(p.sliceN), As = (p.slice / 100) * 110, yA, yB;
@@ -362,7 +478,31 @@
     return "ЖЕЛЕЗО";
   }
 
+  var altBase = { font: null, map: null };
+  function baseCh(name) {
+    if (typeof name !== "string" || name.length < 2) return name;
+    var cp0 = name.codePointAt(0);
+    if (name.length === (cp0 > 0xffff ? 2 : 1)) return name;
+    var m = /^uni([0-9A-Fa-f]{4,6})(?:\.|$)/.exec(name);
+    if (m) return String.fromCodePoint(parseInt(m[1], 16));
+    try {
+      var font = typeof CUR_FONT !== "undefined" ? CUR_FONT : "";
+      if (altBase.font !== font) {
+        altBase.font = font;
+        altBase.map = {};
+        if (typeof otAlternates === "function") otAlternates().forEach(function (a) { if (a && a.name && a.base) altBase.map[a.name] = a.base; });
+      }
+      if (altBase.map[name]) return baseCh(altBase.map[name]);
+    } catch (e) {}
+    var dot = name.indexOf(".");
+    if (dot > 0) {
+      var head = name.slice(0, dot), c0 = head.codePointAt(0);
+      if (head.length === (c0 > 0xffff ? 2 : 1)) return head;
+    }
+    return name;
+  }
   function paramsForGlyph(ch) {
+    ch = baseCh(ch);
     var base = S.p;
     if (S.perLetter && S.letterP[ch]) base = Object.assign({}, S.p, S.letterP[ch]);
     return base;
@@ -1050,18 +1190,7 @@
         }
     }
     if (fx.spikes) {
-      A = (p.spikes / 100) * 80;
-      polys = polys.map(function (P, idx) {
-        var n = P.length, o = new Array(n);
-        for (var i = 0; i < n; i++) {
-          var a = P[(i + n - 1) % n], b = P[(i + 1) % n];
-          var ttx = b[0] - a[0], tty = b[1] - a[1], ll = Math.hypot(ttx, tty) || 1;
-          var nx = tty / ll, ny = -ttx / ll;
-          var kk2 = i % 2 === 1 ? A * (0.55 + 0.45 * rnd(seedG, idx * 1000 + i)) : -A * 0.12;
-          o[i] = [P[i][0] + nx * kk2, P[i][1] + ny * kk2];
-        }
-        return o;
-      });
+      polys = spikeOut(polys, (p.spikes / 100) * 80, seedG);
     }
     if (fx.slice) {
       var N = Math.round(p.sliceN), As = (p.slice / 100) * 110, yA = -60, yB = 780;
@@ -1090,8 +1219,12 @@
     return polys.map(function (P) { return P.length > 480 ? uniform(P, 28) : P; });
   }
 
+  function edgeShift(before, bb, whole) {
+    var sh = before && bb && bb[0] < before[0] - 1 ? before[0] - bb[0] : 0;
+    return whole && sh ? Math.round(sh) : sh;
+  }
   function bakeGlyphCs(cs, adv, ch) {
-    var key = typeof ch === "string" ? ch : "";
+    var key = typeof ch === "string" ? baseCh(ch) : "";
     var p = paramsForGlyph(key);
     if (!S.perLetter) p = Object.assign({}, p, { jit: 0 });
     if (!paramsDiffer(p)) return null;
@@ -1106,7 +1239,7 @@
     if (!polys.length) return null;
     var bb = bbox(polys);
     if (!bb) return null;
-    var shift = before && bb[0] < before[0] - 1 ? before[0] - bb[0] : 0;
+    var shift = edgeShift(before, bb, fx.spikes);
     if (shift) {
       for (var si = 0; si < polys.length; si++)
         for (var sj = 0; sj < polys[si].length; sj++) polys[si][sj][0] += shift;
@@ -1175,12 +1308,13 @@
       var before = bbox(polys);
       var fx = {};
       FX.forEach(function (f) { fx[f.id] = p[f.id] !== 0; });
-      var seedG = hash(S.seed, ch.codePointAt(0) || 0);
+      var seedG = hash(S.seed, baseCh(ch).codePointAt(0) || 0);
       var rec = {};
       var warped = warpLetter(clone(polys), p, fx, seedG, !!S.perLetter, rec);
       var bb = bbox(warped);
-      var shift = before && bb && bb[0] < before[0] - 1 ? before[0] - bb[0] : 0;
-      var fr = { p: p, fx: fx, seedG: seedG, jit: rec.jit || null, field: rec.field || null, slice: rec.slice || null, shift: shift };
+      var shift = edgeShift(before, bb, fx.spikes);
+      var fr = { p: p, fx: fx, seedG: seedG, jit: rec.jit || null, field: rec.field || null, slice: rec.slice || null, shift: shift,
+        ink: fx.pix && p.pix > 0 && warped.length ? warped : null, cell: cellOf(p.pix) };
       frameMemo = { paramKey: paramKey, editKey: editKey, fr: fr };
       return fr;
     } catch (e) {
@@ -1260,6 +1394,59 @@
     if (fr.slice) x += sliceShift(y, fr.slice);
     x += fr.shift || 0;
     return [x, y];
+  }
+  function inkInside(polys, x, y) {
+    var w = 0;
+    for (var pi = 0; pi < polys.length; pi++) {
+      var P = polys[pi];
+      for (var i = 0; i < P.length; i++) {
+        var a = P[i], b = P[(i + 1) % P.length];
+        if ((a[1] <= y) !== (b[1] <= y) && a[0] + ((y - a[1]) / (b[1] - a[1])) * (b[0] - a[0]) > x) w += b[1] > a[1] ? 1 : -1;
+      }
+    }
+    return w !== 0;
+  }
+  function pullInk(q, fr) {
+    if (!fr || !fr.ink) return q;
+    var x = q[0] - (fr.shift || 0), y = q[1];
+    if (inkInside(fr.ink, x, y)) return q;
+    var best = 1e18, bx = x, by = y;
+    for (var pi = 0; pi < fr.ink.length; pi++) {
+      var P = fr.ink[pi];
+      for (var i = 0; i < P.length; i++) {
+        var a = P[i], b = P[(i + 1) % P.length], dx = b[0] - a[0], dy = b[1] - a[1], l = dx * dx + dy * dy;
+        var t = l ? ((x - a[0]) * dx + (y - a[1]) * dy) / l : 0;
+        t = t < 0 ? 0 : t > 1 ? 1 : t;
+        var cx = a[0] + t * dx, cy = a[1] + t * dy, d = (cx - x) * (cx - x) + (cy - y) * (cy - y);
+        if (d < best) { best = d; bx = cx; by = cy; }
+      }
+    }
+    var dist = Math.sqrt(best);
+    if (!(dist > 2) || dist > fr.cell * 1.5) return q;
+    var nudge = Math.min(6, fr.cell / 8);
+    return [bx + ((bx - x) / dist) * nudge + (fr.shift || 0), by + ((by - y) / dist) * nudge];
+  }
+  var pullMemo = { d: null, fr: null, map: null };
+  function pullOffsets(d, fr, base) {
+    if (!d) return null;
+    if (pullMemo.d === d && pullMemo.fr === fr) return pullMemo.map;
+    var map = {};
+    function offOf(x, y) {
+      var pre = toW.apply(null, base.s(x, y)), q0 = mapFont(pre[0], pre[1], fr), q1 = pullInk(q0, fr);
+      return [q1[0] - q0[0], q1[1] - q0[1]];
+    }
+    function reg(pt, off) { map[pt.x + "," + pt.y] = off; }
+    d.disp.forEach(function (st) {
+      if (st.dot) { reg(st, offOf(st.x, st.y)); return; }
+      (st.nodes || []).forEach(function (n) {
+        var o = offOf(n.x, n.y);
+        reg(n, o);
+        if (n.a) reg(n.a, o);
+        if (n.b) reg(n.b, o);
+      });
+    });
+    pullMemo = { d: d, fr: fr, map: map };
+    return map;
   }
   function unmapFont(x, y, fr) {
     x -= fr.shift || 0;
@@ -1512,11 +1699,16 @@
         var ch = edCh();
         var fr = frameFor(ch);
         if (!fr || typeof toS !== "function" || typeof toW !== "function") return base;
+        var pull = null;
+        if (fr.ink) {
+          try { pull = pullOffsets(skData(), fr, base); } catch (e) { pull = null; }
+        }
         return {
           s: function (x, y) {
             var pre = toW.apply(null, base.s(x, y));
             var q = mapFont(pre[0], pre[1], fr);
-            return toS(q[0], q[1]);
+            var off = pull && pull[x + "," + y];
+            return off ? toS(q[0] + off[0], q[1] + off[1]) : toS(q[0], q[1]);
           },
           inv: function (sx, sy) {
             var font = toW(sx, sy);
@@ -1700,6 +1892,7 @@
 
   var bakeDepth = 0;
   var plainDepth = 0;
+  var viewNest = 0;
   function warpView(g, ch) {
     if (!g || !g.cs || !g.cs.length || !distortActive() || bakeDepth || plainDepth) return g;
     try {
@@ -1728,7 +1921,11 @@
     if (typeof orig !== "function" || orig.__gtView) return;
     var fn = function (ch) {
       syncImpCache();
-      return warpView(orig.apply(this, arguments), ch);
+      var nested = viewNest > 0, g;
+      viewNest++;
+      try { g = orig.apply(this, arguments); }
+      finally { viewNest--; }
+      return nested ? g : warpView(g, ch);
     };
     fn.__gtView = true;
     window[name] = fn;

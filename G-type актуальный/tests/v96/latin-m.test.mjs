@@ -3,6 +3,9 @@ import { createSuite, openPage, sleep, assert } from "./lib.mjs";
 // Owner rule: Latin m keeps the original arched form, so U+006D must not be
 // the Cyrillic м (U+043C) outline. Known pending: fails for some fonts until
 // the fix lands; the runner reports it but only `--strict` turns it into a failure.
+// Fonts without a real lowercase (owner: Модуль, Рывок, Аппликация, Тяга, Кортес): their
+// lowercase code points draw the capitals, so Latin m = Latin M and nothing is compared.
+const NO_LOWERCASE = new Set(["modul", "ryvok", "applik", "tyaga", "kortes"]);
 export default async function run() {
   const t = createSuite("latin-m");
   const page = await openPage();
@@ -17,11 +20,11 @@ export default async function run() {
       await page.ev(`document.querySelector('#view-library .lcard[data-font="${id}"]').click()`);
       let cur = "";
       for (let i = 0; i < 20 && cur !== id; i++) { await sleep(200); cur = await page.ev(`(0,eval)("S").fontId`); }
-      const r = await page.ev(`(()=>{const S_=(0,eval)("S");const sig=g=>g?JSON.stringify(g.cs,(k,v)=>typeof v==='function'?undefined:v):null;
+      const r = await page.ev(`(()=>{const NO_LC=new Set(${JSON.stringify([...NO_LOWERCASE])});const S_=(0,eval)("S");const sig=g=>g?JSON.stringify(g.cs,(k,v)=>typeof v==='function'?undefined:v):null;
         const st=S_.style||'regular';const G=(0,eval)("FONTS")[S_.fontId].GL;
         const raw=g=>g?JSON.stringify(g,(k,v)=>typeof v==='function'?undefined:v):null;const hasLc=!!(G['a']&&G['\\u0430']&&raw(G['a'])!==raw(G['A']));
         const m=gfSmart('m',st),c=gfSmart('\\u043c',st);
-        return {id:S_.fontId,hasLc,same:!!m&&!!c&&sig(m)===sig(c),missing:!m||!c}})()`);
+        return {id:S_.fontId,hasLc:hasLc&&!NO_LC.has(S_.fontId),same:!!m&&!!c&&sig(m)===sig(c),missing:!m||!c}})()`);
       rows.push(r);
     }
     for (const r of rows) {

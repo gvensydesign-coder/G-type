@@ -31,14 +31,17 @@
   background: currentColor;
 }
 
-.btn.pri,
-.btn.pri:active {
-  background: var(--accent-press);
+.btn.pri {
+  background: var(--accent);
   color: var(--on-accent);
 }
 
 .btn.pri:hover {
   background: var(--accent-hover);
+}
+
+.btn.pri:active {
+  background: var(--accent-press);
 }
 
 :focus-visible {
@@ -62,9 +65,22 @@ input[type="checkbox"]:not(.dr-sw input, .tgl input):focus-visible {
 
 .lcard.on .nb.go,
 .notch .nb.go {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.lcard.on .nb.go:hover,
+.notch .nb.go:hover,
+.notchc:hover .notch .nb.go {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.lcard.on .nb.go:active,
+.notch .nb.go:active {
   background: var(--accent-press);
   border-color: var(--accent-press);
-  color: var(--on-accent);
 }
 
 .badge:not(.danger):not(.mute) {

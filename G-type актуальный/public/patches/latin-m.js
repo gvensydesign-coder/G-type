@@ -113,50 +113,6 @@
     G["m.ss01"] = Object.assign({}, ss, { shape: mm.shape, w: mm.w });
   }
 
-  /* ---------- Аппликация: m из бумажных кусков (три полосы-ствола и две дуги), как n/р остальных знаков ---------- */
-  function applikM() {
-    var f = FONTS.applik;
-    if (!f || typeof APPLIK === "undefined" || !APPLIK.REC || APPLIK.REC.m_) return;
-    APPLIK.REC.m_ = {
-      w: function (H, S) { return Math.max(1.3 * H, 3 * S + 250); },
-      f: function (K) {
-        var H = K.H, W = K.W, a = K.s(0), b = K.s(1), c = K.s(2), d = K.s(3);
-        var ryo = H * 0.34, cy = H - ryo;
-        var xl = a * 0.5, xr = W - c * 0.5, xm = (xl + xr) / 2;
-        var h1 = (xm - xl) / 2, h2 = (xr - xm) / 2;
-        var t1 = d * 0.9, t2 = b * 0.86;
-        return [
-          K.vs(xl, 0, H, a, H * 0.008),
-          K.vs(xm, 0, H * 0.93, b, -H * 0.006),
-          K.vs(xr, 0, cy + ryo * 0.25, c, H * 0.01),
-          K.arc(xl + h1, cy, h1 + t1 / 2, ryo, t1, t1 * 0.92, 180, 0, 6),
-          K.arc(xm + h2, cy, h2 + t2 / 2, ryo, t2 * 1.05, t2 * 0.82, 180, 0, 6),
-        ];
-      },
-    };
-    var gen = function (p) {
-      return APPLIK.safe({
-        stem: p.stem, jit: p.cjit, tear: p.ctear, gap: p.cgap, lap: p.clap, pcs: p.cpcs, sharp: p.csharp,
-        soft: p.csoft, scat: p.cscat, lean: p.clean, bj: p.cbj, seed: p.cseed, sb: 0,
-      });
-    };
-    var cont = function (cs) {
-      return cs.map(function (c) {
-        return mkc(c.nodes.map(function (n) {
-          return { x: n.x, y: n.y, a: { x: n.a.x, y: n.a.y }, b: { x: n.b.x, y: n.b.y } };
-        }), c.hole);
-      });
-    };
-    f.GL.m = {
-      shape: function (g) { return cont(APPLIK.build("m_", true, gen(g.p), 0).contours); },
-      w: function (p) { return APPLIK.build("m_", true, gen(p), 0).adv; },
-      k: "xh",
-      opt: {},
-    };
-    var raw0 = f.raw;
-    f.raw = function (ch, p) { return ch === "m" ? APPLIK.build("m_", true, gen(p), 0) : raw0(ch, p); };
-  }
-
   /* ---------- Сцепка: m в грамматике шрифта (прямоугольные куски, один радиус скругления, поля как у n) ---------- */
   function filletRect(cs, R, ri) {
     var K = 0.5523;
@@ -247,13 +203,12 @@
   function apply() {
     ["volt", "kvadra", "pixel"].forEach(swapDefault);
     codexM();
-    applikM();
     stsepkaM();
     if (FONTS.volt) FONTS.volt.ss01Name = SS01_NAME;
     if (FONTS.kvadra) FONTS.kvadra.ss01Name = SS01_NAME;
     if (FONTS.codex) FONTS.codex.ss01Name = SS01_NAME;
     if (FONTS.pixel) FONTS.pixel.ss01Name = "m в форме «м» и гладкий нуль";
-    ["volt", "kvadra", "codex", "pixel", "applik", "stsepka"].forEach(refreshLive);
+    ["volt", "kvadra", "codex", "pixel", "stsepka"].forEach(refreshLive);
     dropCaches();
   }
 

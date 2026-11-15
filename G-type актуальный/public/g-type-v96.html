@@ -4050,18 +4050,20 @@ __zrun('zc');__zrun('zu');
     st.id = STYLE_ID;
     st.textContent = [
       ".btn.pri,body:not(.tab-lib) .top .btn.pri,#view-edit .nrow .btn.pri,.imp-pop .btn.pri,.tr-card .btn.pri,.onb-btn.pri,.dm .dm-btn.dm-pri,.rb.dl{",
-      "background:var(--accent-press)!important;color:var(--on-accent)!important}",
+      "background:var(--accent)!important;color:var(--on-accent)!important}",
       ".btn.pri:hover,body:not(.tab-lib) .top .btn.pri:hover,#view-edit .nrow .btn.pri:hover,.imp-pop .btn.pri:hover,.tr-card .btn.pri:hover,.onb-btn.pri:hover,.dm .dm-btn.dm-pri:hover,.rb.dl:hover{",
       "background:var(--accent-hover)!important}",
-      ".btn.pri:active,body:not(.tab-lib) .top .btn.pri:active,#view-edit .nrow .btn.pri:active,.onb-btn.pri:active,.rb.dl:active{",
+      ".btn.pri:active,body:not(.tab-lib) .top .btn.pri:active,#view-edit .nrow .btn.pri:active,.imp-pop .btn.pri:active,.tr-card .btn.pri:active,.onb-btn.pri:active,.dm .dm-btn.dm-pri:active,.rb.dl:active{",
       "background:var(--accent-press)!important}",
       ".logo i{color:inherit!important}",
       ".rail .logo::after{background:currentColor!important}",
       "#rail-profile .dot,.rb-dot{background:var(--ink)!important;box-shadow:0 0 0 2px var(--bg)!important}",
-      ".notch .nb.go,.lcard.on .nb.go{background:var(--accent-press)!important;color:var(--on-accent)!important;border-color:var(--accent-press)!important}",
+      ".notch .nb.go,.lcard.on .nb.go{background:var(--accent)!important;color:var(--on-accent)!important;border-color:var(--accent)!important}",
+      ".notch .nb.go:hover,.lcard.on .nb.go:hover,.notchc:hover .notch .nb.go{background:var(--accent-hover)!important;color:var(--on-accent)!important;border-color:var(--accent-hover)!important}",
+      ".notch .nb.go:active,.lcard.on .nb.go:active{background:var(--accent-press)!important;border-color:var(--accent-press)!important}",
       ".lcard.on{border-color:var(--ink)!important}",
       ".lcard.on .nb:not(.go){background:var(--ink)!important;border-color:var(--ink)!important;color:var(--on-ink)!important}",
-      ".vlink:hover .ico{background:var(--accent-press)!important;color:var(--on-accent)!important}",
+      ".vlink:hover .ico{background:var(--accent-hover)!important;color:var(--on-accent)!important}",
       ".fchip,.pa .chip.fx,.pfix .chip.fx,.badge{background:var(--ink)!important;color:var(--on-ink)!important}",
       ".pa .chip.fx:hover,.pfix .chip.fx:hover{background:var(--ink)!important}",
       ".smp-caret{background:var(--ink)!important}",
@@ -4323,6 +4325,46 @@ __zrun('zc');__zrun('zu');
   }, 50);
 })();
 
+/* Брендовый акцент: покой #FC473C, наведение/нажатие темнее (поверх старых press-в-покое). */
+(function () {
+  "use strict";
+  var ID = "gtype-brand-accent";
+  function paint() {
+    if (document.getElementById(ID)) return;
+    var st = document.createElement("style");
+    st.id = ID;
+    st.textContent = [
+      ".btn.pri,body:not(.tab-lib) .top .btn.pri,#view-edit .nrow .btn.pri,.imp-pop .btn.pri,.tr-card .btn.pri,.onb-btn.pri,.dm .dm-btn.dm-pri,.rb.dl,.srch .btn.pri,.hero .btn.pri,",
+      "#imp-build,.imp-act .btn.imp-go,#view-edit #cu-done.btn.pri,#pn-sim.btn.pri,#pn-sim-go.btn.pri,",
+      "#view-distort .btn.pri-accent,#gt-dst-grp .btn.pri-accent,.btn.pri-accent{",
+      "background:var(--accent)!important;color:var(--on-accent)!important}",
+      ".btn.pri:hover,body:not(.tab-lib) .top .btn.pri:hover,#view-edit .nrow .btn.pri:hover,.imp-pop .btn.pri:hover,.tr-card .btn.pri:hover,.onb-btn.pri:hover,.dm .dm-btn.dm-pri:hover,.rb.dl:hover,.srch .btn.pri:hover,.hero .btn.pri:hover,",
+      "#imp-build:hover,.imp-act .btn.imp-go:hover,#view-edit #cu-done.btn.pri:hover,#pn-sim.btn.pri:hover,#pn-sim-go.btn.pri:hover,",
+      "#view-distort .btn.pri-accent:hover,#gt-dst-grp .btn.pri-accent:hover,.btn.pri-accent:hover{",
+      "background:var(--accent-hover)!important}",
+      ".btn.pri:active,body:not(.tab-lib) .top .btn.pri:active,#view-edit .nrow .btn.pri:active,.imp-pop .btn.pri:active,.tr-card .btn.pri:active,.onb-btn.pri:active,.dm .dm-btn.dm-pri:active,.rb.dl:active,.srch .btn.pri:active,.hero .btn.pri:active,",
+      "#imp-build:active,.imp-act .btn.imp-go:active,#view-edit #cu-done.btn.pri:active,#pn-sim.btn.pri:active,#pn-sim-go.btn.pri:active,",
+      "#view-distort .btn.pri-accent:active,#gt-dst-grp .btn.pri-accent:active,.btn.pri-accent:active{",
+      "background:var(--accent-press)!important}",
+      "#imp-build,.imp-act .btn.imp-go,#view-edit #cu-done.btn.pri,#pn-sim.btn.pri,#pn-sim-go.btn.pri,",
+      "#view-distort .btn.pri-accent,#gt-dst-grp .btn.pri-accent,.btn.pri-accent,",
+      ":is(#view-edit,#view-imp,#view-proof,#view-draw,#view-kern,#view-paper,#view-comm,#view-distort) .btn.pri{",
+      "font-size:var(--fs-base)!important;font-weight:var(--fw-b)!important;white-space:nowrap!important}",
+      "#view-edit #cu-done.btn.pri,#pn-sim.btn.pri{",
+      "min-height:var(--h-md)!important;height:var(--h-md)!important;padding-left:var(--s3)!important;padding-right:var(--s3)!important}",
+      "#imp-build,.imp-act .btn.imp-go{padding-left:var(--s4)!important;padding-right:var(--s4)!important}",
+      "@media (max-width:1400px){#imp-build,.imp-act .btn.imp-go{padding-left:var(--s3)!important;padding-right:var(--s3)!important}}",
+      ".imp-act .btn.imp-go:hover{filter:none!important}",
+      ".notch .nb.go,.lcard.on .nb.go{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--on-accent)!important}",
+      ".notch .nb.go:hover,.lcard.on .nb.go:hover,.notchc:hover .notch .nb.go{background:var(--accent-hover)!important;border-color:var(--accent-hover)!important}",
+      ".notch .nb.go:active,.lcard.on .nb.go:active{background:var(--accent-press)!important;border-color:var(--accent-press)!important}",
+    ].join("");
+    document.head.appendChild(st);
+  }
+  if (document.head) paint();
+  else document.addEventListener("DOMContentLoaded", paint);
+})();
+
 /* «Искажение» в ящике настроек. Математика знака из proto/iskazhenie.html. */
 (function () {
   "use strict";
@@ -4528,6 +4570,132 @@ __zrun('zc');__zrun('zu');
       }
     return polys;
   }
+  var SPIKE_FREE = 0.35;
+  var SPIKE_BEND = 0.75;
+  function spikeClearance(polys, R) {
+    var bb = bbox(polys), E = [], i, pi;
+    if (!bb) return null;
+    var CELL = 48, W = Math.ceil((bb[2] - bb[0] + 2 * R) / CELL) + 1, grid = {};
+    function cellOf2(x, y) { return [Math.floor((x - bb[0] + R) / CELL), Math.floor((y - bb[1] + R) / CELL)]; }
+    for (pi = 0; pi < polys.length; pi++) {
+      var P = polys[pi], n = P.length;
+      for (i = 0; i < n; i++) {
+        var a = P[i], b = P[(i + 1) % n], id = E.length;
+        E.push([a[0], a[1], b[0] - a[0], b[1] - a[1], pi, i]);
+        var c0 = cellOf2(Math.min(a[0], b[0]), Math.min(a[1], b[1])), c1 = cellOf2(Math.max(a[0], b[0]), Math.max(a[1], b[1]));
+        for (var cx = c0[0]; cx <= c1[0]; cx++)
+          for (var cy = c0[1]; cy <= c1[1]; cy++) (grid[cy * W + cx] || (grid[cy * W + cx] = [])).push(id);
+      }
+    }
+    var seen = new Int32Array(E.length), stamp = 0, out = [];
+    for (pi = 0; pi < polys.length; pi++) {
+      var Q = polys[pi], m = Q.length, lim = new Array(m);
+      for (i = 0; i < m; i++) {
+        var pa = Q[(i + m - 1) % m], pb = Q[(i + 1) % m], px = Q[i][0], py = Q[i][1];
+        var tx = pb[0] - pa[0], ty = pb[1] - pa[1], ll = Math.hypot(tx, ty) || 1, dir = i % 2 === 1 ? 1 : -1, nx = (dir * ty) / ll, ny = (-dir * tx) / ll, best = Infinity;
+        stamp++;
+        var r0 = cellOf2(Math.min(px, px + nx * R), Math.min(py, py + ny * R)), r1 = cellOf2(Math.max(px, px + nx * R), Math.max(py, py + ny * R));
+        for (var gx = r0[0]; gx <= r1[0]; gx++)
+          for (var gy = r0[1]; gy <= r1[1]; gy++) {
+            var ids = grid[gy * W + gx];
+            if (!ids) continue;
+            for (var k = 0; k < ids.length; k++) {
+              var e = E[ids[k]];
+              if (seen[ids[k]] === stamp) continue;
+              seen[ids[k]] = stamp;
+              if (e[4] === pi && (e[5] === i || e[5] === (i + m - 1) % m)) continue;
+              var den = nx * e[3] - ny * e[2];
+              if (Math.abs(den) < 1e-9) continue;
+              var qx = e[0] - px, qy = e[1] - py;
+              var t = (qx * e[3] - qy * e[2]) / den, u = (qx * ny - qy * nx) / den;
+              if (t > 0.5 && t < best && t <= R && u >= 0 && u <= 1) best = t;
+            }
+          }
+        var bx = px - pa[0], by = py - pa[1], cx2 = pb[0] - px, cy2 = pb[1] - py, cr = bx * cy2 - by * cx2;
+        if (Math.abs(cr) > 1e-6) {
+          var rad = (Math.hypot(bx, by) * Math.hypot(cx2, cy2) * Math.hypot(tx, ty)) / (2 * Math.abs(cr));
+          if (dir === 1 && ((pa[0] + pb[0]) / 2 - px) * nx + ((pa[1] + pb[1]) / 2 - py) * ny > 0) best = Math.min(best, (rad * SPIKE_BEND) / SPIKE_FREE);
+        }
+        lim[i] = best;
+      }
+      out.push(lim);
+    }
+    return out;
+  }
+  function spikeCrossings(polys) {
+    var bb = bbox(polys), E = [], pi, i;
+    if (!bb) return [];
+    var CELL = 48, W = Math.ceil((bb[2] - bb[0]) / CELL) + 2, grid = {};
+    function cc(v, lo) { return Math.floor((v - lo) / CELL); }
+    for (pi = 0; pi < polys.length; pi++) {
+      var P = polys[pi], n = P.length;
+      for (i = 0; i < n; i++) {
+        var a = P[i], b = P[(i + 1) % n], id = E.length;
+        E.push([a[0], a[1], b[0], b[1], pi, i, n]);
+        var x0 = cc(Math.min(a[0], b[0]), bb[0]), x1 = cc(Math.max(a[0], b[0]), bb[0]);
+        var y0 = cc(Math.min(a[1], b[1]), bb[1]), y1 = cc(Math.max(a[1], b[1]), bb[1]);
+        for (var gx = x0; gx <= x1; gx++)
+          for (var gy = y0; gy <= y1; gy++) (grid[gy * W + gx] || (grid[gy * W + gx] = [])).push(id);
+      }
+    }
+    var seen = new Int32Array(E.length).fill(-1), bad = {}, res = [];
+    function orient(ax, ay, bx, by, qx, qy) { return (bx - ax) * (qy - ay) - (by - ay) * (qx - ax); }
+    function mark(e) {
+      var v = e[5] % 2 === 1 ? e[5] : (e[5] + 1) % e[6], k = e[4] * 1e6 + v;
+      if (!bad[k]) { bad[k] = 1; res.push([e[4], v]); }
+    }
+    for (var id1 = 0; id1 < E.length; id1++) {
+      var e1 = E[id1];
+      var xa = cc(Math.min(e1[0], e1[2]), bb[0]), xb = cc(Math.max(e1[0], e1[2]), bb[0]);
+      var ya = cc(Math.min(e1[1], e1[3]), bb[1]), yb = cc(Math.max(e1[1], e1[3]), bb[1]);
+      for (var gx2 = xa; gx2 <= xb; gx2++)
+        for (var gy2 = ya; gy2 <= yb; gy2++) {
+          var ids = grid[gy2 * W + gx2];
+          if (!ids) continue;
+          for (var k = 0; k < ids.length; k++) {
+            var id2 = ids[k];
+            if (id2 <= id1 || seen[id2] === id1) continue;
+            seen[id2] = id1;
+            var e2 = E[id2];
+            if (e1[4] === e2[4] && (e2[5] === (e1[5] + 1) % e1[6] || e1[5] === (e2[5] + 1) % e2[6])) continue;
+            var d1 = orient(e1[0], e1[1], e1[2], e1[3], e2[0], e2[1]), d2 = orient(e1[0], e1[1], e1[2], e1[3], e2[2], e2[3]);
+            if (d1 * d2 >= 0) continue;
+            var d3 = orient(e2[0], e2[1], e2[2], e2[3], e1[0], e1[1]), d4 = orient(e2[0], e2[1], e2[2], e2[3], e1[2], e1[3]);
+            if (d3 * d4 >= 0) continue;
+            mark(e1);
+            mark(e2);
+          }
+        }
+    }
+    return res;
+  }
+  function spikeOut(polys, A, seedG) {
+    var clear = spikeClearance(polys, A / SPIKE_FREE), V = [], out = polys, it;
+    if (!clear) return polys;
+    polys.forEach(function (P, pi) {
+      var n = P.length, nrm = new Array(n), kk = new Array(n), sc = new Array(n);
+      for (var i = 0; i < n; i++) {
+        var a = P[(i + n - 1) % n], b = P[(i + 1) % n], ttx = b[0] - a[0], tty = b[1] - a[1], ll = Math.hypot(ttx, tty) || 1;
+        nrm[i] = [tty / ll, -ttx / ll];
+        kk[i] = i % 2 === 1 ? Math.min(A * (0.55 + 0.45 * rnd(seedG, pi * 1000 + i)), SPIKE_FREE * clear[pi][i]) : -Math.min(A * 0.12, SPIKE_FREE * clear[pi][i]);
+        sc[i] = 1;
+      }
+      V.push({ P: P, nrm: nrm, kk: kk, sc: sc });
+    });
+    for (it = 0; it < 17; it++) {
+      out = V.map(function (v) {
+        return v.P.map(function (q, i) {
+          var k = v.kk[i] * v.sc[i];
+          return [q[0] + v.nrm[i][0] * k, q[1] + v.nrm[i][1] * k];
+        });
+      });
+      if (it === 16) break;
+      var bad = spikeCrossings(out.map(function (P) { return P.map(function (q) { return [Math.round(q[0]), Math.round(q[1])]; }); }));
+      if (!bad.length) break;
+      for (var b2 = 0; b2 < bad.length; b2++) V[bad[b2][0]].sc[bad[b2][1]] *= 0.6;
+    }
+    return out;
+  }
   function pixelate(polys, cell, xo) {
     var bb = bbox(polys);
     if (!bb) return polys;
@@ -4647,17 +4815,7 @@ __zrun('zc');__zrun('zu');
         }
     }
     if (fx.spikes) {
-      A = (p.spikes / 100) * 80;
-      polys = polys.map(function (P, pi) {
-        var n = P.length, o = new Array(n);
-        for (var i = 0; i < n; i++) {
-          var a = P[(i + n - 1) % n], b = P[(i + 1) % n], ttx = b[0] - a[0], tty = b[1] - a[1],
-            ll = Math.hypot(ttx, tty) || 1, nx = tty / ll, ny = -ttx / ll;
-          var kk2 = i % 2 === 1 ? A * (0.55 + 0.45 * rnd(seedG, pi * 1000 + i)) : -A * 0.12;
-          o[i] = [P[i][0] + nx * kk2, P[i][1] + ny * kk2];
-        }
-        return o;
-      });
+      polys = spikeOut(polys, (p.spikes / 100) * 80, seedG);
     }
     if (fx.slice) {
       var N = Math.round(p.sliceN), As = (p.slice / 100) * 110, yA, yB;
@@ -4687,7 +4845,31 @@ __zrun('zc');__zrun('zu');
     return "ЖЕЛЕЗО";
   }
 
+  var altBase = { font: null, map: null };
+  function baseCh(name) {
+    if (typeof name !== "string" || name.length < 2) return name;
+    var cp0 = name.codePointAt(0);
+    if (name.length === (cp0 > 0xffff ? 2 : 1)) return name;
+    var m = /^uni([0-9A-Fa-f]{4,6})(?:\.|$)/.exec(name);
+    if (m) return String.fromCodePoint(parseInt(m[1], 16));
+    try {
+      var font = typeof CUR_FONT !== "undefined" ? CUR_FONT : "";
+      if (altBase.font !== font) {
+        altBase.font = font;
+        altBase.map = {};
+        if (typeof otAlternates === "function") otAlternates().forEach(function (a) { if (a && a.name && a.base) altBase.map[a.name] = a.base; });
+      }
+      if (altBase.map[name]) return baseCh(altBase.map[name]);
+    } catch (e) {}
+    var dot = name.indexOf(".");
+    if (dot > 0) {
+      var head = name.slice(0, dot), c0 = head.codePointAt(0);
+      if (head.length === (c0 > 0xffff ? 2 : 1)) return head;
+    }
+    return name;
+  }
   function paramsForGlyph(ch) {
+    ch = baseCh(ch);
     var base = S.p;
     if (S.perLetter && S.letterP[ch]) base = Object.assign({}, S.p, S.letterP[ch]);
     return base;
@@ -5375,18 +5557,7 @@ __zrun('zc');__zrun('zu');
         }
     }
     if (fx.spikes) {
-      A = (p.spikes / 100) * 80;
-      polys = polys.map(function (P, idx) {
-        var n = P.length, o = new Array(n);
-        for (var i = 0; i < n; i++) {
-          var a = P[(i + n - 1) % n], b = P[(i + 1) % n];
-          var ttx = b[0] - a[0], tty = b[1] - a[1], ll = Math.hypot(ttx, tty) || 1;
-          var nx = tty / ll, ny = -ttx / ll;
-          var kk2 = i % 2 === 1 ? A * (0.55 + 0.45 * rnd(seedG, idx * 1000 + i)) : -A * 0.12;
-          o[i] = [P[i][0] + nx * kk2, P[i][1] + ny * kk2];
-        }
-        return o;
-      });
+      polys = spikeOut(polys, (p.spikes / 100) * 80, seedG);
     }
     if (fx.slice) {
       var N = Math.round(p.sliceN), As = (p.slice / 100) * 110, yA = -60, yB = 780;
@@ -5415,8 +5586,12 @@ __zrun('zc');__zrun('zu');
     return polys.map(function (P) { return P.length > 480 ? uniform(P, 28) : P; });
   }
 
+  function edgeShift(before, bb, whole) {
+    var sh = before && bb && bb[0] < before[0] - 1 ? before[0] - bb[0] : 0;
+    return whole && sh ? Math.round(sh) : sh;
+  }
   function bakeGlyphCs(cs, adv, ch) {
-    var key = typeof ch === "string" ? ch : "";
+    var key = typeof ch === "string" ? baseCh(ch) : "";
     var p = paramsForGlyph(key);
     if (!S.perLetter) p = Object.assign({}, p, { jit: 0 });
     if (!paramsDiffer(p)) return null;
@@ -5431,7 +5606,7 @@ __zrun('zc');__zrun('zu');
     if (!polys.length) return null;
     var bb = bbox(polys);
     if (!bb) return null;
-    var shift = before && bb[0] < before[0] - 1 ? before[0] - bb[0] : 0;
+    var shift = edgeShift(before, bb, fx.spikes);
     if (shift) {
       for (var si = 0; si < polys.length; si++)
         for (var sj = 0; sj < polys[si].length; sj++) polys[si][sj][0] += shift;
@@ -5500,12 +5675,13 @@ __zrun('zc');__zrun('zu');
       var before = bbox(polys);
       var fx = {};
       FX.forEach(function (f) { fx[f.id] = p[f.id] !== 0; });
-      var seedG = hash(S.seed, ch.codePointAt(0) || 0);
+      var seedG = hash(S.seed, baseCh(ch).codePointAt(0) || 0);
       var rec = {};
       var warped = warpLetter(clone(polys), p, fx, seedG, !!S.perLetter, rec);
       var bb = bbox(warped);
-      var shift = before && bb && bb[0] < before[0] - 1 ? before[0] - bb[0] : 0;
-      var fr = { p: p, fx: fx, seedG: seedG, jit: rec.jit || null, field: rec.field || null, slice: rec.slice || null, shift: shift };
+      var shift = edgeShift(before, bb, fx.spikes);
+      var fr = { p: p, fx: fx, seedG: seedG, jit: rec.jit || null, field: rec.field || null, slice: rec.slice || null, shift: shift,
+        ink: fx.pix && p.pix > 0 && warped.length ? warped : null, cell: cellOf(p.pix) };
       frameMemo = { paramKey: paramKey, editKey: editKey, fr: fr };
       return fr;
     } catch (e) {
@@ -5585,6 +5761,59 @@ __zrun('zc');__zrun('zu');
     if (fr.slice) x += sliceShift(y, fr.slice);
     x += fr.shift || 0;
     return [x, y];
+  }
+  function inkInside(polys, x, y) {
+    var w = 0;
+    for (var pi = 0; pi < polys.length; pi++) {
+      var P = polys[pi];
+      for (var i = 0; i < P.length; i++) {
+        var a = P[i], b = P[(i + 1) % P.length];
+        if ((a[1] <= y) !== (b[1] <= y) && a[0] + ((y - a[1]) / (b[1] - a[1])) * (b[0] - a[0]) > x) w += b[1] > a[1] ? 1 : -1;
+      }
+    }
+    return w !== 0;
+  }
+  function pullInk(q, fr) {
+    if (!fr || !fr.ink) return q;
+    var x = q[0] - (fr.shift || 0), y = q[1];
+    if (inkInside(fr.ink, x, y)) return q;
+    var best = 1e18, bx = x, by = y;
+    for (var pi = 0; pi < fr.ink.length; pi++) {
+      var P = fr.ink[pi];
+      for (var i = 0; i < P.length; i++) {
+        var a = P[i], b = P[(i + 1) % P.length], dx = b[0] - a[0], dy = b[1] - a[1], l = dx * dx + dy * dy;
+        var t = l ? ((x - a[0]) * dx + (y - a[1]) * dy) / l : 0;
+        t = t < 0 ? 0 : t > 1 ? 1 : t;
+        var cx = a[0] + t * dx, cy = a[1] + t * dy, d = (cx - x) * (cx - x) + (cy - y) * (cy - y);
+        if (d < best) { best = d; bx = cx; by = cy; }
+      }
+    }
+    var dist = Math.sqrt(best);
+    if (!(dist > 2) || dist > fr.cell * 1.5) return q;
+    var nudge = Math.min(6, fr.cell / 8);
+    return [bx + ((bx - x) / dist) * nudge + (fr.shift || 0), by + ((by - y) / dist) * nudge];
+  }
+  var pullMemo = { d: null, fr: null, map: null };
+  function pullOffsets(d, fr, base) {
+    if (!d) return null;
+    if (pullMemo.d === d && pullMemo.fr === fr) return pullMemo.map;
+    var map = {};
+    function offOf(x, y) {
+      var pre = toW.apply(null, base.s(x, y)), q0 = mapFont(pre[0], pre[1], fr), q1 = pullInk(q0, fr);
+      return [q1[0] - q0[0], q1[1] - q0[1]];
+    }
+    function reg(pt, off) { map[pt.x + "," + pt.y] = off; }
+    d.disp.forEach(function (st) {
+      if (st.dot) { reg(st, offOf(st.x, st.y)); return; }
+      (st.nodes || []).forEach(function (n) {
+        var o = offOf(n.x, n.y);
+        reg(n, o);
+        if (n.a) reg(n.a, o);
+        if (n.b) reg(n.b, o);
+      });
+    });
+    pullMemo = { d: d, fr: fr, map: map };
+    return map;
   }
   function unmapFont(x, y, fr) {
     x -= fr.shift || 0;
@@ -5837,11 +6066,16 @@ __zrun('zc');__zrun('zu');
         var ch = edCh();
         var fr = frameFor(ch);
         if (!fr || typeof toS !== "function" || typeof toW !== "function") return base;
+        var pull = null;
+        if (fr.ink) {
+          try { pull = pullOffsets(skData(), fr, base); } catch (e) { pull = null; }
+        }
         return {
           s: function (x, y) {
             var pre = toW.apply(null, base.s(x, y));
             var q = mapFont(pre[0], pre[1], fr);
-            return toS(q[0], q[1]);
+            var off = pull && pull[x + "," + y];
+            return off ? toS(q[0] + off[0], q[1] + off[1]) : toS(q[0], q[1]);
           },
           inv: function (sx, sy) {
             var font = toW(sx, sy);
@@ -6025,6 +6259,7 @@ __zrun('zc');__zrun('zu');
 
   var bakeDepth = 0;
   var plainDepth = 0;
+  var viewNest = 0;
   function warpView(g, ch) {
     if (!g || !g.cs || !g.cs.length || !distortActive() || bakeDepth || plainDepth) return g;
     try {
@@ -6053,7 +6288,11 @@ __zrun('zc');__zrun('zu');
     if (typeof orig !== "function" || orig.__gtView) return;
     var fn = function (ch) {
       syncImpCache();
-      return warpView(orig.apply(this, arguments), ch);
+      var nested = viewNest > 0, g;
+      viewNest++;
+      try { g = orig.apply(this, arguments); }
+      finally { viewNest--; }
+      return nested ? g : warpView(g, ch);
     };
     fn.__gtView = true;
     window[name] = fn;
@@ -6589,50 +6828,6 @@ __zrun('zc');__zrun('zu');
     G["m.ss01"] = Object.assign({}, ss, { shape: mm.shape, w: mm.w });
   }
 
-  /* ---------- Аппликация: m из бумажных кусков (три полосы-ствола и две дуги), как n/р остальных знаков ---------- */
-  function applikM() {
-    var f = FONTS.applik;
-    if (!f || typeof APPLIK === "undefined" || !APPLIK.REC || APPLIK.REC.m_) return;
-    APPLIK.REC.m_ = {
-      w: function (H, S) { return Math.max(1.3 * H, 3 * S + 250); },
-      f: function (K) {
-        var H = K.H, W = K.W, a = K.s(0), b = K.s(1), c = K.s(2), d = K.s(3);
-        var ryo = H * 0.34, cy = H - ryo;
-        var xl = a * 0.5, xr = W - c * 0.5, xm = (xl + xr) / 2;
-        var h1 = (xm - xl) / 2, h2 = (xr - xm) / 2;
-        var t1 = d * 0.9, t2 = b * 0.86;
-        return [
-          K.vs(xl, 0, H, a, H * 0.008),
-          K.vs(xm, 0, H * 0.93, b, -H * 0.006),
-          K.vs(xr, 0, cy + ryo * 0.25, c, H * 0.01),
-          K.arc(xl + h1, cy, h1 + t1 / 2, ryo, t1, t1 * 0.92, 180, 0, 6),
-          K.arc(xm + h2, cy, h2 + t2 / 2, ryo, t2 * 1.05, t2 * 0.82, 180, 0, 6),
-        ];
-      },
-    };
-    var gen = function (p) {
-      return APPLIK.safe({
-        stem: p.stem, jit: p.cjit, tear: p.ctear, gap: p.cgap, lap: p.clap, pcs: p.cpcs, sharp: p.csharp,
-        soft: p.csoft, scat: p.cscat, lean: p.clean, bj: p.cbj, seed: p.cseed, sb: 0,
-      });
-    };
-    var cont = function (cs) {
-      return cs.map(function (c) {
-        return mkc(c.nodes.map(function (n) {
-          return { x: n.x, y: n.y, a: { x: n.a.x, y: n.a.y }, b: { x: n.b.x, y: n.b.y } };
-        }), c.hole);
-      });
-    };
-    f.GL.m = {
-      shape: function (g) { return cont(APPLIK.build("m_", true, gen(g.p), 0).contours); },
-      w: function (p) { return APPLIK.build("m_", true, gen(p), 0).adv; },
-      k: "xh",
-      opt: {},
-    };
-    var raw0 = f.raw;
-    f.raw = function (ch, p) { return ch === "m" ? APPLIK.build("m_", true, gen(p), 0) : raw0(ch, p); };
-  }
-
   /* ---------- Сцепка: m в грамматике шрифта (прямоугольные куски, один радиус скругления, поля как у n) ---------- */
   function filletRect(cs, R, ri) {
     var K = 0.5523;
@@ -6723,13 +6918,12 @@ __zrun('zc');__zrun('zu');
   function apply() {
     ["volt", "kvadra", "pixel"].forEach(swapDefault);
     codexM();
-    applikM();
     stsepkaM();
     if (FONTS.volt) FONTS.volt.ss01Name = SS01_NAME;
     if (FONTS.kvadra) FONTS.kvadra.ss01Name = SS01_NAME;
     if (FONTS.codex) FONTS.codex.ss01Name = SS01_NAME;
     if (FONTS.pixel) FONTS.pixel.ss01Name = "m в форме «м» и гладкий нуль";
-    ["volt", "kvadra", "codex", "pixel", "applik", "stsepka"].forEach(refreshLive);
+    ["volt", "kvadra", "codex", "pixel", "stsepka"].forEach(refreshLive);
     dropCaches();
   }
 
@@ -6747,6 +6941,701 @@ __zrun('zc');__zrun('zu');
 })();
 
 // Тепловая карта: уточнения поверх ui_heat.js.
+/* «Пропись»: у шрифта связки между буквами задуманы, поэтому штатная карта не ставит оценку.
+   Здесь оценка считается по телам букв: связки (тонкие входы и выходы штрихов) убираются из растра открытием,
+   и толщина, плотность, апрош и пробел между словами меряются только на том, что осталось.
+   Остальные шрифты идут штатным путём без изменений. */
+(function () {
+  "use strict";
+  if (window.__GT_HEAT_PATCH__) return;
+  window.__GT_HEAT_PATCH__ = true;
+
+  var FONT = "propis";
+  var N = 48;
+  var SCALE = 0.12;
+  var OPEN_R = 2;
+  var THICK_R = 2;
+  var LOW = "nohecsuagdpbqkvxyaonпнитсеуазрдкшх";
+  var UP = "HOEBNMSTUAKPДНОПЕКСТИ";
+  var DIG = "0123456789";
+  var PAIRS_LOW = ["nn", "no", "on", "oo", "нн", "но", "он", "оо", "пп", "пн", "ео", "ое"];
+  var PAIRS_UP = ["HH", "HO", "OH", "OO", "НН", "НО", "ОН", "ОО", "HE", "EH", "НЕ", "ЕН"];
+  var curSc = 0;
+  var BC = typeof WeakMap === "function" ? new WeakMap() : null;
+  var work = null;
+
+  function evalS() {
+    try { return (0, eval)("S"); } catch { return null; }
+  }
+  function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+  function med(a) {
+    if (!a.length) return 0;
+    var b = a.slice().sort(function (x, y) { return x - y; }), m = b.length >> 1;
+    return b.length & 1 ? b[m] : (b[m - 1] + b[m]) / 2;
+  }
+  function cls(ch) {
+    if (/\p{Lu}/u.test(ch)) return "u";
+    if (/\p{Ll}/u.test(ch)) return "l";
+    if (/\p{Nd}/u.test(ch)) return "d";
+    return "p";
+  }
+  function glyph(ch, key) {
+    try { return window.gfSmart(ch, key); } catch { return null; }
+  }
+
+  function erode(m, w, h, r) {
+    var t = new Uint8Array(w * h), o = new Uint8Array(w * h), i, j, k, v;
+    for (j = 0; j < h; j++) for (i = 0; i < w; i++) {
+      v = 1;
+      for (k = -r; k <= r && v; k++) { var x = i + k; if (x < 0 || x >= w || !m[j * w + x]) v = 0; }
+      t[j * w + i] = v;
+    }
+    for (j = 0; j < h; j++) for (i = 0; i < w; i++) {
+      v = 1;
+      for (k = -r; k <= r && v; k++) { var y = j + k; if (y < 0 || y >= h || !t[y * w + i]) v = 0; }
+      o[j * w + i] = v;
+    }
+    return o;
+  }
+  function dilate(m, w, h, r) {
+    var t = new Uint8Array(w * h), o = new Uint8Array(w * h), i, j, k, v;
+    for (j = 0; j < h; j++) for (i = 0; i < w; i++) {
+      v = 0;
+      for (k = -r; k <= r && !v; k++) { var x = i + k; if (x >= 0 && x < w && m[j * w + x]) v = 1; }
+      t[j * w + i] = v;
+    }
+    for (j = 0; j < h; j++) for (i = 0; i < w; i++) {
+      v = 0;
+      for (k = -r; k <= r && !v; k++) { var y = j + k; if (y >= 0 && y < h && t[y * w + i]) v = 1; }
+      o[j * w + i] = v;
+    }
+    return o;
+  }
+
+  /* Тело знака: растр, открытие (тонкие связки уходят), профиль краски по тем же N строкам, что у штатной карты. */
+  function body(g, cap, xh) {
+    var k = cap + "|" + xh, e = BC && BC.get(g);
+    if (e && e.k === k) return e.B;
+    var minx = 1e9, maxx = -1e9, c, n, i;
+    for (i = 0; i < g.cs.length; i++) {
+      c = g.cs[i];
+      for (n = 0; n < c.nodes.length; n++) {
+        var nd = c.nodes[n];
+        if (nd.x < minx) minx = nd.x;
+        if (nd.x > maxx) maxx = nd.x;
+      }
+    }
+    var step = cap / N, B = { L: new Float32Array(N).fill(NaN), R: new Float32Array(N).fill(NaN), ink: new Float32Array(N), adv: g.adv, step: step, xmin: 1e9, xmax: -1e9 };
+    if (!(maxx > minx)) { if (BC) BC.set(g, { k: k, B: B }); return B; }
+    var x0 = minx - 30, w = Math.ceil((maxx - minx + 60) * SCALE), h = Math.ceil(cap * SCALE) + 1;
+    if (!work) work = document.createElement("canvas");
+    work.width = w; work.height = h;
+    var ctx = work.getContext("2d", { willReadFrequently: true });
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#000";
+    ctx.fill(window.pathOf(g.cs, function (a, b) { return [(a - x0) * SCALE, (cap - b) * SCALE]; }), "nonzero");
+    var d = ctx.getImageData(0, 0, w, h).data, m = new Uint8Array(w * h);
+    for (i = 0; i < w * h; i++) m[i] = d[i * 4 + 3] > 127 ? 1 : 0;
+    var thick = dilate(erode(m, w, h, THICK_R), w, h, THICK_R);
+    m = dilate(erode(m, w, h, OPEN_R), w, h, OPEN_R);
+    function rowRuns(mm, r) {
+      var j = Math.min(h - 1, Math.max(0, Math.floor((cap - (r + 0.5) * step) * SCALE))), out = [], st = -1, i;
+      for (i = 0; i <= w; i++) {
+        var on = i < w && mm[j * w + i];
+        if (on && st < 0) st = i;
+        if (!on && st >= 0) { out.push([x0 + st / SCALE, x0 + i / SCALE]); st = -1; }
+      }
+      return out;
+    }
+    var r;
+    for (r = 0; r < N; r++) {
+      var rr = rowRuns(m, r);
+      if (rr.length) {
+        var first = rr[0][0], last = rr[rr.length - 1][1], s = 0;
+        rr.forEach(function (q) { s += q[1] - q[0]; });
+        B.L[r] = first; B.R[r] = last; B.ink[r] = s;
+        if (first < B.xmin) B.xmin = first;
+        if (last > B.xmax) B.xmax = last;
+      }
+    }
+    var nX = Math.max(6, Math.round(xh / cap * N)), runs = [], widths = [];
+    for (r = 0; r < N; r++) runs.push(rowRuns(thick, r));
+    for (r = Math.max(1, Math.floor(nX * 0.2)); r < Math.min(N - 1, Math.ceil(nX * 0.8)); r++) {
+      runs[r].forEach(function (q) {
+        var wq = q[1] - q[0];
+        if (wq > 0.5 * nX * step) return;
+        function near(rw) {
+          for (var z = 0; z < runs[rw].length; z++) {
+            var zz = runs[rw][z];
+            if (Math.abs((zz[0] + zz[1]) / 2 - (q[0] + q[1]) / 2) <= Math.max(wq, zz[1] - zz[0])) return zz;
+          }
+          return null;
+        }
+        var u = near(r - 1), dn = near(r + 1);
+        if (!u || !dn) return;
+        var dl = Math.abs(u[0] - dn[0]), dr = Math.abs(u[1] - dn[1]);
+        if (Math.min(dl, dr) <= 0.8 * step && Math.max(dl, dr) <= 2 * step) widths.push(wq);
+      });
+    }
+    B.sw = widths.length >= 3 ? med(widths) : NaN;
+    if (BC) BC.set(g, { k: k, B: B });
+    return B;
+  }
+  function flatGap(A, B, nb) {
+    var s = 0, n = 0;
+    for (var r = 0; r < nb; r++) {
+      var ra = A.R[r], lb = B.L[r];
+      if (ra !== ra || lb !== lb) continue;
+      s += A.adv - ra + lb; n++;
+    }
+    return n ? s / n : NaN;
+  }
+
+  /* Опора по телам: те же контрольные знаки и пары, что у штатной карты, но профили без связок. */
+  function bodyRef(key, ref, get, HM) {
+    var cap = ref.cap, xh = ref.xh, nX = ref.nX, out = { tone: {}, flat: {}, D: {}, t: {} };
+    function P(ch) { var g = get(ch); return g && g.cs && g.cs.length ? { g: g, P: HM.prof(g, cap, xh), B: body(g, cap, xh) } : null; }
+    [["l", LOW], ["u", UP], ["d", DIG]].forEach(function (pr) {
+      var sws = [];
+      Array.from(new Set(Array.from(pr[1]))).forEach(function (ch) {
+        var p = P(ch);
+        if (p && p.B.sw > 0) sws.push(p.B.sw);
+      });
+      out.tone[pr[0]] = { sw: med(sws), n: sws.length };
+    });
+    [["xh", nX, PAIRS_LOW, ["nn", "нн", "hh", "пп"]], ["cap", N, PAIRS_UP, ["HH", "НН", "EE", "ЕЕ"]]].forEach(function (bd) {
+      var flat = NaN, i;
+      for (i = 0; i < bd[3].length; i++) {
+        var A = P(bd[3][i][0]), B = P(bd[3][i][1]);
+        if (A && B) { flat = flatGap(A.B, B.B, bd[1]); if (flat === flat) break; }
+      }
+      var D = flat === flat && flat > 0 ? 1.6 * flat : (bd[0] === "xh" ? xh : cap) * 0.3, ar = [];
+      bd[2].forEach(function (q) {
+        var A = P(q[0]), B = P(q[1]);
+        if (A && B) ar.push(HM.areaGap(A.B, B.B, A.B.adv, bd[1], D).a);
+      });
+      out.flat[bd[0]] = flat; out.D[bd[0]] = D; out.t[bd[0]] = ar.length ? med(ar) : NaN;
+    });
+    return out;
+  }
+
+  /* строчные кириллические пары: естественный разброс по телам не выходит за ±0,30; прописные (А, Т, диагонали) и латиница терпимее */
+  var sevPair = function (d, caps, loose) {
+    if (caps) return d < 0 ? clamp01((-d - 0.70) / 0.30) : clamp01((d - 0.90) / 0.60);
+    if (loose) return d < 0 ? clamp01((-d - 0.50) / 0.30) : clamp01((d - 0.55) / 0.40);
+    return d < 0 ? clamp01((-d - 0.30) / 0.30) : clamp01((d - 0.32) / 0.35);
+  };
+  var sevTone = function (d) { return clamp01((Math.abs(d) - 0.20) / 0.30); };
+  /* пробел между словами видимый (с росчерком последней буквы), он не зависит от связок внутри слова.
+     Отношение к апрошу пар у прописи не сравнивается: у соединённых букв оно по определению иное, считается только пробел в em. */
+  var sevWord = function (e) {
+    return Math.max(e < 0.17 ? clamp01((0.17 - e) / 0.07) : 0, e > 0.45 ? clamp01((e - 0.45) / 0.15) : 0);
+  };
+
+  function joined(x) {
+    var c = cls(x.c.ch);
+    return !!x.B && (c === "l" || c === "u");
+  }
+  function measure(prev, lines, refs, sc, HM) {
+    var items = [], gc = {}, br = {}, li, old = {};
+    prev.forEach(function (it) { old[it.t + "|" + it.ln + "|" + it.i] = it; });
+    function keep(t, l, i) {
+      var it = old[t + "|" + l + "|" + i];
+      if (it) { it.body = true; it.intended = false; items.push(it); }
+    }
+    for (li = 0; li < lines.length; li++) {
+      var ln = lines[li], key = ln.key, ref = refs[key] || ln.ref;
+      if (!ref) continue;
+      var get = gc[key] || (gc[key] = (function (k) {
+        var m = new Map();
+        return function (ch) { var v = m.get(ch); if (v === undefined) { v = glyph(ch, k); m.set(ch, v); } return v; };
+      })(key));
+      var R = br[key] || (br[key] = bodyRef(key, ref, get, HM));
+      var sp = get(" "), spAdv = sp && sp.adv > 0 ? sp.adv : 250, info = [], i;
+      for (i = 0; i < ln.chars.length; i++) {
+        var c = ln.chars[i], g = get(c.gn || c.ch), ok = g && g.cs && g.cs.length;
+        info.push(ok ? { c: c, g: g, P: HM.prof(g, ref.cap, ref.xh), B: body(g, ref.cap, ref.xh), xu: c.x / sc } : { c: c, g: g, P: null, xu: c.x / sc });
+      }
+      var yTop = function (cp) { return ln.base - cp * sc; };
+      var pairs = [], words = [];
+      for (i = 0; i < info.length; i++) {
+        var Bi = info[i];
+        if (Bi.P) {
+          var cl = cls(Bi.c.ch), T = cl === "l" || cl === "u" ? R.tone[cl] : null;
+          if (cl === "d" || cl === "p") keep("tone", li, i);
+          if (T && T.n && T.sw > 0 && Bi.B.sw > 0) {
+            var band = cl === "l" ? ref.xh : ref.cap;
+            var dev = Math.max(-0.6, Math.min(0.6, Bi.B.sw / T.sw - 1));
+            items.push({ t: "tone", body: true, ln: li, i: i, ch: Bi.c.ch, gn: Bi.c.gn || Bi.c.ch, key: key, dev: dev, sev: sevTone(dev),
+              x0: ln.ox + Bi.xu * sc, x1: ln.ox + (Bi.xu + Bi.g.adv) * sc, y0: yTop(band), y1: ln.base });
+          }
+        }
+        if (!i) continue;
+        var A = info[i - 1];
+        if (!A.P || !Bi.P) continue;
+        var dx = Bi.xu - A.xu, free = dx - A.g.adv;
+        if (free > 0.45 * spAdv) {
+          var rmax = -1e9, lmin = 1e9;
+          var wa = A.P, wb = Bi.P;
+          for (var r = 0; r < ref.nX; r++) {
+            if (wa.R[r] === wa.R[r] && wa.R[r] > rmax) rmax = wa.R[r];
+            if (wb.L[r] === wb.L[r] && wb.L[r] < lmin) lmin = wb.L[r];
+          }
+          if (rmax > -1e8 && lmin < 1e8) words.push({ i: i, wu: dx + lmin - rmax, x0: ln.ox + (A.xu + rmax) * sc, x1: ln.ox + (Bi.xu + lmin) * sc });
+          continue;
+        }
+        var ca = cls(A.c.ch), cb = cls(Bi.c.ch);
+        var bnd = (ca === "u" || ca === "d") && (cb === "u" || cb === "d") ? "cap" : "xh", n = bnd === "cap" ? N : ref.nX;
+        var bod = joined(A) && joined(Bi), PA = bod ? A.B : A.P, PB = bod ? Bi.B : Bi.P, D = bod ? R.D[bnd] : ref.D[bnd];
+        pairs.push({ i: i, A: A, B: Bi, PA: PA, PB: PB, bod: bod, band: bnd, n: n, D: D, m: HM.areaGap(PA, PB, dx, n, D), dx: dx, ca: ca, cb: cb });
+      }
+      var tTxt = med(pairs.map(function (p) { return p.m.a; }));
+      pairs.forEach(function (p) {
+        if (!p.bod) { keep("pair", li, p.i); return; }
+        var rf = R, t = rf.t[p.band];
+        if (!(t > 0)) t = tTxt;
+        if (!(t > 0)) return;
+        var flat = rf.flat[p.band] > 0 ? rf.flat[p.band] : t;
+        var dev = p.m.a / t - 1;
+        if (p.m.min < 1e8 && p.m.min > 1.2 * flat) dev = Math.max(dev, 0.9 * (p.m.min / flat - 1));
+        var cyr = /[\u0400-\u04FF]/;
+        var sev = sevPair(dev, p.ca === "u" || p.cb === "u", !(cyr.test(p.A.c.ch) && cyr.test(p.B.c.ch))), touch = false;
+        if (p.ca !== "u" && p.cb !== "u" && p.m.min < 1e8 && p.m.min <= Math.max(2, 0.12 * flat)) { touch = true; sev = Math.max(sev, 0.78); }
+        if ((p.ca === "p" || p.cb === "p") && dev > 0) sev = 0;
+        var bandH = p.band === "cap" ? ref.cap : ref.xh;
+        var gx0 = p.A.xu + p.PA.xmax, gx1 = p.B.xu + p.PB.xmin;
+        items.push({ t: "pair", body: true, ln: li, i: p.i, a: p.A.c.ch, b: p.B.c.ch, gnA: p.A.c.gn || p.A.c.ch, gnB: p.B.c.gn || p.B.c.ch, key: key, dev: dev, sev: sev, touch: touch,
+          band: p.band, gap: p.m.a, tgt: t, site: { dx: p.dx, n: p.n, D: p.D, PA: p.PA, PB: p.PB, t: t },
+          x0: ln.ox + Math.min(gx0, gx1) * sc - 0.16 * 1000 * sc, x1: ln.ox + Math.max(gx0, gx1) * sc + 0.16 * 1000 * sc, y0: yTop(bandH), y1: ln.base });
+      });
+      var Lt = tTxt > 0 ? tTxt : R.t.xh;
+      words.forEach(function (w) {
+        if (!(Lt > 0)) return;
+        var e = w.wu / 1000, r = 3;
+        items.push({ t: "word", body: true, ln: li, i: w.i, key: key, ratio: r, wu: w.wu, em: e, dev: r / 3 - 1, sev: sevWord(e),
+          x0: w.x0 - 0.06 * 1000 * sc, x1: w.x1 + 0.06 * 1000 * sc, y0: yTop(ref.xh), y1: ln.base });
+      });
+    }
+    prev.forEach(function (it) {
+      if (it.t === "rhy") { it.body = true; it.intended = false; items.push(it); }
+    });
+    return items;
+  }
+
+  /* ---------- общее: чистка, ненаписанные знаки, лишние пробелы ---------- */
+  var INTENT = { modul: "tone,rhy,pair", ryvok: "all", tyaga: "pair", kaplya: "all", pixel: "tone,pair", applik: "all", stsepka: "tone,pair,rhy", kortes: "pair,tone", stolb: "tone,rhy" };
+  var SPACE_FREE = 3;
+
+  function relKinds() {
+    var S = evalS(), v = S && INTENT[S.fontId];
+    if (!v) return null;
+    var o = {};
+    (v === "all" ? ["pair", "tone", "word", "rhy"] : v.split(",")).forEach(function (k) { o[k] = true; });
+    return o;
+  }
+  function distortOn() {
+    try { return !!(window.__GT_DISTORT_API && window.__GT_DISTORT_API.active()); } catch { return false; }
+  }
+  function missingMap(lines) {
+    return lines.map(function (ln) {
+      return ln.chars.map(function (c) {
+        if (!/[\p{L}\p{N}]/u.test(c.ch)) return false;
+        var g = glyph(c.gn || c.ch, ln.key);
+        return !g || !!g.ph || !(g.cs && g.cs.length);
+      });
+    });
+  }
+  function clean(items, lines) {
+    var miss = missingMap(lines);
+    return items.filter(function (it) {
+      var m = miss[it.ln];
+      if (m && (m[it.i] || (it.t !== "tone" && it.i > 0 && m[it.i - 1]))) return false;
+      if (!isFinite(it.sev)) it.sev = 0;
+      if (!isFinite(it.dev)) it.dev = 0;
+      return true;
+    });
+  }
+  function coverage(lines) {
+    var miss = missingMap(lines), used = {}, skip = {};
+    lines.forEach(function (ln, li) {
+      ln.chars.forEach(function (c, i) {
+        if (!/[\p{L}\p{N}]/u.test(c.ch)) return;
+        if (miss[li][i]) skip[c.ch] = 1; else used[c.ch] = 1;
+      });
+    });
+    return { used: Object.keys(used), skipped: Object.keys(skip) };
+  }
+  /* Пробел из нескольких пробелов подряд: явный выброс, даже когда медиана по тексту нормальная. */
+  function markWords(items, lines, kinds) {
+    var sc = curSc, byLine = {};
+    items.forEach(function (it) {
+      if (it.t !== "word") return;
+      if (kinds && kinds.word && !it.xs) it.sev = 0;
+      var ln = lines[it.ln];
+      if (!ln || !sc || !(it.i > 0)) return;
+      var A = ln.chars[it.i - 1], B = ln.chars[it.i];
+      var gA = glyph(A.gn || A.ch, ln.key), gS = byLine[ln.key] || (byLine[ln.key] = glyph(" ", ln.key));
+      if (!gA || !gS || !(gS.adv > 0)) return;
+      var free = (B.x - A.x) / sc - gA.adv, k = Math.round(free / gS.adv);
+      it.xk = k;
+      var extra = k >= SPACE_FREE ? clamp01((k - SPACE_FREE + 1) / 3) : 0;
+      if (extra > 0) {
+        it.xs = extra;
+        it.sev = Math.max(it.sev || 0, extra);
+        it.ratio = Math.max(it.ratio || 0, 3 * k);
+      }
+    });
+  }
+  function verdictFor(score) {
+    return score >= 90 ? "Читается ровно." : score >= 78 ? "Ровно, но есть места, где глаз споткнётся." : score >= 60 ? "Пятно неровное, сбои видны в тексте." : "Пятно рваное, глаз спотыкается на каждой строке.";
+  }
+  function post(res, list, lines) {
+    if (!res) return res;
+    var out = list.filter(function (it) {
+      return it.t === "word" && it.xs >= 0.3 && !(res.finds || []).some(function (f) { return f.items && f.items.indexOf(it) >= 0; });
+    });
+    if (out.length && res.finds) {
+      var pen = 0, before = res.score;
+      out.forEach(function (it, n) {
+        var g = { t: "word", items: [it], ratio: it.ratio, em: it.em, sev: it.xs, k: "w:x" + it.ln + "." + it.i, dev: it.ratio / 3 - 1, rank: it.xs * 0.9 };
+        it.f = g;
+        res.finds.push(g);
+        pen += 7 * Math.pow(it.xs, 1.5) * 0.5 * (n < 8 ? 1 : 0.5);
+      });
+      res.finds.sort(function (a, b) { return b.rank - a.rank; });
+      res.top = res.finds.slice(0, 5);
+      if (typeof before === "number" && isFinite(before)) {
+        res.score = Math.max(0, Math.min(100, Math.round(before - pen)));
+        if (res.verdict && res.verdict === verdictFor(before)) res.verdict = verdictFor(res.score);
+      }
+    }
+    var cv = coverage(lines);
+    res.gtUsed = cv.used.length;
+    res.gtSkipped = cv.skipped;
+    return res;
+  }
+
+  /* ---------- шрифты с задуманной неровностью: оценка по отклонению от рисунка шрифта ---------- */
+  var PG = new Map();
+  function plain(ch, key) {
+    var S = evalS(), st = S && S.styles && S.styles[key];
+    if (!st || typeof window.finalGlyph !== "function") return null;
+    var sig = "", cu = S.custom && S.custom[ch];
+    try { sig = window.styleSig(key); } catch { sig = ""; }
+    var k = S.fontId + "|" + key + "|" + ch + "|" + sig + "|" + (cu ? cu.v : "");
+    if (PG.has(k)) return PG.get(k);
+    var g = null;
+    try { g = window.finalGlyph(ch, st, {}); } catch { g = null; }
+    if (PG.size > 800) PG.clear();
+    PG.set(k, g);
+    return g;
+  }
+  /* у шрифта с задуманной неровностью эталон — его же рисунок, поэтому порог ниже штатного: любое заметное отклонение — правка */
+  var sevPairStd = function (d) { return d < 0 ? clamp01((-d - 0.10) / 0.30) : clamp01((d - 0.12) / 0.30); };
+  var sevToneRel = function (d) { return clamp01((Math.abs(d) - 0.08) / 0.27); };
+
+  function relative(items, lines, refs, sc, HM, kinds) {
+    var dist = distortOn(), idx = {}, tones = [], pairs = [], words = [];
+    items.forEach(function (it) { idx[it.t + "|" + it.ln + "|" + it.i] = it; it.rel = true; });
+    for (var li = 0; li < lines.length; li++) {
+      var ln = lines[li], key = ln.key, ref = refs[key] || ln.ref;
+      if (!ref) continue;
+      var info = ln.chars.map(function (c) {
+        var n = c.gn || c.ch, g = glyph(n, key);
+        if (!(g && g.cs && g.cs.length)) return null;
+        var g0 = dist ? null : plain(n, key), ok = g0 && g0.cs && g0.cs.length;
+        return { c: c, g: g, P: HM.prof(g, ref.cap, ref.xh), g0: ok ? g0 : null, P0: ok ? HM.prof(g0, ref.cap, ref.xh) : null };
+      });
+      for (var i = 0; i < info.length; i++) {
+        var B = info[i], it = idx["tone|" + li + "|" + i];
+        if (it && kinds.tone) {
+          if (dist) { if (!it.warp) { it.sev = 0; it.dev = 0; } }
+          else if (B && B.P0) {
+            var cl = cls(B.c.ch), a = cl === "l" ? B.P.areaX : B.P.areaC, a0 = cl === "l" ? B.P0.areaX : B.P0.areaC;
+            var dA = a0 > 0 ? a / a0 - 1 : 0, raw;
+            if (B.P.sw > 0 && B.P0.sw > 0) raw = 0.8 * (B.P.sw / B.P0.sw - 1) + 0.2 * dA; else raw = 0.4 * dA;
+            tones.push({ it: it, raw: Math.max(-0.6, Math.min(0.6, raw)) });
+          } else { it.sev = 0; it.dev = 0; }
+        }
+        if (!i) continue;
+        var pit = idx["pair|" + li + "|" + i], A = info[i - 1];
+        var wit = idx["word|" + li + "|" + i];
+        if (wit && !dist && A && B && A.P0 && B.P0 && wit.wu > 0) {
+          var rmax = -1e9, lmin = 1e9, r;
+          for (r = 0; r < ref.nX; r++) {
+            if (A.P0.R[r] === A.P0.R[r] && A.P0.R[r] > rmax) rmax = A.P0.R[r];
+            if (B.P0.L[r] === B.P0.L[r] && B.P0.L[r] < lmin) lmin = B.P0.L[r];
+          }
+          if (rmax > -1e8 && lmin < 1e8) {
+            var dxw = (B.c.x - A.c.x) / sc, wu0 = A.P0.adv + (dxw - A.g.adv) + lmin - rmax;
+            if (wu0 > 40) words.push({ it: wit, dev: wit.wu / wu0 - 1 });
+          }
+        }
+        if (pit && kinds.pair) {
+          if (dist) { if (!pit.warp) { pit.sev = 0; pit.dev = 0; pit.touch = false; } }
+          else if (A && B && A.P0 && B.P0 && pit.site) {
+            var st = pit.site, dx0 = A.P0.adv + (st.dx - A.g.adv), m0 = HM.areaGap(A.P0, B.P0, dx0, st.n, st.D), e = 0.1 * st.D;
+            pairs.push({ it: pit, raw: (pit.gap + e) / (m0.a + e) - 1, m0: m0, ref: ref });
+          } else { pit.sev = 0; pit.dev = 0; pit.touch = false; }
+        }
+      }
+    }
+    var mt = tones.length >= 3 ? med(tones.map(function (x) { return x.raw; })) : 0;
+    tones.forEach(function (x) { x.it.dev = x.raw - mt; x.it.sev = sevToneRel(x.it.dev); });
+    var bands = {};
+    pairs.forEach(function (x) { (bands[x.it.band] = bands[x.it.band] || []).push(x.raw); });
+    pairs.forEach(function (x) {
+      var arr = bands[x.it.band], md = arr.length >= 3 ? med(arr) : 0, it = x.it;
+      it.dev = (1 + x.raw) / (1 + md) - 1;
+      it.sev = sevPairStd(it.dev);
+      if (it.touch) {
+        var flat = x.ref.flat[it.band] > 0 ? x.ref.flat[it.band] : it.tgt;
+        if (x.m0.min < 1e8 && x.m0.min <= Math.max(2, 0.12 * flat)) it.touch = false; else it.sev = Math.max(it.sev, 0.78);
+      }
+      if ((cls(it.a) === "p" || cls(it.b) === "p") && it.dev > 0) it.sev = 0;
+    });
+    words.forEach(function (x) {
+      var sv = sevPairStd(x.dev);
+      x.it.sev = kinds.word ? sv : Math.max(x.it.sev || 0, sv);
+      x.it.wdev = x.dev;
+    });
+    if (kinds.rhy) items.forEach(function (it) { if (it.t === "rhy") { it.sev = 0; it.dev = 0; } });
+  }
+
+  /* Неполный набор: штатный счётчик требует Н и О и не менее 12 знаков регистра. Оценку даём по тем знакам, что написаны,
+     если их хотя бы три; недостающие просто не считаются. */
+  var MIN_GLYPHS = 3;
+  function enough(lines) {
+    return coverage(lines).used.length >= MIN_GLYPHS;
+  }
+  function relaxMin(list, refs) {
+    var seen = {}, cl = {}, n = 0;
+    list.forEach(function (it) {
+      if (it.t !== "tone" || seen[it.ch]) return;
+      seen[it.ch] = 1; n++; cl[cls(it.ch)] = 1;
+    });
+    if (n < MIN_GLYPHS) return;
+    Object.keys(refs || {}).forEach(function (k) {
+      var m = refs[k] && refs[k].min;
+      if (!m) return;
+      ["l", "u", "d"].forEach(function (c) { if (m[c] && cl[c]) { m[c].any = true; m[c].ok = true; } });
+    });
+  }
+
+
+  /* Классы знаков, которые штатный счётчик закрыл («мало знаков»): тон и пары считаем сами по тем же опорным числам. */
+  function gated(ref, c) {
+    return !!(ref && ref.min && ref.min[c] && ref.min[c].any && !ref.min[c].ok);
+  }
+  function fill(items, lines, refs, sc, HM) {
+    var any = false;
+    Object.keys(refs || {}).forEach(function (k) { if (gated(refs[k], "l") || gated(refs[k], "u") || gated(refs[k], "d")) any = true; });
+    if (!any) return items;
+    var out = items.filter(function (it) { return !(it.t === "pair" && it.abs); });
+    var have = {};
+    out.forEach(function (it) { have[it.t + "|" + it.ln + "|" + it.i] = 1; });
+    for (var li = 0; li < lines.length; li++) {
+      var ln = lines[li], key = ln.key, ref = refs[key] || ln.ref;
+      if (!ref) continue;
+      var info = ln.chars.map(function (c) {
+        var g = glyph(c.gn || c.ch, key);
+        return g && g.cs && g.cs.length && !g.ph ? { c: c, g: g, P: HM.prof(g, ref.cap, ref.xh), xu: c.x / sc } : null;
+      });
+      var yTop = function (cp) { return ln.base - cp * sc; };
+      var sp = glyph(" ", key), spAdv = sp && sp.adv > 0 ? sp.adv : 250;
+      var pl = [];
+      for (var i = 0; i < info.length; i++) {
+        var B = info[i];
+        if (!B) continue;
+        var cl = cls(B.c.ch);
+        if (cl !== "p" && gated(ref, cl) && !have["tone|" + li + "|" + i]) {
+          var R = ref.tone[cl];
+          var area = cl === "l" ? B.P.areaX : B.P.areaC;
+          if (R && R.n && B.P.adv > 0 && area > 0) {
+            var band = cl === "l" ? ref.xh : ref.cap;
+            var dD = Math.max(-0.6, Math.min(0.6, area / (B.P.adv * band) / R.dens - 1)), dev;
+            if (!(R.sw > 0 && B.P.sw > 0)) dev = 0.4 * dD;
+            else {
+              var dS = Math.max(-0.6, Math.min(0.6, B.P.sw / R.sw - 1));
+              dev = (B.P.stems && B.P.stems.length || dS > 0 ? 0.8 : 0.5) * dS + 0.2 * dD;
+            }
+            out.push({ t: "tone", ln: li, i: i, ch: B.c.ch, gn: B.c.gn || B.c.ch, key: key, dev: dev, sev: sevTone(dev),
+              x0: ln.ox + B.xu * sc, x1: ln.ox + (B.xu + B.g.adv) * sc, y0: yTop(band), y1: ln.base });
+          }
+        }
+        if (!i || !info[i - 1]) continue;
+        var A = info[i - 1], dx = B.xu - A.xu;
+        if (dx - A.g.adv > 0.45 * spAdv) continue;
+        var ca = cls(A.c.ch), cb = cls(B.c.ch);
+        var bnd = (ca === "u" || ca === "d") && (cb === "u" || cb === "d") ? "cap" : "xh";
+        if (!gated(ref, bnd === "cap" ? "u" : "l") || have["pair|" + li + "|" + i]) continue;
+        if (typeof window.kernBlocked === "function" && window.kernBlocked(A.c.ch, B.c.ch)) continue;
+        var n = bnd === "cap" ? N : ref.nX, D = ref.D[bnd];
+        pl.push({ i: i, A: A, B: B, band: bnd, n: n, D: D, m: HM.areaGap(A.P, B.P, dx, n, D), dx: dx, ca: ca, cb: cb });
+      }
+      var tTxt = med(pl.map(function (p) { return p.m.a; }));
+      pl.forEach(function (p) {
+        var t = ref.t[p.band];
+        if (!(t > 0)) t = tTxt;
+        if (!(t > 0)) return;
+        var flat = ref.flat[p.band] > 0 ? ref.flat[p.band] : t;
+        var dev = p.m.a / t - 1;
+        if (p.m.min < 1e8 && p.m.min > 1.2 * flat) dev = Math.max(dev, 0.9 * (p.m.min / flat - 1));
+        var sev = sevPairStd0(dev), touch = false;
+        if (p.m.min < 8) { touch = true; sev = Math.max(sev, 0.78); }
+        if ((p.ca === "p" || p.cb === "p") && dev > 0) sev = 0;
+        var bandH = p.band === "cap" ? ref.cap : ref.xh;
+        var gx0 = p.A.xu + p.A.P.xmax, gx1 = p.B.xu + p.B.P.xmin;
+        out.push({ t: "pair", ln: li, i: p.i, a: p.A.c.ch, b: p.B.c.ch, gnA: p.A.c.gn || p.A.c.ch, gnB: p.B.c.gn || p.B.c.ch, key: key, dev: dev, sev: sev, touch: touch,
+          band: p.band, gap: p.m.a, tgt: t, site: { dx: p.dx, n: p.n, D: p.D, PA: p.A.P, PB: p.B.P, t: t },
+          x0: ln.ox + Math.min(gx0, gx1) * sc - 0.16 * 1000 * sc, x1: ln.ox + Math.max(gx0, gx1) * sc + 0.16 * 1000 * sc, y0: yTop(bandH), y1: ln.base });
+      });
+    }
+    return out;
+  }
+  var sevPairStd0 = function (d) { return d < 0 ? clamp01((-d - 0.25) / 0.40) : clamp01((d - 0.40) / 0.50); };
+
+  function hook() {
+    var HM = window.HEAT;
+    if (!HM || typeof HM.summarize !== "function" || typeof HM.analyze !== "function") return false;
+    if (HM.summarize.__gtBody) return true;
+    var origSum = HM.summarize, origAnalyze = HM.analyze;
+    var sum = function (items, lines, refs) {
+      var S = evalS();
+      if (!items || !lines || !S) return origSum.apply(this, arguments);
+      var id = S.fontId, body = id === FONT, kinds = relKinds();
+      var list = items;
+      if (!items.some(function (x) { return x.body || x.rel; })) {
+        list = clean(items, lines);
+        if (curSc && enough(lines)) list = fill(list, lines, refs, curSc, HM);
+        if (body && curSc) list = measure(list, lines, refs, curSc, HM);
+        if (!body && kinds && curSc) relative(list, lines, refs, curSc, HM, kinds);
+        markWords(list, lines, body ? null : kinds);
+      }
+      relaxMin(list, refs);
+      var res;
+      if (body || kinds) {
+        S.fontId = "";
+        try { res = origSum.call(this, list, lines, refs); }
+        finally { S.fontId = id; }
+      } else res = origSum.call(this, list, lines, refs);
+      if (res) res.gtMode = body ? "body" : kinds ? "rel" : "std";
+      return post(res, list, lines);
+    };
+    sum.__gtBody = true;
+    sum.__gtOrig = origSum;
+    HM.summarize = sum;
+    var an = function (lines, sc) {
+      curSc = sc;
+      var saved = window.gfSmart;
+      if (typeof saved !== "function") return origAnalyze.apply(this, arguments);
+      window.gfSmart = function () {
+        var g = saved.apply(this, arguments);
+        return g && g.ph ? null : g;
+      };
+      try { return origAnalyze.apply(this, arguments); }
+      finally { window.gfSmart = saved; }
+    };
+    an.__gtBodyScale = true;
+    HM.analyze = an;
+    var origToggle = HM.toggle;
+    HM.toggle = function (on) {
+      if (!autoCall && HM.on && (on === undefined || !on)) userOff = true;
+      return origToggle.apply(this, arguments);
+    };
+    return true;
+  }
+
+  var autoCall = false, userOff = false, autoFor = "";
+  function lastRes() {
+    var H = window.HEAT;
+    return H && (H.lastPf || H.last);
+  }
+  function note(rep, cls_, html) {
+    var el = rep.querySelector("." + cls_);
+    if (!html) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement("p");
+      el.className = "hr-intent " + cls_;
+      var sc = rep.querySelector(".hr-score"), prev = rep.querySelector(".hr-body-note");
+      (cls_ === "hr-cnt-note" && prev ? prev : sc).after(el);
+    }
+    if (el.innerHTML !== html) el.innerHTML = html;
+  }
+  function tune() {
+    var S = evalS(), H = window.HEAT;
+    if (!S || !H) return;
+    var id = S.fontId, body = id === FONT, rel = !!INTENT[id];
+    if (id === "imp") {
+      if (S.tab === "edit" && !H.on && !userOff && autoFor !== "imp" && document.getElementById("heatb")) {
+        autoFor = "imp";
+        autoCall = true;
+        try { H.toggle(true); } finally { autoCall = false; }
+      }
+    } else autoFor = "";
+    var rep = document.getElementById("heat-rep");
+    if (rep && !rep.__gtTune) {
+      rep.__gtTune = true;
+      new MutationObserver(function () { tune(); }).observe(rep, { childList: true });
+    }
+    var res = lastRes();
+    if (rep && rep.querySelector(".hr-score")) {
+      var noFix = body || rel;
+      if (noFix) {
+        rep.querySelectorAll('[data-rp="fix"],[data-rp="fixs"]').forEach(function (b) {
+          if (b.closest("li") && !b.closest("li").querySelector('[data-rp="glyph"]')) {
+            b.setAttribute("data-rp", "glyph"); b.textContent = "Открыть знак";
+          } else b.remove();
+        });
+      }
+      var other = rep.querySelector(".hr-intent:not(.hr-body-note):not(.hr-cnt-note)");
+      note(rep, "hr-body-note", other ? "" : body ? "<b>Связки не считаются.</b> Оценка по телам букв." : rel ? "<b>Неровность задумана рисунком.</b> Оценка по отклонениям от рисунка шрифта." : "");
+      var sk = res && res.gtSkipped && res.gtSkipped.length;
+      note(rep, "hr-cnt-note", sk ? "<b>В оценке " + res.gtUsed + " " + plural(res.gtUsed) + ".</b> Ненаписанные знаки пропущены: " + res.gtSkipped.length + "." : "");
+    }
+    var bar = document.getElementById("heatbar");
+    if (bar) {
+      var c = bar.querySelector(".heat-cnt"), r2 = H.last, txt = H.on && r2 && r2.gtSkipped && r2.gtSkipped.length ? "В оценке " + r2.gtUsed + " " + plural(r2.gtUsed) : "";
+      if (txt && !c) {
+        c = document.createElement("span");
+        c.className = "heat-cnt";
+        c.style.cssText = "font-size:var(--fs-sm);color:var(--muted);align-self:center;white-space:nowrap";
+        bar.appendChild(c);
+      }
+      if (c) { c.textContent = txt; c.hidden = !txt; }
+    }
+    var tip = document.getElementById("heat-tip");
+    if (tip && !tip.__gtTune) {
+      tip.__gtTune = true;
+      new MutationObserver(function () {
+        var S2 = evalS();
+        if (!S2 || !(S2.fontId === FONT || INTENT[S2.fontId])) return;
+        var acts = tip.querySelector(".ht-a");
+        if (!acts) return;
+        acts.querySelectorAll('[data-ha="fix"],[data-ha="fixs"],[data-ha="kern"]').forEach(function (b) { b.remove(); });
+        if (!acts.querySelector("button")) {
+          var g = document.createElement("button");
+          g.type = "button"; g.className = "btn sm"; g.setAttribute("data-ha", "glyph"); g.textContent = "Открыть знак";
+          acts.appendChild(g);
+        }
+      }).observe(tip, { childList: true });
+    }
+  }
+  function plural(n) {
+    var a = n % 10, b = n % 100;
+    return a === 1 && b !== 11 ? "знак" : a >= 2 && a <= 4 && (b < 10 || b >= 20) ? "знака" : "знаков";
+  }
+
+  var tries = 0;
+  function boot() {
+    var ok = hook();
+    tune();
+    if (!ok && tries++ < 100) setTimeout(boot, 100);
+  }
+  boot();
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  setInterval(tune, 600);
+})();
 
 // «С листа бумаги»: уточнения обводки бланка и статусы частично заполненного листа.
 (function () {
@@ -7774,6 +8663,1291 @@ __zrun('zc');__zrun('zu');
   }
 
   boot();
+})();
+
+/* Сравнение шрифтов: плашка выбора, экран «Рядом / Наложение», входы из библиотеки,
+   избранного, черновиков и истории редактора. Шрифты рисует сервисный движок (libRun). */
+(function () {
+  "use strict";
+  if (window.__GT_COMPARE_PATCH__) return;
+  window.__GT_COMPARE_PATCH__ = true;
+
+  var KEY = "gtype-compare-v1";
+  var MAXN = 4;
+  var MAXLEN = 60;
+  var STYLE_ID = "gtype-compare-patch";
+  var TRAY_TABS = { home: 1, library: 1, fav: 1, profile: 1, folder: 1 };
+  var LINES = [
+    { c: "#141416", w: 1.5, d: [], cap: "butt" },
+    { c: "#55555d", w: 1.5, d: [7, 4], cap: "butt" },
+    { c: "#85858e", w: 1.75, d: [0.1, 4], cap: "round" },
+    { c: "#6a6a72", w: 1.5, d: [10, 3, 1, 3], cap: "butt" },
+  ];
+  var MARKS = ["var(--ink)", "var(--text-2)", "var(--text-2)", "var(--text-2)"];
+
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+  function phone() { return matchMedia("(max-width:720px)").matches; }
+  function still() { return matchMedia("(prefers-reduced-motion:reduce)").matches; }
+  function tabNow() { try { return S.tab; } catch (e) { return ""; } }
+  function fname(id) {
+    try { return (typeof fmeta === "function" ? fmeta(id).name : FONTS[id].name) || id; } catch (e) { return id; }
+  }
+  function fkind(id) {
+    try {
+      var m = fmeta(id);
+      return m.tags.slice(0, 2).map(function (t) { return tagById(t)[1]; }).join(", ");
+    } catch (e) { return ""; }
+  }
+  function say(t) { try { toast(t); } catch (e) {} }
+
+  /* ---------- стили ---------- */
+  var NOTCH2 =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cpath d='M0 0A16 16 0 0 1 16 16L16 26A30 30 0 0 0 46 56L56 56A16 16 0 0 1 72 72L0 72Z'/%3E%3C/svg%3E\")";
+  var RING2 =
+    "linear-gradient(#000 0 0) left top/calc(100% - 71px) 100% no-repeat," +
+    "linear-gradient(#000 0 0) left bottom/100% calc(100% - 71px) no-repeat," +
+    NOTCH2 + " right top/72px 72px no-repeat";
+
+  function ensureStyles() {
+    if (document.getElementById(STYLE_ID)) return;
+    var st = document.createElement("style");
+    st.id = STYLE_ID;
+    st.textContent = [
+      ".ico.i-cmp{--ic:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5.5' width='11' height='11' rx='2.5'/%3E%3Cpath d='M9.5 8.5h8a2 2 0 012 2v8a2 2 0 01-2 2h-8a2 2 0 01-2-2v-2'/%3E%3C/svg%3E\")}",
+
+      /* «…» рядом с сердечком */
+      ":root{--cb:40px;--cb-gap:10px}",
+      "@media (max-width:720px),(pointer:coarse){:root{--cb:44px}}",
+      "#view-cmp>*{flex-shrink:0}",
+      ".lcard .heart{width:var(--cb);height:var(--cb);min-width:var(--cb);min-height:var(--cb)}",
+      ".lcard .lc-more{position:absolute;left:auto;top:auto;bottom:10px;right:calc(10px + var(--cb) + var(--cb-gap));width:var(--cb);height:var(--cb);min-width:var(--cb);min-height:var(--cb);opacity:1;color:var(--muted);transform:none}",
+      ".lcard .lc-more .ico{width:24px;height:24px}",
+      ".lcard .lc-more:hover,.lcard .lc-more:focus-visible,.lcard .lc-more[aria-expanded=true]{background:var(--panel);color:var(--ink)}",
+      ".lcard:not(.list>.lcard) .lt.tags{--mh:calc(var(--cb) + 10px - 16px);--mx:calc(10px + var(--cb)*2 + var(--cb-gap) - 12px);-webkit-mask:linear-gradient(#000 0 0) left top/100% max(0px,calc(100% - var(--mh))) no-repeat,linear-gradient(90deg,#000 calc(100% - var(--mx) - 18px),transparent calc(100% - var(--mx))) left bottom/100% var(--mh) no-repeat;mask:linear-gradient(#000 0 0) left top/100% max(0px,calc(100% - var(--mh))) no-repeat,linear-gradient(90deg,#000 calc(100% - var(--mx) - 18px),transparent calc(100% - var(--mx))) left bottom/100% var(--mh) no-repeat}",
+      "@media (pointer:coarse){.lcard:not(.list>.lcard) .lt.tags{-webkit-mask:none;mask:none}.lcard:not(.list>.lcard) .heart{grid-row:4;grid-column:1;justify-self:end;left:2px;top:-6px}.lcard:not(.list>.lcard) .lc-more{position:relative;grid-row:4;grid-column:1;justify-self:end;align-self:start;top:-6px;left:2px;bottom:auto;right:auto;margin-right:calc(var(--cb) + var(--cb-gap))}}",
+      ".list>.lcard{grid-template-columns:minmax(200px,36%) minmax(0,1fr) auto auto auto auto!important;grid-template-areas:\"cv ln lb mrt hrt nb\" \"cv lt lb mrt hrt nb\"!important}",
+      ".list>.lcard .lc-more{position:static;grid-area:mrt;transform:none;margin:0}",
+      ".list>.lcard .heart{position:static;grid-area:hrt}",
+      "@media (max-width:720px){.list>.lcard{grid-template-columns:minmax(0,1fr) auto auto auto!important;grid-template-areas:\"cv cv cv cv\" \"ln mrt hrt nb\" \"lt lt lt lt\" \"lb lb lb lb\"!important}}",
+
+      /* отметка выбора по той же форме карточки с вырезом */
+      ".lcard.cmp-on:has(>.notch):not(.list>.lcard){--cring:var(--ink)}",
+      ".lcard.cmp-on:has(>.notch):not(.list>.lcard)::after{inset:2px;border-radius:calc(var(--r) - 2px);-webkit-mask:" + RING2 + ";mask:" + RING2 + "}",
+      ".list>.lcard.cmp-on{box-shadow:inset 0 0 0 2px var(--ink)!important}",
+      ".lcard.cmp-pickable,.dd-card.cmp-pickable{cursor:pointer}",
+      ".dd-card.cmp-on{position:relative}",
+      ".dd-card.cmp-on::after{content:\"\";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 2px var(--ink);pointer-events:none}",
+
+      /* карточка шрифта при наведении */
+      ".hcard .hc-act{flex-wrap:wrap}",
+      ".hcard .hc-act .hc-open{flex:1 1 100%}",
+      ".hcard .hc-act .hc-cmp{flex:1 1 0;min-width:0;min-height:var(--h-lg,42px);padding:0 var(--s4,16px)}",
+      ".hcard .hc-act .hc-cmp .ico{width:20px;height:20px;margin-right:var(--s2,8px)}",
+      ".hcard .hc-act .hc-cmp[aria-pressed=true]{background:var(--ink);color:var(--on-ink)}",
+
+      /* кнопки входа */
+      ".cmp-enter{display:inline-flex;align-items:center;gap:var(--s2,8px)}",
+      ".cmp-enter .ico{width:20px;height:20px}",
+      ".cmp-enter[aria-pressed=true]{background:var(--ink);color:var(--on-ink)}",
+      "#dd-sect .vhead .cmp-enter{margin-left:auto}",
+      "#dd-sect .vhead .cmp-enter+.dd-pref{margin-left:0}",
+
+      /* плашка выбора */
+      ".cmp-tray{position:fixed;left:calc(var(--rw,64px) + var(--pad,14px)*2);right:var(--pad,14px);bottom:calc(var(--pad,14px) + var(--cmp-lift,0px) + env(safe-area-inset-bottom,0px));z-index:60;display:flex;justify-content:center;pointer-events:none;visibility:hidden;opacity:0;transform:translateY(16px);transition:opacity var(--dur-fast) var(--ease-in),transform var(--dur-fast) var(--ease-in),bottom var(--dur-base) var(--ease-out),visibility 0s linear var(--dur-fast)}",
+      ".cmp-tray.on{visibility:visible;opacity:1;transform:none;transition:opacity var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-out),bottom var(--dur-base) var(--ease-out),visibility 0s}",
+      ".cmp-tin{pointer-events:auto;display:flex;align-items:center;gap:var(--s3);background:var(--paper);box-shadow:var(--sh-3);border-radius:var(--r-pill);padding:var(--bar-in,8px) var(--bar-in,8px) var(--bar-in,8px) var(--s5);min-height:58px;max-width:100%;min-width:0}",
+      ".cmp-tl{flex:none;font-weight:600;font-size:var(--fs-base);white-space:nowrap;color:var(--ink)}",
+      ".cmp-tl em{font-style:normal;color:var(--muted);font-weight:500}",
+      ".cmp-tchips{display:flex;gap:var(--s2);min-width:0;overflow-x:auto;flex-wrap:nowrap}",
+      ".cmp-tc{flex:none;display:inline-flex;align-items:center;height:34px;padding:0 4px 0 var(--s3);border-radius:var(--r-pill);background:var(--panel);font-weight:600;font-size:var(--fs-base);white-space:nowrap;animation:cmp-pop var(--dur-base) var(--ease-out) both}",
+      ".cmp-tc button{position:relative;width:26px;height:26px;margin-left:var(--s1);border:0;border-radius:50%;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:background var(--dur-fast),color var(--dur-fast)}",
+      ".cmp-tc button::after{content:\"\";position:absolute;inset:-9px}",
+      ".cmp-tc button:hover{background:var(--surface-3);color:var(--ink)}",
+      ".cmp-tc .ico{width:14px;height:14px}",
+      ".cmp-go{flex:none;min-height:var(--h-lg,42px);padding:0 var(--s5);font-size:var(--fs-base);font-weight:700}",
+      "@keyframes cmp-pop{from{transform:scale(.8);opacity:0}60%{transform:scale(1.04)}to{transform:none;opacity:1}}",
+      "body.cmp-tray-on .libview{padding-bottom:calc(var(--cmp-h,58px) + var(--pad,14px)*3)!important}",
+      "@media (max-width:720px){",
+      ".cmp-tray{left:8px;right:8px;bottom:calc(88px + var(--cmp-lift,0px) + env(safe-area-inset-bottom,0px))}",
+      ".cmp-tin{flex-wrap:nowrap;border-radius:var(--r-pill);padding:12px 12px 12px var(--s4);min-height:68px;width:100%;gap:var(--s3)}",
+      ".cmp-tl:has(+.cmp-tchips){display:none}",
+      ".cmp-tl:not(:has(+.cmp-tchips)){white-space:normal;font-size:var(--fs-sm,13px);line-height:1.3}",
+      ".cmp-tchips{flex:1 1 auto;scrollbar-width:none;-ms-overflow-style:none}.cmp-tchips::-webkit-scrollbar{display:none}",
+      ".cmp-go{flex:none;min-height:44px;padding:0 var(--s4)}",
+      "body.cmp-tray-on .libview{padding-bottom:calc(var(--cmp-h,58px) + 96px + var(--pad,12px))!important}",
+      "}",
+
+      /* экран сравнения */
+      "#view-cmp{gap:clamp(12px,1.6vw,20px);color:var(--ink)}",
+      "#view-cmp.cmp-in{animation:cmp-in var(--dur-open) var(--ease-out) both}",
+      "#view-cmp.cmp-out{animation:cmp-out var(--dur-close) var(--ease-in) both;pointer-events:none}",
+      "@keyframes cmp-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}",
+      "@keyframes cmp-out{to{opacity:0;transform:translateY(8px)}}",
+      "#view-cmp .vhead{align-items:flex-start}",
+      ".cmp-lead{margin:var(--s1) 0 0;color:var(--muted);font-size:var(--fs-base);max-width:62ch}",
+      ".cmp-bar{display:flex;align-items:center;gap:var(--s5);background:var(--paper);box-shadow:var(--sh-2);border-radius:var(--r-pill);padding:var(--bar-in,8px);min-height:58px}",
+      ".cmp-bar .seg{flex:none;background:var(--panel);padding:3px;position:relative}",
+      ".cmp-bar .seg button{min-height:36px;padding:0 var(--s5);font-weight:600;position:relative;z-index:1}",
+      ".cmp-bar .seg button[aria-disabled=true]{opacity:.45;cursor:not-allowed}",
+      ".cmp-sz{display:flex;align-items:center;gap:var(--s3);flex:1;min-width:0;padding-right:var(--s4)}",
+      ".cmp-sz label{flex:none;font-weight:600;color:var(--muted)}",
+      ".cmp-sz output{flex:none;min-width:56px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}",
+      ".cmp-sz input{flex:1;min-width:0;width:auto}",
+      ".cmp-chiprow{display:flex;align-items:center;gap:var(--s3)}",
+      ".cmp-cap{flex:none;min-width:96px;font-size:var(--fs-sm);font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}",
+      ".cmp-chips{display:flex;flex-wrap:nowrap;gap:var(--s2);overflow-x:auto;min-width:0;flex:1;--fl:0px;--fr:0px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--fl),#000 calc(100% - var(--fr)),transparent);mask-image:linear-gradient(90deg,transparent,#000 var(--fl),#000 calc(100% - var(--fr)),transparent)}",
+      ".cmp-chips[data-hs~=l]{--fl:28px}.cmp-chips[data-hs~=r]{--fr:28px}",
+      ".cmp-chip{flex:none;display:inline-flex;align-items:center;gap:var(--s2);height:var(--h-lg,42px);padding:0 var(--s4);border:0;border-radius:var(--r-pill);background:var(--paper);box-shadow:var(--sh-1);font:600 var(--fs-base)/1 var(--f-ui);color:var(--ink);white-space:nowrap;cursor:pointer;transition:background var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out),opacity var(--dur-fast) var(--ease-out)}",
+      ".cmp-chip:hover{background:var(--panel)}",
+      ".cmp-chip .ck{width:16px;height:16px;border-radius:50%;border:1.75px solid var(--line-strong,var(--track-on));display:grid;place-items:center;transition:background var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out)}",
+      ".cmp-chip .ck .ico{width:12px;height:12px;opacity:0;color:var(--ink);transition:opacity var(--dur-fast) var(--ease-out)}",
+      ".cmp-chip[aria-pressed=true]{background:var(--ink);color:var(--on-ink)}",
+      ".cmp-chip[aria-pressed=true]:hover{background:var(--ink)}",
+      ".cmp-chip[aria-pressed=true] .ck{background:var(--on-ink);border-color:var(--on-ink)}",
+      ".cmp-chip[aria-pressed=true] .ck .ico{opacity:1}",
+      ".cmp-chip[aria-disabled=true]{opacity:.45;cursor:not-allowed}",
+      ".cmp-chip[aria-disabled=true]:hover{background:var(--paper)}",
+      ".cmp-stagewrap{display:grid;grid-template-rows:0fr;opacity:0;margin-top:calc(-1*clamp(12px,1.6vw,20px));transition:grid-template-rows var(--dur-close) var(--ease-in),opacity var(--dur-fast) var(--ease-in),margin var(--dur-close) var(--ease-in)}",
+      ".cmp-stagewrap>div{overflow:hidden;min-height:0}",
+      "#view-cmp[data-view=overlay] .cmp-stagewrap{grid-template-rows:1fr;opacity:1;margin-top:0;transition:grid-template-rows var(--dur-slow) var(--ease-out),opacity var(--dur-base) var(--ease-out) 60ms,margin var(--dur-base) var(--ease-out)}",
+      ".cmp-stage{position:relative;background:var(--canvas);border-radius:var(--r-lg);box-shadow:var(--sh-1);padding:var(--s7) var(--s6) var(--s5);overflow:hidden;cursor:text}",
+      ".cmp-stage:focus-within{box-shadow:inset 0 0 0 2px var(--focus-ring)}",
+      ".cmp-field{position:relative;width:100%}",
+      ".cmp-field canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}",
+      ".cmp-in{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;background:transparent;color:transparent;caret-color:transparent;font-size:16px;cursor:text;z-index:2;outline:0;box-shadow:none!important}",
+      ".cmp-caret{position:absolute;width:2px;background:#141416;display:none;pointer-events:none;animation:cmp-blink 1.1s steps(1) infinite;z-index:1}",
+      "@keyframes cmp-blink{50%{opacity:0}}",
+      ".cmp-legend{position:relative;z-index:4;margin-top:var(--s4);display:flex;gap:var(--s2);flex-wrap:nowrap;overflow-x:auto;align-items:center;font-size:var(--fs-sm)}",
+      ".cmp-lg{flex:none;display:inline-flex;align-items:center;gap:var(--s2);height:34px;padding:0 var(--s3);border-radius:var(--r-pill);font-weight:600;color:#2a2a30;transition:background var(--dur-fast) var(--ease-out)}",
+      ".cmp-lg:hover{background:rgba(20,20,22,.07)}",
+      ".cmp-lg:focus-visible{outline:2px solid #141416;outline-offset:-2px;box-shadow:none}",
+      ".cmp-gx{flex:none;margin-left:auto;padding-left:var(--s4);color:#6a6a72;font-weight:500}",
+      ".cmp-gx.nt{margin-left:var(--s3);padding-left:0;color:#2a2a30}",
+      ".cmp-mk{flex:none;width:28px;height:8px;overflow:visible}",
+      ".cmp-fh .cmp-mk{display:none}",
+      "#view-cmp[data-view=overlay] .cmp-fh .cmp-mk{display:block}",
+      ".cmp-grid{display:grid;gap:var(--s3);grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}",
+      ".cmp-card{position:relative;background:var(--card);box-shadow:var(--sh-1);border-radius:var(--r-lg);padding:var(--s4);display:flex;flex-direction:column;gap:var(--s3);min-width:0}",
+      ".cmp-card::after{content:\"\";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 0 var(--ink);pointer-events:none;transition:box-shadow var(--dur-fast) var(--ease-out)}",
+      ".cmp-card.sel::after{box-shadow:inset 0 0 0 2px var(--ink)}",
+      ".cmp-card.in{animation:cmp-card-in var(--dur-base) var(--ease-out) both}",
+      ".cmp-card.out{animation:cmp-card-out var(--dur-fast) var(--ease-in) both}",
+      "@keyframes cmp-card-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}",
+      "@keyframes cmp-card-out{to{opacity:0;transform:scale(.98)}}",
+      ".cmp-fh{display:flex;align-items:center;gap:var(--s3);min-height:40px}",
+      ".cmp-ft{min-width:0;flex:1}",
+      ".cmp-ft b{display:block;font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+      ".cmp-ft small{display:block;font-size:var(--fs-sm);color:var(--muted);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+      ".cmp-x{position:relative;flex:none;width:40px;height:40px;border:0;border-radius:50%;background:var(--panel);color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:background var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out),transform var(--dur-instant) var(--ease-out)}",
+      ".cmp-x:hover{background:var(--surface-3);color:var(--ink)}",
+      ".cmp-x:active{transform:scale(1.06)}",
+      ".cmp-x[disabled]{opacity:.35;cursor:not-allowed}",
+      ".cmp-x .ico{width:18px;height:18px}",
+      "@media (max-width:720px){.cmp-x{width:44px;height:44px}}",
+      ".cmp-sw{display:grid;grid-template-rows:1fr;flex:1;transition:grid-template-rows var(--dur-base) var(--ease-out),opacity var(--dur-base) var(--ease-out) 60ms}",
+      ".cmp-sw>div{min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:var(--s2)}",
+      "#view-cmp[data-view=overlay] .cmp-sw{grid-template-rows:0fr;opacity:0;flex:0;transition:grid-template-rows var(--dur-base) var(--ease-out),opacity var(--dur-fast) var(--ease-in)}",
+      ".cmp-sample{position:relative;flex:1;background:var(--canvas);border-radius:var(--r-md);min-height:180px;overflow:hidden;cursor:text}",
+      ".cmp-sample canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}",
+      ".cmp-sample:focus-within{box-shadow:inset 0 0 0 2px var(--focus-ring)}",
+      ".cmp-note{margin:0;font-size:var(--fs-sm);color:var(--muted);line-height:1.35}",
+      ".cmp-slot{border:1.5px dashed var(--line-strong,var(--track-on));border-radius:var(--r-lg);min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s2);padding:var(--s6);text-align:center;color:var(--muted);animation:cmp-card-in var(--dur-base) var(--ease-out) both}",
+      ".cmp-slot b{color:var(--ink);font-size:16px}",
+      ".cmp-slot span{max-width:30ch}",
+      ".cmp-open{min-height:var(--h-lg,48px);width:100%;font-size:var(--fs-base);font-weight:700}",
+      ".cmp-card:not(.sel) .cmp-open{font-weight:600}",
+      "@media (max-width:1100px){.cmp-grid[data-n=\"3\"],.cmp-grid[data-n=\"4\"]{--n:2}}",
+      "@media (max-width:720px){",
+      ".cmp-grid{--n:1!important}",
+      ".cmp-bar{flex-wrap:wrap;border-radius:var(--r-xl);gap:var(--s3);padding:var(--s2)}",
+      ".cmp-bar .seg{width:100%}.cmp-bar .seg button{flex:1;min-height:44px}",
+      ".cmp-sz{flex:1 0 100%;padding:0 var(--s3) var(--s2)}",
+      ".cmp-chiprow{flex-direction:column;align-items:stretch;gap:var(--s2)}",
+      ".cmp-cap{min-width:0;padding-left:var(--s2)}",
+      ".cmp-chips{margin:0 calc(-1*var(--pad,12px));padding:0 var(--pad,12px)}",
+      ".cmp-chip{height:44px}",
+      ".cmp-stage{padding:var(--s5) var(--s4) var(--s3)}",
+      ".cmp-gx:not(.nt){display:none}",
+      "}",
+
+      /* история редактора */
+      ".hist-l li{position:relative}",
+      ".hist-l li:has(.hist-cmp) .hist-i{padding-right:112px}",
+      ".hist-cmp{position:absolute;right:var(--s2);top:50%;transform:translateY(-50%);z-index:2}",
+      ".hist-cmpf{display:flex;align-items:center;gap:var(--s3);width:calc(100% - var(--s4));margin:var(--s2) var(--s2) var(--s2);min-height:var(--h-lg,42px);padding:0 var(--s3);border:0;border-radius:var(--r-sm);background:transparent;color:var(--ink);font:600 var(--fs-base)/1 var(--f-ui);text-align:left;cursor:pointer;transition:background var(--dur-fast)}",
+      ".hist-cmpf:hover{background:var(--panel)}",
+      ".hist-cmpf .ico{width:20px;height:20px}",
+      ".hist-cmpf .nx{margin-left:auto;color:var(--muted)}",
+      ".hist-pick{display:none;flex-direction:column;gap:var(--s1);padding:0 var(--s2) var(--s2);min-height:0;overflow:hidden}",
+      "#hist.cmp-pick .hist-pick{display:flex;animation:cmp-in var(--dur-fast) var(--ease-out) both}",
+      "#hist.cmp-pick .hist-l,#hist.cmp-pick .hist-e,#hist.cmp-pick .hist-cmpf,#hist.cmp-pick .hist-h{display:none}",
+      ".hist-pick .hp-h{display:flex;align-items:center;gap:var(--s2);padding:var(--s1) var(--s1) var(--s2);font-weight:700}",
+      ".hist-pick .hp-l{display:flex;flex-direction:column;gap:2px;overflow-y:auto;max-height:min(340px,50vh)}",
+      ".hist-pick .hp-i{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);min-height:var(--h-lg,44px);padding:0 var(--s3);border:0;border-radius:var(--r-sm);background:transparent;color:var(--ink);font:600 var(--fs-base)/1 var(--f-ui);text-align:left;cursor:pointer}",
+      ".hist-pick .hp-i:hover,.hist-pick .hp-i:focus-visible{background:var(--panel)}",
+      ".hist-pick .hp-i small{font-weight:500;color:var(--muted);font-size:var(--fs-sm)}",
+    ].join("\n");
+    document.head.appendChild(st);
+  }
+
+  /* ---------- выбор (общий, переживает перезагрузку) ---------- */
+  var SEL = [];
+  var MODE = null; /* null | "fav" | "drafts": режим отметок */
+  var DRMETA = {};
+
+  function loadSel() {
+    var a = [];
+    try { a = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { a = []; }
+    if (!Array.isArray(a)) a = [];
+    SEL = a.filter(function (k) {
+      return typeof k === "string" && (k.indexOf("d:") === 0 || (typeof FONTS !== "undefined" && FONTS[k]));
+    }).filter(function (k, i, arr) { return arr.indexOf(k) === i; }).slice(0, MAXN);
+  }
+  function saveSel() { try { localStorage.setItem(KEY, JSON.stringify(SEL)); } catch (e) {} }
+  function isDraftKey(k) { return k.indexOf("d:") === 0; }
+  function keyName(k) {
+    if (isDraftKey(k)) { var m = DRMETA[k.slice(2)]; return m ? m.name : "Черновик"; }
+    return fname(k);
+  }
+
+  function addKey(k) {
+    if (SEL.indexOf(k) >= 0) return true;
+    if (SEL.length >= MAXN) {
+      say("В сравнении уже четыре шрифта. Уберите один, чтобы добавить «" + keyName(k) + "».");
+      return false;
+    }
+    SEL.push(k); saveSel(); changed();
+    return true;
+  }
+  function removeKey(k) {
+    var i = SEL.indexOf(k);
+    if (i < 0) return;
+    SEL.splice(i, 1); saveSel(); changed();
+  }
+  function toggleKey(k) {
+    if (SEL.indexOf(k) >= 0) { removeKey(k); return true; }
+    return addKey(k);
+  }
+  function setSel(keys) {
+    SEL = keys.slice(0, MAXN); saveSel(); changed();
+  }
+
+  function changed() {
+    markCards();
+    renderTray();
+    if (CMP.open && CMP.mode === "shared") syncShared();
+  }
+
+  /* ---------- плашка ---------- */
+  var tray = null, tin = null;
+  function buildTray() {
+    if (tray) return;
+    tray = document.createElement("div");
+    tray.id = "cmp-tray";
+    tray.className = "cmp-tray";
+    tray.setAttribute("role", "region");
+    tray.setAttribute("aria-label", "Сравнение шрифтов");
+    tin = document.createElement("div");
+    tin.className = "cmp-tin";
+    tray.appendChild(tin);
+    document.body.appendChild(tray);
+    tin.addEventListener("click", function (e) {
+      var u = e.target.closest("[data-un]");
+      if (u) { removeKey(u.getAttribute("data-un")); return; }
+      var g = e.target.closest("#cmp-go");
+      if (g) openShared(g);
+    });
+  }
+  function trayWanted() {
+    if (CMP.open) return false;
+    if (!TRAY_TABS[tabNow()]) return false;
+    return SEL.length > 0 || !!MODE;
+  }
+  function renderTray() {
+    buildTray();
+    var show = trayWanted(), n = SEL.length;
+    if (show) {
+      var chips = SEL.map(function (k) {
+        return '<span class="cmp-tc" data-k="' + esc(k) + '">' + esc(keyName(k)) +
+          '<button type="button" data-un="' + esc(k) + '" aria-label="Убрать «' + esc(keyName(k)) + '» из сравнения"><i class="ico i-close" aria-hidden="true"></i></button></span>';
+      }).join("");
+      var html;
+      if (n === 0) {
+        html = '<span class="cmp-tl">Сравнение: <em>' + (MODE === "drafts" ? "отметьте два черновика" : "отметьте от двух до четырёх шрифтов") + "</em></span>";
+      } else if (n === 1) {
+        html = '<span class="cmp-tl">Сравнение:</span><span class="cmp-tchips">' + chips + '</span><span class="cmp-tl"><em>· добавьте ещё ' + (isDraftKey(SEL[0]) ? "один черновик" : "один") + "</em></span>";
+      } else {
+        html = '<span class="cmp-tl">Сравнение:</span><span class="cmp-tchips">' + chips + '</span><button type="button" class="btn pri cmp-go" id="cmp-go">Сравнить ' + n + "</button>";
+      }
+      if (tin.getAttribute("data-h") !== html) { tin.setAttribute("data-h", html); tin.innerHTML = html; }
+    }
+    tray.classList.toggle("on", show);
+    tray.setAttribute("aria-hidden", show ? "false" : "true");
+    if (show) tray.removeAttribute("inert"); else tray.setAttribute("inert", "");
+    document.body.classList.toggle("cmp-tray-on", show);
+    if (show) {
+      document.documentElement.style.setProperty("--cmp-h", tin.offsetHeight + "px");
+      startLift();
+    }
+  }
+  var liftTimer = 0;
+  function startLift() {
+    if (liftTimer) return;
+    liftTimer = setInterval(function () {
+      if (!tray || !tray.classList.contains("on")) { clearInterval(liftTimer); liftTimer = 0; return; }
+      liftNow();
+    }, 250);
+    liftNow();
+  }
+  function liftNow() {
+    if (!tin) return;
+    var cur = parseFloat(document.documentElement.style.getPropertyValue("--cmp-lift")) || 0;
+    var r = tin.getBoundingClientRect();
+    var nat = { top: r.top + cur, bottom: r.bottom + cur, left: r.left, right: r.right };
+    var lift = 0;
+    $$("#toast.on,.drn:not(.off)").forEach(function (el) {
+      var q = el.getBoundingClientRect();
+      if (q.width < 2 || q.height < 2) return;
+      if (nat.right <= q.left || nat.left >= q.right) return;
+      if (q.bottom < nat.top - 8 || q.top > nat.bottom + 8) return;
+      lift = Math.max(lift, nat.bottom - q.top + 8);
+    });
+    lift = Math.round(lift);
+    if (lift !== cur) document.documentElement.style.setProperty("--cmp-lift", lift + "px");
+  }
+
+  /* ---------- отметки на карточках ---------- */
+  function markCards() {
+    $$(".lcard[data-font]").forEach(function (c) {
+      var on = SEL.indexOf(c.getAttribute("data-font")) >= 0;
+      c.classList.toggle("cmp-on", on);
+      var pick = MODE === "fav" && !!c.closest("#favgrid");
+      c.classList.toggle("cmp-pickable", pick);
+      if (pick) c.setAttribute("aria-pressed", on ? "true" : "false"); else c.removeAttribute("aria-pressed");
+    });
+    $$(".dd-card[data-card]").forEach(function (c) {
+      var k = "d:" + c.getAttribute("data-card");
+      var rec = DRMETA[c.getAttribute("data-card")];
+      var can = !!rec && rec.mode === "edit";
+      var on = SEL.indexOf(k) >= 0;
+      c.classList.toggle("cmp-on", on);
+      var pick = MODE === "drafts" && can;
+      c.classList.toggle("cmp-pickable", pick);
+      if (pick) c.setAttribute("aria-pressed", on ? "true" : "false"); else c.removeAttribute("aria-pressed");
+    });
+    var fb = $("#cmp-fav-btn"), db = $("#cmp-dd-btn");
+    if (fb) fb.setAttribute("aria-pressed", MODE === "fav" ? "true" : "false");
+    if (db) db.setAttribute("aria-pressed", MODE === "drafts" ? "true" : "false");
+    syncHcardBtn();
+  }
+
+  /* ---------- меню «…» ---------- */
+  function hookMenu() {
+    if (!window.PORT || typeof PORT.cardMenu !== "function" || PORT.cardMenu.__cmp) return;
+    var orig = PORT.cardMenu;
+    var w = function (btn, fid) {
+      var r = orig.apply(this, arguments);
+      var m = $$(".menu70").pop();
+      if (m && btn.getAttribute("aria-expanded") === "true") wireMenu(m, btn, fid);
+      return r;
+    };
+    w.__cmp = 1;
+    PORT.cardMenu = w;
+  }
+  function wireMenu(m, btn, fid) {
+    var inject = function () {
+      var fav = m.querySelector('[data-m="fav"]');
+      if (!fav || m.querySelector('[data-m="cmp"]')) return;
+      var on = SEL.indexOf(fid) >= 0;
+      var b = document.createElement("button");
+      b.type = "button"; b.setAttribute("role", "menuitem"); b.setAttribute("data-m", "cmp");
+      b.innerHTML = '<i class="ico i-cmp" aria-hidden="true"></i>' + (on ? "Убрать из сравнения" : "Сравнить");
+      fav.after(b);
+    };
+    inject();
+    new MutationObserver(inject).observe(m, { childList: true });
+    m.addEventListener("click", function (e) {
+      var b = e.target.closest('[data-m="cmp"]');
+      if (!b) return;
+      e.stopPropagation();
+      toggleKey(fid);
+      PORT.cardMenu(btn, fid);
+    });
+  }
+
+  /* ---------- карточка при наведении ---------- */
+  function hcId(el) {
+    var l = el.getAttribute("aria-label") || "";
+    var m = /«(.+)»/.exec(l);
+    if (!m) return "";
+    return Object.keys(FONTS).filter(function (id) { return fname(id) === m[1]; })[0] || "";
+  }
+  function hookHcard() {
+    var h = $("#hcard");
+    if (!h || h.__cmp) return;
+    h.__cmp = 1;
+    var act = $(".hc-act", h);
+    if (!act) return;
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "btn hc-cmp";
+    var heart = $(".hc-heart", act);
+    if (heart) act.insertBefore(b, heart); else act.appendChild(b);
+    b.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var id = hcId(h);
+      if (id) toggleKey(id);
+    });
+    new MutationObserver(syncHcardBtn).observe(h, { attributes: true, attributeFilter: ["aria-label", "hidden", "class"] });
+    syncHcardBtn();
+  }
+  function syncHcardBtn() {
+    var h = $("#hcard"), b = h && $(".hc-cmp", h);
+    if (!b) return;
+    var id = hcId(h), on = !!id && SEL.indexOf(id) >= 0;
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+    var t = on ? "В сравнении" : "Сравнить";
+    var lab = (on ? "Убрать из сравнения: " : "Сравнить: ") + (id ? fname(id) : "");
+    b.title = lab; b.setAttribute("aria-label", lab);
+    b.innerHTML = '<i class="ico ' + (on ? "i-check" : "i-cmp") + '" aria-hidden="true"></i>' + t;
+  }
+
+  /* ---------- избранное ---------- */
+  function favIds() {
+    return Object.keys(FONTS).filter(function (id) { return FAVS.has(id); });
+  }
+  function hookFav() {
+    var ctl = $("#view-fav .vhead .vctl");
+    if (!ctl || $("#cmp-fav-btn")) return;
+    var b = document.createElement("button");
+    b.type = "button"; b.id = "cmp-fav-btn"; b.className = "btn cmp-enter";
+    b.setAttribute("aria-pressed", "false");
+    b.innerHTML = '<i class="ico i-cmp" aria-hidden="true"></i>Сравнить избранное';
+    ctl.insertBefore(b, ctl.firstChild);
+    b.addEventListener("click", function () {
+      var ids = favIds();
+      if (ids.length < 2) { say("Для сравнения нужно не меньше двух избранных шрифтов."); return; }
+      if (ids.length <= MAXN) { MODE = null; setSel(ids); openShared(b); return; }
+      MODE = MODE === "fav" ? null : "fav";
+      markCards(); renderTray();
+    });
+    var fg = $("#favgrid");
+    if (fg && !fg.__cmp) {
+      fg.__cmp = 1;
+      fg.addEventListener("click", function (e) {
+        if (MODE !== "fav") return;
+        var c = e.target.closest(".lcard");
+        if (!c) return;
+        e.stopPropagation(); e.preventDefault();
+        if (e.target.closest(".heart,.lc-more")) { return; }
+        toggleKey(c.getAttribute("data-font"));
+      }, true);
+      fg.addEventListener("keydown", function (e) {
+        if (MODE !== "fav" || (e.key !== "Enter" && e.key !== " ")) return;
+        var c = e.target.closest(".lcard");
+        if (!c || e.target !== c) return;
+        e.stopPropagation(); e.preventDefault();
+        toggleKey(c.getAttribute("data-font"));
+      }, true);
+    }
+  }
+
+  /* ---------- черновики ---------- */
+  function readDrafts() {
+    return new Promise(function (res) {
+      var out = [];
+      try {
+        var q = indexedDB.open("gtype-drafts-v1", 1);
+        q.onupgradeneeded = function () { try { q.result.createObjectStore("d", { keyPath: "id" }); } catch (e) {} };
+        q.onsuccess = function () {
+          try {
+            var rq = q.result.transaction("d", "readonly").objectStore("d").getAll();
+            rq.onsuccess = function () { res(rq.result || []); };
+            rq.onerror = function () { res([]); };
+          } catch (e) { res([]); }
+        };
+        q.onerror = function () { lsDrafts(res); };
+        return;
+      } catch (e) {}
+      lsDrafts(res);
+    });
+  }
+  function lsDrafts(res) {
+    var out = [];
+    try {
+      var ix = JSON.parse(localStorage.getItem("gtype-drafts-v1-idx") || "[]");
+      ix.forEach(function (id) {
+        try { var r = JSON.parse(localStorage.getItem("gtype-drafts-v1-d-" + id)); if (r) out.push(r); } catch (e) {}
+      });
+    } catch (e) {}
+    res(out);
+  }
+  function refreshDraftMeta() {
+    if (!window.GT_DRAFTS || !GT_DRAFTS.list) return;
+    var l = GT_DRAFTS.list(), m = {};
+    l.forEach(function (d) { m[d.id] = d; });
+    DRMETA = m;
+    SEL = SEL.filter(function (k) { return !isDraftKey(k) || !!m[k.slice(2)]; });
+  }
+  function hookDrafts() {
+    var sect = $("#dd-sect");
+    if (!sect) return;
+    refreshDraftMeta();
+    var head = $(".vhead", sect);
+    if (head && !$("#cmp-dd-btn", head)) {
+      var b = document.createElement("button");
+      b.type = "button"; b.id = "cmp-dd-btn"; b.className = "btn cmp-enter";
+      b.setAttribute("aria-pressed", MODE === "drafts" ? "true" : "false");
+      b.innerHTML = '<i class="ico i-cmp" aria-hidden="true"></i>Сравнить';
+      var pref = $(".dd-pref", head);
+      if (pref) head.insertBefore(b, pref); else head.appendChild(b);
+      b.addEventListener("click", function () {
+        var edit = Object.keys(DRMETA).filter(function (id) { return DRMETA[id].mode === "edit"; });
+        if (edit.length < 2) { say("Для сравнения нужно не меньше двух черновиков редактора."); return; }
+        MODE = MODE === "drafts" ? null : "drafts";
+        markCards(); renderTray();
+      });
+    }
+    var grid = $("#dd-grid", sect);
+    if (grid && !grid.__cmp) {
+      grid.__cmp = 1;
+      grid.addEventListener("click", function (e) {
+        if (MODE !== "drafts") return;
+        var c = e.target.closest(".dd-card");
+        if (!c) return;
+        e.stopPropagation(); e.preventDefault();
+        var id = c.getAttribute("data-card"), m = DRMETA[id];
+        if (!m || m.mode !== "edit") { say("Сравнить можно только черновики редактора."); return; }
+        toggleKey("d:" + id);
+      }, true);
+      grid.addEventListener("keydown", function (e) {
+        if (MODE !== "drafts" || (e.key !== "Enter" && e.key !== " ")) return;
+        var c = e.target.closest(".dd-card");
+        if (!c || e.target !== c) return;
+        e.preventDefault();
+        var id = c.getAttribute("data-card"), m = DRMETA[id];
+        if (m && m.mode === "edit") toggleKey("d:" + id);
+      }, true);
+      $$(".dd-card", grid).forEach(function (c) { if (!c.hasAttribute("tabindex")) c.tabIndex = 0; });
+    }
+    markCards();
+    renderTray();
+  }
+
+  /* ---------- «Две строки» ---------- */
+  function renameTwoLines() {
+    var b = $("#cmpb");
+    if (b) {
+      var t = b.textContent;
+      var n = /А$/.test(t) ? "Две строки с А" : "Две строки";
+      if (t !== n) b.textContent = n;
+      var title = "Две строки: сейчас и вариант для сравнения";
+      if (b.title !== title) b.title = title;
+      if (b.getAttribute("aria-label") !== n) b.setAttribute("aria-label", n);
+    }
+    var s = $("#cmpsrc");
+    if (s && s.getAttribute("aria-label") !== "Вариант для второй строки") s.setAttribute("aria-label", "Вариант для второй строки");
+    $$("[data-tip],[title]").forEach(function (e) {
+      ["data-tip", "title"].forEach(function (a) {
+        var v = e.getAttribute(a);
+        if (v === "Тестер, сравнение, декоративные начертания") e.setAttribute(a, "Тестер, две строки, декоративные начертания");
+      });
+    });
+    $$(".tour-card").forEach(function (c) {
+      var t = $(".tour-t,h3,h2,b", c);
+      if (/Запомнить как А/.test(c.textContent) && t && t.textContent === "Сравнение") t.textContent = "Две строки";
+      $$("p,div,span", c).forEach(function (e) {
+        if (e.children.length === 0 && e.textContent.indexOf("Тестер, сравнение двух вариантов") === 0)
+          e.textContent = "Тестер, две строки и декоративные начертания. Это только просмотр: сам шрифт они не меняют.";
+      });
+    });
+  }
+
+  /* ---------- история редактора ---------- */
+  function hookHist() {
+    var h = $("#hist");
+    if (!h || h.__cmp) return;
+    h.__cmp = 1;
+    var lst = $("#hist-l", h), empty = $("#hist-e", h);
+    var foot = document.createElement("button");
+    foot.type = "button"; foot.className = "hist-cmpf";
+    foot.innerHTML = '<i class="ico i-cmp" aria-hidden="true"></i>Сравнить с другим шрифтом<i class="ico i-chev-right nx" aria-hidden="true"></i>';
+    (empty || lst).after(foot);
+    var pick = document.createElement("div");
+    pick.className = "hist-pick";
+    foot.after(pick);
+    foot.addEventListener("click", function () { renderPick(pick); h.classList.add("cmp-pick"); var f = $(".hp-i", pick); if (f) f.focus({ preventScroll: true }); });
+    pick.addEventListener("click", function (e) {
+      if (e.target.closest("[data-hpback]")) { h.classList.remove("cmp-pick"); foot.focus({ preventScroll: true }); return; }
+      var i = e.target.closest("[data-hp]");
+      if (i) { var id = i.getAttribute("data-hp"); closeHist(); openLocal([liveItem(), fontItem(id)], foot); }
+    });
+    h.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && h.classList.contains("cmp-pick")) {
+        e.stopPropagation(); e.preventDefault(); h.classList.remove("cmp-pick"); foot.focus({ preventScroll: true });
+      }
+    }, true);
+    var addRows = function () {
+      var t;
+      try { t = HIST.st("ed"); } catch (e) { return; }
+      if (!t) return;
+      $$("li", lst).forEach(function (li) {
+        var b = $(".hist-i", li);
+        if (!b || $(".hist-cmp", li)) return;
+        var i = +b.getAttribute("data-i");
+        if (i === t.i) return;
+        var c = document.createElement("button");
+        c.type = "button"; c.className = "btn sm hist-cmp"; c.setAttribute("data-hi", String(i));
+        c.textContent = "Сравнить";
+        c.setAttribute("aria-label", "Сравнить с версией: " + (t.list[i] ? t.list[i].l : ""));
+        li.appendChild(c);
+      });
+    };
+    addRows();
+    new MutationObserver(addRows).observe(lst, { childList: true });
+    lst.addEventListener("click", function (e) {
+      var c = e.target.closest(".hist-cmp");
+      if (!c) return;
+      e.stopPropagation(); e.preventDefault();
+      var i = +c.getAttribute("data-hi");
+      closeHist();
+      openLocal([liveItem(), histItem(i)], c);
+    }, true);
+    new MutationObserver(function () { if (h.hidden) h.classList.remove("cmp-pick"); }).observe(h, { attributes: true, attributeFilter: ["hidden"] });
+  }
+  function closeHist() { try { HIST.close(false); } catch (e) {} }
+  function renderPick(box) {
+    var ids = Object.keys(FONTS).filter(function (id) { return id !== S.fontId && (id !== "imp" || (typeof impHasInk === "function" && impHasInk())); });
+    box.innerHTML = '<div class="hp-h"><button type="button" class="ibtn sm" data-hpback aria-label="Назад к истории"><i class="ico i-chev-left" aria-hidden="true"></i></button>Выберите шрифт</div>' +
+      '<div class="hp-l">' + ids.map(function (id) {
+        return '<button type="button" class="hp-i" data-hp="' + esc(id) + '"><span>' + esc(fname(id)) + "</span><small>" + esc(fkind(id)) + "</small></button>";
+      }).join("") + "</div>";
+  }
+
+  /* ---------- элементы сравнения ---------- */
+  function fontItem(id) {
+    return { key: id, id: id, name: fname(id), kind: fkind(id), slot: null, open: function () { libOpen(id); } };
+  }
+  function liveItem() {
+    var id = S.fontId;
+    return { key: "h:live", id: id, name: "Ваша версия", kind: fname(id) + " с вашими правками", slot: null, open: function () { window.setTab("edit"); } };
+  }
+  function histItem(i) {
+    var t = HIST.st("ed"), e = t.list[i], id = S.fontId;
+    var o = HIST.unflat(e.c);
+    var slot = { styles: normStyles(id, o.styles), edits: o.edits || {} };
+    var base = !!e.base;
+    return {
+      key: "h:" + i, id: id, slot: slot,
+      name: base ? fname(id) + ", исходный" : e.l,
+      kind: base ? "Исходное состояние: " + fname(id) + " из библиотеки" : "Версия из истории правок",
+      open: function () { try { HIST.go("ed", i); } catch (x) {} window.setTab("edit"); },
+    };
+  }
+  function draftItem(rec) {
+    var pr = { fonts: {} };
+    pr.fonts[rec.fid] = JSON.parse(JSON.stringify({ family: rec.data.family, edits: rec.data.edits, styles: rec.data.styles }));
+    projSanitize(pr);
+    var slot = mkSlot(rec.fid, pr.fonts[rec.fid]);
+    return {
+      key: "d:" + rec.id, id: rec.fid, slot: slot, name: rec.name,
+      kind: "Черновик, редактор",
+      open: function () { try { GT_DRAFTS.continueDraft(rec.id); } catch (e) {} },
+    };
+  }
+  function resolveKeys(keys) {
+    var needD = keys.some(isDraftKey);
+    var p = needD ? readDrafts() : Promise.resolve([]);
+    return p.then(function (recs) {
+      var by = {};
+      recs.forEach(function (r) { by[r.id] = r; });
+      var out = [];
+      keys.forEach(function (k) {
+        if (isDraftKey(k)) {
+          var r = by[k.slice(2)];
+          if (r && r.mode === "edit" && r.data && FONTS[r.fid]) { try { out.push(draftItem(r)); } catch (e) {} }
+        } else if (FONTS[k]) out.push(fontItem(k));
+      });
+      return out;
+    });
+  }
+  function candidateKeys() {
+    var keys = Object.keys(FONTS).filter(function (id) { return id !== "imp" || (typeof impHasInk === "function" && impHasInk()); });
+    var dr = Object.keys(DRMETA).filter(function (id) { return DRMETA[id].mode === "edit"; }).map(function (id) { return "d:" + id; });
+    return dr.concat(keys);
+  }
+
+  /* ---------- движок: тексты шрифтом сервиса ---------- */
+  var RC = new Map();
+  function runOf(it, txt) {
+    var k = it.key + "\u0001" + txt, r = RC.get(k);
+    if (r) return r;
+    var back = S.fontId;
+    try {
+      useFont(it.id);
+      r = libRun(it.id, txt, undefined, "regular", it.slot || undefined);
+    } catch (e) { r = { items: [], tot: 0, cap: 700 }; }
+    finally { try { if (FONTS[back]) useFont(back); } catch (e) {} }
+    if (RC.size > 4000) RC.clear();
+    RC.set(k, r);
+    return r;
+  }
+  function nodesSig(run) {
+    if (!run.items.length) return "";
+    return JSON.stringify(run.items[0][0].cs.map(function (c) { return c.nodes.map(function (n) { return [Math.round(n.x), Math.round(n.y)]; }); }));
+  }
+  function inkOf(it) {
+    if (it._ink) return it._ink;
+    var r = runOf(it, "х"), xh = 0;
+    if (r.items.length) r.items[0][0].cs.forEach(function (c) { c.nodes.forEach(function (n) { if (n.y > xh) xh = n.y; }); });
+    if (!xh) xh = (runOf(it, "Н").cap || 700) * 0.72;
+    var a = runOf(it, "а"), A = runOf(it, "А");
+    var caps = !!a.items.length && !!A.items.length && nodesSig(a) === nodesSig(A);
+    it._ink = { xh: xh, caps: caps };
+    return it._ink;
+  }
+  function spaceW(it) {
+    var r = runOf(it, " ");
+    return r.tot > 0 ? r.tot : 260;
+  }
+  function wrap(it, text, size, maxw) {
+    var sc = size / 1000, words = [], pos = 0, sw = spaceW(it) * sc;
+    text.split(" ").forEach(function (w, i) {
+      var start = text.indexOf(w, pos);
+      if (w === "") { pos += 1; return; }
+      var r = runOf(it, w);
+      words.push({ s: w, start: start, end: start + w.length, run: r, w: r.tot * sc });
+      pos = start + w.length;
+    });
+    var lines = [], cur = null;
+    words.forEach(function (w) {
+      if (cur && cur.w + sw + w.w <= maxw) { w.x = cur.w + sw; cur.w += sw + w.w; cur.words.push(w); }
+      else { w.x = 0; cur = { w: w.w, words: [w] }; lines.push(cur); }
+    });
+    return { lines: lines, sc: sc, sw: sw };
+  }
+
+  /* ---------- состояние экрана ---------- */
+  var CMP = {
+    open: false, mode: "shared", items: [], cand: [], view: "side", text: phone() ? "Гармония" : "Гармония и ритм",
+    want: 72, wantO: null, eff: 72, sel: "", from: "home", opener: null, hl: null, dom: null,
+  };
+
+  function buildView() {
+    if (CMP.dom) return CMP.dom;
+    var app = $(".app") || document.body;
+    var v = document.createElement("section");
+    v.className = "libview"; v.id = "view-cmp"; v.hidden = true; v.setAttribute("aria-label", "Сравнение шрифтов");
+    v.setAttribute("data-view", "side");
+    v.innerHTML =
+      '<div class="vhead"><div><h2>Сравнение шрифтов</h2><p class="cmp-lead">Печатайте прямо в образце, текст одинаков во всех карточках.</p></div>' +
+      '<div class="vctl"><button type="button" class="btn" id="cmp-close"><i class="ico i-close" aria-hidden="true"></i>Закрыть</button></div></div>' +
+      '<div class="cmp-bar" role="group" aria-label="Параметры сравнения">' +
+      '<div class="seg" id="cmp-seg" role="group" aria-label="Режим"><button type="button" data-v="side" aria-pressed="true" class="on">Рядом</button><button type="button" data-v="overlay" aria-pressed="false">Наложение</button></div>' +
+      '<div class="cmp-sz"><label for="cmp-size">Размер</label><input id="cmp-size" type="range" min="16" max="160" step="1" value="72"><output id="cmp-sizev" for="cmp-size">72 px</output></div></div>' +
+      '<div class="cmp-chiprow"><div class="cmp-cap" id="cmp-cnt"></div><div class="cmp-chips" id="cmp-chips" role="group" aria-label="Шрифты"></div></div>' +
+      '<div class="cmp-stagewrap"><div><section class="cmp-stage" id="cmp-stage" aria-label="Наложение контуров"><div class="cmp-field" id="cmp-field"><canvas aria-hidden="true"></canvas><input class="cmp-in" id="cmp-in-o" type="text" maxlength="' + MAXLEN + '" autocomplete="off" spellcheck="false" aria-label="Образец в наложении"><i class="cmp-caret"></i></div><div class="cmp-legend" id="cmp-legend"></div></section></div></div>' +
+      '<section class="cmp-grid" id="cmp-grid" aria-label="Выбранные шрифты"></section>';
+    app.appendChild(v);
+    CMP.dom = {
+      v: v, seg: $("#cmp-seg", v), size: $("#cmp-size", v), out: $("#cmp-sizev", v), chips: $("#cmp-chips", v), cnt: $("#cmp-cnt", v),
+      stage: $("#cmp-stage", v), field: $("#cmp-field", v), legend: $("#cmp-legend", v), grid: $("#cmp-grid", v), inO: $("#cmp-in-o", v),
+      caret: $(".cmp-caret", v),
+    };
+    wireView();
+    return CMP.dom;
+  }
+
+  function markSvg(i, card) {
+    var l = LINES[i];
+    return '<svg class="cmp-mk" viewBox="0 0 28 8" aria-hidden="true"><line x1="1" x2="27" y1="4" y2="4" stroke="' + (card ? MARKS[i] : l.c) + '" stroke-width="' + l.w + '"' +
+      (l.d.length ? ' stroke-dasharray="' + l.d.join(" ") + '"' : "") + ' stroke-linecap="' + l.cap + '"/></svg>';
+  }
+
+  function selKey() {
+    if (!CMP.items.some(function (x) { return x.key === CMP.sel; })) CMP.sel = CMP.items[0] ? CMP.items[0].key : "";
+    return CMP.sel;
+  }
+
+  function renderChips() {
+    var d = CMP.dom, on = CMP.items.map(function (x) { return x.key; });
+    var list = CMP.cand;
+    d.chips.innerHTML = list.map(function (c) {
+      var isOn = on.indexOf(c.key) >= 0, dis = !isOn && CMP.items.length >= MAXN;
+      return '<button type="button" class="cmp-chip" data-k="' + esc(c.key) + '" aria-pressed="' + isOn + '"' + (dis ? ' aria-disabled="true"' : "") + '><span class="ck"><i class="ico i-check" aria-hidden="true"></i></span>' + esc(c.name) + "</button>";
+    }).join("");
+    d.cnt.textContent = "Выбрано " + CMP.items.length + " из " + MAXN;
+    var ob = $('[data-v="overlay"]', d.seg);
+    if (CMP.items.length < 2) ob.setAttribute("aria-disabled", "true"); else ob.removeAttribute("aria-disabled");
+    edge();
+  }
+  function edge() {
+    var e = CMP.dom && CMP.dom.chips; if (!e) return;
+    var l = e.scrollLeft > 2, r = e.scrollLeft + e.clientWidth < e.scrollWidth - 2;
+    e.setAttribute("data-hs", (l ? "l " : "") + (r ? "r" : ""));
+  }
+
+  function cardHTML(it, i) {
+    var info = inkOf(it), sel = it.key === selKey();
+    return '<article class="cmp-card' + (sel ? " sel" : "") + '" data-k="' + esc(it.key) + '" aria-label="' + esc(it.name) + '">' +
+      '<div class="cmp-fh">' + markSvg(i, true) + '<div class="cmp-ft"><b>' + esc(it.name) + "</b><small>" + esc(it.kind || "") + "</small></div>" +
+      '<button type="button" class="cmp-x" data-rm="' + esc(it.key) + '" aria-label="Убрать «' + esc(it.name) + '» из сравнения" title="Убрать из сравнения"' + (CMP.items.length <= 1 ? " disabled" : "") + '><i class="ico i-close" aria-hidden="true"></i></button></div>' +
+      '<div class="cmp-sw"><div><div class="cmp-sample"><canvas aria-hidden="true"></canvas><input class="cmp-in" type="text" maxlength="' + MAXLEN + '" autocomplete="off" spellcheck="false" aria-label="Образец: ' + esc(it.name) + '"><i class="cmp-caret"></i></div>' +
+      (info.caps ? '<p class="cmp-note">Строчные нарисованы как прописные. В паре со строчными этого шрифта сравнивайте высоту и ширину знаков.</p>' : "") +
+      '</div></div><button type="button" class="btn cmp-open' + (sel ? " pri" : "") + '" data-open="' + esc(it.key) + '">Открыть в редакторе</button></article>';
+  }
+
+  function renderCards(newKey) {
+    var d = CMP.dom, n = CMP.items.length;
+    d.grid.style.setProperty("--n", Math.max(2, n));
+    d.grid.setAttribute("data-n", String(n));
+    d.grid.innerHTML = CMP.items.map(cardHTML).join("") +
+      (n < 2 ? '<div class="cmp-slot"><b>Добавьте второй шрифт</b><span>Выберите его в ряду выше, и карточки встанут рядом.</span></div>' : "");
+    if (newKey) { var c = $('[data-k="' + newKey.replace(/"/g, '\\"') + '"]', d.grid); if (c && !still()) c.classList.add("in"); }
+    $$(".cmp-in", d.grid).forEach(function (i) { i.value = CMP.text; });
+    d.inO.value = CMP.text;
+    renderLegend();
+    layout();
+  }
+  function renderLegend() {
+    var d = CMP.dom;
+    var notes = CMP.items.filter(function (x) { return inkOf(x).caps; }).map(function (x) {
+      return '<span class="cmp-gx nt">' + esc(x.name) + ": строчные нарисованы как прописные</span>";
+    }).join("");
+    d.legend.innerHTML = CMP.items.map(function (x, i) {
+      return '<span class="cmp-lg" tabindex="0" data-i="' + i + '">' + markSvg(i) + esc(x.name) + "</span>";
+    }).join("") + notes + '<span class="cmp-gx">Тонкие линии показывают высоту строчных</span>';
+  }
+
+  /* размеры: предел по ширине */
+  function fitMax() {
+    var d = CMP.dom, t = CMP.text || "Аа";
+    if (CMP.view === "overlay" && CMP.items.length) {
+      var cs = getComputedStyle(d.stage);
+      var W = d.stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 4;
+      var tot = cells(t).reduce(function (a, c) { return a + c.w; }, 0);
+      return Math.floor(W / Math.max(tot, 1) * 1000);
+    }
+    var cap = 999;
+    $$(".cmp-sample", d.grid).forEach(function (s, i) {
+      var it = CMP.items[i]; if (!it) return;
+      var W = s.clientWidth - 2 * padOf();
+      var lw = 1;
+      t.split(" ").forEach(function (w) { if (w) lw = Math.max(lw, runOf(it, w).tot); });
+      cap = Math.min(cap, Math.floor(W / lw * 1000));
+    });
+    return cap;
+  }
+  function padOf() { return phone() ? 14 : 18; }
+  function cells(t) {
+    return Array.prototype.map.call(t, function (ch) {
+      var w = 0;
+      CMP.items.forEach(function (it) { w = Math.max(w, runOf(it, ch).tot || 0); });
+      if (!w) w = ch === " " ? 260 : 0;
+      return { ch: ch, w: w };
+    });
+  }
+
+  function applySize() {
+    if (!CMP.open) return;
+    var d = CMP.dom, ov = CMP.view === "overlay";
+    var mx = Math.max(24, Math.min(ov ? 400 : 200, fitMax()));
+    d.size.max = String(mx);
+    var w = ov ? (CMP.wantO == null ? Math.round(mx * 0.9) : CMP.wantO) : CMP.want;
+    var v = Math.max(16, Math.min(w, mx));
+    d.size.value = String(v); CMP.eff = v;
+    d.out.textContent = v + " px";
+    var p = (v - 16) / Math.max(1, mx - 16) * 100;
+    d.size.style.setProperty("--lo", "0%"); d.size.style.setProperty("--hi", p + "%");
+    draw();
+  }
+
+  function layout() {
+    if (!CMP.open) return;
+    /* высота образцов под самый длинный перенос; потом рисуем */
+    var d = CMP.dom;
+    if (CMP.view === "side") {
+      var need = 180, size = CMP.eff || 72;
+      $$(".cmp-sample", d.grid).forEach(function (s, i) {
+        var it = CMP.items[i]; if (!it) return;
+        var W = s.clientWidth - 2 * padOf();
+        var L = wrap(it, CMP.text, size, W);
+        need = Math.max(need, Math.round(L.lines.length * size * 1.2 + 2 * padOf() + 8));
+      });
+      $$(".cmp-sample", d.grid).forEach(function (s) { s.style.minHeight = need + "px"; });
+    }
+    applySize();
+  }
+
+  function fitCv(cv) {
+    var r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    var w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    var c = cv.getContext("2d");
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, w, h);
+    return { c: c, w: w, h: h };
+  }
+
+  function drawSide() {
+    var d = CMP.dom, size = CMP.eff, ink = "#141416";
+    $$(".cmp-sample", d.grid).forEach(function (s, i) {
+      var it = CMP.items[i]; if (!it) return;
+      var cv = $("canvas", s), f = fitCv(cv), c = f.c, pad = padOf();
+      var L = wrap(it, CMP.text, size, f.w - 2 * pad), lh = size * 1.2;
+      var total = L.lines.length * lh, top = Math.max(pad * 0.5, (f.h - total) / 2);
+      c.fillStyle = ink;
+      var caretPos = null, idx = caretIndex(s);
+      L.lines.forEach(function (ln, li) {
+        var base = top + li * lh + lh * 0.5 + (runOf(it, "Н").cap || 700) * L.sc * 0.5;
+        ln.words.forEach(function (w) {
+          var x0 = pad + w.x;
+          w.run.items.forEach(function (p) {
+            c.fill(pathOf(p[0].cs, function (px, py) { return [x0 + (p[1] + px) * L.sc, base - py * L.sc]; }), "nonzero");
+          });
+          if (idx != null && idx >= w.start && idx <= w.end) {
+            var pre = runOf(it, w.s.slice(0, idx - w.start)).tot * L.sc;
+            caretPos = { x: x0 + pre, y: top + li * lh };
+          }
+        });
+        if (idx != null && !caretPos && ln.words.length && idx > ln.words[ln.words.length - 1].end) {
+          var lw = ln.words[ln.words.length - 1];
+          var nx = L.lines[li + 1];
+          if (!nx || idx < nx.words[0].start) caretPos = { x: pad + lw.x + lw.w + (idx > lw.end ? L.sw * (idx - lw.end) : 0), y: top + li * lh };
+        }
+      });
+      placeCaret($(".cmp-caret", s), caretPos, lh * 0.8, lh * 0.1);
+    });
+  }
+  function caretIndex(box) {
+    var i = $(".cmp-in", box);
+    if (!i || document.activeElement !== i) return null;
+    return i.selectionStart === i.selectionEnd ? i.selectionStart : null;
+  }
+  function placeCaret(el, pos, h, dy) {
+    if (!el) return;
+    if (!pos) { el.style.display = ""; el.style.left = "-9px"; return; }
+    el.style.display = "block";
+    el.style.left = pos.x + "px"; el.style.top = (pos.y + dy) + "px"; el.style.height = h + "px";
+  }
+
+  function drawOverlay() {
+    var d = CMP.dom, size = CMP.eff, cv = $("canvas", d.field);
+    var cs = cells(CMP.text), sc = size / 1000;
+    var cw = d.field.clientWidth, H = Math.round(size * 1.3);
+    d.field.style.height = H + "px";
+    var f = fitCv(cv), c = f.c;
+    var tot = cs.reduce(function (a, x) { return a + x.w; }, 0) * sc;
+    var x0 = Math.max(0, (f.w - tot) / 2), base = Math.round(size * 1.0);
+    c.strokeStyle = "rgba(20,20,22,.3)"; c.lineWidth = 1; c.setLineDash([]);
+    c.beginPath(); c.moveTo(0, base + 0.5); c.lineTo(f.w, base + 0.5); c.stroke();
+    c.fillStyle = "#6a6a72"; c.font = "500 12px " + (css("--f-ui") || "Onest, system-ui, sans-serif"); c.textAlign = "right";
+    c.fillText("Базовая линия", f.w, base + 16);
+    var hl = CMP.hl;
+    CMP.items.forEach(function (it, i) {
+      var l = LINES[i], dim = hl != null && hl !== i, on = hl === i;
+      c.globalAlpha = dim ? 0.35 : 1;
+      var yx = base - inkOf(it).xh * sc;
+      c.strokeStyle = l.c; c.lineWidth = 1; c.setLineDash([]); c.globalAlpha = (dim ? 0.35 : 1) * 0.4;
+      c.beginPath(); c.moveTo(0, Math.round(yx) + 0.5); c.lineTo(f.w, Math.round(yx) + 0.5); c.stroke();
+      c.globalAlpha = dim ? 0.35 : 1;
+      c.strokeStyle = on ? "#141416" : l.c; c.lineWidth = on ? 2.75 : l.w; c.setLineDash(l.d); c.lineCap = l.cap; c.lineJoin = "round";
+      var x = x0;
+      cs.forEach(function (cell) {
+        if (cell.ch !== " ") {
+          var r = runOf(it, cell.ch), ox = x + (cell.w - r.tot) / 2 * sc;
+          r.items.forEach(function (p) {
+            c.stroke(pathOf(p[0].cs, function (px, py) { return [ox + (p[1] + px) * sc, base - py * sc]; }));
+          });
+        }
+        x += cell.w * sc;
+      });
+    });
+    c.globalAlpha = 1; c.setLineDash([]);
+    var i = d.inO, idx = document.activeElement === i && i.selectionStart === i.selectionEnd ? i.selectionStart : null;
+    if (idx != null) {
+      var cx = x0; for (var k = 0; k < Math.min(idx, cs.length); k++) cx += cs[k].w * sc;
+      d.caret.style.display = "block"; d.caret.style.left = (cx - 1) + "px"; d.caret.style.top = (base - size * 0.8) + "px"; d.caret.style.height = size + "px";
+    } else d.caret.style.display = "";
+  }
+  function draw() {
+    if (!CMP.open) return;
+    if (CMP.view === "overlay") drawOverlay(); else drawSide();
+  }
+  function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+  /* ---------- открытие и закрытие ---------- */
+  function syncShared() {
+    resolveKeys(SEL).then(function (items) {
+      if (!CMP.open || CMP.mode !== "shared") return;
+      var prev = CMP.items.map(function (x) { return x.key; });
+      CMP.items = items;
+      if (!items.length) { closeCmp(); return; }
+      var added = items.map(function (x) { return x.key; }).filter(function (k) { return prev.indexOf(k) < 0; })[0];
+      if (CMP.view === "overlay" && items.length < 2) setView("side", true);
+      var gone = prev.filter(function (k) { return !items.some(function (x) { return x.key === k; }); });
+      var swap = function () { renderChips(); renderCards(added); };
+      if (gone.length && !still()) {
+        var cards = gone.map(function (k) { return $('[data-k="' + k.replace(/"/g, '\\"') + '"]', CMP.dom.grid); }).filter(Boolean);
+        cards.forEach(function (c) { c.classList.add("out"); });
+        setTimeout(swap, 180);
+      } else swap();
+    });
+  }
+
+  function showView() {
+    var d = buildView();
+    $$(".app > section, .app > .cols").forEach(function (e) { if (e !== d.v) e.hidden = true; });
+    document.body.classList.add("tab-lib");
+    document.body.classList.remove("tab-proof");
+    d.v.hidden = false;
+    d.v.classList.remove("cmp-out");
+    d.v.classList.remove("cmp-in"); void d.v.offsetWidth;
+    if (!still()) d.v.classList.add("cmp-in");
+    d.v.scrollTop = 0;
+    window.scrollTo(0, 0);
+    renderTray();
+  }
+
+  function begin(items, mode, opener) {
+    if (!items.length) { say("Нечего сравнивать: выберите шрифты."); return; }
+    ensureStyles();
+    try { if (window.HIST && HIST.open === true) HIST.close(false); } catch (e) {}
+    CMP.mode = mode; CMP.items = items; CMP.from = tabNow() === "compare" ? CMP.from : tabNow();
+    CMP.opener = opener || document.activeElement; CMP.sel = items[0].key;
+    CMP.view = "side"; CMP.wantO = null; CMP.hl = null; RC.clear();
+    var d = buildView();
+    d.v.setAttribute("data-view", "side");
+    $$("button", d.seg).forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-v") === "side")); b.classList.toggle("on", b.getAttribute("data-v") === "side"); });
+    var have = items.map(function (x) { return x.key; });
+    var candItems = candidateKeys().filter(function (k) { return have.indexOf(k) < 0; });
+    CMP.cand = items.map(function (x) { return { key: x.key, name: x.name }; }).concat(candItems.map(function (k) { return { key: k, name: keyName(k) }; }));
+    CMP.open = true;
+    showView();
+    renderChips(); renderCards();
+    setTimeout(function () { layout(); edge(); }, 40);
+    var cl = $("#cmp-close", d.v); if (cl) cl.focus({ preventScroll: true });
+  }
+  function openShared(opener) {
+    resolveKeys(SEL).then(function (items) {
+      if (items.length < 1) return;
+      begin(items, "shared", opener);
+    });
+  }
+  function openLocal(items, opener) { begin(items, "local", opener); }
+
+  function closeCmp(silent) {
+    if (!CMP.open) return;
+    var d = CMP.dom;
+    CMP.open = false;
+    var back = CMP.from, op = CMP.opener;
+    var done = function () {
+      d.v.hidden = true; d.v.classList.remove("cmp-out", "cmp-in");
+      if (!silent) {
+        window.setTab(back);
+        requestAnimationFrame(function () {
+          renderTray();
+          try { if (op && document.contains(op) && op.offsetParent !== null) op.focus({ preventScroll: true }); else { var g = $("#cmp-go") || $('.rail [data-tab="' + back + '"]'); if (g) g.focus({ preventScroll: true }); } } catch (e) {}
+        });
+      }
+    };
+    if (silent || still()) { done(); return; }
+    d.v.classList.remove("cmp-in"); d.v.classList.add("cmp-out");
+    setTimeout(done, 250);
+  }
+
+  function setView(v, quiet) {
+    if (v === CMP.view) return;
+    if (v === "overlay" && CMP.items.length < 2) return;
+    var d = CMP.dom;
+    CMP.view = v; d.v.setAttribute("data-view", v);
+    $$("button", d.seg).forEach(function (b) { var on = b.getAttribute("data-v") === v; b.setAttribute("aria-pressed", String(on)); b.classList.toggle("on", on); });
+    layout();
+    setTimeout(layout, 60); setTimeout(layout, 360);
+  }
+
+  function setHl(i) { CMP.hl = i; draw(); }
+
+  /* ---------- события экрана ---------- */
+  function wireView() {
+    var d = CMP.dom;
+    $("#cmp-close", d.v).addEventListener("click", function () { closeCmp(); });
+    d.seg.addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      if (b.getAttribute("aria-disabled") === "true") { say("Для наложения нужно не меньше двух шрифтов."); return; }
+      setView(b.getAttribute("data-v"));
+    });
+    d.size.addEventListener("input", function () {
+      if (CMP.view === "overlay") CMP.wantO = +d.size.value; else CMP.want = +d.size.value;
+      layout();
+    });
+    d.chips.addEventListener("scroll", edge);
+    d.chips.addEventListener("click", function (e) {
+      var b = e.target.closest(".cmp-chip"); if (!b) return;
+      var k = b.getAttribute("data-k"), on = CMP.items.some(function (x) { return x.key === k; });
+      if (!on && CMP.items.length >= MAXN) { say("В сравнении не больше четырёх шрифтов. Уберите один, чтобы добавить другой."); return; }
+      if (on && CMP.items.length <= 1) { say("В сравнении остаётся хотя бы один шрифт."); return; }
+      toggleItem(k);
+    });
+    d.grid.addEventListener("click", function (e) {
+      var r = e.target.closest("[data-rm]");
+      if (r && !r.disabled) { toggleItem(r.getAttribute("data-rm")); return; }
+      var o = e.target.closest("[data-open]");
+      if (o) { var it = CMP.items.filter(function (x) { return x.key === o.getAttribute("data-open"); })[0]; if (it) openItem(it); return; }
+      var s = e.target.closest(".cmp-sample");
+      if (s && !e.target.closest(".cmp-in")) $(".cmp-in", s).focus();
+    });
+    d.grid.addEventListener("pointerdown", function (e) { var c = e.target.closest(".cmp-card"); if (c) pickCard(c.getAttribute("data-k")); });
+    d.grid.addEventListener("focusin", function (e) {
+      var c = e.target.closest(".cmp-card");
+      if (c) { pickCard(c.getAttribute("data-k")); if (CMP.view === "overlay") setHl(CMP.items.map(function (x) { return x.key; }).indexOf(c.getAttribute("data-k"))); }
+      if (e.target.matches(".cmp-in")) draw();
+    });
+    d.grid.addEventListener("focusout", function () { setHl(null); setTimeout(draw, 0); });
+    d.grid.addEventListener("mouseover", function (e) {
+      var c = e.target.closest(".cmp-card");
+      if (c && CMP.view === "overlay") setHl(CMP.items.map(function (x) { return x.key; }).indexOf(c.getAttribute("data-k")));
+    });
+    d.grid.addEventListener("mouseleave", function () { setHl(null); });
+    d.legend.addEventListener("mouseover", function (e) { var l = e.target.closest(".cmp-lg"); if (l) setHl(+l.getAttribute("data-i")); });
+    d.legend.addEventListener("mouseleave", function () { setHl(null); });
+    d.legend.addEventListener("focusin", function (e) { var l = e.target.closest(".cmp-lg"); if (l) setHl(+l.getAttribute("data-i")); });
+    d.legend.addEventListener("focusout", function () { setHl(null); });
+    d.stage.addEventListener("click", function (e) { if (!e.target.closest(".cmp-lg")) d.inO.focus(); });
+    d.v.addEventListener("input", function (e) {
+      var el = e.target; if (!el.classList.contains("cmp-in")) return;
+      var t = el.value.replace(/\n/g, " ");
+      if (t.length > MAXLEN) { t = t.slice(0, MAXLEN); el.value = t; }
+      CMP.text = t;
+      $$(".cmp-in", d.v).forEach(function (i) { if (i !== el && i.value !== t) i.value = t; });
+      renderLegend(); layout();
+    });
+    ["keyup", "click", "select", "focus", "blur"].forEach(function (ev) {
+      d.v.addEventListener(ev, function (e) { if (e.target.classList && e.target.classList.contains("cmp-in")) setTimeout(draw, 0); }, true);
+    });
+    document.addEventListener("selectionchange", function () { if (CMP.open && document.activeElement && document.activeElement.classList.contains("cmp-in")) draw(); });
+    addEventListener("resize", function () { if (CMP.open) { layout(); edge(); } });
+    if (window.ResizeObserver) new ResizeObserver(function () { if (CMP.open) draw(); }).observe(d.grid);
+    new MutationObserver(function () { if (CMP.open) { RC.clear(); draw(); } }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  }
+  function pickCard(k) {
+    if (CMP.sel === k) return;
+    CMP.sel = k;
+    $$(".cmp-card", CMP.dom.grid).forEach(function (c) {
+      var on = c.getAttribute("data-k") === k;
+      c.classList.toggle("sel", on);
+      var b = $(".cmp-open", c); if (b) b.classList.toggle("pri", on);
+    });
+  }
+  function toggleItem(k) {
+    if (CMP.mode === "shared") {
+      var on = SEL.indexOf(k) >= 0;
+      if (!on && SEL.length >= MAXN) { say("В сравнении не больше четырёх шрифтов. Уберите один, чтобы добавить другой."); return; }
+      if (on && SEL.length <= 1) return;
+      toggleKey(k);
+      return;
+    }
+    var i = -1;
+    CMP.items.forEach(function (x, j) { if (x.key === k) i = j; });
+    if (i >= 0) {
+      if (CMP.items.length <= 1) return;
+      var cards = $('[data-k="' + k.replace(/"/g, '\\"') + '"]', CMP.dom.grid);
+      CMP.items.splice(i, 1);
+      if (CMP.view === "overlay" && CMP.items.length < 2) setView("side", true);
+      renderChips();
+      if (cards && !still()) { cards.classList.add("out"); setTimeout(function () { renderCards(); }, 180); } else renderCards();
+    } else {
+      resolveKeys([k]).then(function (items) {
+        if (!items[0]) return;
+        CMP.items.push(items[0]);
+        renderChips(); renderCards(k);
+      });
+    }
+  }
+  function openItem(it) {
+    CMP.open = false;
+    CMP.dom.v.hidden = true;
+    document.body.classList.remove("cmp-tray-on");
+    try { it.open(); } catch (e) {}
+    setTimeout(renderTray, 50);
+  }
+
+  /* ---------- Esc и смена вкладки ---------- */
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape" || !CMP.open) return;
+    if ($(".menu70") || ($("#toast.on") && false)) return;
+    e.preventDefault(); e.stopPropagation();
+    closeCmp();
+  }, true);
+
+  function hookTab() {
+    if (typeof window.setTab !== "function" || window.setTab.__cmp) return;
+    var o = window.setTab;
+    var w = function () {
+      if (CMP.open) {
+        CMP.open = false;
+        CMP.dom.v.hidden = true; CMP.dom.v.classList.remove("cmp-in", "cmp-out");
+      }
+      var r = o.apply(this, arguments);
+      var tn = tabNow();
+      if (MODE === "fav" && tn !== "fav") MODE = null;
+      if (MODE === "drafts" && tn !== "profile" && tn !== "folder") MODE = null;
+      setTimeout(function () { sweep(); renderTray(); markCards(); }, 0);
+      return r;
+    };
+    w.__cmp = 1;
+    window.setTab = w;
+  }
+
+  /* ---------- обход DOM ---------- */
+  var sweeping = false;
+  function sweep() {
+    if (sweeping) return;
+    sweeping = true;
+    try {
+      ensureStyles();
+      hookMenu();
+      hookHcard();
+      hookFav();
+      hookDrafts();
+      hookHist();
+      renameTwoLines();
+      markCards();
+    } catch (e) { console.error(e); }
+    finally { sweeping = false; }
+  }
+
+  function boot() {
+    ensureStyles();
+    loadSel();
+    buildTray();
+    hookTab();
+    sweep();
+    renderTray();
+    var t = 0;
+    new MutationObserver(function () { clearTimeout(t); t = setTimeout(sweep, 60); })
+      .observe(document.body, { childList: true, subtree: true });
+    if (window.GT_DRAFTS && GT_DRAFTS.whenReady) GT_DRAFTS.whenReady(function () { refreshDraftMeta(); saveSel(); sweep(); renderTray(); });
+    window.addEventListener("storage", function (e) { if (e.key === KEY) { loadSel(); changed(); } });
+    window.GT_COMPARE = {
+      sel: function () { return SEL.slice(); },
+      add: addKey, remove: removeKey, toggle: toggleKey, clear: function () { setSel([]); },
+      open: function () { openShared(null); },
+      close: function () { closeCmp(); },
+      isOpen: function () { return CMP.open; },
+      view: function () { return CMP.view; },
+      items: function () { return CMP.items.map(function (x) { return x.key; }); },
+      selected: function () { return CMP.sel; },
+      max: MAXN,
+    };
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(boot, 0); });
+  else setTimeout(boot, 0);
 })();
 
 </script>

@@ -12,18 +12,20 @@
     st.id = STYLE_ID;
     st.textContent = [
       ".btn.pri,body:not(.tab-lib) .top .btn.pri,#view-edit .nrow .btn.pri,.imp-pop .btn.pri,.tr-card .btn.pri,.onb-btn.pri,.dm .dm-btn.dm-pri,.rb.dl{",
-      "background:var(--accent-press)!important;color:var(--on-accent)!important}",
+      "background:var(--accent)!important;color:var(--on-accent)!important}",
       ".btn.pri:hover,body:not(.tab-lib) .top .btn.pri:hover,#view-edit .nrow .btn.pri:hover,.imp-pop .btn.pri:hover,.tr-card .btn.pri:hover,.onb-btn.pri:hover,.dm .dm-btn.dm-pri:hover,.rb.dl:hover{",
       "background:var(--accent-hover)!important}",
-      ".btn.pri:active,body:not(.tab-lib) .top .btn.pri:active,#view-edit .nrow .btn.pri:active,.onb-btn.pri:active,.rb.dl:active{",
+      ".btn.pri:active,body:not(.tab-lib) .top .btn.pri:active,#view-edit .nrow .btn.pri:active,.imp-pop .btn.pri:active,.tr-card .btn.pri:active,.onb-btn.pri:active,.dm .dm-btn.dm-pri:active,.rb.dl:active{",
       "background:var(--accent-press)!important}",
       ".logo i{color:inherit!important}",
       ".rail .logo::after{background:currentColor!important}",
       "#rail-profile .dot,.rb-dot{background:var(--ink)!important;box-shadow:0 0 0 2px var(--bg)!important}",
-      ".notch .nb.go,.lcard.on .nb.go{background:var(--accent-press)!important;color:var(--on-accent)!important;border-color:var(--accent-press)!important}",
+      ".notch .nb.go,.lcard.on .nb.go{background:var(--accent)!important;color:var(--on-accent)!important;border-color:var(--accent)!important}",
+      ".notch .nb.go:hover,.lcard.on .nb.go:hover,.notchc:hover .notch .nb.go{background:var(--accent-hover)!important;color:var(--on-accent)!important;border-color:var(--accent-hover)!important}",
+      ".notch .nb.go:active,.lcard.on .nb.go:active{background:var(--accent-press)!important;border-color:var(--accent-press)!important}",
       ".lcard.on{border-color:var(--ink)!important}",
       ".lcard.on .nb:not(.go){background:var(--ink)!important;border-color:var(--ink)!important;color:var(--on-ink)!important}",
-      ".vlink:hover .ico{background:var(--accent-press)!important;color:var(--on-accent)!important}",
+      ".vlink:hover .ico{background:var(--accent-hover)!important;color:var(--on-accent)!important}",
       ".fchip,.pa .chip.fx,.pfix .chip.fx,.badge{background:var(--ink)!important;color:var(--on-ink)!important}",
       ".pa .chip.fx:hover,.pfix .chip.fx:hover{background:var(--ink)!important}",
       ".smp-caret{background:var(--ink)!important}",
@@ -283,4 +285,44 @@
       clearInterval(poll);
     }
   }, 50);
+})();
+
+/* Брендовый акцент: покой #FC473C, наведение/нажатие темнее (поверх старых press-в-покое). */
+(function () {
+  "use strict";
+  var ID = "gtype-brand-accent";
+  function paint() {
+    if (document.getElementById(ID)) return;
+    var st = document.createElement("style");
+    st.id = ID;
+    st.textContent = [
+      ".btn.pri,body:not(.tab-lib) .top .btn.pri,#view-edit .nrow .btn.pri,.imp-pop .btn.pri,.tr-card .btn.pri,.onb-btn.pri,.dm .dm-btn.dm-pri,.rb.dl,.srch .btn.pri,.hero .btn.pri,",
+      "#imp-build,.imp-act .btn.imp-go,#view-edit #cu-done.btn.pri,#pn-sim.btn.pri,#pn-sim-go.btn.pri,",
+      "#view-distort .btn.pri-accent,#gt-dst-grp .btn.pri-accent,.btn.pri-accent{",
+      "background:var(--accent)!important;color:var(--on-accent)!important}",
+      ".btn.pri:hover,body:not(.tab-lib) .top .btn.pri:hover,#view-edit .nrow .btn.pri:hover,.imp-pop .btn.pri:hover,.tr-card .btn.pri:hover,.onb-btn.pri:hover,.dm .dm-btn.dm-pri:hover,.rb.dl:hover,.srch .btn.pri:hover,.hero .btn.pri:hover,",
+      "#imp-build:hover,.imp-act .btn.imp-go:hover,#view-edit #cu-done.btn.pri:hover,#pn-sim.btn.pri:hover,#pn-sim-go.btn.pri:hover,",
+      "#view-distort .btn.pri-accent:hover,#gt-dst-grp .btn.pri-accent:hover,.btn.pri-accent:hover{",
+      "background:var(--accent-hover)!important}",
+      ".btn.pri:active,body:not(.tab-lib) .top .btn.pri:active,#view-edit .nrow .btn.pri:active,.imp-pop .btn.pri:active,.tr-card .btn.pri:active,.onb-btn.pri:active,.dm .dm-btn.dm-pri:active,.rb.dl:active,.srch .btn.pri:active,.hero .btn.pri:active,",
+      "#imp-build:active,.imp-act .btn.imp-go:active,#view-edit #cu-done.btn.pri:active,#pn-sim.btn.pri:active,#pn-sim-go.btn.pri:active,",
+      "#view-distort .btn.pri-accent:active,#gt-dst-grp .btn.pri-accent:active,.btn.pri-accent:active{",
+      "background:var(--accent-press)!important}",
+      "#imp-build,.imp-act .btn.imp-go,#view-edit #cu-done.btn.pri,#pn-sim.btn.pri,#pn-sim-go.btn.pri,",
+      "#view-distort .btn.pri-accent,#gt-dst-grp .btn.pri-accent,.btn.pri-accent,",
+      ":is(#view-edit,#view-imp,#view-proof,#view-draw,#view-kern,#view-paper,#view-comm,#view-distort) .btn.pri{",
+      "font-size:var(--fs-base)!important;font-weight:var(--fw-b)!important;white-space:nowrap!important}",
+      "#view-edit #cu-done.btn.pri,#pn-sim.btn.pri{",
+      "min-height:var(--h-md)!important;height:var(--h-md)!important;padding-left:var(--s3)!important;padding-right:var(--s3)!important}",
+      "#imp-build,.imp-act .btn.imp-go{padding-left:var(--s4)!important;padding-right:var(--s4)!important}",
+      "@media (max-width:1400px){#imp-build,.imp-act .btn.imp-go{padding-left:var(--s3)!important;padding-right:var(--s3)!important}}",
+      ".imp-act .btn.imp-go:hover{filter:none!important}",
+      ".notch .nb.go,.lcard.on .nb.go{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--on-accent)!important}",
+      ".notch .nb.go:hover,.lcard.on .nb.go:hover,.notchc:hover .notch .nb.go{background:var(--accent-hover)!important;border-color:var(--accent-hover)!important}",
+      ".notch .nb.go:active,.lcard.on .nb.go:active{background:var(--accent-press)!important;border-color:var(--accent-press)!important}",
+    ].join("");
+    document.head.appendChild(st);
+  }
+  if (document.head) paint();
+  else document.addEventListener("DOMContentLoaded", paint);
 })();
