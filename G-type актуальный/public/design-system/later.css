@@ -101,5 +101,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .ctl output.clamp {
-  color: var(--accent-text);
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
 }

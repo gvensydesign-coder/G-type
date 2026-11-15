@@ -7,7 +7,8 @@
     "assemble": "python3 service/build.py",
     "build": "next build --turbopack",
     "start": "next start -p 4177 -H 0.0.0.0",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:v96": "node tests/v96/run.mjs"
   },
   "dependencies": {
     "react": "19.1.0",

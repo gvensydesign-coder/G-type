@@ -110,3 +110,177 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 })();
+
+/* Тост и GT_MSG: на hover/focus пауза оставшегося ttl, без сброса анимации ухода. */
+(function () {
+  "use strict";
+  if (window.__GT_VISUAL_MSG_PAUSE__) return;
+  window.__GT_VISUAL_MSG_PAUSE__ = true;
+
+  (function ensureMsgPauseStyles() {
+    var id = "gtype-msg-pause-css";
+    if (document.getElementById(id)) return;
+    var st = document.createElement("style");
+    st.id = id;
+    st.textContent = ".toast.on{pointer-events:auto}";
+    document.head.appendChild(st);
+  })();
+
+  var gtNativeTimeout = window.setTimeout.bind(window);
+  var gtNativeClearTimeout = window.clearTimeout.bind(window);
+
+  function armPausable(el, ms, onFire, assignTm) {
+    if (!el || !(ms > 0) || typeof onFire !== "function") return null;
+    var remain = ms;
+    var paused = false;
+    var t0 = Date.now();
+    var tid = 0;
+    var hoverIn = false;
+
+    function engaged() {
+      return hoverIn || el.contains(document.activeElement);
+    }
+
+    function schedule() {
+      gtNativeClearTimeout(tid);
+      tid = gtNativeTimeout(function () {
+        onFire();
+      }, remain);
+      if (assignTm) assignTm(tid);
+      t0 = Date.now();
+    }
+
+    function sync() {
+      var want = engaged();
+      if (want && !paused) {
+        paused = true;
+        gtNativeClearTimeout(tid);
+        remain -= Date.now() - t0;
+        if (remain < 0) remain = 0;
+        if (assignTm) assignTm(0);
+      } else if (!want && paused) {
+        paused = false;
+        schedule();
+      }
+    }
+
+    function onPointerEnter() {
+      hoverIn = true;
+      sync();
+    }
+    function onPointerLeave() {
+      hoverIn = false;
+      sync();
+    }
+    function onFocusIn() {
+      sync();
+    }
+    function onFocusOut() {
+      requestAnimationFrame(sync);
+    }
+
+    schedule();
+    el.addEventListener("pointerenter", onPointerEnter);
+    el.addEventListener("pointerleave", onPointerLeave);
+    el.addEventListener("focusin", onFocusIn);
+    el.addEventListener("focusout", onFocusOut);
+    return {
+      cancel: function () {
+        gtNativeClearTimeout(tid);
+        el.removeEventListener("pointerenter", onPointerEnter);
+        el.removeEventListener("pointerleave", onPointerLeave);
+        el.removeEventListener("focusin", onFocusIn);
+        el.removeEventListener("focusout", onFocusOut);
+      },
+    };
+  }
+
+  function wrapDraftsNote() {
+    var D = window.GT_DRAFTS;
+    if (!D || typeof D.note !== "function" || D.note.__gtMsgPause) return false;
+    var orig = D.note;
+    D.note = function (o) {
+      var n = orig.apply(this, arguments);
+      if (!n || !n.el || !o || !(o.ttl > 0)) return n;
+      clearTimeout(n.tm);
+      n.tm = 0;
+      var ctrl = armPausable(
+        n.el,
+        o.ttl,
+        function () {
+          if (n.el && n.el.isConnected) D.closeNote();
+        },
+        function (id) {
+          n.tm = id;
+        }
+      );
+      if (ctrl && n.el) {
+        var x = n.el.querySelector(".drn-x");
+        if (x) {
+          x.addEventListener(
+            "click",
+            function () {
+              ctrl.cancel();
+            },
+            { once: true }
+          );
+        }
+      }
+      return n;
+    };
+    D.note.__gtMsgPause = true;
+    return true;
+  }
+
+  function isToastDismiss(fn, delay) {
+    if (delay !== 2600 || typeof fn !== "function") return false;
+    var src = Function.prototype.toString.call(fn);
+    return src.indexOf("classList") >= 0 && src.indexOf("remove") >= 0 && src.indexOf("on") >= 0;
+  }
+
+  function installToastDismissHook() {
+    if (installToastDismissHook.done) return true;
+    if (typeof window.setTimeout !== "function") return false;
+    var orig = window.setTimeout;
+    gtNativeTimeout = orig.bind(window);
+    gtNativeClearTimeout = window.clearTimeout.bind(window);
+    window.setTimeout = function (fn, delay) {
+      var id = orig.apply(this, arguments);
+      if (isToastDismiss(fn, delay)) {
+        orig(function () {
+          clearTimeout(id);
+        }, 0);
+        var el = document.getElementById("toast");
+        if (el) armPausable(el, delay, fn);
+      }
+      return id;
+    };
+    installToastDismissHook.done = true;
+    return true;
+  }
+
+  function installHooks() {
+    wrapDraftsNote();
+    installToastDismissHook();
+  }
+
+  installHooks();
+  document.addEventListener("DOMContentLoaded", function () {
+    installHooks();
+    setTimeout(installHooks, 0);
+    setTimeout(installHooks, 50);
+  });
+  window.addEventListener("load", installHooks);
+  var n = 0;
+  var poll = setInterval(function () {
+    installHooks();
+    if (
+      (window.GT_DRAFTS && window.GT_DRAFTS.note && window.GT_DRAFTS.note.__gtMsgPause) &&
+      installToastDismissHook.done
+    ) {
+      clearInterval(poll);
+    } else if (++n > 400) {
+      clearInterval(poll);
+    }
+  }, 50);
+})();
