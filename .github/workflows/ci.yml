@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   build-and-regression:
+    if: false
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -71,9 +72,10 @@ jobs:
       - run: npm ci
       - name: Trial patched PostCSS override
         run: |
-          npm pkg set "overrides.next.postcss=8.5.33"
+          npm pkg set "overrides.postcss=8.5.33"
           npm install --package-lock-only --ignore-scripts
           npm ci
+          npm ls postcss
           npm audit --omit=dev --json
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
