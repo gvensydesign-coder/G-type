@@ -76,6 +76,7 @@ jobs:
           npm install --package-lock-only --ignore-scripts
           npm ci
           npm ls postcss
+          git diff -- package.json package-lock.json
           npm audit --omit=dev --json
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
@@ -84,4 +85,3 @@ jobs:
           path: |
             G-type актуальный/package.json
             G-type актуальный/package-lock.json
-      - run: npm audit --json
