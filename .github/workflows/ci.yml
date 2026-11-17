@@ -9,6 +9,14 @@ permissions:
 jobs:
   font-matrix:
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        group:
+          - volt,kvadra,stroka,propis,liniya
+          - codex,rotunda,ustav,modul,ryvok
+          - kaplya,pixel,renessa,applik,stsepka
+          - stolb,nit,tyaga,kortes
     defaults:
       run:
         working-directory: G-type актуальный
@@ -21,4 +29,6 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install -r requirements-ci.txt
-      - run: node tests/v96/run.mjs export --strict
+      - run: node tests/v96/run.mjs export-matrix --strict
+        env:
+          GTYPE_FONT_GROUP: ${{ matrix.group }}
