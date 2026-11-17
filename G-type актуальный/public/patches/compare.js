@@ -522,6 +522,7 @@
   }
   function refreshDraftMeta() {
     if (!window.GT_DRAFTS || !GT_DRAFTS.list) return;
+    if (GT_DRAFTS.ready && !GT_DRAFTS.ready()) return;
     var l = GT_DRAFTS.list(), m = {};
     l.forEach(function (d) { m[d.id] = d; });
     DRMETA = m;

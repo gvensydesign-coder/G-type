@@ -37,7 +37,7 @@ const XHINT={ttf:'Для установки в систему',otf:'Для ус�
 const CYR='АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя',LAT='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',SIGNS='0123456789.,:;!?-–—«»()"\'№/%+=*&@#$₽€…';
 const OTH={smcp:['Капитель','строчные становятся малыми прописными'],c2sc:['Капитель из прописных','весь текст малыми прописными'],onum:['Цифры разной высоты','текстовые, как строчные буквы'],tnum:['Цифры одной ширины','столбцы чисел встают ровно'],frac:['Дроби','1/2 превращается в настоящую дробь'],sups:['Верхние индексы','как в м² и сносках'],subs:['Нижние индексы','как в H₂O'],liga:['Лигатуры','fi, fl, ff в один знак'],salt:['Альтернативы','запасные формы букв'],swsh:['Росчерки','длинные выходные штрихи'],kern:['Кернинг','расстояния между парами букв подобраны'],calt:['Сцепки букв','буквы соединяются сами по контексту'],ss01:['Набор форм 1','другие формы по включению']};
 function xStats(){
-  const F=FONTS[S.fontId],cs=(F.CHARSET||[]).filter(c=>c!==' '&&c!==' '),has=new Set(cs);
+  const F=FONTS[S.fontId],cs=(F.CHARSET||[]).filter(c=>!/^\s+$/u.test(c)),has=new Set(cs);
   /* FX80 B03: знак без контуров (в любом из двух начертаний) в набор не засчитывается: файл унесёт его пустым */
   const emp=new Set();
   for(const c of cs){let e=false;
@@ -56,13 +56,19 @@ const sizeKb=(n,k)=>Math.max(9,Math.round(n*.46*k+12));
 const fmtSize=kb=>kb>=1000?(kb/1024).toFixed(1).replace('.',',')+' МБ':kb+' КБ';
 function xFiles(x,n){
   const base=psSafe(S.family),r=sizeKb(n,1),i=sizeKb(n,1.04);
-  if(x==='ttf')return [[base+'-Regular.ttf',r],[base+'-Italic.ttf',i]];
-  if(x==='otf')return [[base+'-Regular.otf',Math.round(r*.56)],[base+'-Italic.otf',Math.round(i*.56)]];
-  if(x==='woff2')return [[base+'-Regular.woff2',Math.round(r*.22)],[base+'-Italic.woff2',Math.round(i*.22)]];
-  if(x==='woff')return [[base+'-Regular.woff',Math.round(r*.55)],[base+'-Italic.woff',Math.round(i*.55)]];
-  if(x==='fam')return [[base+'-family.zip',Math.round((r+i)*4*1.7)]];
-  if(x==='vf')return [[base+'-VF.zip',Math.round((r*1.9+i*1.9+r*.4+i*.4)*1.02)]];
-  return [[base+'-sample.png',140]];
+  const weight=weightOf(S.styles.regular.p).name;
+  /* Match buildTTF's name ID 6 without building glyphs in the preview. */
+  const family=psSafe(famEff(S.family,S.fontId),psSafe(famOwn()));
+  const name=k=>(family+'-'+(weight==='Regular'?(k==='italic'?'Italic':'Regular'):weight+(k==='italic'?' Italic':'')).replace(/[^A-Za-z0-9]/g,'')).slice(0,63);
+  if(['ttf','otf','woff2','woff'].includes(x)){
+    const factor={ttf:1,otf:.56,woff2:.22,woff:.55}[x];
+    return [[name('regular')+'.'+x,Math.round(r*factor)],[name('italic')+'.'+x,Math.round(i*factor)]];
+  }
+  const uw=typeof vfxOpts==='function'&&vfxOpts().uniwidth?'-uniwidth':'';
+  if(x==='fam')return [[base+uw+'-family.zip',Math.round((r+i)*4*1.7)]];
+  if(x==='vf')return [[base+'-VF'+uw+'.zip',Math.round((r*1.9+i*1.9+r*.4+i*.4)*1.02)]];
+  const style=weight==='Regular'&&S.style==='italic'?'Italic':weight+(S.style==='italic'?'Italic':'');
+  return [[base+'-'+style+'-specimen.png',140]];
 }
 function xStyles(x){
   if(x==='fam')return ['Тонкий','Обычный','Жирный','Чёрный','Тонкий курсив','Обычный курсив','Жирный курсив','Чёрный курсив'];

@@ -79,8 +79,8 @@
  OTLX={st,key,same};}}catch(e){OTLX=null;}
  try{return _bo.call(this,glyphs,st,kmap,fontId);}finally{OTLX=prev;}};}
  })();
--const AP_BID='0615e513ad';
-+const AP_BID='21f98736d7';
+-const AP_BID='fead01da09';
++const AP_BID='7edb6e9802';
  const AP={res:new Map(),kern:new Map(),sSig:'',eSig:new Map(),job:0,t:0,lp:0,running:false,ver:-1,sum:{n:0,fix:0}};
  (function(){const st=document.createElement('style');st.textContent=
  '.gb{position:relative}.gb .apd{position:absolute;left:5px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--danger);pointer-events:none}'+

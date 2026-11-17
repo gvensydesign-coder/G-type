@@ -397,6 +397,13 @@ export default async function run() {
       await sleep(1000);
       eq(await page.ev(`(0,eval)("S").tab`), "profile", "возврат в профиль");
       eq((await sel(page)).length, 2, "выбор сохранился после закрытия");
+      const chosen = await sel(page);
+      await reload(page, "profile");
+      for (let i = 0; i < 40; i++) {
+        if (await page.ev(`window.GT_DRAFTS?.ready()`)) break;
+        await sleep(250);
+      }
+      eq(await sel(page), chosen, "выбор черновиков сохранился после перезагрузки");
       await page.ev(`GT_COMPARE.clear()`);
     });
 

@@ -1,5 +1,5 @@
 import { readdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { ensureServer, startChrome } from "./lib.mjs";
 
@@ -16,7 +16,7 @@ try {
   for (const f of files) {
     console.log(`\n# ${f}`);
     const tf = Date.now();
-    try { all.push(...(await (await import(join(here, f))).default())); }
+    try { all.push(...(await (await import(pathToFileURL(join(here, f)).href)).default())); }
     catch (e) { console.log(`  FAIL  ${f} crashed: ${e.message}`); all.push({ name: f, label: "crash", ok: false, pending: false, msg: e.message }); }
     console.log(`  (${Math.round((Date.now() - tf) / 1000)}s)`);
   }

@@ -6,16 +6,18 @@ import { join } from "node:path";
 export const PORT = 9418;
 export const URL_ = "http://127.0.0.1:4177/g-type-v96.html";
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const python = process.env.GTYPE_PYTHON || "python3";
+const chrome = process.env.GTYPE_CHROME || "google-chrome";
 
 export async function ensureServer(root) {
   try { const r = await fetch(URL_, { method: "HEAD" }); if (r.ok) return null; } catch {}
-  const p = spawn("python3", ["-m", "http.server", "4177", "--bind", "127.0.0.1", "-d", "public"], { cwd: root, stdio: "ignore" });
+  const p = spawn(python, ["-m", "http.server", "4177", "--bind", "127.0.0.1", "-d", "public"], { cwd: root, stdio: "ignore" });
   for (let i = 0; i < 50; i++) { await sleep(200); try { if ((await fetch(URL_, { method: "HEAD" })).ok) return p; } catch {} }
   throw new Error("server did not start");
 }
 
 export async function startChrome() {
-  const p = spawn("google-chrome", ["--headless=new", "--no-sandbox", "--disable-gpu", `--remote-debugging-port=${PORT}`, `--user-data-dir=/tmp/chrome-h-${process.pid}`, "about:blank"], { stdio: "ignore" });
+  const p = spawn(chrome, ["--headless=new", "--no-sandbox", "--disable-gpu", `--remote-debugging-port=${PORT}`, `--user-data-dir=${join(tmpdir(), `chrome-h-${process.pid}`)}`, "about:blank"], { stdio: "ignore" });
   for (let i = 0; i < 100; i++) { await sleep(200); try { await fetch(`http://127.0.0.1:${PORT}/json/version`); return p; } catch {} }
   throw new Error("chrome did not start");
 }
@@ -64,7 +66,7 @@ export function fontInfo(buf) {
 from fontTools.ttLib import TTFont
 f=TTFont(sys.argv[1]);cm=f.getBestCmap()
 print(json.dumps({"glyphs":len(f.getGlyphOrder()),"cmap":len(cm),"flavor":f.flavor,"tables":sorted(f.keys())}))`;
-  return JSON.parse(execFileSync("python3", ["-c", py, f]).toString());
+  return JSON.parse(execFileSync(python, ["-c", py, f]).toString());
 }
 
 export const magic = (buf) => Buffer.from(buf.slice(0, 4)).toString("latin1");

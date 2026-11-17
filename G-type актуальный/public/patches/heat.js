@@ -179,7 +179,7 @@
 
   /* строчные кириллические пары: естественный разброс по телам не выходит за ±0,30; прописные (А, Т, диагонали) и латиница терпимее */
   var sevPair = function (d, caps, loose) {
-    if (caps) return d < 0 ? clamp01((-d - 0.70) / 0.30) : clamp01((d - 0.90) / 0.60);
+    if (caps) return d < 0 ? clamp01((-d - 0.40) / 0.30) : clamp01((d - 0.65) / 0.45);
     if (loose) return d < 0 ? clamp01((-d - 0.50) / 0.30) : clamp01((d - 0.55) / 0.40);
     return d < 0 ? clamp01((-d - 0.30) / 0.30) : clamp01((d - 0.32) / 0.35);
   };
@@ -258,7 +258,7 @@
         if (p.m.min < 1e8 && p.m.min > 1.2 * flat) dev = Math.max(dev, 0.9 * (p.m.min / flat - 1));
         var cyr = /[\u0400-\u04FF]/;
         var sev = sevPair(dev, p.ca === "u" || p.cb === "u", !(cyr.test(p.A.c.ch) && cyr.test(p.B.c.ch))), touch = false;
-        if (p.ca !== "u" && p.cb !== "u" && p.m.min < 1e8 && p.m.min <= Math.max(2, 0.12 * flat)) { touch = true; sev = Math.max(sev, 0.78); }
+        if (p.m.min < 1e8 && p.m.min <= Math.max(2, 0.12 * flat)) { touch = true; sev = Math.max(sev, 0.78); }
         if ((p.ca === "p" || p.cb === "p") && dev > 0) sev = 0;
         var bandH = p.band === "cap" ? ref.cap : ref.xh;
         var gx0 = p.A.xu + p.PA.xmax, gx1 = p.B.xu + p.PB.xmin;
@@ -615,16 +615,12 @@
     var info = window.kernInfo(f.a, f.b, st, f.key, get);
     if (info.blocked) { window.toast("Между этими знаками кернинг не применяется"); return true; }
     var v0 = Math.round(kernOfF(f.a, f.b, f.key)), want = v0 + d, v1 = Math.max(-info.hi, Math.min(info.hi, want));
+    if (v1 === v0) { window.toast("Кернинг достиг допустимого предела. Откройте пару в кернинге"); return true; }
     window.snap();
     window.kernApply(st, f.a, f.b, v1, "exc", info);
-    if (want !== v1) {
-      var e = S.edits[f.a] || (S.edits[f.a] = {});
-      e.sbR = Math.max(-120, Math.min(120, (e.sbR || 0) + (want - v1)));
-    }
     window.persist();
     window.schedule();
-    window.toast("Кернинг " + f.a + f.b + ": " + (v0 < 0 ? "−" : "") + Math.abs(v0) + " → " + (v1 < 0 ? "−" : "") + Math.abs(v1));
-    if (want !== v1 && typeof window.bump === "function") window.bump();
+    window.toast("Кернинг " + f.a + f.b + ": " + (v0 < 0 ? "−" : "") + Math.abs(v0) + " → " + (v1 < 0 ? "−" : "") + Math.abs(v1) + (want !== v1 ? ". Достигнут допустимый предел; проверьте пару" : ""));
     HM.refresh();
     return true;
   }
@@ -633,7 +629,6 @@
       var b = e.target.closest && e.target.closest('#heat-rep [data-rp="fix"],#heat-tip [data-ha="fix"]');
       if (!b) return;
       var S = evalS();
-      if (S && (S.fontId === FONT || INTENT[S.fontId])) return;
       var f = null, tip = b.closest("#heat-tip");
       if (tip) f = tip._f;
       else {
@@ -735,10 +730,11 @@
     }
     var res = lastRes();
     if (rep && rep.querySelector(".hr-score")) {
-      var noFix = body || rel;
-      if (noFix) {
+      if (body || rel) {
         rep.querySelectorAll('[data-rp="fix"],[data-rp="fixs"]').forEach(function (b) {
-          if (b.closest("li") && !b.closest("li").querySelector('[data-rp="glyph"]')) {
+          var li = b.closest("li"), idx = +b.dataset.i, f = res && res.top && res.top[idx];
+          if (f && f.t === "pair" && f.items && f.items[0] && f.items[0].site) return;
+          if (li && !li.querySelector('[data-rp="glyph"]')) {
             b.setAttribute("data-rp", "glyph"); b.textContent = "Открыть знак";
           } else b.remove();
         });
@@ -767,7 +763,11 @@
         if (!S2 || !(S2.fontId === FONT || INTENT[S2.fontId])) return;
         var acts = tip.querySelector(".ht-a");
         if (!acts) return;
-        acts.querySelectorAll('[data-ha="fix"],[data-ha="fixs"],[data-ha="kern"]').forEach(function (b) { b.remove(); });
+        var f = tip._f;
+        acts.querySelectorAll('[data-ha="fix"],[data-ha="fixs"],[data-ha="kern"]').forEach(function (b) {
+          if (f && f.t === "pair" && f.items && f.items[0] && f.items[0].site) return;
+          b.remove();
+        });
         if (!acts.querySelector("button")) {
           var g = document.createElement("button");
           g.type = "button"; g.className = "btn sm"; g.setAttribute("data-ha", "glyph"); g.textContent = "Открыть знак";

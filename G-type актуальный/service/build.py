@@ -8,6 +8,7 @@ v94 собирается из template.html и модулей. delta/*.diff по
 import hashlib
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -21,8 +22,8 @@ PATCHES = ["layout.js", "visual.js", "distortion.js", "art.js", "latin-m.js", "h
 
 EXPECT = {
     "html": "b60faf4ac0d7",
-    "zc": "58f34118fde5",
-    "zu": "be2531ebd731",
+    "zc": "8e731c349906",
+    "zu": "1bace3221d9c",
     "zm": "a71ebbed2d32",
 }
 
@@ -39,11 +40,20 @@ def apply_diff(name: str, text: str) -> str:
     with tempfile.TemporaryDirectory() as tmp:
         target = Path(tmp) / f"{name}.txt"
         target.write_text(text, encoding="utf-8")
-        proc = subprocess.run(
-            ["patch", "--forward", "--batch", "-p0", str(target)],
-            input=diff.read_bytes(),
-            cwd=tmp,
-        )
+        if shutil.which("patch"):
+            proc = subprocess.run(
+                ["patch", "--forward", "--batch", "-p0", str(target)],
+                input=diff.read_bytes(), cwd=tmp,
+            )
+        elif shutil.which("git"):
+            lines = diff.read_text(encoding="utf-8").splitlines(keepends=True)
+            lines[:2] = [f"--- a/{name}.txt\n", f"+++ b/{name}.txt\n"]
+            proc = subprocess.run(
+                ["git", "apply", "--whitespace=nowarn", "-p1", "-"],
+                input="".join(lines).encode("utf-8"), cwd=tmp,
+            )
+        else:
+            sys.exit("для сборки нужен patch или git")
         if proc.returncode != 0:
             sys.exit(f"delta/{name}.diff не встал на свежую сборку v94")
         return target.read_text(encoding="utf-8")
@@ -116,7 +126,7 @@ def main():
     page += boot + "\n"
     page += blk % ("zm", packed["zm"][0], packed["zm"][1])
     page += '<script id="gtype-curator">\n' + curator + "\n</script>\n</body></html>\n"
-    OUT.write_text(page, encoding="utf-8")
+    OUT.write_text(page, encoding="utf-8", newline="\n")
     print(f"wrote {OUT} ({OUT.stat().st_size} bytes)")
 
 
