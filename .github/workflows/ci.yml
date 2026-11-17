@@ -20,4 +20,4 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: node --test tests/audit/project-recovery.test.mjs
+      - run: timeout 120s node --test tests/audit/project-recovery.test.mjs
