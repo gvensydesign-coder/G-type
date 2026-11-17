@@ -60,3 +60,29 @@ jobs:
       - name: Browser regression
         if: ${{ always() }}
         run: npm run test:v96 -- --strict
+  font-matrix:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        group:
+          - volt,kvadra,stroka,propis,liniya
+          - codex,rotunda,ustav,modul,ryvok
+          - kaplya,pixel,renessa,applik,stsepka
+          - stolb,nit,tyaga,kortes
+    defaults:
+      run:
+        working-directory: G-type актуальный
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-ci.txt
+      - name: Validate font exports
+        run: node tests/v96/run.mjs export-matrix --strict
+        env:
+          GTYPE_FONT_GROUP: ${{ matrix.group }}

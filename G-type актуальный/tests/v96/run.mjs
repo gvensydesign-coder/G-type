@@ -6,7 +6,8 @@ import { ensureServer, startChrome } from "./lib.mjs";
 const here = dirname(fileURLToPath(import.meta.url));
 const strict = process.argv.includes("--strict");
 const only = process.argv.slice(2).filter((a) => !a.startsWith("--"));
-const files = readdirSync(here).filter((f) => f.endsWith(".test.mjs") && (!only.length || only.some((o) => f.includes(o)))).sort();
+// The all-family export matrix has its own CI jobs; the default browser suite stays serial.
+const files = readdirSync(here).filter((f) => f.endsWith(".test.mjs") && (!only.length || only.some((o) => f.includes(o))) && (f !== "export-matrix.test.mjs" || only.includes("export-matrix"))).sort();
 
 const server = await ensureServer(resolve(here, "../.."));
 const chrome = await startChrome();
