@@ -129,12 +129,14 @@ export async function exportFormat(page, fmt) {
   await page.ev(`document.querySelector('#xpv [data-xf="${fmt}"]').click()`);
   await sleep(200);
   await page.ev(`document.querySelector('#xpv [data-xa="go"]').click()`);
-  for (let i = 0; i < 60; i++) {
+  let complete = false;
+  for (let i = 0; i < 180; i++) {
     await sleep(500);
-    const n = await page.ev(`window.__cap.filter(c=>c.name).length`);
-    if (n) break;
+    complete = await page.ev(`window.__cap.filter(c=>c.name).length>=2&&document.querySelector("#ex-menu").getAttribute("aria-busy")!=="true"`);
+    if (complete) break;
   }
-  const r = await page.ev(`(async()=>{const a=window.__cap.filter(c=>c.name).pop();if(!a)return null;const source=window.__cap.find(c=>c.blob&&c.href===a.href);if(!source)throw new Error("download blob not captured");const b=new Uint8Array(await source.blob.arrayBuffer());let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return {name:a.name,b64:btoa(s)}})()`);
+  if (!complete) throw new Error("export did not finish both styles for " + fmt);
+  const r = await page.ev(`(async()=>{const a=window.__cap.filter(c=>c.name)[0];if(!a)return null;const source=window.__cap.find(c=>c.blob&&c.href===a.href);if(!source)throw new Error("download blob not captured");const b=new Uint8Array(await source.blob.arrayBuffer());let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return {name:a.name,b64:btoa(s)}})()`);
   if (!r) throw new Error("no download captured for " + fmt);
   return { name: r.name, bytes: Buffer.from(r.b64, "base64") };
 }
