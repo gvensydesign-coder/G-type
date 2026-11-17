@@ -114,7 +114,7 @@ export function assert(c, m) { if (!c) throw new Error(m || "assertion failed");
 export function eq(a, b, m) { assert(JSON.stringify(a) === JSON.stringify(b), `${m || "not equal"}: got ${JSON.stringify(a)}, want ${JSON.stringify(b)}`); }
 export function near(a, b, tol, m) { assert(Math.abs(a - b) <= tol, `${m || "not near"}: got ${a}, want ${b}±${tol}`); }
 
-export const HOOK_JS = `(()=>{if(window.__cap)return;window.__cap=[];const o=URL.createObjectURL.bind(URL);URL.createObjectURL=function(b){try{if(b instanceof Blob)window.__cap.push({blob:b})}catch(e){}return o(b)};
+export const HOOK_JS = `(()=>{if(window.__cap)return;window.__cap=[];const o=URL.createObjectURL.bind(URL);URL.createObjectURL=function(b){const href=o(b);try{if(b instanceof Blob)window.__cap.push({blob:b,href})}catch(e){}return href};
 const ac=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){window.__cap.push({name:this.download,href:this.href});return ac.apply(this,arguments)}})()`;
 
 // Export one format from the «Скачать» menu; returns {name, bytes:Buffer}.
@@ -134,7 +134,7 @@ export async function exportFormat(page, fmt) {
     const n = await page.ev(`window.__cap.filter(c=>c.name).length`);
     if (n) break;
   }
-  const r = await page.ev(`(async()=>{const a=window.__cap.filter(c=>c.name).pop();if(!a)return null;const r=await fetch(a.href);const b=new Uint8Array(await r.arrayBuffer());let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return {name:a.name,b64:btoa(s)}})()`);
+  const r = await page.ev(`(async()=>{const a=window.__cap.filter(c=>c.name).pop();if(!a)return null;const source=window.__cap.find(c=>c.blob&&c.href===a.href);if(!source)throw new Error("download blob not captured");const b=new Uint8Array(await source.blob.arrayBuffer());let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return {name:a.name,b64:btoa(s)}})()`);
   if (!r) throw new Error("no download captured for " + fmt);
   return { name: r.name, bytes: Buffer.from(r.b64, "base64") };
 }
