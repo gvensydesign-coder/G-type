@@ -29,6 +29,8 @@ jobs:
           python -m pip install -r requirements-ci.txt
           command -v patch
           command -v google-chrome
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=moderate
       - name: Rebuild checked-in editor twice
         run: |
           set -o pipefail
