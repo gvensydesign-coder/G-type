@@ -13,6 +13,7 @@ async function measure(version) {
   const page = await openPage();
   try {
     await openEditor(page);
+    await page.send("Performance.enable");
     const out = [];
     for (const font of ["volt", "propis"]) {
       if (font === "propis") {
