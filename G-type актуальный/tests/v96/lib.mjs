@@ -69,6 +69,27 @@ print(json.dumps({"glyphs":len(f.getGlyphOrder()),"cmap":len(cm),"flavor":f.flav
   return JSON.parse(execFileSync(python, ["-c", py, f]).toString());
 }
 
+export function fontSignature(buf) {
+  const f = join(mkdtempSync(join(tmpdir(), "v96-matrix-")), "font.bin");
+  writeFileSync(f, buf);
+  const py = `import sys,json
+from fontTools.ttLib import TTFont
+f=TTFont(sys.argv[1])
+c=f.getBestCmap()
+features={}
+for tag in ("GSUB","GPOS"):
+    table=f[tag].table if tag in f else None
+    records=table.FeatureList.FeatureRecord if table and table.FeatureList else []
+    features[tag]=sorted(set(record.FeatureTag for record in records))
+metrics={str(cp):f["hmtx"][name][0] for cp,name in c.items()}
+os2=f["OS/2"] if "OS/2" in f else None
+print(json.dumps({"cmap":sorted(c),"advances":metrics,"glyphs":len(f.getGlyphOrder()),
+  "upm":f["head"].unitsPerEm,"ascender":f["hhea"].ascent,"descender":f["hhea"].descent,
+  "typoAscender":os2.sTypoAscender if os2 else None,
+  "typoDescender":os2.sTypoDescender if os2 else None,"features":features}))`;
+  return JSON.parse(execFileSync(python, ["-c", py, f]).toString());
+}
+
 export const magic = (buf) => Buffer.from(buf.slice(0, 4)).toString("latin1");
 
 // ---- mini test framework ----
@@ -93,7 +114,7 @@ export function assert(c, m) { if (!c) throw new Error(m || "assertion failed");
 export function eq(a, b, m) { assert(JSON.stringify(a) === JSON.stringify(b), `${m || "not equal"}: got ${JSON.stringify(a)}, want ${JSON.stringify(b)}`); }
 export function near(a, b, tol, m) { assert(Math.abs(a - b) <= tol, `${m || "not near"}: got ${a}, want ${b}±${tol}`); }
 
-export const HOOK_JS = `(()=>{if(window.__cap)return;window.__cap=[];const o=URL.createObjectURL.bind(URL);URL.createObjectURL=function(b){try{if(b instanceof Blob)window.__cap.push({blob:b})}catch(e){}return o(b)};
+export const HOOK_JS = `(()=>{if(window.__cap)return;window.__cap=[];const o=URL.createObjectURL.bind(URL);URL.createObjectURL=function(b){const href=o(b);try{if(b instanceof Blob)window.__cap.push({blob:b,href})}catch(e){}return href};
 const ac=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){window.__cap.push({name:this.download,href:this.href});return ac.apply(this,arguments)}})()`;
 
 // Export one format from the «Скачать» menu; returns {name, bytes:Buffer}.
@@ -108,12 +129,14 @@ export async function exportFormat(page, fmt) {
   await page.ev(`document.querySelector('#xpv [data-xf="${fmt}"]').click()`);
   await sleep(200);
   await page.ev(`document.querySelector('#xpv [data-xa="go"]').click()`);
-  for (let i = 0; i < 60; i++) {
+  let complete = false;
+  for (let i = 0; i < 180; i++) {
     await sleep(500);
-    const n = await page.ev(`window.__cap.filter(c=>c.name).length`);
-    if (n) break;
+    complete = await page.ev(`window.__cap.filter(c=>c.name).length>=2&&document.querySelector("#ex-menu").getAttribute("aria-busy")!=="true"`);
+    if (complete) break;
   }
-  const r = await page.ev(`(async()=>{const a=window.__cap.filter(c=>c.name).pop();if(!a)return null;const r=await fetch(a.href);const b=new Uint8Array(await r.arrayBuffer());let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return {name:a.name,b64:btoa(s)}})()`);
+  if (!complete) throw new Error("export did not finish both styles for " + fmt);
+  const r = await page.ev(`(async()=>{const a=window.__cap.filter(c=>c.name)[0];if(!a)return null;const source=window.__cap.find(c=>c.blob&&c.href===a.href);if(!source)throw new Error("download blob not captured");const b=new Uint8Array(await source.blob.arrayBuffer());let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return {name:a.name,b64:btoa(s)}})()`);
   if (!r) throw new Error("no download captured for " + fmt);
   return { name: r.name, bytes: Buffer.from(r.b64, "base64") };
 }
