@@ -17,9 +17,17 @@ export async function ensureServer(root) {
 }
 
 export async function startChrome() {
-  const p = spawn(chrome, ["--headless=new", "--no-sandbox", "--disable-gpu", `--remote-debugging-port=${PORT}`, `--user-data-dir=${join(tmpdir(), `chrome-h-${process.pid}`)}`, "about:blank"], { stdio: "ignore" });
-  for (let i = 0; i < 100; i++) { await sleep(200); try { await fetch(`http://127.0.0.1:${PORT}/json/version`); return p; } catch {} }
-  throw new Error("chrome did not start");
+  const p = spawn(chrome, ["--headless=new", "--no-sandbox", "--disable-gpu", `--remote-debugging-port=${PORT}`, `--user-data-dir=${join(tmpdir(), `chrome-h-${process.pid}`)}`, "about:blank"], { stdio: ["ignore", "ignore", "pipe"] });
+  let diagnostics = "";
+  p.stderr.on("data", (chunk) => { diagnostics = (diagnostics + chunk.toString()).slice(-4000); });
+  p.on("error", (error) => { diagnostics = (diagnostics + "\n" + error.message).slice(-4000); });
+  for (let i = 0; i < 300; i++) {
+    await sleep(200);
+    try { if ((await fetch(`http://127.0.0.1:${PORT}/json/version`)).ok) return p; } catch {}
+    if (p.exitCode !== null) break;
+  }
+  p.kill();
+  throw new Error(`chrome did not start (exit ${p.exitCode ?? "timeout"}): ${diagnostics || "no stderr"}`);
 }
 
 export async function openPage() {
