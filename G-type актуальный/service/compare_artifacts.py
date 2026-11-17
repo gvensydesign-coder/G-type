@@ -56,6 +56,11 @@ def normalized(path):
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         sys.exit("usage: compare_artifacts.py committed.html rebuilt.html")
-    if normalized(sys.argv[1]) != normalized(sys.argv[2]):
-        sys.exit("committed editor and rebuilt editor differ after decoding")
+    committed, rebuilt = normalized(sys.argv[1]), normalized(sys.argv[2])
+    if committed != rebuilt:
+        at = next((i for i, (a, b) in enumerate(zip(committed, rebuilt)) if a != b), min(len(committed), len(rebuilt)))
+        lo, hi = max(0, at - 32), at + 64
+        sys.exit(f"committed and rebuilt editors differ at {at}: "
+                 f"{committed[lo:hi]!r} != {rebuilt[lo:hi]!r}; "
+                 f"lengths {len(committed)} and {len(rebuilt)}")
     print("committed and rebuilt editors match after decoding")
