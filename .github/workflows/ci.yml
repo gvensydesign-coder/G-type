@@ -54,7 +54,7 @@ jobs:
         run: npm run build
       - name: Audit regressions
         if: ${{ always() }}
-        run: node --test tests/audit/*.cjs tests/audit/*.mjs
+        run: node --test --test-concurrency=1 tests/audit/*.cjs tests/audit/*.mjs
       - name: Browser regression
         if: ${{ always() }}
         run: npm run test:v96 -- --strict

@@ -20,6 +20,20 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  // Legacy service scripts are plain browser/Node code, not React components.
+  {
+    files: ["service/**/*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "react-hooks/rules-of-hooks": "off",
+    },
+  },
+  {
+    files: ["public/patches/**/*.js"],
+    rules: {
+      "react-hooks/rules-of-hooks": "off",
+    },
+  },
 ];
 
 export default eslintConfig;
