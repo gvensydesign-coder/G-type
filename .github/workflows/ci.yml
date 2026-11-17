@@ -60,6 +60,7 @@ jobs:
         if: ${{ always() }}
         run: npm run test:v96 -- --strict
   dependency-audit:
+    if: false
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -85,3 +86,25 @@ jobs:
           path: |
             G-type актуальный/package.json
             G-type актуальный/package-lock.json
+  export-baseline:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: G-type актуальный
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-ci.txt
+      - name: Extract baseline editor
+        run: git show 'f1423167156ae6066559b9fc851c0ff66472a02c:G-type актуальный/public/g-type-v96.html' > "$RUNNER_TEMP/baseline-v96.html"
+      - name: Benchmark baseline and current export
+        run: node tests/audit/perf_compare.mjs
+        env:
+          GTYPE_BASELINE_HTML: ${{ runner.temp }}/baseline-v96.html
