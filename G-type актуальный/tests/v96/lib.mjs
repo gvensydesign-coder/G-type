@@ -69,6 +69,27 @@ print(json.dumps({"glyphs":len(f.getGlyphOrder()),"cmap":len(cm),"flavor":f.flav
   return JSON.parse(execFileSync(python, ["-c", py, f]).toString());
 }
 
+export function fontSignature(buf) {
+  const f = join(mkdtempSync(join(tmpdir(), "v96-matrix-")), "font.bin");
+  writeFileSync(f, buf);
+  const py = `import sys,json
+from fontTools.ttLib import TTFont
+f=TTFont(sys.argv[1])
+c=f.getBestCmap()
+features={}
+for tag in ("GSUB","GPOS"):
+    table=f[tag].table if tag in f else None
+    records=table.FeatureList.FeatureRecord if table and table.FeatureList else []
+    features[tag]=sorted(set(record.FeatureTag for record in records))
+metrics={str(cp):f["hmtx"][name][0] for cp,name in c.items()}
+os2=f["OS/2"] if "OS/2" in f else None
+print(json.dumps({"cmap":sorted(c),"advances":metrics,"glyphs":len(f.getGlyphOrder()),
+  "upm":f["head"].unitsPerEm,"ascender":f["hhea"].ascent,"descender":f["hhea"].descent,
+  "typoAscender":os2.sTypoAscender if os2 else None,
+  "typoDescender":os2.sTypoDescender if os2 else None,"features":features}))`;
+  return JSON.parse(execFileSync(python, ["-c", py, f]).toString());
+}
+
 export const magic = (buf) => Buffer.from(buf.slice(0, 4)).toString("latin1");
 
 // ---- mini test framework ----
