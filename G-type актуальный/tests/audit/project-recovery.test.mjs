@@ -21,6 +21,19 @@ test('damaged project keeps the working copy and valid project restores it', asy
     await sleep(350);
     const restored = await page.ev(`(0,eval)('S').text`);
     assert(restored === 'AUDIT RESTORED', `valid project did not restore text: ${restored}`);
+    await page.ev(`(()=>{const p=projectJSON(),slot=p.fonts.volt;
+      window.__auditLegacyProject=JSON.stringify({app:'volt',v:1,styles:slot.styles,edits:slot.edits,family:slot.family,text:'LEGACY RESTORED'})})()`);
+    await page.ev(`(()=>{const d=new DataTransfer();d.items.add(new File([window.__auditLegacyProject],'legacy.gtype',{type:'application/json'}));const i=document.querySelector('#pj-l');i.files=d.files;i.dispatchEvent(new Event('change',{bubbles:true}))})()`);
+    await sleep(350);
+    const legacy = await page.ev(`(()=>{const s=(0,eval)('S');return {font:s.fontId,text:s.text,wdth:s.styles.regular.p.wdth}})()`);
+    assert(legacy.font === 'volt' && legacy.text === 'LEGACY RESTORED', 'legacy project did not restore');
+
+    const changed = legacy.wdth + (legacy.wdth < 200 ? 1 : -1);
+    await page.ev(`(()=>{snap();(0,eval)('S').styles.regular.p.wdth=${changed};bump()})()`);
+    await page.ev(`document.querySelector('#undo').click()`);
+    assert(await page.ev(`(0,eval)('S').styles.regular.p.wdth`) === legacy.wdth, 'undo did not restore the prior width');
+    await page.ev(`document.querySelector('#redo').click()`);
+    assert(await page.ev(`(0,eval)('S').styles.regular.p.wdth`) === changed, 'redo did not reapply the width');
   } finally {
     page.close();
     chrome.kill();
