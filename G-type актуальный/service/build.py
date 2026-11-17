@@ -40,17 +40,17 @@ def apply_diff(name: str, text: str) -> str:
     with tempfile.TemporaryDirectory() as tmp:
         target = Path(tmp) / f"{name}.txt"
         target.write_text(text, encoding="utf-8")
-        if shutil.which("patch"):
-            proc = subprocess.run(
-                ["patch", "--forward", "--batch", "-p0", str(target)],
-                input=diff.read_bytes(), cwd=tmp,
-            )
-        elif shutil.which("git"):
+        if shutil.which("git"):
             lines = diff.read_text(encoding="utf-8").splitlines(keepends=True)
             lines[:2] = [f"--- a/{name}.txt\n", f"+++ b/{name}.txt\n"]
             proc = subprocess.run(
                 ["git", "apply", "--whitespace=nowarn", "-p1", "-"],
                 input="".join(lines).encode("utf-8"), cwd=tmp,
+            )
+        elif shutil.which("patch"):
+            proc = subprocess.run(
+                ["patch", "--forward", "--batch", "-p0", str(target)],
+                input=diff.read_bytes(), cwd=tmp,
             )
         else:
             sys.exit("для сборки нужен patch или git")

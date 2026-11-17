@@ -31,17 +31,27 @@ jobs:
           command -v google-chrome
       - name: Rebuild checked-in editor twice
         run: |
-          cp public/g-type-v96.html "$RUNNER_TEMP/g-type-v96-committed.html"
-          python service/build.py
-          cp public/g-type-v96.html "$RUNNER_TEMP/g-type-v96-first.html"
-          python service/build.py
-          cmp "$RUNNER_TEMP/g-type-v96-first.html" public/g-type-v96.html
-          python service/compare_artifacts.py "$RUNNER_TEMP/g-type-v96-committed.html" public/g-type-v96.html
+          set -o pipefail
+          {
+            cp public/g-type-v96.html "$RUNNER_TEMP/g-type-v96-committed.html"
+            python service/build.py
+            cp public/g-type-v96.html "$RUNNER_TEMP/g-type-v96-first.html"
+            python service/build.py
+            cmp "$RUNNER_TEMP/g-type-v96-first.html" public/g-type-v96.html
+            python service/compare_artifacts.py "$RUNNER_TEMP/g-type-v96-committed.html" public/g-type-v96.html
+          } 2>&1 | tee "$RUNNER_TEMP/g-type-build-check.log"
+      - name: Report build failure
+        if: ${{ failure() }}
+        run: |
+          if [ -f "$RUNNER_TEMP/g-type-build-check.log" ]; then
+            message=$(tail -n 8 "$RUNNER_TEMP/g-type-build-check.log")
+            echo "::error title=Build check::${message//$'\n'/%0A}"
+          fi
       - name: Lint
         run: npm run lint
       - name: Production build
         run: npm run build
-      - name: Browser regression
-        run: npm run test:v96 -- --strict
       - name: Audit regressions
         run: node --test tests/audit/*.cjs tests/audit/*.mjs
+      - name: Browser regression
+        run: npm run test:v96 -- --strict

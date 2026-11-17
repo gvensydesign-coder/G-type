@@ -27,7 +27,7 @@
 
 - Локальная среда: Node 24.22.1, Python 3.12.14, Microsoft Edge headless. Архив v94 и доступные файлы v96 сверены с blob SHA исходного commit. Недостающие `blank-partial.png` и `proto/iskazhenie.html` восстановлены из исходного commit по SHA; это не изменения PR.
 - Сборка: две последовательные сборки после нормализации LF дали одинаковый SHA-256 `7381AD407B3A5D6EFD9B698D4ABAF47BCF71127E59EF2E7DD788350253CA1FAD`. Сравнение распакованного содержимого с прежней сборкой прошло; итоговый blob SHA HTML `553a9de5b6b91c42bafc2e99861993f8c0b31477`.
-- Новые проверки: `export-preview`, `export-filenames`, `safe-fix` и `svg-limits` прошли. Тесты SVG: 3/3. Тепловая карта: 17/17.
+- Новые проверки: `export-preview`, `export-filenames`, `safe-fix`, `svg-limits` и браузерный тест чипов и вариантов искажения прошли (7/7; SVG 3/3). Тепловая карта: 17/17.
 - Полный `node tests/v96/run.mjs --strict`: **99 passed, 8 failed, 0 pending, 451 s**. Никакая ошибка не переведена в «успех».
 
 ### Разбор восьми ошибок локального прогона
