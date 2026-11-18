@@ -95,6 +95,9 @@ test('imported glyph download opens export preview and produces a font', async (
     await sleep(500);
     const wizard = await page.ev(`(()=>({name:(0,eval)('S').family,step:GT_FLOW.FL.step,preview:!!document.querySelector('#xpv')&&!document.querySelector('#xpv').hidden}))()`);
     assert(wizard.name === 'Мой шрифт Проверка' && wizard.step === 3 && !wizard.preview, 'wizard did not keep its font name or stage: ' + JSON.stringify(wizard));
+    await page.ev(`(()=>{GT_FLOW.FL.name='Мой шрифт Повтор';GT_FLOW.build()})()`);
+    const repeated = await page.ev(`(()=>({active:(0,eval)('S').family,slot:(0,eval)('S').lib.imp.family,source:IMP.family}))()`);
+    assert(Object.values(repeated).every(name => name === 'Мой шрифт Повтор'), 'rebuilding active import lost the chosen name: ' + JSON.stringify(repeated));
   } finally {
     page.close();
     chrome.kill();

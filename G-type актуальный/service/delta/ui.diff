@@ -4124,7 +4124,7 @@
 +try{
 +if(m==='draw'){const f=FXD();if(!f||!f.mounted()){say('Откройте холст и сохраните хотя бы один знак');return false;}hide();ok=f.build(name);}
 +else if(m==='paper'){guard(()=>{GT_PAPER.P.name=name;});hide();ok=GT_PAPER.commit()!==false;}
-+else{const b=$('#imp-build');hide();if(b&&!b.disabled){IMP.family=name;IMP.ver++;if(S.lib&&S.lib.imp)S.lib.imp.family=name;b.click();ok=true;}}
++else{const b=$('#imp-build');hide();if(b&&!b.disabled){IMP.family=name;IMP.ver++;if(S.lib&&S.lib.imp)S.lib.imp.family=name;if(S.fontId==='imp')S.family=name;b.click();ok=true;}}
 +}finally{FL.nav=false;}
 +return ok;}
 +function next(){
