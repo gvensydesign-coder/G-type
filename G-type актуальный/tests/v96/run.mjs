@@ -7,7 +7,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const strict = process.argv.includes("--strict");
 const only = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 // The all-family export matrix has its own CI jobs; the default browser suite stays serial.
-const files = readdirSync(here).filter((f) => f.endsWith(".test.mjs") && (!only.length || only.some((o) => f.includes(o))) && (f !== "export-matrix.test.mjs" || only.includes("export-matrix"))).sort();
+const files = readdirSync(here).filter((f) => f.endsWith(".test.mjs") && (!only.length || only.some((o) => f.includes(o))) && ((!["export-matrix.test.mjs", "vf-archive.test.mjs"].includes(f) || only.some((o) => f.includes(o))))).sort();
 
 const server = await ensureServer(resolve(here, "../.."));
 const chrome = await startChrome();
