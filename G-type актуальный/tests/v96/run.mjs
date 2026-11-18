@@ -1,12 +1,13 @@
 import { readdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { ensureServer, startChrome } from "./lib.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const strict = process.argv.includes("--strict");
 const only = process.argv.slice(2).filter((a) => !a.startsWith("--"));
-const files = readdirSync(here).filter((f) => f.endsWith(".test.mjs") && (!only.length || only.some((o) => f.includes(o)))).sort();
+// The all-family export matrix has its own CI jobs; the default browser suite stays serial.
+const files = readdirSync(here).filter((f) => f.endsWith(".test.mjs") && (!only.length || only.some((o) => f.includes(o))) && ((!["export-matrix.test.mjs", "vf-archive.test.mjs"].includes(f) || only.some((o) => f.includes(o))))).sort();
 
 const server = await ensureServer(resolve(here, "../.."));
 const chrome = await startChrome();
@@ -16,7 +17,7 @@ try {
   for (const f of files) {
     console.log(`\n# ${f}`);
     const tf = Date.now();
-    try { all.push(...(await (await import(join(here, f))).default())); }
+    try { all.push(...(await (await import(pathToFileURL(join(here, f)).href)).default())); }
     catch (e) { console.log(`  FAIL  ${f} crashed: ${e.message}`); all.push({ name: f, label: "crash", ok: false, pending: false, msg: e.message }); }
     console.log(`  (${Math.round((Date.now() - tf) / 1000)}s)`);
   }

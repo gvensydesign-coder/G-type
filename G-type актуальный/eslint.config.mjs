@@ -18,7 +18,30 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // This source is concatenated into a wrapper by service/build.py.
+      "service/ryvok_body.js",
     ],
+  },
+  // Legacy service scripts are plain browser/Node code, not React components.
+  {
+    files: ["service/**/*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "react-hooks/rules-of-hooks": "off",
+      "react/display-name": "off",
+    },
+  },
+  {
+    files: ["public/patches/**/*.js"],
+    rules: {
+      "react-hooks/rules-of-hooks": "off",
+    },
+  },
+  {
+    files: ["tests/audit/**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
   },
 ];
 

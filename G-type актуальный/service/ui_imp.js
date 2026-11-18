@@ -175,7 +175,8 @@ function iuBuildView(){
   v.querySelector('#imp-dir').addEventListener('change',e=>{const f=[...e.target.files];e.target.value='';if(f.length)iuIngest(f);});
   v.querySelector('#imp-build').addEventListener('click',()=>{
     if(!impHasInk()){toast('Сначала загрузите хотя бы один знак');return;}
-    iuRegisterNow();iuClose();if(S.fontId!=='imp')switchFont('imp');setTab('edit');});
+    iuRegisterNow();iuClose();if(S.fontId!=='imp')switchFont('imp');setTab('edit');
+    if(!(window.GT_FLOW&&GT_FLOW.FL.nav)&&window.PORT&&PORT.xpvOpen)PORT.xpvOpen('ttf');});
   v.querySelectorAll('#imp-sc button').forEach(b=>b.addEventListener('click',()=>{IU.sc=b.dataset.sc;iuRender();}));
   v.querySelectorAll('#imp-lv button').forEach(b=>b.addEventListener('click',()=>{IU.lv=b.dataset.lv;iuRender();}));
   v.querySelector('#imp-emp').addEventListener('change',e=>{IU.empty=e.target.checked;iuRender();});

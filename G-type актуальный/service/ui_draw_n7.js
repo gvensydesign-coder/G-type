@@ -1050,7 +1050,7 @@ function wire(){
   on(ui.pg2,'click',e=>{const b=e.target.closest('button');if(!b)return;ui.tx.value=PANGR[b.dataset.p];renderTest();});
   on(ui.tth,'click',()=>{setTT(!ui.tt.classList.contains('dk'));renderTest();});
   on(ui.nm,'input',()=>{const raw=ui.nm.value,t=nameStrip(raw),a=Array.from(t);nameHint(raw);const v=a.length>NAME_MAX?a.slice(0,NAME_MAX).join(''):t;if(v!==raw)ui.nm.value=v;});
-  on(ui.mfo,'click',()=>{const nm=cleanName(ui.nm.value)||'Мой шрифт';D.name=nm;if(buildFont(D.name)){ui.mf.hidden=true;}});
+  on(ui.mfo,'click',()=>{const nm=cleanName(ui.nm.value)||'Мой шрифт';D.name=nm;if(buildFont(D.name)){ui.mf.hidden=true;if(window.PORT&&PORT.xpvOpen)PORT.xpvOpen('ttf');}});
   /* размер */
   if(window.ResizeObserver){new ResizeObserver(()=>{if(D.mounted){draw();}}).observe(ui.mid);}
   window.addEventListener('resize',()=>redraw());

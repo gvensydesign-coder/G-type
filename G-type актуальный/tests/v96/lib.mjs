@@ -6,18 +6,28 @@ import { join } from "node:path";
 export const PORT = 9418;
 export const URL_ = "http://127.0.0.1:4177/g-type-v96.html";
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const python = process.env.GTYPE_PYTHON || "python3";
+const chrome = process.env.GTYPE_CHROME || "google-chrome";
 
 export async function ensureServer(root) {
   try { const r = await fetch(URL_, { method: "HEAD" }); if (r.ok) return null; } catch {}
-  const p = spawn("python3", ["-m", "http.server", "4177", "--bind", "127.0.0.1", "-d", "public"], { cwd: root, stdio: "ignore" });
+  const p = spawn(python, ["-m", "http.server", "4177", "--bind", "127.0.0.1", "-d", "public"], { cwd: root, stdio: "ignore" });
   for (let i = 0; i < 50; i++) { await sleep(200); try { if ((await fetch(URL_, { method: "HEAD" })).ok) return p; } catch {} }
   throw new Error("server did not start");
 }
 
 export async function startChrome() {
-  const p = spawn("google-chrome", ["--headless=new", "--no-sandbox", "--disable-gpu", `--remote-debugging-port=${PORT}`, `--user-data-dir=/tmp/chrome-h-${process.pid}`, "about:blank"], { stdio: "ignore" });
-  for (let i = 0; i < 100; i++) { await sleep(200); try { await fetch(`http://127.0.0.1:${PORT}/json/version`); return p; } catch {} }
-  throw new Error("chrome did not start");
+  const p = spawn(chrome, ["--headless=new", "--no-sandbox", "--disable-gpu", `--remote-debugging-port=${PORT}`, `--user-data-dir=${join(tmpdir(), `chrome-h-${process.pid}`)}`, "about:blank"], { stdio: ["ignore", "ignore", "pipe"] });
+  let diagnostics = "";
+  p.stderr.on("data", (chunk) => { diagnostics = (diagnostics + chunk.toString()).slice(-4000); });
+  p.on("error", (error) => { diagnostics = (diagnostics + "\n" + error.message).slice(-4000); });
+  for (let i = 0; i < 300; i++) {
+    await sleep(200);
+    try { if ((await fetch(`http://127.0.0.1:${PORT}/json/version`)).ok) return p; } catch {}
+    if (p.exitCode !== null) break;
+  }
+  p.kill();
+  throw new Error(`chrome did not start (exit ${p.exitCode ?? "timeout"}): ${diagnostics || "no stderr"}`);
 }
 
 export async function openPage() {
@@ -64,7 +74,28 @@ export function fontInfo(buf) {
 from fontTools.ttLib import TTFont
 f=TTFont(sys.argv[1]);cm=f.getBestCmap()
 print(json.dumps({"glyphs":len(f.getGlyphOrder()),"cmap":len(cm),"flavor":f.flavor,"tables":sorted(f.keys())}))`;
-  return JSON.parse(execFileSync("python3", ["-c", py, f]).toString());
+  return JSON.parse(execFileSync(python, ["-c", py, f]).toString());
+}
+
+export function fontSignature(buf) {
+  const f = join(mkdtempSync(join(tmpdir(), "v96-matrix-")), "font.bin");
+  writeFileSync(f, buf);
+  const py = `import sys,json
+from fontTools.ttLib import TTFont
+f=TTFont(sys.argv[1])
+c=f.getBestCmap()
+features={}
+for tag in ("GSUB","GPOS"):
+    table=f[tag].table if tag in f else None
+    records=table.FeatureList.FeatureRecord if table and table.FeatureList else []
+    features[tag]=sorted(set(record.FeatureTag for record in records))
+metrics={str(cp):f["hmtx"][name][0] for cp,name in c.items()}
+os2=f["OS/2"] if "OS/2" in f else None
+print(json.dumps({"cmap":sorted(c),"advances":metrics,"glyphs":len(f.getGlyphOrder()),
+  "upm":f["head"].unitsPerEm,"ascender":f["hhea"].ascent,"descender":f["hhea"].descent,
+  "typoAscender":os2.sTypoAscender if os2 else None,
+  "typoDescender":os2.sTypoDescender if os2 else None,"features":features}))`;
+  return JSON.parse(execFileSync(python, ["-c", py, f]).toString());
 }
 
 export const magic = (buf) => Buffer.from(buf.slice(0, 4)).toString("latin1");
@@ -91,7 +122,7 @@ export function assert(c, m) { if (!c) throw new Error(m || "assertion failed");
 export function eq(a, b, m) { assert(JSON.stringify(a) === JSON.stringify(b), `${m || "not equal"}: got ${JSON.stringify(a)}, want ${JSON.stringify(b)}`); }
 export function near(a, b, tol, m) { assert(Math.abs(a - b) <= tol, `${m || "not near"}: got ${a}, want ${b}±${tol}`); }
 
-export const HOOK_JS = `(()=>{if(window.__cap)return;window.__cap=[];const o=URL.createObjectURL.bind(URL);URL.createObjectURL=function(b){try{if(b instanceof Blob)window.__cap.push({blob:b})}catch(e){}return o(b)};
+export const HOOK_JS = `(()=>{if(window.__cap)return;window.__cap=[];const o=URL.createObjectURL.bind(URL);URL.createObjectURL=function(b){const href=o(b);try{if(b instanceof Blob)window.__cap.push({blob:b,href})}catch(e){}return href};
 const ac=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){window.__cap.push({name:this.download,href:this.href});return ac.apply(this,arguments)}})()`;
 
 // Export one format from the «Скачать» menu; returns {name, bytes:Buffer}.
@@ -106,12 +137,14 @@ export async function exportFormat(page, fmt) {
   await page.ev(`document.querySelector('#xpv [data-xf="${fmt}"]').click()`);
   await sleep(200);
   await page.ev(`document.querySelector('#xpv [data-xa="go"]').click()`);
-  for (let i = 0; i < 60; i++) {
+  let complete = false;
+  for (let i = 0; i < 180; i++) {
     await sleep(500);
-    const n = await page.ev(`window.__cap.filter(c=>c.name).length`);
-    if (n) break;
+    complete = await page.ev(`window.__cap.filter(c=>c.name).length>=2&&document.querySelector("#ex-menu").getAttribute("aria-busy")!=="true"`);
+    if (complete) break;
   }
-  const r = await page.ev(`(async()=>{const a=window.__cap.filter(c=>c.name).pop();if(!a)return null;const r=await fetch(a.href);const b=new Uint8Array(await r.arrayBuffer());let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return {name:a.name,b64:btoa(s)}})()`);
+  if (!complete) throw new Error("export did not finish both styles for " + fmt);
+  const r = await page.ev(`(async()=>{const a=window.__cap.filter(c=>c.name)[0];if(!a)return null;const source=window.__cap.find(c=>c.blob&&c.href===a.href);if(!source)throw new Error("download blob not captured");const b=new Uint8Array(await source.blob.arrayBuffer());let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return {name:a.name,b64:btoa(s)}})()`);
   if (!r) throw new Error("no download captured for " + fmt);
   return { name: r.name, bytes: Buffer.from(r.b64, "base64") };
 }

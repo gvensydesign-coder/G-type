@@ -46,6 +46,7 @@
   var cv, ctx, cvw, dpr = 1, cw = 480, ch = 280;
   var flatCache = {};
   var drawTmr = 0;
+  var pendingVariantSeed = null;
 
   function hash(a, b) {
     var h = (a ^ 0x9e3779b9) >>> 0;
@@ -543,7 +544,9 @@
       }
       all.push(buildGlyph(g, glyphEnv, false));
     }
-    var r = targetCv.parentElement ? targetCv.parentElement.getBoundingClientRect() : { width: cw, height: ch };
+    var r = targetCv === cv && targetCv.parentElement
+      ? targetCv.parentElement.getBoundingClientRect()
+      : targetCv.getBoundingClientRect();
     var w = Math.max(80, Math.round(r.width)), h = Math.max(80, Math.round(r.height));
     var ratio = Math.min(3, window.devicePixelRatio || 1);
     targetCv.width = w * ratio;
@@ -591,7 +594,7 @@
   function draw() {
     if (!open) return;
     fitMain();
-    renderPreview(cv, ctx, S.seed, S.text);
+    renderPreview(cv, ctx, pendingVariantSeed == null ? S.seed : pendingVariantSeed, S.text);
     if (S.variants) renderVariants();
     syncSliders();
     refreshLetters();
@@ -606,8 +609,9 @@
     if (!ui.varRow) return;
     ui.varRow.hidden = false;
     var items = ui.varRow.querySelectorAll("canvas");
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < items.length; i++) {
       var seed = S.variantSeed + i * 97;
+      items[i].classList.toggle("on", seed === (pendingVariantSeed == null ? S.seed : pendingVariantSeed));
       renderPreview(items[i], items[i].getContext("2d"), seed, S.text);
     }
   }
@@ -639,6 +643,12 @@
       setRange(el, p, bag[p.id] != null ? bag[p.id] : DEF[p.id]);
     });
     FX.forEach(function (f) {
+      var chip = ui.fxNames && ui.fxNames.querySelector('[data-fx="' + f.id + '"]');
+      if (chip) {
+        var active = (bag[f.id] || 0) !== 0;
+        chip.classList.toggle("on", active);
+        chip.setAttribute("aria-pressed", String(active));
+      }
       (f.sub || []).forEach(function (s) {
         var sub = ui.sliders[s.id];
         if (!sub) return;
@@ -781,6 +791,7 @@
       "#view-distort .dst-h h2{margin:0 auto 0 0;font:600 var(--fs-lg)/1 var(--f-ui)}" +
       "#view-distort .dst-note{margin:0;font-size:var(--fs-md);color:var(--text-2);line-height:1.45}" +
       "#view-distort .dst-fx{display:flex;flex-wrap:wrap;gap:var(--s1)}" +
+      "#view-distort .dst-fx[hidden],#view-distort .dst-vars[hidden]{display:none!important}" +
       "#view-distort .dst-fx .chip{height:var(--h-sm);padding:0 var(--s3);font-size:var(--fs-sm);background:var(--surface-2);border:0;border-radius:var(--r-pill);cursor:pointer;color:var(--text)}" +
       "#view-distort .dst-fx .chip.on{background:var(--ink);color:var(--on-ink)}" +
       "#view-distort .dst-sec{display:flex;flex-direction:column;gap:var(--s3)}" +
@@ -809,11 +820,14 @@
       "#gt-dst-grp .dst-art[hidden]{display:none!important}" +
       "#gt-dst-grp .dst-sec h3{margin:var(--s2) 0 var(--s1);font:600 var(--fs-xs)/1.2 var(--f-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--text-2)}" +
       "#gt-dst-grp .dst-fx{display:flex;flex-wrap:wrap;gap:var(--s1)}" +
+      "#gt-dst-grp .dst-fx[hidden],#gt-dst-grp .dst-vars[hidden]{display:none!important}" +
       "#gt-dst-grp .dst-sw{display:flex;align-items:center;gap:var(--s2);min-height:var(--h-sm);font-size:var(--fs-sm);color:var(--text);cursor:pointer}" +
       "#gt-dst-grp .dst-sw input{accent-color:var(--ink);width:16px;height:16px}" +
       "#gt-dst-grp .dst-sub{margin-left:var(--s3);padding-left:var(--s3);border-left:2px solid var(--line)}" +
       "#gt-dst-grp .dst-vars{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--s2)}" +
       "#gt-dst-grp .dst-vars canvas{width:100%;background:var(--canvas);border-radius:var(--r-xs);box-shadow:inset 0 0 0 1px var(--line)}" +
+      "#gt-dst-grp .dst-vars canvas{height:auto;cursor:pointer}" +
+      "#gt-dst-grp .dst-vars canvas.on{outline:2px solid var(--ink);outline-offset:2px}" +
       "#gt-dst-grp .btn.pri-accent{align-self:flex-start;background:var(--accent-press);color:var(--on-accent)}" +
       "#gt-dst-grp .btn.pri-accent:hover{background:var(--accent-hover)}" +
       "@media(max-width:960px){#view-distort{grid-template-columns:1fr;grid-template-rows:minmax(180px,34vh) minmax(0,1fr)}}";
@@ -886,11 +900,19 @@
     ctx = cv.getContext("2d");
 
     var fxNames = sec.querySelector("#dst-fxnames");
+    ui.fxNames = fxNames;
     FX.forEach(function (f) {
-      var b = document.createElement("span");
+      var b = document.createElement("button");
+      b.type = "button";
       b.className = "chip sm";
+      b.dataset.fx = f.id;
+      b.setAttribute("aria-pressed", "false");
       b.textContent = f.name;
       b.title = f.name;
+      b.addEventListener("click", function () {
+        var bag = S.perLetter && S.selCh ? S.letterP[S.selCh] || S.p : S.p;
+        setParam(f.id, bag[f.id] ? 0 : (f.id === "twist" || f.id === "lens" ? 45 : 50));
+      });
       fxNames.appendChild(b);
     });
 
@@ -904,15 +926,38 @@
       var c = document.createElement("canvas");
       c.width = 120;
       c.height = 96;
-      c.setAttribute("aria-hidden", "true");
+      c.setAttribute("role", "button");
+      c.setAttribute("tabindex", "0");
+      c.setAttribute("aria-label", "Применить вариант " + (vi + 1));
+      c.dataset.variant = String(vi);
       ui.varRow.appendChild(c);
     }
 
     sec.querySelector("#dst-close").addEventListener("click", closePanel);
     sec.querySelector("#dst-apply").addEventListener("click", function () {
       S.text = sampleFromPage();
+      if (pendingVariantSeed != null) {
+        S.seed = pendingVariantSeed;
+        pendingVariantSeed = null;
+        scheduleSave();
+      }
       if (ui.spec) ui.spec.textContent = S.text;
       queueDraw();
+      refreshView();
+    });
+
+    ui.varRow.addEventListener("click", function (e) {
+      var item = e.target.closest("[data-variant]");
+      if (!item) return;
+      pendingVariantSeed = S.variantSeed + (+item.dataset.variant) * 97;
+      queueDraw();
+    });
+    ui.varRow.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      var item = e.target.closest("[data-variant]");
+      if (!item) return;
+      e.preventDefault();
+      item.click();
     });
 
     ui.swPer.addEventListener("change", function () {
@@ -931,9 +976,10 @@
       scheduleSave();
       if (S.variants) {
         S.variantSeed = S.seed;
+        pendingVariantSeed = null;
         renderVariants();
         ui.varRow.hidden = false;
-      } else hideVariants();
+      } else { pendingVariantSeed = null; hideVariants(); queueDraw(); }
     });
 
     ui.letters.addEventListener("click", function (e) {

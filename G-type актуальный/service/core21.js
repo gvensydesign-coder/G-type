@@ -12,7 +12,7 @@ function impDecode(s){return s.indexOf('&')<0?s:s.replace(/&(#x[0-9a-fA-F]+|#\d+
   return IMPX.ENT[e]!=null?IMPX.ENT[e]:m;});}
 /* крошечный XML-разборщик: дерево {tag,attrs,kids,text} */
 function impXml(src){
-  const root={tag:'#root',attrs:{},kids:[],text:''},st=[root],n=src.length;let i=0;
+  const root={tag:'#root',attrs:{},kids:[],text:''},st=[root],n=src.length;let i=0,nodes=0;
   while(i<n){
     const lt=src.indexOf('<',i);
     if(lt<0){st[st.length-1].text+=src.slice(i);break;}
@@ -28,6 +28,7 @@ function impXml(src){
     const tag=m[1].replace(/^.*:/,'').toLowerCase(),attrs={};
     const re=/([^\s=\/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;re.lastIndex=m[0].length;let am;
     while((am=re.exec(inner))){{let k=am[1].replace(/^xlink:/i,'').toLowerCase();attrs[k]=impDecode(am[2]!=null?am[2]:am[3]);}}
+    if(++nodes>50000||st.length>128)throw {imp:'complex',n:nodes};
     const el={tag,attrs,kids:[],text:''};st[st.length-1].kids.push(el);if(!self)st.push(el);
     i=j+1;}
   return root;}
@@ -246,7 +247,7 @@ function impBBox(cs){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
 const IMP_MAXSUB=800,IMP_MAXNODE=20000; /* предел сложности одного файла: больше — отказ (иначе страница зависает) */
 function svgImport(text){
   const warn=new Set();let root;
-  try{root=impXml(String(text));}catch(e){return {cs:[],warn:['bad'],bb:null};}
+  try{root=impXml(String(text));}catch(e){return {cs:[],warn:[e&&e.imp==='complex'?'complex':'bad'],bb:null,n:e&&e.n};}
   let svg=null;const find=(e)=>{if(svg)return;if(e.tag==='svg'){svg=e;return;}for(const k of e.kids)find(k);};find(root);
   if(!svg)return {cs:[],warn:['nosvg'],bb:null};
   const rules=[],ids={};impCollectCss(root,rules);impCollect(root,ids);
