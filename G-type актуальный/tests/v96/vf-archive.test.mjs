@@ -60,7 +60,7 @@ export default async function run() {
         if (done) break;
       }
       assert(done, "variable ZIP download did not complete");
-      const captured = await page.ev(`(async()=>{const a=window.__cap.find(c=>c.name&&c.name.endsWith('-VF.zip'));const b=window.__cap.find(c=>c.blob&&c.href===a.href);if(!b)throw new Error("ZIP blob missing");const bytes=new Uint8Array(await b.blob.arrayBuffer());let s="";for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));return {name:a.name,b64:btoa(s)}})()`);
+      const captured = await page.ev(`(async()=>{const a=window.__cap.find(c=>c.name&&c.name.endsWith('-VF.zip'));const b=window.__cap.filter(c=>c.blob).pop();if(!b)throw new Error("ZIP blob missing");const bytes=new Uint8Array(await b.blob.arrayBuffer());if(bytes[0]!==80||bytes[1]!==75)throw new Error("captured blob is not a ZIP");let s="";for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));return {name:a.name,b64:btoa(s)}})()`);
       assert(captured.name.endsWith("-VF.zip"), captured.name);
       const path = join(mkdtempSync(join(tmpdir(), "gtype-vf-")), "font.zip");
       writeFileSync(path, Buffer.from(captured.b64, "base64"));
