@@ -25,8 +25,10 @@ for name in ttfs:
         for tag in ("fvar", "avar", "STAT", "HVAR", "gvar"):
             assert tag in font, (name, tag)
         axes = font["fvar"].axes
-        assert [axis.axisTag for axis in axes] == ["wght"], (name, axes)
-        assert axes[0].minValue == 300 and axes[0].maxValue == 900, (name, axes[0].minValue, axes[0].maxValue)
+        expected = {"wght": (300, 400, 900), "wdth": (83, 100, 125) if "Italic" in name else (80, 100, 121), "opsz": (8, 14, 72)}
+        if "Italic" not in name: expected["slnt"] = (-12, 0, 0)
+        assert [axis.axisTag for axis in axes] == list(expected), (name, [axis.axisTag for axis in axes])
+        assert all((axis.minValue, axis.defaultValue, axis.maxValue) == expected[axis.axisTag] for axis in axes), (name, [(axis.axisTag, axis.minValue, axis.defaultValue, axis.maxValue) for axis in axes])
         assert len(font["fvar"].instances) >= 4, (name, len(font["fvar"].instances))
         assert len(font.getBestCmap()) > 100, name
         inst = instancer.instantiateVariableFont(font, {"wght": axes[0].defaultValue}, inplace=False)
