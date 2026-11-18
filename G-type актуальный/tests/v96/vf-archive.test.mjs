@@ -11,7 +11,7 @@ from fontTools.varLib import instancer
 z = zipfile.ZipFile(sys.argv[1])
 assert z.testzip() is None, "ZIP CRC failed"
 names = z.namelist()
-ttfs = sorted(n for n in names if "/" not in n and n.endswith("-VF.ttf"))
+ttfs = sorted(n for n in names if "/" not in n and (n.endswith("-VF.ttf") or n.endswith("-VF-Italic.ttf")))
 assert len(ttfs) == 2 and any("-VF-Italic.ttf" in n for n in ttfs), names
 assert len(names) == 4, names
 for name in ttfs:
