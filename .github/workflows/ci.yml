@@ -60,6 +60,9 @@ jobs:
       - name: Browser regression
         if: ${{ always() }}
         run: npm run test:v96 -- --strict
+      - name: Variable archive
+        if: ${{ always() }}
+        run: timeout 420s node tests/v96/run.mjs vf-archive --strict
   font-matrix:
     runs-on: ubuntu-24.04
     strategy:
