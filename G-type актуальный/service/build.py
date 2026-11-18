@@ -23,7 +23,7 @@ PATCHES = ["layout.js", "visual.js", "distortion.js", "art.js", "latin-m.js", "h
 EXPECT = {
     "html": "b60faf4ac0d7",
     "zc": "8e731c349906",
-    "zu": "1bace3221d9c",
+    "zu": "3d13ba34e124",
     "zm": "a71ebbed2d32",
 }
 
