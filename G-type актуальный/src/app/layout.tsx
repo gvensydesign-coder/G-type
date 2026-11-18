@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Onest } from "next/font/google";
+import localFont from "next/font/local";
 import { Shell } from "@/components/Shell";
 import "./globals.css";
 
-const onest = Onest({
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "500", "600", "700", "800"],
+const onest = localFont({
+  src: "./fonts/Onest.ttf",
+  weight: "100 900",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
